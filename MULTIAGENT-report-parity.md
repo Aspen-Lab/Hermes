@@ -84905,3 +84905,104 @@ Ranked by what a reader loses, worst first.
 
 **RULING 89e — ROUND 32 IS CLOSED. `WHOSE TURN: B — round 33`, TWO items: (1) A32-01 (event-side job-content kind guard, 89b); (2) the dateless-branch diagnostic (89c).** Sonnet ninth data point: A's turn was clean — right supplementary instrument, right false-alarm discipline, right escalation of a scale discovery to the manager instead of silently absorbing or silently re-litigating it.
 
+
+
+### Round 33 — Agent B — ITEM 1 (A32-01, Ruling 89b: the event pipeline has no kind guard for job-content pages, the mirror of A31-01): **DESIGNED, ONE NEW ADDITIVE TITLE-VOCABULARY GUARD, THE MUST-CATCH CORPUS WIDENED FROM ONE WITNESS TO FOUR BY THIS ITEM'S OWN LIVE TRACE, THE MUST-KEEP CORPUS AT 19 ROWS WITH ZERO COLLISIONS.**
+
+**B changed no code.** Claimed the turn lock (`dabf018`) after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 33 — Agent B` first — zero prior entries existed, fresh start not a resume. Read round 32 A's three parts and Rulings 87a-89e in full before any live pull. Every candidate function below was written and adversarially tested standalone in a throwaway harness (`web/zz-r33b/`, own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load per Ruling 75/76d) — deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean immediately after.
+
+## 1.0 A MANDATORY LIVE TRACE FIRST — THE WITNESSED CLASS IS NOT ONE ROW
+
+Five fresh live event pulls (`buildDailyEventPool`, `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }`, fresh no-op `PoolCache` per pull, `searchGemini` call-through-spied to capture every offered `{title, url, snippet, pageKind}` row). RULING 75 CHECKED DIRECTLY: `fetched` keys across all 5 pulls are exactly `{ccfddl, confstech, researchseminars, eventweb}`, `tavily` never appears; `euagenda.eu` never offered, checked by scan over all 410 offered rows.
+
+Scanned all 410 offered rows for job/career vocabulary (`\b(job|jobs|career|careers|vacanc|hiring|recruit|opening)/i`) and ran the shipped, exported `webResultToRawEventItem` on each hit to get ground truth. **14 distinct job/career-worded rows this window; THREE MORE, beyond the already-known `industrialguide.co.in` specimen, are CONFIRMED currently ADMITTED (wrongly) by direct execution — none of the six existing kind guards fire on any of them:**
+
+```
+"Ion Exchange Jobs,Jobs for Ion Exchange, -:JobItUs" @ jobitus.com/jobseeker/ion-exchange-jobs
+  -- a job aggregator's own query-results listing page
+"Executive Jobs in All-India - 12,878 Executive Job Vacancies in All-India - Aug 2026" @ shine.com/jobs/...
+  -- explicit vacancy COUNT, the strongest-worded instance this window
+"Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page - iimjobs.com" @ iimjobs.com/ion-exchange-india-careers
+  -- a job board's own COMPANY PROFILE page
+```
+
+Also confirmed by execution: **eleven of the fourteen job/career-worded rows are CORRECTLY handled already, with no new work needed on this item.** Five are correctly ADMITTED genuine job/career fairs (`Nuclear Career Fair - S&T Women in Nuclear`, `Nittany Lion Careers`, `2026 MSE-NE Career Fair`, `Clean Energy Job Fairs - RE+ Events`, `Nuclear job fair` — URL-context-checked, e.g. `Nittany Lion Careers`'s URL path is literally `/events/engr_nucefa26`, "Nuclear Career Fair 2026" abbreviated). Six bare `"Careers"`/`"Careers - X"` titles at `/career(s)` paths (`ionenviromgt.net`, `ionexchangeglobal.com`, `moltensaltsolutions.com`, `naturaresources.com`, `iongroup.com`, `canftech.com`) are correctly DROPPED already by the existing `isEventHubResult` (`EVENT_HUB_TITLE_HEAD_RE`/`EVENT_HUB_PATH_SEGMENT_RE`, `eventweb.ts:744,738-739`). **The remaining three of fourteen are the fresh must-catch trio above.**
+
+## 1.1 THE SIGNAL IS TITLE VOCABULARY, NOT PATH SHAPE — MEASURED, NOT ASSUMED
+
+The brief's own hint named the witnessed specimen's `/2026/03/` two-segment date-structured path as superficially close to the job side's own three-segment `/YYYY/MM/DD/` `DATE_STRUCTURED_PATH_RE` (Round 32 C, `jobweb.ts:100`). **Checked directly and rejected**: two of this item's own three fresh must-catch witnesses (`jobitus.com`, `shine.com`) carry ORDINARY job-board URLs with no date-structured path segment at all — a path-based design would MISS them outright. A two-segment `/YYYY/MM/` prefix is also common on ordinary blog/announcement URLs generally (plausibly including genuine event-announcement posts), so requiring it would be a narrower, unevidenced instrument. Title vocabulary alone already separates all four must-catch rows from all nineteen must-keep rows tested below with zero collisions, so **no path clause is added.**
+
+## 1.2 THE DESIGN — ONE ADDITIVE TITLE-VOCABULARY GUARD, SAFETY-NETTED BY THE SHIPPED EVENT-SIGNAL CHECK
+
+Two trigger clauses, either sufficient alone, both gated by the SAME safety-net pattern Round 32 C's own job-side trio established as this loop's precedent (Ruling 87a Components B/C: a suspicious signal cannot drop a title that ALSO states the RIGHT kind's own vocabulary) — mirrored here as: a job-listing-vocabulary title cannot be dropped if it ALSO carries real event vocabulary, which is exactly what already protects every "Career Fair"/"Job Fair"/"Career Expo" must-keep without one new word added to that list.
+
+```ts
+// ROUND 33 B (Ruling 89b, mirror of A31-01 / Round 32's job-side trio,
+// Ruling 87a): the EVENT pipeline had no guard for JOB-CONTENT vocabulary at
+// all. Witnessed live, round 32 A: industrialguide.co.in's "Ion Exchange
+// Mumbai Job Openings Check here" -- a job-listings roundup blog post, not
+// an event -- admitted and rendered as an event card. NONE of the six
+// existing title/URL kind guards (isEventIndexResult, isEventHubResult,
+// isNewsArticleTitle, isPaperPageTitle, isEventArtefactTitle,
+// isEarningsCallPage) carry any job/vacancy vocabulary, so a kind miss here
+// fell to ADMISSION -- this file's own documented doctrine (Ruling 32).
+//
+// ROUND 33 B's OWN LIVE TRACE (5 fresh pulls, this item) found the class is
+// not a single specimen -- three more live rows this window carry the exact
+// same defect (jobitus.com, shine.com, iimjobs.com -- see the round log).
+//
+// THE SIGNAL IS TITLE VOCABULARY, NOT PATH SHAPE -- measured and rejected,
+// see the round log: two of the three fresh witnesses carry no
+// date-structured path at all, so a path clause would miss them.
+const JOB_LISTING_CONTENT_RE =
+  /\bjob\s+openings?\b|\bjob\s+vacanc(?:y|ies)\b|\bvacanc(?:y|ies)\b|\bcompany\s+page\b/i;
+
+// A second, independent trigger: the word "job"/"jobs" stated twice or more
+// in one title is the SEO-keyword-stuffed shape a job-board's own listing
+// title commonly takes ("X Jobs, Jobs for X - SiteName"). Zero collisions
+// with any must-keep title tested (none mentions "job" more than once, most
+// mention it zero times) -- see the round log's corpus table.
+function hasRepeatedJobsMention(title: string): boolean {
+  const matches = title.match(/\bjobs?\b/gi) ?? [];
+  return matches.length >= 2;
+}
+
+// The safety net: a suspicious title cannot drop a row that ALSO states the
+// event kind's own vocabulary -- the same shape Round 32 C's Components B/C
+// already established as this loop's precedent (jobweb.ts:107,1576). Reuses
+// the file's OWN existing front-door check rather than a new word list, so
+// every "Career Fair"/"Job Fair"/"Career Expo" must-keep is protected for
+// free.
+export function isJobListingContentTitle(title: string): boolean {
+  if (!JOB_LISTING_CONTENT_RE.test(title) && !hasRepeatedJobsMention(title)) {
+    return false;
+  }
+  return !looksLikeEvent(title);
+}
+```
+
+**Recommended wiring**: as a 7th additive kind guard in `webResultToRawEventItem`, immediately after the existing `isEarningsCallPage(title, url)` call and before the `const text = ...` line (`eventweb.ts:1965-1966`) — same family, same failure direction (row → null, never a value edit), same placement pattern every guard in this chain already uses. Function bodies placed near the call site, mirroring Round 32 C's own placement of its new components immediately before `webResultToRawJobItem`.
+
+## 1.3 ADVERSARIALLY TESTED, EXECUTED — 30 CASES, ZERO FAILURES
+
+| group | corpus (count) | result |
+|---|---|---|
+| must CATCH | this item's own 4 live witnesses: `industrialguide.co.in` (round 32 A), `jobitus.com`, `shine.com`, `iimjobs.com` (all three new, this item) | **4 of 4 caught** |
+| must-keep — Ruling 89b's four | `Nuclear Career Fair - S&T Women in Nuclear`, `2026 Job Fair & Hiring Event Calendar - JobFairX`, `Career Expo & Job Fair`, `Nittany Lion Careers` | **0 of 4 false positives** |
+| must-keep — this item's own three live-witnessed job/career-fair rows | `2026 MSE-NE Career Fair`, `Clean Energy Job Fairs - RE+ Events`, `Nuclear job fair` (each URL-context-checked as a real in-person fair) | **0 of 3 false positives** |
+| must-keep — round 32 A's full event artefact table, every ADMITTED row | `rsc.org` IEX 2026, `pyro.byu.edu` MoSES, `euchemsil2026.com` EUCHEMSIL, `flibe.com` EUROMOST, `flogen.org` SIPS, `ans.org` Molten Salt Fuel Chemistry, `events.ornl.gov` (`"Home"`, honest-host fallback), `batterysummit.solarenergyevents.com` (`"Homepage"`, honest-host fallback), `nucnet.org`, `thebatteryshow.com`, `quintustechnologies.com`, `tirt7.com` (12 rows) | **0 of 12 false positives** |
+| adversarial, constructed | `IT Job Fair 2026 - 500+ Job Openings Available` (fair vocabulary must rescue it despite also carrying "job openings"), `Vacancies List for Engineers` (must drop, no rescue), `Company Careers Fair 2026` (must keep, "careers fair"), `Job Vacancy: Battery Research Scientist` (must drop, single posting), `Jobs Jobs Jobs: How to Land Your Dream Role` (must drop, repeated-jobs trigger, no rescue), `International Job Fair and Career Expo 2026` (must keep, both fair AND expo), `A Job Well Done: Conference Recap` (must keep, "job" as idiom, no trigger phrase at all) | **0 of 7 false positives / false negatives** |
+
+**30 of 30 pass**, `web/zz-r33b/item1-design.test.ts` (deleted before this commit).
+
+## 1.4 FAILURE DIRECTION AND BLAST RADIUS
+
+**The guard can only ever cause `webResultToRawEventItem` to return null where it previously did not — it never edits a value, and the safety net's own failure direction favours admission** (a miss on `looksLikeEvent` always keeps the row), matching every existing kind guard in this file (Ruling 32).
+
+**Tests at risk, grepped directly against the live 2890-line `eventweb.test.ts`**: `job opening|job vacanc|\bvacanc|company page` (case-insensitive) — **zero hits**. A crude string-literal scan for any test title containing the word "job"/"jobs" twice or more — **zero hits**. Zero collision with the existing suite, verified by execution over the actual file content, not assumed.
+
+## 1.5 VERDICT
+
+**SHIP `isJobListingContentTitle`** (`JOB_LISTING_CONTENT_RE` + `hasRepeatedJobsMention`), wired as a 7th additive kind guard immediately after `isEarningsCallPage` in `webResultToRawEventItem`, title-only (no URL needed, matching `isPaperPageTitle`/`isEventArtefactTitle`'s own contract). Catches all four must-catch rows (the original A32-01 witness plus three fresh live witnesses this item's own trace found), zero false positives across nineteen must-keep rows and seven adversarial constructions, zero test-suite collision.
+
+Committed and pushed as its own item. Item 2 (the dateless-branch diagnostic, Ruling 89c) follows.
