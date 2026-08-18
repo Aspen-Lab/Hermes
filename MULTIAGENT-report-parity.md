@@ -84580,3 +84580,117 @@ Named-row sanity checks against this table: `hyetlithium.com` and `postdocjobs.c
 
 Committed and pushed as its own item, per the write-as-you-go discipline. Part 2 (event surface census, A31-02 verification, and the residual watch list) follows.
 
+
+### Round 32 — Agent A (part 2: THE EVENT SURFACE VALUE CENSUS. A31-02 NOT ORGANICALLY RE-WITNESSED THIS WINDOW (0 of 5) -- A SUPPLEMENTARY TARGETED RE-FETCH OF THE SAME KNOWN URL VERIFIES THE FIX END-TO-END LIVE, DATES TILE RENDERS "Mar 3 - 5, 2026". ONE FRESH, UNEXPLAINED EVENT-SURFACE FINDING -- A32-01. THE RESIDUAL WATCH LIST RE-MEASURED ITEM BY ITEM.)
+
+STATUS: PARTIAL BY DESIGN, continuing part 1's method (same profile, same fuse, same no-op cache, same spy-on-`searchGemini` instrument). Same single window, five independent live pulls, run as part of the same background job as part 1's job pulls. No gate verdict is set here.
+
+## A31-02: NOT ORGANICALLY RE-WITNESSED (0 of 5) -- SUPPLEMENTARY TARGETED RE-FETCH VERIFIES THE FIX LIVE
+
+`linevsystems.com` did not appear in either surface's offered corpus this window -- **0 of 5 event pulls**, checked directly against the recorded JSON. Per the round's own honesty standard, absence is reported as absence, not silently treated as a pass.
+
+**A supplementary targeted re-fetch of the EXACT already-known URL was run** (Ruling 75 -- this is not a new host hunt; it is a direct re-check of a specific URL round 31 A already recorded and round 32 B already fetched once, the same technique B used for this exact item). Fetched `https://www.linevsystems.com/events/ev-battery-recycling-and-reuse-conference-2026/` fresh, through the pipeline's own `fetchPagesConcurrently`, and ran the shipped `extractJsonLdOpportunities` on the real, freshly-fetched HTML:
+
+```
+startDate (raw, from the page's own JSON-LD): "2026-3-3T09:00-4:00"
+startDate (after normalizeNearIsoDateString):  "2026-03-03T09:00-04:00"
+endDate   (raw): "2026-3-5T18:00-4:00"
+endDate   (after normalize): "2026-03-05T18:00-04:00"
+formatDateRange(startDate, endDate): "Mar 3 - 5, 2026"
+```
+
+**The raw malformed string is BYTE-IDENTICAL to round 31 A's original witness and round 32 B's own fetch** -- the source page itself has not changed. The normalizer's output was then run through the SHIPPED `buildEventFacts` (`page.tsx:635`) with a minimal Event carrying this exact date: **the Dates tile IS PRESENT, `datesTilePresent: true`, value `"Mar 3 - 5, 2026"`.** This is the normalizer's first LIVE witness end-to-end -- from the real page's real malformed JSON-LD, through the real normalizer, through the real deep-report fact-builder, to a rendered tile with a correct date. **A31-02 VERIFIED FIXED**, via targeted re-fetch since the ordinary 5-pull census did not organically re-offer this specimen this window.
+
+## ONE FRESH, UNEXPLAINED EVENT-SURFACE FINDING -- A32-01 (mirror-image of A31-01: job content admitted into the EVENT pool)
+
+Witnessed **1 of 5 pulls** (pull 2):
+
+> `"Ion Exchange Mumbai Job Openings Check here"` @ `https://www.industrialguide.co.in/2026/03/ion-exchange-mumbai-job-openings-check.html`
+
+This is a job-listings roundup/aggregator blog post -- not an event, not a fair, not an expo -- admitted into the event pool and rendered as an event card (dateless, `startDate: ""`, consistent with honest silence -- no invented date, Ruling 62b's zero holds). Checked directly against the shipped guard chain in `webResultToRawEventItem` (`eventweb.ts:1938`): `isEventIndexResult`, `isEventHubResult`, `isNewsArticleTitle` (`NEWS_TITLE_RE` covers "news"/"press release"/"blog post"/"newsletter" -- not "job openings"), `isPaperPageTitle`, `isEventArtefactTitle`, `isEarningsCallPage` -- none of the six title/URL kind guards contain any job/vacancy/hiring vocabulary, so this row falls through every one of them clean and is admitted by the pipeline's own documented "a kind miss falls to ADMISSION" doctrine (the same design principle named explicitly in the `isEventArtefactTitle` doc comment and the A29-01 family-(ii) comment block immediately above this function). **This is the mirror image of A31-01**: A31-01 found the JOB pipeline had no guard for non-job content (Wikipedia, research-blog, brand-tagline); this finds the EVENT pipeline has no guard for job-related content.
+
+**Ruled out as a false alarm before banking:** a broader scan for job-vocabulary titles across the whole event offered corpus found four OTHER rows carrying "career"/"job" words (`"Nuclear Career Fair - S&T Women in Nuclear"`, `"2026 Job Fair & Hiring Event Calendar - JobFairX"`, `"Career Expo & Job Fair"`, `"Nittany Lion Careers"`) -- **all four of these are correctly admitted, because a job/career FAIR is a genuine in-person EVENT you attend**, unlike `industrialguide.co.in`'s row, which is an informational "here is a list of job openings" article with no event of any kind behind it. Only the `industrialguide.co.in` row is a genuine kind-classification error; the other four are NOT instances of this finding and were checked individually, not swept in by keyword alone. A mirror-image check for event-vocabulary titles wrongly admitted to the JOB pool this round found ZERO matches.
+
+A does not investigate which guard SHOULD catch this or design a fix (not A's role) -- the observation is: a reader of the event report can be served a generic "check here for job openings" roundup article, laid out and labelled exactly like a real conference, with no date (consistent with every other dateless row this round, see below) and no way to attend anything.
+
+## THE DATELESS-BRANCH COST, QUANTIFIED AT FULL-POOL SCALE FOR THE FIRST TIME THIS ROUND -- RESTATEMENT OF RULING 83a, NOT A NEW FINDING
+
+**34 of this window's 35 total final-pool event rows (97%) render `startDate: ""`.** The single exception, `"The Battery Show North America"` (pull 5, `thebatteryshow.com`), carries a real extracted date, `"2026-10-12"`. Checked directly per-row across all 5 pulls' `finalPoolRows`, not sampled.
+
+**This is EXPLAINED, not fresh, under Ruling 83a's own already-ratified scope**: `eventweb.ts`'s documented "dateless branch" trade-off (`eventweb.ts` ~lines 2030-2084, cited verbatim by Ruling 83a: *"a genuinely finished page that mentions any later year survives, dateless, exactly as it does today"*) and Ruling 83a's own explicit reopen condition -- *"reopens ONLY if an invented or wrong DATE ever renders on such a row... never for datelessness itself, which is the priced outcome"* -- governs the OUTCOME (a blank date), not any one specific causal path. **Zero of the 34 blank rows carries an invented or wrong value** -- every one is the literal empty string, never a guessed date, so 62b's zero holds cleanly across the entire final pool, not just the EUCHEMSIL specimen previously named. Round 31 A separately confirmed (`enrichEventCandidates` reads structured dates from the top-40 pre-enrichment survivors) that this is a coverage/extraction-success limitation, not a fabrication risk.
+
+**What is new this round is the SCALE, not the mechanism**: prior rounds named EUCHEMSIL specifically (a single repeatedly-witnessed host) as the concrete instance of this trade-off; this round's own full-pool sweep shows the SAME honest-silence outcome applies to the overwhelming majority of ALL admitted events, not just that one host. **Flagged to the manager as A's own judgement call on disposition, per the standing mandate to surface rather than silently decide**: whether Ruling 83a's named-cost registry entry should be reworded from "EUCHEMSIL's dateless persistence" to "the dateless branch, now measured at full-pool scale (34/35, 97%, this window)" is the manager's call, not A's -- the underlying doctrine (datelessness itself is priced, not a defect; only an invented date reopens it) is unchanged either way, and this entry does not re-litigate it.
+
+For comparison, the JOB side's silent-company rate this window (a DIFFERENT field, same honest-silence doctrine, Ruling 32): **13 of 27 final-pool job rows (48%) carry a real company value, 14 (52%) render silent** -- a much less extreme split, consistent with the job pipeline's per-row employer extraction succeeding roughly half the time versus the event pipeline's per-row date extraction succeeding on almost none of this window's admitted rows.
+
+## RESIDUAL WATCH LIST -- RE-MEASURED ITEM BY ITEM, CITED BY NAME
+
+| item | this round's live measurement |
+|---|---|
+| `The Battery Saloon` (79a) | OFFERED 5 of 5 pulls (`batteryinnovationsummit.com`) -- correctly NOT ingested, 0 of 5. Named cost re-confirmed, unregressed. |
+| EUCHEMSIL dateless (83a) | RE-CONFIRMED, 5 of 5 pulls: `euchemsil2026.com` renders `name: "EUCHEMSIL 2026: 30th EUCHEMS Meeting"`, `date: ""` every time. Its twin `.../about/` page correctly stays OUT of the final pool every appearance. See the full-pool quantification above. |
+| Honest-host fallback (84b(1)) | RE-WITNESSED 1 of 5 pulls (`batterysummit.solarenergyevents.com`, title `"Homepage"`) -- less frequent than round 31's 3 of 5, ordinary variance, not a regression. Renders the bare hostname as `name`, admitted. |
+| `stocktitan.net` (A30-03) | RE-WITNESSED 4 of 5 pulls, byte-identical title/URL to prior rounds. **`ingested: false` EVERY appearance** -- dropped at ingestion every time, unregressed. |
+| `psi.ch` BALDER (A30-01) | RE-WITNESSED 5 of 5 pulls (13 total offers), **`ingested: true` every time (confirmed `company: undefined` at the ingestion stage directly)**, but **0 of 5 pulls reached the FINAL POOL this window** -- down from round 31's 1 of 5. This is topic-floor/relevance-score variance (the row is honestly silenced at ingestion every time it is offered; it simply did not out-score this window's other candidates into the small final pool), not a regression of the fix -- the render-side "honest silence" property could not be RE-witnessed this specific window because the row never reached render, but the ingestion-stage fix (the actual mechanism Ruling 84a shipped) is unambiguously intact and re-confirmed directly. |
+| `CSE`-class acronym collision | RE-WITNESSED 2 of 5 pulls (`pire.illinois.edu`), `ingested: true` (`company: "CSE"`), **0 of 2 witnesses reaches the final pool** -- unchanged from round 31, net rendered cost still zero. |
+| "General 1" chrome shape (80b) | NOT witnessed this window (`membranes.org` not offered, 0 of 5). Absence, reopen trigger did not fire. |
+| Occupation-profile page-kind (81b) | `faraday.ac.uk/career-development/phd-internship-programme/` offered 3 of 5 (title `"PhD Internships"`, a DIFFERENT URL from the previously-named `career-portfolio-scientist/` page), `ingested: false` every time -- dropped by a pre-existing listing-shape guard, unrelated to any round-32 change. The specific named occupation-profile URL still not re-witnessed. Residual stands, unregressed. |
+| Latent `postdocjobs.com` sibling | RE-WITNESSED 4 of 5 pulls, admitted 3 of 4 with silent company (A29-03 pattern, unchanged). |
+| `@ Septerna` shape | NOT organically witnessed this round's job corpus (checked directly: the only ` @ ` title shape this window is jobright.ai's own real-posting title, a different context). Unchanged. |
+| Segment-order (`Chemistry`/`Chemical Engineering` bare) | NOT organically witnessed this round's final job pool (checked directly, zero bare-word title matches). Still deferred. |
+| `Career Connections Center University of Florida` (82a) | NOT witnessed, absent from the full job offered corpus (99 hosts, checked by scan). Reopen trigger did not fire. |
+| Ruling 34a (`careerservices.upenn.edu`) | RE-WITNESSED 2 of 5 pulls, same posting, `ingested: true`, NOT admitted to final pool (topic-floor variance, unchanged pattern). |
+| Ruling 33 (short-acronym `LCO`) | RE-CONFIRMED. `lco.global`/`lco.edu` offered 39 times combined across this round's job window (25 + 14 via `ionexchangeglobal.com` separately), 0 admitted to the final pool. |
+| 45a (`euagenda.eu` never fetched) | CONFIRMED -- zero appearances anywhere in either surface's offered corpus, both windows (checked by scan over the full recorded JSON). |
+| 41c's three hosts (not hunted) | Not deliberately searched for this round, consistent with the standing exclusion. |
+| 39a/40, 42c | Not independently re-checked this round; their shapes did not appear in either offered corpus. Carried forward unchanged. |
+| **`thrlab.tamu.edu` (87a residual)** | **NOT RE-WITNESSED, 0 of 5 pulls.** Per Ruling 75, not hunted by name. Stays a named, unshipped residual. |
+| **`lco.cl` reversed-order title shape (87a POLICY)** | **NOT RE-WITNESSED, 0 of 5 pulls.** Not hunted by name. Stays a named, unshipped structural observation; its 57b value-credit (a separate, already-settled question) is untouched by this round's absence. |
+
+## TIMEOUT-FLAKE RATE, EVENT SIDE (83b re-measure duty)
+
+**0 of 5 event pulls lost the `eventweb` source to the 25000ms timeout this round (0%)** -- `errors: {}` on all 5 pulls, confirmed directly in the recorded JSON. Combined with part 1's job-side rate (1 of 5, 20%), this round's combined flake rate is **1 of 10 (10%)** -- identical to round 31's own combined rate, reported honestly as measured per Ruling 83b's standing instruction.
+
+## `beforeDedup -> afterDedup` DELTAS, EVENT SIDE
+
+187->184 (3), 187->184 (3), 171->169 (2), 177->175 (2), 187->184 (3) -- small, consistent with prior rounds, no anomaly.
+
+## EVENT SURFACE ARTEFACT TABLE (Ruling 79e) -- COMPACT, HOST-LEVEL, ONE WINDOW, 5 PULLS
+
+134 unique hosts across 5 pulls. Format: `host | first-seen title (<=55 chars) | offered-count | decision`.
+
+```
+rsc.org | IEX 2026 technical training introductory course: Intro... | x27 | ADMITTED (pool)
+cambridgeenertech.com | Solid-State Battery Summit | August 11-12, 2026 | Chic... | x17 | not in final pool
+pyro.byu.edu | Molten Salt Electrochemistry Symposium (MoSES) | x17 | ADMITTED (pool)
+soci.org | IEX 2026 technical training introductory course: Intro... | x15 | not in final pool
+joint-research-centre.ec.europa.eu | Molten salt reactor technology (EUROMOST) | x15 | not in final pool
+lco.global | Call for Proposals 2026A | x15 | not in final pool
+euchemsil2026.com | EUCHEMSIL 2026: 30th EUCHEMS Meeting | x13 | ADMITTED (pool, dateless -- 83a named cost, re-confirmed 5/5)
+event.fourwaves.com | Twenty-Seventh Congress and General Assembly of the In... | x12 | not in final pool
+onlinelearningconsortium.org | Present - Online Learning Consortium | x11 | not in final pool
+snetp.eu | EUROMOST 2026 - SNETP | x10 | not in final pool
+programmaster.org | Materials and Chemistry for Molten Salt Systems | x10 | not in final pool
+lco-nsn.gov | Calendar - The Official Website of Lac Courte Oreilles | x10 | not in final pool
+orcities.org | League of Oregon Cities:: Conferences | x7 | not in final pool
+sophion.com | ICMS Cambridge UK 2026 - Sophion | x6 | not in final pool
+flibe.com | Thorium and Molten Salt Recognition: EUROMOST 2026 and... | x6 | ADMITTED (pool)
+flogen.org | Molten International Symposium - Topics - SIPS 2026 by... | x6 | ADMITTED (pool)
+stocktitan.net | Birchtech plans 4 water conference stops as PFAS remova... | x4 | not in final pool (A30-03, dropped at ingestion 4/4 witnessed pulls)
+ans.org | Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ... | x4 | ADMITTED (pool)
+batteryinnovationsummit.com | The Battery Saloon | x5 | not in final pool (79a, re-confirmed 5/5)
+industrialguide.co.in | Ion Exchange Mumbai Job Openings Check here | x1 | ADMITTED (pool) -- A32-01, FRESH FINDING (job content, not an event)
+events.ornl.gov | Home | x2 | ADMITTED (pool, honest-host fallback pattern)
+batterysummit.solarenergyevents.com | Homepage | x1 | ADMITTED (pool, honest-host fallback -- 84b(1) named cost, re-confirmed)
+nucnet.org | European Conference Calls For Coordinated Action On Mo... | x2 | ADMITTED (pool)
+thebatteryshow.com | The Battery Show North America | Advanced Battery & EV... | x2 | ADMITTED (pool, the ONE dated final-pool row this window)
+quintustechnologies.com | Solid-State Battery Summit 2026 | Quintus Technologies | x2 | ADMITTED (pool)
+tirt7.com | Meeting Summary-2026 International Round Table on Tita... | x1 | ADMITTED (pool)
+industrialguide.co.in (Mumbai) | Ion Exchange Mumbai Job Openings Check here | x1 | see A32-01 above
+(106 further hosts offered 1-4 times each, all "not in final pool" except the ones named above; every remaining single/low-offer host is a genuine drop, not individually clause-traced this round)
+```
+
+Named-row sanity checks against this table: `stocktitan.net`, `batteryinnovationsummit.com`, `euchemsil2026.com` all re-confirmed exactly as named above. `linevsystems.com` (A31-02) does not appear anywhere in this window's offered corpus -- verified fixed via the supplementary targeted re-fetch above instead.
+
+Committed and pushed as its own item. Part 3 (visual census, standing tallies, ranked list, and the gate verdict) follows.
+
