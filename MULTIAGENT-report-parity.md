@@ -83225,3 +83225,85 @@ A's own aside is worth restating: the URL slug `msrworkshop2025` suggests this r
 **No code change recommended for either sub-finding.** The `events.ornl.gov` secondary witness is EXPLAINED — the tested, Ruling-32-blessed "honest host" fallback working exactly as designed, priced and locked five-plus rounds ago; recommend it joins the named-cost registry (alongside Ruling 83a's EUCHEMSIL precedent) rather than staying an open item. The `veryst.com` primary witness (A30-02 itself) **does not reproduce under direct execution of the mechanism it was attributed to** — `POLICY — manager decides` per §2.5, with a concrete, scoped next step named (a targeted live re-witness distinguishing ingestion-stage from post-enrichment `name`) rather than a bare "A was wrong."
 
 Committed and pushed as its own item. Item 3 (A30-03 event, `stocktitan.net` investor-PR headline) follows.
+
+### Round 31 — Agent B — ITEM 3 (A30-03 event: `stocktitan.net` investor-PR headline admitted as an event, 3 of 5, the round's most-witnessed finding): **TWO INDEPENDENT, BOUNDED EXTENSIONS DESIGNED — A PATH-STRUCTURE SIGNAL (a ticker-slug after `/news/`, avoiding the host-hunting question entirely) AND A TITLE-SHAPE SIGNAL (subject + forward-looking PR verb + digit count). BOTH ADVERSARIALLY CLEAN AGAINST ROUND 30 A's OWN ADMITTED-ROW CORPUS. RULINGS 41c/45a READ IN FULL: NEITHER SPEAKS TO PRODUCTION-CODE HOST LISTS — THEY ARE MEASUREMENT-METHOD RULINGS, NOT A DESIGN PROHIBITION.**
+
+**B changed no code.** Executed the SHIPPED, exported `isNewsArticleTitle` and `NEWS_TITLE_RE` (`web/src/lib/events/sources/eventweb.ts:237-238,416-420`) directly on the exact recorded title/URL; both candidate designs were written and adversarially tested standalone in a throwaway harness (`web/zz-r31b/`, deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean). No live pull needed — the recorded evidence is sufficient to design and test against. No credential printed, logged, committed or written.
+
+## 3.0 CONFIRMED, EXECUTED
+
+```
+isNewsArticleTitle(
+  "Birchtech plans 4 water conference stops as PFAS removal draws focus",
+  "https://www.stocktitan.net/news/BCHT/birchtech-to-exhibit-at-upcoming-water-industry-conferences-....html",
+) === false
+```
+Confirmed exactly as A found. `NEWS_TITLE_RE.test(title)` is also `false` — none of its eight start-anchored phrases (`the year ahead`, `year in review`, `top/best N`, `what to expect/watch`, `a look back/ahead`, `recap`, `highlights from`, `report from`, `announcing`) match this title's own opening ("Birchtech plans..."), and the unanchored `\b(news|press release|blog post|newsletter)\b` arm finds none of those words in the TITLE text either (they only appear in the URL, which `NEWS_TITLE_RE` never reads).
+
+## 3.1 WHY "announcing" DOESN'T FIRE — READ BEFORE EXTENDING, PER THE COMMISSION
+
+`NEWS_TITLE_RE`'s `announcing\b` alternative sits INSIDE the same `^\s*(?:...)` start-anchor group as the other seven phrases (`eventweb.ts:238`) — it only fires if the title's FIRST word (after optional leading whitespace) is literally "announcing." "Birchtech plans..." begins with a company name and the verb "plans," not "announcing," so the anchor is why this miss happens — not a vocabulary gap in the "announcing" word itself. **This is the same anchoring discipline this file uses everywhere** (`PRESENT_NARRATIVE_RE`, `CAREERS_OFFICE_LABEL_RE`'s job-side sibling, etc.) — a start-anchor keeps a real event's own title merely CONTAINING the word "announcing" mid-sentence from being wrongly dropped. This is confirmed as the correct, deliberate reason the guard is narrow, not a bug to patch by unanchoring it.
+
+## 3.2 TWO DESIGNS, EACH SCOPED TO A DIFFERENT SIGNAL
+
+**Design A — PATH STRUCTURE (primary, higher confidence).** The URL path `/news/BCHT/birchtech-to-exhibit-...` carries a short, ALL-UPPERCASE segment (`BCHT`, a stock ticker) immediately after `/news/`. This is a genuinely closed, structural signal — ordinary URL slugs are essentially always lowercase-hyphenated English words; a 1-5 character all-caps alphanumeric path segment bounded by `/news/.../` is, as far as this loop's evidence goes, specific to financial-newswire ticker conventions.
+
+```
+// eventweb.ts — reads the RAW (un-lowercased) URL path, since
+// urlPathPhrase() lowercases everything and would destroy the very signal
+// (the ALL-CAPS shape) that makes this reliable; a separate small check,
+// not a change to urlPathPhrase/NEWS_HEADLINE_PATH_RE.
+const TICKER_NEWS_PATH_RE = /\/news\/[A-Z]{1,5}\//;
+
+function isTickerNewsPath(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    return TICKER_NEWS_PATH_RE.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
+```
+Called as one more disjunct inside `isNewsArticleTitle` (`eventweb.ts:416-420`), reading the raw URL, not `urlPathPhrase`'s lowercased output.
+
+**Design B — TITLE STRUCTURE (secondary, single-witness-derived, named as such).** Mirrors this file's own precedented "subject (1-5 title-case-ish words) + closed PR-style verb" shape (the SAME convention `PRESENT_NARRATIVE_RE` already uses for `attends?|announces?|hosts?|presents?|joins?|visits?`, applied here to a DIFFERENT consumer — whole-row rejection, not segment selection — and therefore designed and tested separately rather than importing that constant directly):
+
+```
+const PR_ANNOUNCEMENT_HEADLINE_RE =
+  /^\s*[A-Z][\w&.,'-]*(?:\s+[A-Z]?[\w&.,'-]*){0,4}\s+(?:plans?|schedules?)\s+(?:to\s+)?\d+\b/;
+```
+Requires BOTH a leading proper-noun-shaped subject AND the verb `plans`/`schedules` AND an immediately following digit — a specific, unusual combination. **Only "plans"/"schedules" are included, not the fuller PR-verb family (`announces`, `to exhibit at`, `attends`) — those are UNWITNESSED on this item (one live specimen only) and are NOT added blind, per this loop's own "land what is confirmed" practice (round 30's own `GENERIC_PAGE_TITLE_RE` doc comment names this exact discipline).** Named as a residual for a future round if any of those verbs is ever organically witnessed in this shape.
+
+## 3.3 ADVERSARIALLY TESTED, EXECUTED — SIX GROUPS
+
+| group | result |
+|---|---|
+| live specimen, path design | **caught** |
+| live specimen, title design | **caught** |
+| the file's OWN named counterexample (`battery2030.eu/news/call-for-abstracts` — the doc comment at `eventweb.ts:383-394` explaining why `NEWS_HEADLINE_PATH_RE` deliberately excludes bare "news") | **NOT caught by the path design** — `call-for-abstracts` is lowercase, not a 1-5-char all-caps ticker; the two designs cannot collide |
+| round 30 A's event artefact table, ADMITTED rows (real titles as recorded): `IEX 2026 technical training...` (rsc.org), `EUCHEMSIL 2026: 30th EUCHEMS Meeting`, `Molten Salt Electrochemistry Symposium (MoSES)`, `Thorium and Molten Salt Recognition: EUROMOST 2026...` (flibe.com), `Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ANS A...` (ans.org), `Solid-State Battery Summit 2026 \| Quintus Technologies`, `The Battery Show North America \| Advanced Battery & EV Tech...`, `Molten International Symposium - Topics - SIPS 2026 by FLOGE...` (flogen.org), `Join us at the International Battery Seminar & Exhibit 2026 in Orlando! \| Veryst Engineering` (veryst.com, this round's OWN A30-02 title) | **0 of 9 false positives**, both designs and `NEWS_TITLE_RE` all agree — none dropped |
+| adversarial: a real organiser-published announcement (`"Announcing the 2026 Battery Gigafactory Summit: Registration Now Open"`) — the must-keep the commission specifically named | **title design: not caught. Confirms it is ALREADY correctly caught by the EXISTING, unmodified `NEWS_TITLE_RE` `announcing\b` clause** — this row is a genuine drop under TODAY's shipped code too (a real announcement PAGE is not the same thing as a real event's own registration page, and this loop's existing doctrine already treats "announcing"-led PR-style titles as news, not events; nothing about my extension changes that existing behaviour) |
+| adversarial: numbered/ordinal real event titles (`5th Battery Gigafactory Summit USA`, `2026 ANS Annual Conference`, `27th International Conference on Ion Exchange`, `The 250th ECS Meeting`) and PR-adjacent real-word titles with no digit after the verb (`Advanced Planning Solutions Conference`, `Schedule Optimization Summit`) | **0 of 6 false positives** on the title design — none contain the specific subject+plans/schedules+digit shape |
+
+## 3.4 THE HOST-HUNTING QUESTION, ANSWERED FROM THE RECORDED DOCTRINE, NOT ASSUMED
+
+Read Rulings 41c and 45a/45b in full (`MULTIAGENT-report-parity.md:16550-16553` and `:45843-45856`). **Neither is a production-code doctrine at all — both are MEASUREMENT-METHOD rulings governing this LOOP'S OWN AGENTS during live census work:**
+- **41c** instructs round 14's A to hunt three specific hosts BY NAME as a targeted, disclosed verification check during a live pull ("targeted checks, disclosed as targeted") — it is about how A confirms a fix worked, nothing about what B may design.
+- **45a** permanently excludes `euagenda.eu` from LIVE FETCHING by this loop's own tooling (four identical 403s, and Ruling 25 forbids the only instrument that could reach it) — a probing-scope restriction, not a production-guard restriction.
+- **45b** retires 41c's ongoing per-round hunting duty once confirmed — again, purely about census method.
+
+**Neither ruling forbids a closed host- or path-based guard SHIPPING in production code.** The codebase already ships exactly that pattern, twice, uncontroversially: `DENY_HOSTS` (`eventweb.ts:193-219` — social-media platforms, academic paper/preprint hosts, and known predatory-conference-listing sites, none of which host genuine event pages) and `PAPER_PAGE_HOSTS` (`:246-254`). **The actually-relevant doctrine is Ruling 32's own recorded complaint, quoted verbatim elsewhere in this file's own comments — "stop fixing it one site at a time."** That is a caution against a design that ONLY ever generalises by enumerating individual hosts one at a time as they're discovered, not a blanket ban on any host- or path-shaped signal. **This is why Design A is a PATH-STRUCTURE rule (a ticker-slug shape), not a host-NAME list** — it generalises across every financial-newswire site using this URL convention without naming any of them, sidestepping the one-site-at-a-time critique entirely, while staying exactly as closed and bounded as the shipped `DENY_PATH_RE`/`COMMERCE_PATH_RE`/`NEWS_HEADLINE_PATH_RE` precedents already are.
+
+## 3.5 FAILURE DIRECTION AND BLAST RADIUS
+
+**A miss falls to admission, the status quo — exactly `isNewsArticleTitle`'s existing contract.** Both designs can only ever cause `isNewsArticleTitle` to return `true` where it previously returned `false`, i.e., they can only REMOVE a row from the pool (`webResultToRawEventItem` returns `null`), never alter a rendered value, never promote a different candidate. No blast radius through any scoring mechanism — a dropped row never reaches Ruling 57b's collision guard or anything downstream.
+
+## 3.6 TESTS AT RISK, GREPPED
+
+**Grepped `eventweb.test.ts` for `isNewsArticleTitle`, `NEWS_TITLE_RE`, `NEWS_HEADLINE_PATH_RE` by name: zero hits.** This guard has no dedicated unit-test coverage today — a genuine, pre-existing gap, not something this item introduces or is responsible for closing. Two INCIDENTAL matches for `/news/` paths in unrelated tests were checked directly: (1) `"Conference Call for Fourth Quarter and Full Year 2026 Financial Results"` @ `https://www.balchem.com/investors/news/conference-call-q4` (`:1726-1737`, the documented, ACCEPTED `isEarningsCallPage` under-catch — its path segment after `/news/` is `conference-call-q4`, lowercase, not a 1-5-char all-caps ticker, so `TICKER_NEWS_PATH_RE` does not touch it; the test only asserts `isEarningsCallPage`, an unrelated function, unaffected either way); (2) `https://gain.inl.gov/news/events` (`:2144-2149`, an `isEventHubResult` must-keep — path segment `events`, lowercase, 6 characters, no collision). **Zero tests at risk for either design.**
+
+## 3.7 VERDICT
+
+**Two independent, bounded, adversarially-tested designs, both clean against round 30 A's own admitted-row corpus and the commission's own named adversarial case ("announcing" already correctly protected).** No `POLICY — manager decides` needed on the MECHANISM question (host-hunting doctrine read and answered within the recorded rulings, §3.4) — recommend BOTH designs ship together as two small, independent, additive disjuncts inside `isNewsArticleTitle`: Design A (path, higher confidence, generalises beyond this one host) and Design B (title, single-witness-derived, named as narrower and residual-watched for its unwitnessed verb siblings the same way round 30 B named its own residuals). If the manager prefers to ship only one, Design A is the stronger standalone signal — it does not depend on this round's one title sample generalising correctly.
+
+Committed and pushed as its own item. §1 close-out follows as a separate commit.
