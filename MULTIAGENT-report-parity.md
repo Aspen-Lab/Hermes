@@ -79784,3 +79784,31 @@ was run while any vitest run was live.
    carried to "whichever agent next has live search credentials" — **A had live
    credentials and the host did not appear in this window's corpus**, so it could
    not be settled. **Still open, and now explained rather than merely unresolved.**
+
+---
+
+### Round 29 — MANAGER verification of Agent A, RULING 78a–d, and the hand-off to B
+
+**Date: 2026-08-18. Checked, not inherited.** **The gate re-run by the manager: 98 files / 2208 tests, 2208 passing — zero failures, benchmark green on gemini.** A changed no code; four instrument defects self-disclosed and corrected before any figure was quoted; one candidate withdrawn on its own lawful-expiry proof; Ruling 75 obeyed and proven four independent ways.
+
+**THE TURN IS ACCEPTED, AND TWO MILESTONES GO ON THE RECORD:** (1) **the VISUAL dimension reads ZERO on both plates for the first time in this loop's history** — 135/135 labels across all 53 live reports, both plate orders position-checked; (2) the gemini adapter's own falsifiers read zero everywhere (0 bare-hostname titles and 0 redirect leaks in 716 offered rows; 969/969 redirects resolved) — the round-28 design holds on its first full census.
+
+**THE MANAGER'S OWN DEFECT, OWNED:** the Ruling-77 ratification commit did not update §1's `WHOSE TURN:` — the one field §0 routes on — leaving it stale at "C — round 28" while the status block and Ruling 77 said round 29 A. **That is the round-21 staleness class, this time by the manager.** A proceeded correctly on the two agreeing sources and repaired the field; the repair is RATIFIED. **Standing checklist addition (78d below).**
+
+---
+
+## RULING 78 — THE ROUND-29 SCOPING. BINDING.
+
+**78a. A29-01 IS B's PRIORITY ITEM, WITH TWO FIX FAMILIES TO PRICE:** the gemini snippet channel is the page's meta description or EMPTY (empty on 35% of rows), and two shipped admission rules read title-plus-snippet, so NO TEXT reads as WRONG KIND and real opportunities — including `The Battery Saloon`, a twice-adjudicated must-keep — are never admitted. B prices BOTH: **(i)** the adapter reads the page's meta description in the SAME page fetch that already reads the title (one fetch, two fields — the snippet channel refilled honestly, never invented); **(ii)** the admission rules stop treating absence-of-text as evidence of kind (the loop's own doctrine: misses fall to ADMISSION). Both may land together; the must-keep corpus is the acceptance; round 28 B's falsified "empty snippet is never a drop" claim carries a dated amendment.
+
+**78b. THE PAPER-SURFACE TIMEOUT: 76a's 25s override EXTENDS to the papers web-search call site** — approved in principle; B confirms the site and prices it as a small item.
+
+**78c. THE 32.6% JOB TITLE-LOSS IS NOT ACCEPTED AS A PRICE YET.** Against 76d's recorded ~12.5%, nearly triple. B diagnoses the composition cheaply (bot-walls vs timeouts vs parse failures, by host class, from A's captured drop lists — no banned APIs) and reports; the manager rules accept-vs-fix on B's numbers.
+
+**78d. THE CLOSE-OUT CHECKLIST GAINS A LINE:** every manager entry that advances the loop ends by editing §1's `WHOSE TURN:` explicitly and re-reading it back — the routing field is never left to implication. (The `careers.emdgroup.com` question stays recorded, no action — the host never appeared.)
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: B — round 29` stands as A wrote it — **seven items (A29-01 per 78a first, then A29-02..07 as A ranked them) plus 78b and 78c as sub-items.** 76b's seven named misses and 74's cost stay tallied, not re-ranked. Bank per item. The gate stays `GATE (0%): NOT MET` — value 7 from zero, visual AT zero.
+
+---
