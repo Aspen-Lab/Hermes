@@ -84332,3 +84332,23 @@ Implemented B's §1.1 design exactly as printed, no deviation. `web/src/lib/jobs
 **Residuals untouched, exactly per Ruling 87a**: `thrlab.tamu.edu` stays a named, unshipped residual (no URL, no evidence to size a fix). `lco.cl`'s reversed-order title shape stays a named, unshipped structural observation (POLICY-ruled, not to be re-litigated absent a fresh ordinary-census re-witness).
 
 Item 2 (A31-02, malformed-date normalizer, Ruling 87b) follows as its own commit.
+
+
+### Round 32 — Agent C — ITEM 2 (A31-02, malformed-date normalizer, Ruling 87b — implemented VERBATIM): **SHIPPED, COMMIT (this commit).**
+
+Implemented B's §2.1 design exactly as printed in `web/src/lib/opportunities/structured-extract.ts` (`:1090-1161`, inserted directly before `extractOpportunity`, which is its sole consumer): `NEAR_ISO_DATETIME_RE` and `normalizeNearIsoDateString(value)` transcribed byte-for-byte from B's printed code, including the range checks (month 1-12, day 1-31, hour ≤23, minute ≤59, second ≤59, offset-hour ≤14, offset-minute ≤59) AND the component round-trip check (`Date.UTC` re-read of year/month/day). Doc comment records WHY the round-trip exists — re-executed and re-confirmed by this agent: `new Date("2026-02-30T09:00:00-04:00")` silently rolls to `2026-03-02` rather than going `NaN`, so a bare `new Date()`+`isNaN` check would have shipped a Ruling 62b violation — with an explicit "do not simplify this back" instruction for future rounds. One wording correction made during transcription: B's own printed comment referenced `isoDate()` as living "~40 lines above" the new function; in the ACTUAL file `isoDate()` sits BELOW `extractOpportunity` (`:1267`, confirmed by grep), so the placed doc comment says "further down this file" instead — a citation-accuracy fix only, zero logic change from B's design.
+
+**Wiring, exactly per B's §2.1**: both fields wrapped at the single point of origin in `extractOpportunity` (`:1197-1198`) — `startDate: normalizeNearIsoDateString(nonEmptyString(node.startDate))`, same for `endDate`. Nothing else in the chain touched.
+
+**Tests: 14 new, `structured-extract.test.ts`, tested through the public `extractJsonLdOpportunities` entry point** (the file's own existing convention for every other private extraction helper — `normalizeNearIsoDateString` itself is not exported). Every assertion first verified in a throwaway probe file (`web/src/lib/opportunities/zz-r32c2.probe.test.ts`, deleted before commit, confirmed clean via `git status --porcelain --untracked-files=all`).
+
+- **Must FIX, 3 of 3**: the live `startDate` specimen (`"2026-3-3T09:00-4:00"` → `"2026-03-03T09:00-04:00"`), the live `endDate` twin on the same page (`"2026-3-5T18:00-4:00"` → `"2026-03-05T18:00-04:00"`), and a lossless-instant assertion — the normalized value's `new Date(...).toISOString()` equals the exact UTC instant the malformed original states (`"2026-03-03T13:00:00.000Z"`).
+- **Must NOT touch, 10 of 10**: an already-well-formed ISO datetime, asserted BYTE-IDENTICAL against `structured-extract.test.ts:28`'s own exact fixture value (`"2026-06-22T18:30:00+02:00"`); a date-only string; Ruling 62b's month-granularity claim (`"2026-08"`); `undefined`; empty string; out-of-range month (13); out-of-range day (32); **the calendar-invalid Feb 30 case — re-asserted here as the load-bearing regression test, returns the ORIGINAL string untouched, does NOT roll to March 2**; a milliseconds-bearing value; a `Z`-suffixed value; a no-offset value (genuinely ambiguous, left alone).
+
+**Gate after this item, cold**: `npx vitest run` — **99 files / 2381 tests, 2381 passing, ZERO failures** (2348 baseline + 19 item-1 + 14 item-2 = 2381, exact). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged.
+
+**Part (b) — no code change**, per Ruling 87b: tile omission at the render layer is the spec's own stated rule; nothing here touches `page.tsx`/`card.ts`.
+
+**Process note, named honestly**: item 1 landed as two commits (code+tests, then the §4 log entry) instead of the standing one-commit-per-item pattern round 31 C set (confirmed by inspecting `45dd9a7`, which bundled code, tests and the log entry together). Item 2 corrects this — code, tests and this log entry are one commit. No functional consequence (both item-1 commits are pushed, in order, complete), but flagged so it is not silently repeated.
+
+**HAND-OFF: `WHOSE TURN: A — round 32, GATE CANDIDATE ROUND`** (value + visual, `searchProvider: gemini`, artefact duty, pool-count re-measure, watch list + round-32 residual additions: `thrlab.tamu.edu`, the `lco.cl` reversed-order shape). Turn lock RELEASED (`HELD BY: free`) in the close-out commit that follows.

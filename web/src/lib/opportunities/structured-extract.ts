@@ -1086,6 +1086,82 @@ function extractBaseSalary(value: unknown): NormalizedSalary | null {
   return normalizeSalary({ min: bareValue, max: bareValue, currency });
 }
 
+/**
+ * ROUND 32 C, ITEM 2 (A31-02, Ruling 87b) — a bounded near-ISO datetime
+ * normalizer. The live specimen this item was written for
+ * (`linevsystems.com`'s own JSON-LD, `"2026-3-3T09:00-4:00"`) has every
+ * component of a valid ISO datetime fully stated — year, month, day, hour,
+ * minute, offset-sign, offset-hour, offset-minute are all present as
+ * digits. The ONLY defect is that month/day/offset-hour are 1-digit instead
+ * of 2-digit. `"2026-3-3"` and `"2026-03-03"` name the exact same calendar
+ * day; `"-4:00"` and `"-04:00"` name the exact same UTC offset.
+ *
+ * Ruling 62b forbids INVENTING a value — the month-granularity case, where
+ * a component (the day) is genuinely ABSENT from the source, e.g.
+ * `"2026-08"`. It does not forbid re-formatting a value that is already
+ * fully and unambiguously stated. This function holds that line: a
+ * no-op passthrough for every shape it does not recognise or that fails an
+ * out-of-range check, and a lossless re-format for the one shape it does.
+ *
+ * **THE COMPONENT ROUND-TRIP CHECK BELOW IS LOAD-BEARING, NOT DEFENSIVE
+ * DECORATION — DO NOT "SIMPLIFY" IT BACK TO A BARE `new Date(candidate)` +
+ * `isNaN` CHECK.** A first draft used exactly that simpler idiom (the same
+ * one `parseDate` itself uses) and it shipped a real bug, caught only by
+ * its own adversarial test before banking, and independently re-proved by
+ * the manager's own execution before this item was commissioned: a
+ * calendar-invalid day (`"2026-2-30T09:00-4:00"`, February 30th does not
+ * exist) does NOT make `new Date(...)` return `NaN` — `new
+ * Date("2026-02-30T09:00:00-04:00")` silently rolls over to March 2nd,
+ * which would have let this function INVENT a different day than the
+ * source stated, a direct Ruling 62b violation. The round-trip below — the
+ * SAME idiom this file's own `isoDate()` helper (further down this file)
+ * already uses, for exactly this reason — is what catches it: re-deriving
+ * year/month/day through `Date.UTC` and checking they read back unchanged
+ * detects any calendar rollover the JS `Date` constructor performs
+ * silently.
+ */
+const NEAR_ISO_DATETIME_RE =
+  /^(\d{4})-(\d{1,2})-(\d{1,2})T(\d{1,2}):(\d{2})(?::(\d{2}))?([+-])(\d{1,2}):(\d{2})$/;
+
+function normalizeNearIsoDateString(
+  value: string | undefined,
+): string | undefined {
+  if (!value) return value;
+  const m = NEAR_ISO_DATETIME_RE.exec(value.trim());
+  if (!m) return value; // not this shape -- untouched, status quo
+  const [, year, month, day, hour, minute, second, offsetSign, offsetHour, offsetMinute] = m;
+  const yearN = Number(year), monthN = Number(month), dayN = Number(day);
+  const hourN = Number(hour), minuteN = Number(minute);
+  const secondN = second !== undefined ? Number(second) : 0;
+  const offsetHourN = Number(offsetHour), offsetMinuteN = Number(offsetMinute);
+  if (
+    monthN < 1 || monthN > 12 || dayN < 1 || dayN > 31 ||
+    hourN > 23 || minuteN > 59 || secondN > 59 ||
+    offsetHourN > 14 || offsetMinuteN > 59
+  ) {
+    return value; // out of range -- not a padding-only defect, leave untouched
+  }
+  // Component round-trip (the SAME discipline this file's own isoDate()
+  // helper, further down this file, already uses) -- catches a
+  // calendar-invalid day (Feb 30) that a plain new Date(string)+isNaN check
+  // does NOT catch. See the doc comment above: proved by execution, not
+  // assumed.
+  const roundTrip = new Date(Date.UTC(yearN, monthN - 1, dayN));
+  if (
+    roundTrip.getUTCFullYear() !== yearN ||
+    roundTrip.getUTCMonth() !== monthN - 1 ||
+    roundTrip.getUTCDate() !== dayN
+  ) {
+    return value;
+  }
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return (
+    `${pad(yearN, 4)}-${pad(monthN)}-${pad(dayN)}T${pad(hourN)}:${pad(minuteN)}` +
+    (second !== undefined ? `:${pad(secondN)}` : "") +
+    `${offsetSign}${pad(offsetHourN)}:${pad(offsetMinuteN)}`
+  );
+}
+
 function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   const kind = opportunityKind(node["@type"]);
   if (!kind) return null;
@@ -1118,8 +1194,12 @@ function extractOpportunity(node: JsonRecord): JsonLdOpportunity | null {
   return {
     kind,
     name: nonEmptyString(node.name) ?? nonEmptyString(node.title),
-    startDate: nonEmptyString(node.startDate),
-    endDate: nonEmptyString(node.endDate),
+    // ROUND 32 C, ITEM 2 (A31-02, Ruling 87b): wrapped at the single point of
+    // origin so every downstream consumer (enrich.ts, mapper.ts, dedup.ts,
+    // scoring.ts, page.tsx, card.ts) sees the repaired value once, rather
+    // than patching each call site separately.
+    startDate: normalizeNearIsoDateString(nonEmptyString(node.startDate)),
+    endDate: normalizeNearIsoDateString(nonEmptyString(node.endDate)),
     datePosted: nonEmptyString(node.datePosted),
     ...(validThrough ? { validThrough } : {}),
     place: extractPlace(node.location ?? node.jobLocation),

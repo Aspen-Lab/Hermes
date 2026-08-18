@@ -1315,3 +1315,113 @@ describe("A29-02 — the company name in the city slot", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// ROUND 32 C, ITEM 2 (A31-02, Ruling 87b) — the bounded near-ISO datetime
+// normalizer (`normalizeNearIsoDateString`), wired at the single point of
+// origin in `extractOpportunity` (`startDate`/`endDate`). Tested through the
+// public `extractJsonLdOpportunities` entry point, the same convention this
+// file already uses for every other private extraction helper. Corpus
+// verbatim from Round 32 B's §2.3 table.
+// ---------------------------------------------------------------------------
+describe("Round 32 C, ITEM 2 — the near-ISO datetime normalizer (Ruling 87b)", () => {
+  function eventHtml(fields: Record<string, unknown>): string {
+    return `
+      <script type="application/ld+json">
+        ${JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Event",
+          name: "Test Event",
+          ...fields,
+        })}
+      </script>
+    `;
+  }
+
+  function startDateOf(value: string | undefined): string | undefined {
+    return extractJsonLdOpportunities(
+      eventHtml(value === undefined ? {} : { startDate: value }),
+    )[0]?.startDate;
+  }
+
+  describe("must FIX — 3 of 3", () => {
+    it("fixes the live startDate specimen (linevsystems.com)", () => {
+      expect(startDateOf("2026-3-3T09:00-4:00")).toBe("2026-03-03T09:00-04:00");
+    });
+
+    it("fixes the live endDate specimen — same page, same malformation shape", () => {
+      const opp = extractJsonLdOpportunities(
+        eventHtml({
+          startDate: "2026-3-3T09:00-4:00",
+          endDate: "2026-3-5T18:00-4:00",
+        }),
+      )[0];
+      expect(opp?.endDate).toBe("2026-03-05T18:00-04:00");
+    });
+
+    it("is a lossless re-format — the normalized value parses to the exact same UTC instant", () => {
+      const normalized = startDateOf("2026-3-3T09:00-4:00");
+      expect(normalized).toBeDefined();
+      // "2026-3-3T09:00-4:00" states 09:00 local at UTC-4, i.e. 13:00 UTC.
+      expect(new Date(normalized as string).toISOString()).toBe(
+        "2026-03-03T13:00:00.000Z",
+      );
+    });
+  });
+
+  describe("must NOT touch — 10 of 10", () => {
+    it("leaves an already-well-formed ISO datetime byte-identical (the :28 fixture's own exact value)", () => {
+      expect(startDateOf("2026-06-22T18:30:00+02:00")).toBe(
+        "2026-06-22T18:30:00+02:00",
+      );
+    });
+
+    it("leaves a date-only string untouched (parseDate's other branch)", () => {
+      expect(startDateOf("2026-09-01")).toBe("2026-09-01");
+    });
+
+    it("leaves Ruling 62b's month-granularity claim untouched (day genuinely absent)", () => {
+      expect(startDateOf("2026-08")).toBe("2026-08");
+    });
+
+    it("leaves undefined untouched", () => {
+      expect(startDateOf(undefined)).toBeUndefined();
+    });
+
+    it("leaves an empty string untouched", () => {
+      expect(startDateOf("")).toBeUndefined();
+    });
+
+    it("leaves an out-of-range month (13) untouched", () => {
+      expect(startDateOf("2026-13-01T09:00-4:00")).toBe("2026-13-01T09:00-4:00");
+    });
+
+    it("leaves an out-of-range day (32) untouched", () => {
+      expect(startDateOf("2026-01-32T09:00-4:00")).toBe("2026-01-32T09:00-4:00");
+    });
+
+    it("leaves a calendar-invalid Feb 30 untouched -- returns the ORIGINAL string, does NOT roll over to March 2", () => {
+      // THE LOAD-BEARING REGRESSION TEST. A bare `new Date()`+isNaN check
+      // does NOT catch this: `new Date("2026-02-30T09:00:00-04:00")`
+      // silently becomes 2026-03-02, which would invent a different day
+      // than the source stated (a Ruling 62b violation). The component
+      // round-trip check in `normalizeNearIsoDateString` is what makes this
+      // assertion pass. Do not "simplify" that check away.
+      expect(startDateOf("2026-2-30T09:00-4:00")).toBe("2026-2-30T09:00-4:00");
+    });
+
+    it("leaves a milliseconds-bearing value untouched (unwitnessed shape)", () => {
+      expect(startDateOf("2026-03-03T09:00:00.123-04:00")).toBe(
+        "2026-03-03T09:00:00.123-04:00",
+      );
+    });
+
+    it("leaves a Z-suffixed value untouched (unwitnessed shape)", () => {
+      expect(startDateOf("2026-3-3T09:00:00Z")).toBe("2026-3-3T09:00:00Z");
+    });
+
+    it("leaves a no-offset value untouched (genuinely ambiguous)", () => {
+      expect(startDateOf("2026-3-3T09:00:00")).toBe("2026-3-3T09:00:00");
+    });
+  });
+});
