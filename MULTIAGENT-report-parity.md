@@ -81873,3 +81873,97 @@ leaves all four adversarial shapes alone.
 **`enrich.test.ts` SOLO: 56/56.** Five tests added, none edited, none deleted.
 
 **Turn lock still HELD; item 6 next.**
+
+### Round 29 — Agent C — ITEM 6 (SUB-ITEM 8, RULING 79c): **LANDED, AS THE TWO-PART CHANGE B PRICED. The papers pipeline's private timeout helper is DELETED, the shared one is imported, and the `web` source gets 25 s. The 8000 ms value B found untested is now asserted.**
+
+**No live search call. Ruling 75 untouched** — the timing evidence this rests on
+is B's, made through the permitted Vertex Gemini adapter; C's tests stub every
+source fetch and make no network call at all. No credential touched.
+
+## **6.1 WHAT SHIPPED — BOTH PARTS**
+
+**PART 1: the private copy is GONE.** `feed/pipeline.ts` had its own
+`withSourceTimeout` with `const TIMEOUT_MS = 8000` and **no override
+parameter** — byte-identical to `opportunities/shared.ts`'s except for the one
+thing that mattered. That is why Ruling 76a could be a one-argument change at the
+events and jobs call sites and **could not be implemented here at all**, and
+round 28 C's disclosure of exactly that is confirmed accurate.
+
+**Deleted, not parameterised — B's recommendation taken as given.** A second
+copy that merely GAINS a parameter leaves the drift one edit away. The two
+implementations were compared line by line first (same race, same error string,
+same `finally`-clause `clearTimeout`), so for every source that keeps the default
+this is a substitution and not a behaviour change. **A tombstone comment stands
+where the function was.**
+
+**PART 2: the override at the call site**, in the same shape 76a took on the
+other two surfaces — `web` only, gemini only, `GEMINI_SOURCE_TIMEOUT_MS`.
+
+**ONE SMALL STRUCTURAL CHANGE C MADE AND NAMES:** the web source's `webSearch`
+options are now resolved ONCE into `paperWebSearch`, before the fan-out, and
+both the fetch argument and the timeout override read that one value. The
+alternative was re-deriving the provider from the same three-way ternary in two
+places, which is how two numbers that must agree start disagreeing.
+
+## **6.2 THE NEGATIVE PROOFS**
+
+| reverted | red | which |
+|---|---|---|
+| the override argument removed | **1** | `hands the web source 25 s on gemini and every other source the default` |
+| the private copy restored and used | **1** | the same test — the spy wraps the SHARED helper, so a pipeline calling its own copy records nothing |
+
+**The second proof is the one that matters for part 1**: it shows the assertion
+is anchored to the shared helper actually being the thing this pipeline calls,
+not merely to a number appearing somewhere.
+
+## **6.3 THE MISSING ASSERTION B FOUND, NOW WRITTEN**
+
+B grepped and reported: *"No shipped test asserts the 8000 ms constant by
+value… That absence is itself worth noting: nothing would go red if the value
+changed silently."* **Confirmed — there was no test for `withSourceTimeout`
+anywhere in the tree.** The new file
+`web/src/lib/feed/paper-source-timeout.test.ts` closes that gap as well as this
+item's:
+
+- the shared wall **defaults to 8000 ms** — asserted on fake timers, including
+  that it has NOT fired at 7999 ms;
+- it **honours an override**, which the deleted private copy could not do;
+- the adapter's inner soft deadline is **UNDER** the outer wall. Before this
+  item the two disagreed by **2.6x** — the adapter was built to spend up to 21 s
+  inside a source the papers pipeline killed at 8 s. Now they are set relative
+  to each other rather than by accident, which is what B asked for.
+
+## **6.4 THE COST, NAMED AT THE CALL SITE**
+
+`runFeedPipeline` is on a **REQUEST path** and `Promise.allSettled` waits for
+the slowest settler, so **the paper surface's worst case goes from about 8 s to
+about 25 s for a user who is waiting.** 79c accepted this. It is only ever paid
+when the web source is genuinely slow — every other paper source keeps its 8 s
+and settles earlier — and the worst case is bounded by the adapter's own 21 s
+soft deadline. **Asserted that the raise does NOT apply on the tavily branch and
+does NOT apply with no Vertex project configured**, so the 25 s cannot be paid by
+a surface that could not have used it.
+
+## **6.5 WHY THIS WAS WORTH DOING, IN B's OWN CORRECTION**
+
+B's live timing: **7541 ms survives the 8000 ms wall; 11832 ms is KILLED.** The
+paper surface's web source was **not uniformly dead at 8 s — it was a coin
+flip.** A source that always fails is honest: zero fetched, a reason in
+`errors[sourceId]`, an empty report on purpose. **A source that fails about half
+the time gives a paper surface whose contents depend on grounding latency on the
+day** — two runs of the same profile minutes apart differ, with no error a reader
+sees and nothing in the report saying so. **That is a reproducibility defect on
+the measured surface, and every future A census of that surface inherited it.**
+
+**B's FALSIFIER, CARRIED FORWARD FOR WHOEVER MEASURES NEXT:** if a paper-surface
+census still shows the web source reporting zero fetched with a `source-timeout`
+reason after this raise, the wall was not the binding constraint and something
+else is.
+
+## **6.6 THE GATE, AFTER THIS ITEM**
+
+**99 files / 2266 tests, 2266 passing, ZERO failures** — one new test FILE, six
+new tests, none edited, none deleted. `tsc --noEmit` clean. `eslint src` exactly
+the one standing `quiz.tsx:46` error, 0 warnings.
+
+**Turn lock still HELD; the close-out is next.**

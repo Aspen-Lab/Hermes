@@ -1,6 +1,10 @@
 import { bySourceId } from "@/lib/sources";
 import type { SourceId, RawItem } from "@/lib/sources/types";
-import { geminiWebSearchOptions } from "@/lib/sources/gemini-search";
+import {
+  geminiWebSearchOptions,
+  GEMINI_SOURCE_TIMEOUT_MS,
+} from "@/lib/sources/gemini-search";
+import { withSourceTimeout } from "@/lib/opportunities/shared";
 import { scoreItems } from "@/lib/scoring";
 import type { ScoredItem } from "@/lib/scoring/types";
 import { dedupItems } from "./dedup";
@@ -108,6 +112,16 @@ export async function runFeedPipeline(
         }))
       : Promise.resolve({ queryBoosts: [], resultCount: 0 });
 
+  // SUB-ITEM 8 / RULING 79c. Resolved ONCE so the timeout override below reads
+  // the same value the fetch is given, rather than re-deriving the provider
+  // from the same ternary in two places and inviting them to disagree.
+  const paperWebSearch = req.searchConnectors?.tavily?.enabled
+    ? {
+        provider: "tavily" as const,
+        tavilyApiKey: req.searchConnectors.tavily.apiKey,
+      }
+    : geminiWebSearchOptions(req.searchConnectors);
+
   const fetchPromise = Promise.allSettled(
     sources.map((s) =>
       withSourceTimeout(
@@ -124,23 +138,45 @@ export async function runFeedPipeline(
           // branch is what keeps the paper surface's web source alive with the
           // quota-capped providers suspended.
           //
-          // **NAMED, DISCLOSED COST:** this pipeline has its OWN
-          // `withSourceTimeout` with a hard-coded 8000 ms and no override
-          // parameter, and RULING 76a approved the raise at the TWO opportunity
-          // call sites ONLY. C implements exactly what was approved, so a
-          // grounded paper search that outruns 8 s reports the source as timed
-          // out and the surface renders honestly empty. Widening this without a
-          // ruling is not C's call — it is carried to the manager instead.
-          webSearch:
-            s !== "web"
-              ? undefined
-              : req.searchConnectors?.tavily?.enabled
-                ? {
-                    provider: "tavily",
-                    tavilyApiKey: req.searchConnectors.tavily.apiKey,
-                  }
-                : geminiWebSearchOptions(req.searchConnectors),
+          // **RULING 79c CLOSED ROUND 28 C's DISCLOSURE.** The 8 s wall above
+          // is now overridable and the `web` source gets 25 s — see the
+          // override argument below for the price and the evidence.
+          webSearch: s !== "web" ? undefined : paperWebSearch,
         }),
+        // SUB-ITEM 8 / RULING 79c — **THE PER-SOURCE OVERRIDE, AND IT IS THE
+        // SAME SHAPE RULING 76a TOOK AT THE EVENTS AND JOBS CALL SITES.** Only
+        // the `web` source, only on the gemini provider; every other paper
+        // source keeps the 8 s it has always had.
+        //
+        // **WHY, ON A MEASUREMENT RATHER THAN A PRINCIPLE.** Round 29 B timed
+        // two paper-shaped grounded searches through the shipped adapter:
+        // **7541 ms** (survives 8000) and **11832 ms** (KILLED). So the paper
+        // surface's web source was **not uniformly dead at 8 s — it was a coin
+        // flip, which is worse.** A source that always fails is honest: the
+        // surface reports zero fetched and renders empty on purpose. A source
+        // that fails about half the time produces a paper surface **whose
+        // contents depend on grounding latency on the day** — two runs of the
+        // same profile minutes apart differ, with no error a reader sees and
+        // nothing in the report saying so. That is a reproducibility defect on
+        // the measured surface, and every future census of it inherits it.
+        //
+        // **THE PRICE, NAMED (79c accepted it):** `runFeedPipeline` is on a
+        // REQUEST path and `Promise.allSettled` waits for the slowest settler,
+        // so the paper surface's WORST CASE goes from about 8 s to about 25 s
+        // for a user who is waiting. It is only ever paid when the web source
+        // is genuinely slow — every other source settles earlier. The worst
+        // case is bounded by the adapter's own 21 s soft deadline
+        // (`GEMINI_SEARCH_BUDGET_MS`), which is why 25 s and not more: the
+        // inner budget must stay UNDER the outer wall, and before this change
+        // it was 2.6x OVER it.
+        //
+        // **FALSIFIER, FROM B:** if a paper-surface census still shows the web
+        // source reporting zero fetched with a `source-timeout` reason after
+        // this raise, the wall was not the binding constraint and something
+        // else is.
+        s === "web" && paperWebSearch?.provider === "gemini"
+          ? GEMINI_SOURCE_TIMEOUT_MS
+          : undefined,
       ),
     ),
   );
@@ -261,28 +297,21 @@ export async function runFeedPipeline(
   };
 }
 
-// Hard wall on a single source's fetch. Internal per-call timeouts (6s)
-// usually catch hung requests, but with up to 3 parallel queries inside a
-// source the worst case can still be ~6s — this guarantees one slow source
-// never drags Promise.allSettled past 8s on the critical path.
-async function withSourceTimeout<T>(
-  sourceId: string,
-  promise: Promise<T>,
-): Promise<T> {
-  const TIMEOUT_MS = 8000;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(
-      () => reject(new Error(`[${sourceId}] source-timeout after ${TIMEOUT_MS}ms`)),
-      TIMEOUT_MS,
-    );
-  });
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
-}
+// SUB-ITEM 8 / RULING 79c (round 29 C, item 6): this pipeline's PRIVATE
+// `withSourceTimeout` WAS HERE. It was byte-identical to
+// `opportunities/shared.ts`'s except for one thing that mattered — it hard-coded
+// `TIMEOUT_MS = 8000` and took **no override parameter**, which is why Ruling
+// 76a could be implemented at the events and jobs call sites as a single
+// argument and could not be implemented here at all. Round 28 C flagged exactly
+// that and carried it rather than widening it without a ruling.
+//
+// **Deleted, not parameterised.** B's recommendation, taken as given: importing
+// the shared helper is what stops the three surfaces drifting apart again, and a
+// second copy that merely GAINS a parameter would leave the drift one edit away.
+// The two implementations were compared line by line before the deletion — same
+// race, same error string, same `finally`-clause `clearTimeout` — so this is a
+// substitution, not a behaviour change for any source that keeps the 8 s
+// default.
 
 // Papers from a preferred journal get +1/3 of their own relevance score.
 const JOURNAL_BOOST_FACTOR = 4 / 3;
