@@ -270,11 +270,82 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 31 + 2026-08-18 21:01 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 31 C IS COMPLETE @ 2026-08-18 ~21:3x UTC — BOTH
+                  ITEMS SHIPPED, TWO COMMITS, EACH PUSHED ON LANDING.** Run
+                  by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  and after confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`a4e119a`). Grepped `Round 31 — Agent C` first —
+                  zero prior entries existed, fresh start not a resume.
+                  Read Round 31 Agent B's ITEM 1 and ITEM 3 entries and
+                  RULINGS 84a-84e in full before writing any code. Item 2
+                  shipped no code per Ruling 84b (round 31 A's job).
+
+                  **ITEM 1 (Ruling 84a, `jobweb.ts`) — SHIPPED, COMMIT
+                  `45dd9a7`.** `PROGRAMME_LABEL_TAIL_RE`,
+                  `ORG_DESIGNATOR_ANYWHERE_RE` (doc comment preserving WHY
+                  it is unanchored, why `co`/`as` are excluded, and the
+                  `Genome Research Project (Institute of Genomics)`
+                  first-draft-regression warning), and
+                  `looksLikeProjectLabelWithDescription` landed VERBATIM
+                  from B's §1.2, wired additively at the end of the
+                  employer `.find()` predicate chain. 46 new tests, all
+                  five commissioned assertion groups: live specimen caught
+                  (honest silence), 21-row must-keep corpus untouched, nine
+                  real "Project"-org adversarials untouched (including the
+                  regression case, confirmed SURVIVING), 14-row must-drop
+                  corpus unaffected (values obtained by direct execution
+                  via a temporary debug probe, deleted before commit, not
+                  guessed), zero collision with the `isListingPage`
+                  `Project and Website Coordinator` row.
+
+                  **ITEM 3 (Ruling 84c, `eventweb.ts`) — SHIPPED, COMMIT
+                  `8e1d01d`.** `TICKER_NEWS_PATH_RE`/`isTickerNewsPath`
+                  (design A, reads the raw un-lowercased URL path) and
+                  `PR_ANNOUNCEMENT_HEADLINE_RE` (design B, subject +
+                  plans/schedules + digit) landed VERBATIM from B's §3.2,
+                  both wired as additive disjuncts inside
+                  `isNewsArticleTitle`. 9 new tests: live specimen caught
+                  by both designs independently, the `battery2030.eu`
+                  named counterexample not caught, round 30 A's nine
+                  ADMITTED titles unaffected, six numbered/PR-adjacent
+                  titles unaffected, balchem and gain.inl.gov `/news/`
+                  paths unaffected, PLUS Ruling 84c's own commissioned
+                  base-case lock for the existing `announcing\b` guard
+                  (zero prior coverage): an announcing-led title fires, a
+                  real title merely containing "announcing" mid-sentence
+                  does not.
+
+                  **GATE, COLD, AFTER BOTH ITEMS: 99 files / 2348 tests,
+                  2348 passing, ZERO failures** (2293 baseline + 46 + 9 =
+                  2348, exact). `npx tsc --noEmit` clean. `npx eslint src`
+                  — exactly the one standing `quiz.tsx:46`
+                  `set-state-in-effect` error, nothing new.
+
+                  No credential printed, logged, committed or written
+                  anywhere across either item; boolean presence only;
+                  `.env.local` never `cat`-ed. No live network call —
+                  Ruling 75 not exercised, nothing to report against it
+                  (pure implementation turn). No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+                  test deleted or weakened.
+
+                  **HAND-OFF: `WHOSE TURN: A — round 31, GATE CANDIDATE
+                  ROUND` (value + visual, `searchProvider: gemini`,
+                  artefact duty, pool-count re-measure post-veto per §1.4,
+                  PLUS Ruling 84b(3)'s two-stage name-capture duty — record
+                  `name` at ingestion and at post-enrichment for every
+                  event row to test the `declaredEventName` hypothesis; if
+                  nothing re-witnesses in five pulls, A30-02 parks as
+                  UNREPRODUCED).** Turn lock RELEASED (`HELD BY: free`) in
+                  this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~21:1x UTC — ROUND 31 B
                   VERIFIED INDEPENDENTLY, RULINGS 84a-84e APPENDED (§4).**
                   Gate re-run cold by the manager: **99 files / 2293 tests,
