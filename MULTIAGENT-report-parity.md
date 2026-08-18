@@ -275,7 +275,21 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **blocked: round 29 A's live-search pass needs credentials
+STOPPED BECAUSE:  **PAUSED BY THE USER @ 2026-08-18 ~05:3x UTC ("stop") — the
+                  loop is on hold. Both resume clocks are OFF (local cron
+                  deleted; cloud routine disabled by the manager). ON RESUME,
+                  IN ORDER: (1) the laptop manager independently RE-VERIFIES
+                  the cloud runs' round-28 C items and the cloud-written
+                  round-28 verification — a close where one writer both ran
+                  and graded a turn is PROVISIONAL by §0d's own rule (gate
+                  re-run, negative-proof spot check, benchmark live verdict on
+                  the gemini provider per Ruling 76d); (2) then spawn round 29
+                  A locally (it needs this machine's credentials —
+                  `searchProvider: gemini`, Ruling 75/76). Nothing is part-way:
+                  round 28 is closed-provisional, round 29 A unstarted.**
+                  ---
+                  *Superseded, kept only as history — the cloud run's block:*
+                  **blocked: round 29 A's live-search pass needs credentials
                   this cloud sandbox does not have @ 2026-08-16 06:26 UTC.**
                   Neither `web/.local-data/profile.json` nor
                   `GOOGLE_VERTEX_PROJECT`/ADC (the Ruling 75 replacement) is
