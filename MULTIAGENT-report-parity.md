@@ -80473,3 +80473,80 @@ scope, not to its evidence.**
 if any move, the rule reached `LISTING_URL_RE`'s territory and is wrong.
 
 **VERDICT: structure, not vocabulary. 0 of 10 wrong, language-independent, and it touches neither locked constant.**
+
+### Round 29 — Agent B — ITEM 5 (A29-05): the breadcrumb trail as an event name. **A's PROPOSED SEPARATORS ARE MEASURED TO COST REAL NAMES. A TRAIL-COUNT RULE COSTS NONE — 8 OF 8.**
+
+**B changed no code.** Shipped `bestEventTitleSegment` executed on the live title.
+
+## **5.1 THE ROW REPRODUCES**
+
+`bestEventTitleSegment("Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ANS Annual Conference / Technical Sessions", <ans.org url>)`
+returns **the whole string, unchanged**. `--` and ` / ` are not in the head
+separator set, so no head is taken and the navigation trail is rendered as the
+event's name. **A's mechanism is correct and confirmed.** A's note that the place
+value on this row is CORRECT and out of scope is also confirmed.
+
+## **5.2 A's IMPLIED FIX — "add `--` and ` / ` as separators" — IS MEASURED HARMFUL**
+
+Splitting on the first `--` or ` / ` and keeping the head, run over five real
+event-name shapes:
+
+| title | head taken | verdict |
+|---|---|---|
+| `Materials and Chemistry for Molten Salt Systems` | unchanged | ok |
+| **`Gordon Research Conference / Batteries`** | `Gordon Research Conference` | **TRUNCATED — the subject is lost** |
+| `AI/ML for Energy Storage Workshop 2026` | unchanged | ok (no spaces round the slash) |
+| **`Electrochemistry -- Fundamentals and Applications Symposium`** | `Electrochemistry` | **TRUNCATED — the kind word is lost with it** |
+| **`R&D / Innovation Summit 2026`** | `R&D` | **TRUNCATED — worst case: the residue names nothing** |
+
+**3 of 5 real names damaged, and one of them (`R&D`) would render a two-character
+event name.** A separator rule cannot tell a trail from a name because **one
+separator is not a trail** — it is ordinary punctuation.
+
+## **5.3 THE DISCRIMINATOR THAT WORKS: COUNT THE TRAIL, DO NOT MATCH THE SEPARATOR**
+
+A breadcrumb is a **path**, so it has **three or more** chrome separators. A name
+has nought or one. Rule: take the head only when the title carries **≥ 3**
+` -- ` / ` / ` separators.
+
+| title | separators | classed | head taken |
+|---|---|---|---|
+| `Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ANS Annual Conference / Technical Sessions` | **4** | trail | **`Molten Salt Fuel Chemistry`** — correct |
+| `Home / Events / 2026 / Battery Summit` | 3 | trail | `Home` |
+| `Gordon Research Conference / Batteries` | 1 | name | unchanged |
+| `Electrochemistry -- Fundamentals and Applications Symposium` | 1 | name | unchanged |
+| `R&D / Innovation Summit 2026` | 1 | name | unchanged |
+| `Materials and Chemistry for Molten Salt Systems` | 0 | name | unchanged |
+| `AI/ML for Energy Storage Workshop 2026` | 0 | name | unchanged |
+| `Battery Summit 2026 \| Register \| Home` | 0 | name | unchanged |
+
+**WRONG: 0 of 8.** Every real name survives; both trails are cut correctly.
+
+**BOUNDARY CONDITIONS, STATED:**
+- **Separators must be SPACE-DELIMITED.** `AI/ML` has no spaces and must never
+  count — measured, and it is why the naive rule spared that one row.
+- **≥ 3, not ≥ 2.** Two is reachable by an ordinary subtitled name
+  (`Conference / Workshop / 2026` is a real risk at 2); B set the threshold where
+  the measured corpus separates and **states that 2 is untested rather than
+  claiming it is safe**.
+- **`Home / Events / 2026 / Battery Summit` yields `Home`, which is a WORTHLESS
+  name.** The rule correctly identifies the trail; it does not follow that the
+  head is a good name. **A trail whose head is chrome should render honest
+  silence rather than `Home`** — B flags this as the rule's own residual and
+  recommends C pair it with the existing name-quality path rather than shipping
+  `Home` to a reader.
+- **Absent title ⇒ nothing to split; the rule cannot fire.** No invention.
+
+**VACUITY CHECK: NOT VACUOUS.** It changes exactly one live row's rendered name
+and leaves six constructed names byte-identical.
+
+**FREQUENCY, HONESTLY:** A recorded this as **EVENT, 2 of 5**. It is one row.
+The fix is small; the reason to take it is that the rendered value is a
+navigation menu, which is the least defensible thing a name slot can hold.
+
+**TESTS AT RISK — GREPPED:** `web/src/lib/events/sources/eventweb.test.ts` (150
+tests) — every `bestEventTitleSegment` / `bestEventTitleSegmentDetailed` case,
+and A23-02's month-year name-strip assertions that read the same function's
+detailed form.
+
+**VERDICT: A's row is real; A's implied separator fix costs 3 of 5 real names; a ≥3 trail-count rule costs 0 of 8. Take the count, not the separator.**
