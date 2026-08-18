@@ -84078,3 +84078,94 @@ Total live pulls this item: **10** (5 dedicated trace pulls + 3 wide-check pulls
 
 Committed and pushed as its own item. Item 2 (A31-02, the malformed-date extraction stage plus the render-parity question) follows.
 
+
+### Round 32 — Agent B — ITEM 2 (A31-02, event: a malformed date string reaches `Event.date`, the deep report's Dates tile vanishes silently): **(a) THE EXTRACTION STAGE IDENTIFIED BY FETCHING THE REAL PAGE AND READING THE RAW JSON-LD, NOT INFERRED — a bounded, adversarially-tested near-ISO normalizer designed, provably lossless per Ruling 62b, ONE REAL BUG CAUGHT AND FIXED IN THE DESIGN ITSELF BY ITS OWN ADVERSARIAL TEST BEFORE BANKING. (b) THE RENDER-SIDE QUESTION ANSWERED FROM THE SPEC'S OWN TEXT, NOT TASTE — tile omission is the CORRECT, SPEC-MATCHING behaviour; no code change recommended.**
+
+**B changed no code.** One targeted live page fetch (Ruling 75 — the pipeline's OWN `fetchPagesConcurrently`, `page-fetch.ts:90`, on the EXACT URL round 31 A already recorded, not a fresh host hunt) plus the shipped, exported `extractJsonLdOpportunities`/`extractOpportunityPageDetails` (`structured-extract.ts:1895,2059`) and `parseDate` (`format.ts:16`) run directly against the real response. The candidate normalizer was written and adversarially tested standalone in the same throwaway harness as item 1 (`web/zz-r32b/`), deleted before this commit, confirmed clean.
+
+## 2.0 PART (a) — THE EXTRACTION STAGE, FOUND BY EXECUTION
+
+Fetched `https://www.linevsystems.com/events/ev-battery-recycling-and-reuse-conference-2026/` through the pipeline's own fetch mechanism and ran the shipped `extractJsonLdOpportunities` on the real HTML:
+```
+extractJsonLdOpportunities(html) => [{
+  kind: "event",
+  name: "EV Battery Recycling and Reuse Conference 2026",
+  startDate: "2026-3-3T09:00-4:00",
+  endDate:   "2026-3-5T18:00-4:00",
+  ...
+}]
+```
+**Byte-identical to A's recorded `startDate`, and the `endDate` carries the SAME malformation shape** (not previously reported — A's entry only quoted `date`). The source is the page's own schema.org `Event` JSON-LD block. Traced the exact call site: `extractOpportunity` (`structured-extract.ts:1089-1135`) reads `startDate: nonEmptyString(node.startDate)` (`:1121`) — and `nonEmptyString` (`:858-862`) does nothing but trim and check non-empty, **zero date validation of any kind.** This raw value flows unchanged through `extractOpportunityPageDetails` (`:2090`, `startDate: structured?.startDate ?? meta.start`) into `enrichEventCandidates` (`enrich.ts:341`, `startDate: item.startDate || structured?.startDate || ""`) into `scoredEventToEvent`/`mapper.ts:134` (`date: item.startDate`) — **confirmed, not assumed: every one of these four call sites was read, and none of them validates or normalizes a date string.** `parseDate` (`format.ts:16-32`) is the FIRST point in the entire chain that ever attempts to parse it, and it fails, exactly as A found.
+
+## 2.1 THE DESIGN — A BOUNDED NEAR-ISO NORMALIZER, RULING 62b HELD ABSOLUTE
+
+**Every component of the malformed string is fully stated in the source — only its zero-padding is missing.** `"2026-3-3T09:00-4:00"`: year, month, day, hour, minute, offset-sign, offset-hour, offset-minute are all present as digits; the ONLY defect is that month/day/offset-hour are 1-digit instead of 2-digit. `"2026-3-3"` and `"2026-03-03"` name the exact same calendar day; `"-4:00"` and `"-04:00"` name the exact same UTC offset. Ruling 62b forbids INVENTING a value (the month-granularity case, where the DAY is genuinely absent from the source); it does not forbid re-formatting a value that is already fully and unambiguously stated. This is the dividing line the design holds to.
+
+```ts
+const NEAR_ISO_DATETIME_RE =
+  /^(\d{4})-(\d{1,2})-(\d{1,2})T(\d{1,2}):(\d{2})(?::(\d{2}))?([+-])(\d{1,2}):(\d{2})$/;
+
+function normalizeNearIsoDateString(value: string | undefined): string | undefined {
+  if (!value) return value;
+  const m = NEAR_ISO_DATETIME_RE.exec(value.trim());
+  if (!m) return value; // not this shape -- untouched, status quo
+  const [, year, month, day, hour, minute, second, offsetSign, offsetHour, offsetMinute] = m;
+  const yearN = Number(year), monthN = Number(month), dayN = Number(day);
+  const hourN = Number(hour), minuteN = Number(minute);
+  const secondN = second !== undefined ? Number(second) : 0;
+  const offsetHourN = Number(offsetHour), offsetMinuteN = Number(offsetMinute);
+  if (monthN < 1 || monthN > 12 || dayN < 1 || dayN > 31 ||
+      hourN > 23 || minuteN > 59 || secondN > 59 ||
+      offsetHourN > 14 || offsetMinuteN > 59) {
+    return value; // out of range -- not a padding-only defect, leave untouched
+  }
+  // Component round-trip (the SAME discipline this file's own isoDate()
+  // helper already uses, ~40 lines above) -- catches a calendar-invalid day
+  // (Feb 30) that a plain new Date(string)+isNaN check does NOT catch (see
+  // §2.2, this was proved by execution, not assumed).
+  const roundTrip = new Date(Date.UTC(yearN, monthN - 1, dayN));
+  if (roundTrip.getUTCFullYear() !== yearN || roundTrip.getUTCMonth() !== monthN - 1 ||
+      roundTrip.getUTCDate() !== dayN) {
+    return value;
+  }
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return `${pad(yearN,4)}-${pad(monthN)}-${pad(dayN)}T${pad(hourN)}:${pad(minuteN)}` +
+    (second !== undefined ? `:${pad(secondN)}` : "") +
+    `${offsetSign}${pad(offsetHourN)}:${pad(offsetMinuteN)}`;
+}
+```
+
+**Recommended wiring**: wrap BOTH `startDate` and `endDate` at the single point of origin, `structured-extract.ts:1121-1122` (`extractOpportunity`) — `startDate: normalizeNearIsoDateString(nonEmptyString(node.startDate))`, same for `endDate`. This is the earliest possible point, fixes the value ONCE for every downstream consumer (`enrich.ts`, `mapper.ts`, `dedup.ts`, `scoring.ts`, `page.tsx`, `card.ts`) rather than patching each call site separately, and needs zero changes anywhere else in the chain.
+
+## 2.2 ONE REAL BUG, CAUGHT BY MY OWN ADVERSARIAL TEST BEFORE BANKING — NAMED, NOT HIDDEN
+
+The first draft validated the padded candidate with `new Date(candidateString); if (Number.isNaN(...)) return value;` — a plain parse-and-check-NaN, the same idiom `parseDate` itself uses. **An adversarial test for a calendar-invalid day (`"2026-2-30T09:00-4:00"`, Feb 30 does not exist) went RED**: `new Date("2026-02-30T09:00:00-04:00")` does **not** go NaN — it silently rolls over to March 2nd, which would have shipped a normalizer that could invent a DIFFERENT day than the source stated, a direct Ruling 62b violation. Fixed by switching to the component round-trip shown above (mirroring `structured-extract.ts`'s own `isoDate()` helper, `:1193-1203`, which already uses exactly this idiom for exactly this reason) — re-run, green. Recorded here so a future implementer does not "simplify" the round-trip check back to a bare NaN check and reintroduce this.
+
+## 2.3 ADVERSARIALLY TESTED, EXECUTED — 16 OF 16 PASS
+
+| group | cases | result |
+|---|---|---|
+| must FIX | live `startDate` specimen, live `endDate` specimen (same page), lossless-instant check (`toISOString()` of the normalized result equals the exact UTC instant the malformed original states) | **3 of 3** |
+| must NOT touch | an already-well-formed ISO datetime (byte-identical output), a date-only string (`parseDate`'s OTHER branch), Ruling 62b's month-granularity claim (`"2026-08"`), `undefined`/`""`, out-of-range month (13), out-of-range day (32), calendar-invalid Feb 30 (the caught bug, §2.2), milliseconds-bearing value (unwitnessed shape), `Z`-suffixed value (unwitnessed shape), no-offset value (genuinely ambiguous) | **10 of 10** |
+| sanity vs. real captured data | three well-formed `date` values captured from this session's own live event pulls | **3 of 3 untouched** |
+
+## 2.4 FAILURE DIRECTION AND BLAST RADIUS
+
+**The function is a no-op passthrough for every shape it does not recognise, and a lossless re-format for the one shape it does — it can never make a currently-working date worse, and it never turns a genuinely different malformation into a guessed value.** Wiring at `structured-extract.ts:1121-1122` touches ONLY the `startDate`/`endDate` fields of `extractOpportunity`'s return value, which is a SHARED function for both job and event JSON-LD (job postings mostly populate `datePosted`/`validThrough` instead per schema.org's own `JobPosting` vocabulary, not `startDate`) — even if a job's JSON-LD ever carried this same shape, the function only ever improves it, never regresses it, so the shared call site is not a risk.
+
+**Tests at risk, grepped directly**: `structured-extract.test.ts:28` asserts an EXACT `startDate: "2026-06-22T18:30:00+02:00"` via `toEqual` — already 2-digit/well-formed; confirmed by execution in the standalone harness that the normalizer returns this value BYTE-IDENTICAL, so the exact-equality assertion is unaffected. Lines `:51,72,107,1050` use date-only or `undefined` values — outside this regex's shape (requires a `T` separator + offset) by construction, confirmed by reading each line directly. **Zero collisions.**
+
+## 2.5 PART (b) — THE RENDER-SIDE QUESTION, ANSWERED FROM THE PLATE'S OWN TEXT
+
+Read the design spec (`template for web design/Peer-design-spec-original.pdf`) pages 1-9 directly (pypdf text extraction, not inferred from the visual mockup alone — the brief named pp.4-9 for the event plate, and the answer required reading back to page 2's job-report intro, which the event plate explicitly incorporates by reference). **PDF page 2, the "02 Job report" section header, states in plain text: "Fields Peer can't find are hidden rather than shown empty."** **PDF page 4, the "03 Event report" section header, states: "Same skeleton as the job report, different questions..."** — the event report explicitly inherits the job report's own stated convention. Neither plate anywhere shows an empty-state or "not listed" mockup for any Tier-0 fact tile (both example mockups show a fully-populated event/job, the happy path); the GOVERNING RULE is in the section-header prose, not the mockup art, and it is unambiguous.
+
+**This is not ambiguous, so this is not a `POLICY — manager decides` item.** The shipped `buildEventFacts` (`page.tsx:635-661,721`) already implements exactly this rule: `dates ? {...} : undefined`, and the facts array is filtered with `facts.filter((fact) => Boolean(fact?.value))` (`:721`) — a missing/unparseable date is HIDDEN, never shown empty. **Confirmed directly**: `card.ts:31,41,49`'s "Date not listed" text is a DIFFERENT, shallower surface (the event CARD, not the deep report) with its own separate convention — A's original distinction between the two call sites was exactly right, and this item's own reading of the spec confirms the deep report's silent-omission behaviour is the CORRECT one, not a defect to patch toward card.ts's fallback text.
+
+**Recommendation: no code change for part (b).** Once part (a)'s normalizer ships, THIS specimen's Dates tile renders correctly (a real date reaches `parseDate` successfully), which resolves the concrete instance without touching the render layer at all. For any date that remains genuinely unparseable after part (a) (a different malformation shape, unwitnessed), the CURRENT omission behaviour is already spec-compliant and should stay exactly as it is.
+
+## 2.6 VERDICT
+
+**(a) SHIP**: `normalizeNearIsoDateString`, wired at `structured-extract.ts:1121-1122`, wraps both `startDate` and `endDate`. Adversarially clean, one self-caught bug fixed before banking, zero test collisions, bounded failure direction (only ever improves a value, never invents one). **(b) NO CHANGE**: the spec's own text ("Fields Peer can't find are hidden rather than shown empty") settles this — tile omission is correct, card.ts's "Date not listed" is a deliberately different, shallower surface, and nothing here is ambiguous enough to need a manager ruling.
+
+Committed and pushed as its own item. §1 close-out follows as a separate commit.
+
