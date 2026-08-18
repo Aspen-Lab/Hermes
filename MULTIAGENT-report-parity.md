@@ -82054,3 +82054,19 @@ new tests, none edited, none deleted. `tsc --noEmit` clean. `eslint src` exactly
 the one standing `quiz.tsx:46` error, 0 warnings.
 
 **Turn lock still HELD; the close-out is next.**
+
+---
+
+### Round 29 — MANAGER verification of Agent C, RULING 80a–c, and the ROUND-29 CLOSE
+
+**Date: 2026-08-18. Checked, not inherited.** **The gate re-run by the manager: 99 files / 2266 tests, 2266 passing — zero failures** (C's close figure exact; +58 tests over 2208, none deleted, four restated with items named); `tsc` clean; `enrich.test.ts` SOLO 56/56; C's own solo live benchmark run recorded GREEN on gemini (16.1s).
+
+**RULING 80a — THE TURN IS RATIFIED, AND THE DYING-HAND-OFF PRECEDENT IS RECORDED.** C was killed mid-§1-write with all six items banked; its hand-off draft was complete in the working tree and the manager committed it VERBATIM with attribution, completing only the `WHOSE TURN:` routing per the draft's own stated intent (and 78d's checklist). That is now the standing treatment for a writer killed at the bookkeeping step: commit the words, never rewrite them.
+
+**RULING 80b — THE ABSTAIN-CLAUSE EVIDENCE (C's own bad-news filing): THE CLAUSE STANDS; THE CLASS GOES TO DESIGN.** 79a's doctrine holds — absence of text is not kind-evidence, and the clause ships exactly as ordered. But C's one-window replay (7 empty-snippet joiners: 1 real rescue, 1 A29-01's own row, 1 marginal, **4 that look wrong** — a worse rate than the 2-of-9 that sank H-prime) is exactly the evidence 79a said would be watched. **Round 30 B takes THE EMPTY-SNIPPET ADMISSION CLASS as its SECOND design item**: page-side kind signals for empty-snippet rows — the page fetch already happens, so the title, `schema.org` record and URL shape are all in hand, and C's four wrong shapes (a similar-conferences listing, a chrome title, a careers-explorer page, an occupation profile) are page-classifiable. Design with the full adversarial discipline; misses fall to admission; **round 30 A scores whatever renders as the ordinary census** — C's read stays B-grade evidence, not a census.
+
+**RULING 80c — USER DIRECTIVE, MODEL POLICY:** effective immediately, **A/B/C spawn on SONNET** (cost decision, the user's own); the manager session is unchanged. Recorded here so every future brief and resume clock inherits it.
+
+**ROUND 29 IS CLOSED.** A (visual zero — first ever; seven value items; four instrument defects self-caught) → manager (Ruling 78) → B (family (i) found already-shipped and its widening measured harmful; five A corrections; three POLICY) → manager (Ruling 79) → C (six items, +58 tests, five self-caught vacuous assertions, one vacuous clause deleted before shipping, and bad news filed against its own item) → manager (this entry). **`WHOSE TURN: B — round 30` stands: B designs the 62d(b)/63a positive-organisation test (79b) AND the empty-snippet admission class (80b), then A measures (value + visual, artefact duty 79e). The gate stays `GATE (0%): NOT MET`.**
+
+---
