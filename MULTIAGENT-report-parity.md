@@ -79812,3 +79812,303 @@ was run while any vitest run was live.
 **THE HAND-OFF:** `WHOSE TURN: B — round 29` stands as A wrote it — **seven items (A29-01 per 78a first, then A29-02..07 as A ranked them) plus 78b and 78c as sub-items.** 76b's seven named misses and 74's cost stay tallied, not re-ranked. Bank per item. The gate stays `GATE (0%): NOT MET` — value 7 from zero, visual AT zero.
 
 ---
+
+### Round 29 — Agent B — ITEM 1 (RULING 78a): A29-01, BOTH FIX FAMILIES PRICED BY EXECUTION. **FAMILY (i) IS ALREADY SHIPPED; FAMILY (ii) REACHES ONE OF A's FOUR NAMED ROWS; AND ONE OF THOSE FOUR IS WITHDRAWN — IT EXPIRES LAWFULLY.**
+
+**B changed no code.** Every figure below is execution against the live pages on
+2026-08-18 06:2x–06:3x UTC from a throwaway harness in `web/zz-r29b/` (outside
+`web/src/`, its own vitest config, never staged, deleted before this turn ends).
+**No Tavily / Adzuna / USAJobs / JSearch call for any purpose (Ruling 75)** — this
+item made plain `fetchPageHtml` calls and nothing else; no search provider was
+invoked at all. No credential printed, logged or written; `.env.local` never
+`cat`-ed. No third-party page text pasted — every quotation below is a
+programmatic clip under 90 characters. `euagenda.eu` not fetched (45a); 41c's
+three hosts not hunted (45b).
+
+---
+
+## **1.0 THE FIRST FINDING IS ABOUT THE BRIEF: FIX FAMILY (i) IS ALREADY SHIPPED.**
+
+Ruling 78a asks B to price *"the adapter reads the page's meta description in the
+SAME page fetch that already reads the title (one fetch, two fields)"*. **It does.
+It has since round 28 C landed it.** `searchGemini`
+(`web/src/lib/sources/gemini-search.ts`) fetches once at `:508`
+(`const pages = await fetchPages(capped)`) and reads **both** fields off the same
+buffer — `pageTitleFromHtml(pages[index])` at `:511` and
+`pageSnippetFromHtml(pages[index])` at `:516`. `pageSnippetFromHtml` (`:432`) is
+already `og:description`, else the plain `description` meta, else `""`.
+
+**Consequence for the whole item: A's 35.1%-empty figure is the residue AFTER
+one-fetch-two-fields, not a measurement of its absence.** There is no cheap fix
+to buy here. **The only thing family (i) can still mean is "widen the
+page-derived text taken from that same HTML", and B priced that instead. It
+measures HARMFUL and B does not recommend it — see 1.2.**
+
+---
+
+## **1.1 A29-01's FOUR NAMED ROWS, RE-ADJUDICATED BY EXECUTION. THREE OF THE FOUR ARE NOT WHAT THE FILING SAYS THEY ARE.**
+
+Each page fetched with the shipped `fetchPageHtml`, each field read with the
+shipped `pageTitleFromHtml` / `pageSnippetFromHtml`, each verdict from the
+shipped `webResultToRawEventItem` at the real clock.
+
+| row | shipped snippet | `og:site_name` | JSON-LD `@type` | `extractPageText` | shipped verdict | **what actually decides it** |
+|---|---|---|---|---|---|---|
+| `EUCHEMSIL 2026` @ `rsc.org` | **0 chars** | `Royal Society of Chemistry` | — | **3098 chars** | refused | **EXPIRY — see 1.1a. WITHDRAWN.** |
+| `IEX 2026 …` @ `rsc.org` | (A: 0) | — | — | — | refused | **UNVERIFIED — A published no full URL; same host, same template as the row above, so the same expiry risk applies. Not banked.** |
+| `The Battery Show North America` @ `thebatteryshow.com/` | **154 chars** | *(none)* | **`Event`,`Place`,`Organization`,`Schedule`** | 6177 chars | refused | **VOCABULARY, not emptiness** |
+| `The Battery Saloon` @ `batteryinnovationsummit.com/` | **157 chars** | *(none)* | *(none)* | **0 chars** | refused | **VOCABULARY, not emptiness** |
+
+**TWO OF THE FOUR — INCLUDING THE TWICE-ADJUDICATED MUST-KEEP — HAVE A PRESENT,
+NON-EMPTY, PAGE-PUBLISHED DESCRIPTION.** So A29-01's own summary sentence,
+*"the deciding input is whether the page published a meta description"*, **is
+false on those two rows.** They are refused because `EVENT_SIGNAL_RE` does not
+contain the bare word `event` — which **A's part 1 states correctly for
+`The Battery Show North America`** and which part 2 and the §1 block then fold
+back into the emptiness story. **The aggregate counts are not disputed** (251/716
+empty; 109 event and 63 job drops with an empty snippet; 71 of 138 job rows
+admitted on supplied wording) — B could not recheck them, see 1.6 — **but the
+named-casualty evidence supports a smaller claim than the one filed.**
+
+### **1.1a `EUCHEMSIL 2026` @ `rsc.org` IS WITHDRAWN. IT IS THE SAME CLASS A WITHDREW ITS OWN FIFTH CANDIDATE FOR.**
+
+Supplying the page's own text and re-running the SHIPPED mapper does **not**
+admit it. It leaves on **EXPIRY**:
+
+- `extractPageText(html).slice(0,300)` contains the page's own date line. The
+  first date-shaped token is **`31 July 2026`**, at index 203, in a clip reading
+  `…alts and Ionic Liquids / Date / 26&#x2013;31 July 2026 / Subject areas…`
+  (90-char programmatic clip).
+- The shipped `extractEventDate` over that prefix returns **`2026-07-31`**.
+- Measurement date is **2026-08-18**. The event is **PAST**, so
+  `Math.max(...anchor) < now` fires and the row is dropped — **71b(c), lawful,
+  the expiry design working.**
+
+**A's counterfactual admitted this row only because the clause A appended carried
+no date, so the expiry anchor stayed empty.** The counterfactual therefore tested
+a page that does not exist. **This is exactly the failure A caught in itself on
+`The Battery Show South 2026` and it is filed here the same way: WITHDRAWN, by
+execution, not by argument.**
+
+**AND ITS TWIN IS A DIFFERENT DEFECT, POINTING THE OTHER WAY.** A records that
+the same conference **renders 5 of 5 from `euchemsil2026.com`**. B confirms that
+row is ADMITTED (200-char `og:description`, no date in it, so it rides the
+**dateless branch**). **A past conference is therefore being rendered as live** —
+an expiry evasion, the mirror image of A29-01. **B does not rank it** (it is a
+new observation on A's surface, not B's to file) — **POLICY, the manager decides
+whether it opens as a round-30 item.**
+
+---
+
+## **1.2 FAMILY (i) RE-PRICED AS "WIDEN THE PAGE TEXT FROM THE SAME HTML": MEASURED, AND NOT RECOMMENDED.**
+
+Every honest channel available off the already-fetched HTML, measured on the five
+event rows:
+
+| channel | measured |
+|---|---|
+| `twitter:description` | **duplicate of `og:description` on every row that had one; 0 chars wherever `og:description` was 0.** Buys nothing. |
+| JSON-LD `description` | 0 chars on 4 of 5 event rows; present on the job rows |
+| `<h1>` | 0–31 chars; never carries kind vocabulary |
+| `extractPageText` (shipped) | 0–8633 chars — **the only channel with real content** |
+
+Six snippet variants run through the shipped chain (`V0` shipped, `V1`
+shipped-else-body300, `V2` +`og:site_name`, `V3` shipped+site, `V4` A's
+counterfactual, `V5` shipped+body1200):
+
+| row | V0 | V1 | V5 (append 1200 chars of page text) |
+|---|---|---|---|
+| `EUCHEMSIL` @ rsc | refused `!looksLikeEvent` | **kind=true, then EXPIRES** | **kind=true, then EXPIRES** |
+| `Battery Show NA` | refused | **refused — the else-arm never fires, the snippet is non-empty** | **ADMITTED** |
+| `Battery Saloon` | refused | **refused — body is 0 chars** | **refused — body is 0 chars** |
+| `EUCHEMSIL` control | admitted | admitted | admitted |
+| `Quintus` (A29-02) | admitted | admitted | admitted |
+
+**THREE MEASURED REASONS TO REFUSE THIS FAMILY:**
+
+1. **IT RESCUES NONE OF THE NAMED ROWS.** 0 of 3 checkable casualties are
+   admitted by an *else* widening; only the *append* form rescues one
+   (`Battery Show NA`), and only the append form has the next problem.
+2. **THE APPEND FORM MANUFACTURES DATE EVIDENCE.** Page furniture is **not** a
+   description. `extractEventDate` and `extractDeadline` run over the snippet,
+   so appending body text hands the date fields a token the description channel
+   never offered — proven on `EUCHEMSIL`, where the verdict changes from
+   `!looksLikeEvent` to an expiry driven by a date sourced from a table region.
+   **Here the extracted date happens to be TRUE and the new verdict is the RIGHT
+   one — which is precisely why this is dangerous: the same mechanism with a
+   "last updated 2019" or a sponsor's date in the furniture writes a WRONG
+   rendered date.** Round 28 B drew a hard line at model prose because *"a
+   generated date could become a rendered date"* (Ruling 62b, ZERO invented
+   dates, still zero this round). **Body boilerplate is page-derived and
+   therefore honest as to provenance, but it carries the identical hazard as to
+   ROLE, and B states that the earlier line was drawn one channel too narrow.**
+3. **IT IS NON-MONOTONE — it turns admits into drops.** `Quintus` (A29-02) is
+   ADMITTED at V0 and **REFUSED** once 1200 chars of its own page text are
+   appended (probe `item1`, `MAP shipped=true widened=false`). A "widening" that
+   silently deletes currently-rendered rows is not a widening.
+
+**VERDICT: DO NOT WIDEN THE TEXT CHANNEL. Leave `pageSnippetFromHtml`
+byte-for-byte as shipped.** Cost of this recommendation, stated plainly: the
+35.1% empty-snippet rate stays exactly where it is.
+
+---
+
+## **1.3 FAMILY (ii) — ABSENCE IS NOT EVIDENCE. DOCTRINALLY RIGHT, CHEAP, AND IT REACHES ONE OF THE FOUR NAMED ROWS.**
+
+**The two rules, named and located:**
+
+- **EVENT** — `webResultToRawEventItem`, `eventweb.ts:1774-1775`: the text is
+  `title + " " + (snippet ?? "")` and then `if (!looksLikeEvent(text)) return null;`
+- **JOB** — `webResultToRawJobItem`, `jobweb.ts:1355-1357`: the same text, then
+  `if (!JOB_PATH_RE.test(parsed.pathname) && !JOB_TEXT_RE.test(text)) return null;`
+
+Both are **kind** rules, so the loop's own doctrine puts a miss on the ADMISSION
+side. **The proposed clause is ABSTAIN-ON-ABSENCE, and its boundary is exact:**
+
+> When `result.snippet` is the **empty string after trim**, the text arm of the
+> kind test **abstains** — it neither admits nor refuses — and the row is decided
+> by the guards that have evidence. The **title still votes**: a title that names
+> the kind admits exactly as it does today. **"Absent" means empty, never
+> "short".** A 111-character median snippet is PRESENT and is tested unchanged.
+
+**Job side, the shape it takes:** the gate is already a disjunction
+(`!path && !text`), so abstaining on the text arm means an empty-snippet row is
+decided by `JOB_PATH_RE` alone — and then still faces `NON_JOB_PATH_RE` (which
+runs above it) and both `isListingPage` arms (which run below it). **The guards do
+not weaken to nothing; one starved arm stops voting.**
+
+**Event side:** guard 8 abstains and the row falls through to the **dateless
+branch** — which is what round 28 B's design always claimed happened, and which
+carries its own "every year token is past ⇒ drop" rule, so a stale row still
+leaves.
+
+**WHAT IT BUYS, ON A's OWN COUNTS:** up to **109 event** and **63 job** refusals
+stop being refusals-for-want-of-text; **71 of 138** job path/text rows A proved
+admit on supplied wording. **WHAT IT DOES NOT BUY: 3 of the 4 named rows** — they
+have text.
+
+**VACUITY CHECK: NOT VACUOUS.** 251 of 716 rows carry an empty snippet, so the
+new arm decides real rows rather than restating existing behaviour. **FALSIFIER
+FOR C: if the abstain clause changes zero verdicts on a corpus that contains
+empty snippets, it has been written in the wrong place.**
+
+**RECORDED-DECISION CHECK.** This does not touch A22-01, 62a, 62d, 63a, 64b, 71b
+or 49a; it widens no vocabulary; it adds no new value to any rendered field. It
+makes round 28 B's dateless-branch claim TRUE rather than merely asserted.
+
+---
+
+## **1.4 THE RESIDUE, AND IT IS THE HEADLINE: NEITHER 78a FAMILY REACHES `The Battery Saloon`.**
+
+`batteryinnovationsummit.com/` publishes a **157-character description with no
+kind word**, **no `og:site_name`**, **no JSON-LD**, and **`extractPageText`
+returns 0 characters** (a JavaScript shell). Family (ii) does not fire — its text
+is present. Family (i) has nothing to add. **The twice-adjudicated must-keep is
+unreachable by both families as 78a words them, and B says so rather than
+reporting a fix that does not fix it.**
+
+Exactly **two** structural, page-derived, non-inventing channels rescue anything,
+and they rescue **different rows**:
+
+**CHANNEL L — the page's own `schema.org` `@type` is `Event` (or a subtype).**
+Read off the SAME HTML, no extra fetch. The publisher declaring "this page is an
+Event" is stronger evidence of kind than a keyword, and it cannot be invented
+because it either is in the markup or is not.
+- `Battery Show NA`: **`Event` present → RESCUED.**
+- `Battery Saloon`: no JSON-LD → not rescued.
+- **Adversarial cost in B's set: ZERO.** No non-event page in the set declares
+  `@type: Event`.
+- Boundary: match `Event|BusinessEvent|EducationEvent|ExhibitionEvent|Festival|SocialEvent|CourseInstance` **only**. `WebPage`, `Organization`, `BreadcrumbList`, `LocalBusiness` and `JobPosting` are **not** kind evidence — `euchemsil2026.com` declares `LocalBusiness` and is deliberately excluded.
+
+**CHANNEL H-prime — the registrable host names the kind AND the URL is the bare
+site root.** Kind evidence only; **the host is never written into a rendered
+field**, so **A22-01 stays flagged and unreversed** — that ruling governs the host
+as a NAME, this uses it as a KIND signal and puts nothing on the card.
+
+| variant | must-keeps saved | adversarial newly-admitted |
+|---|---|---|
+| channel H unscoped (host anywhere) | 1 of 2 | **4 of 8** — `/contact`, `/privacy`, `/shop/…`, `/blog/…` on event-named hosts all become events |
+| **channel H-prime (root path, no query)** | **1 of 2 — `The Battery Saloon`** | **2 of 9** |
+
+**The 2 remaining costs are named, not hidden:** a bare root on an event-named
+host whose title is `Home` — `conferenceseries.com/` and `someexpo.com/` — is
+admitted. Both are constructed rows; **B did not sight either shape live.**
+
+**RECOMMENDATION.**
+
+1. **LAND: family (ii) abstain-on-absence (1.3) + channel L (schema.org Event).**
+   Both are cheap, doctrinal, adversarially clean at zero measured cost, and
+   together they close the emptiness half of A29-01 and rescue
+   `The Battery Show North America`.
+2. **DO NOT LAND: any widening of the snippet TEXT channel (1.2).** Measured
+   harmful on three independent counts.
+3. **CHANNEL H-prime IS `POLICY — MANAGER DECIDES`.** It is the **only** measured
+   way to keep `The Battery Saloon`, and its price is that any bare-root URL on
+   an event-named domain becomes admissible. **The alternative is to record the
+   twice-adjudicated must-keep as LOST and say so on the record.** B will not
+   spend a recorded adjudication without a ruling.
+4. **`EUCHEMSIL @ rsc.org` is WITHDRAWN from A29-01** (1.1a), and its rendered
+   twin is carried to the manager as a possible round-30 expiry-evasion item.
+
+**THE MUST-KEEP CORPUS IS THE ACCEPTANCE, and it is exactly this, for C:**
+`The Battery Saloon` (only under H-prime), `The Battery Show North America`
+(under L), `Nuclear Materials and Molten Salt Technologist 1` (round 27's LANL
+row, must not move), `EUCHEMSIL 2026` @ `euchemsil2026.com` (must not move),
+`Quintus` (A29-02's row must still be ADMITTED — it is the non-monotonicity
+canary).
+
+---
+
+## **1.5 THE DATED AMENDMENT RULING 78a REQUIRES**
+
+> **AMENDMENT, 2026-08-18, to "Round 28 — Agent B — ITEM 0 (RULING 75)", §0.4
+> "STAGE 3 — TITLE AND SNIPPET, FROM THE PAGE OR NOT AT ALL":** the sentence
+> *"No description is the EMPTY STRING, **never a drop** and never model prose…
+> the event mapper's dateless branch is explicitly unaffected by an empty
+> snippet"* is **FALSIFIED IN ITS FIRST CLAUSE and CORRECT IN ITS SECOND.** An
+> empty snippet **IS** a drop: `!looksLikeEvent(title + " " + snippet)`
+> (`eventweb.ts:1775`) and the `JOB_TEXT_RE` arm (`jobweb.ts:1357`) both read the
+> snippet and both run ABOVE the dateless branch, so the dateless branch is
+> unaffected only because **it is never reached**. Measured by round 29 A at
+> **109 event and 63 job drops** carrying an empty snippet. **The design error
+> was checking what an empty snippet does to the code BELOW the guards while
+> never checking the guards ABOVE them** — the same class of miss as reading a
+> function's contract instead of executing it. **The title channel of that same
+> design is not faulted and measures 0 bare-hostname titles in 716 rows.**
+> Recorded by round 29 B, who wrote the falsified claim.
+
+---
+
+## **1.6 WHAT B COULD NOT DO, AND WHERE B LOOKED**
+
+**A's 716 offered rows and its per-row drop lists DO NOT EXIST.** A's harness
+(`web/zz-r29a/`) was never staged and is deleted; `git log --name-only` over A's
+four commits shows **`MULTIAGENT-report-parity.md` only**; `ls -d web/zz-*`
+returns nothing; `git status --porcelain --untracked-files=all` is clean. **Only
+the aggregate tables and about ten named rows survive.** So:
+
+- B could **not** re-verify the 251/716, 109, 63 and 71/138 counts. They are
+  carried as A stated them, marked unrechecked.
+- B could **not** run family (ii) or channels L / H-prime against the real
+  190-row `!looksLikeEvent` bucket. **The adversarial corpus in 1.4 is 9
+  constructed rows plus 4 live pages, not 716.** That is the honest limit of this
+  pricing and C should not read it as more.
+- **STANDING REQUEST TO THE MANAGER:** a census whose drop lists are deleted at
+  the end of the turn cannot be audited by the next agent. **Round 30 A should
+  persist the offered-row table (url, title, snippet length, first-refusing
+  guard) as a committed artefact.** Without it every B after this one prices
+  fixes against ten rows.
+
+---
+
+**TESTS AT RISK — GREPPED, NOT REMEMBERED** (for C, if the manager lands 1.3 + L):
+`web/src/lib/events/sources/eventweb.test.ts` (150 tests) and
+`web/src/lib/jobs/sources/jobweb.test.ts` (123 tests) both feed
+`WebResult`-shaped fixtures straight to the two mappers; **any fixture relying on
+an EMPTY snippet producing a refusal will flip.** `web/src/lib/events/benchmark.test.ts`
+(4 tests) is the live acceptance. `web/src/lib/sources/gemini-search.test.ts`
+covers `pageSnippetFromHtml` and **must stay byte-unchanged** — recommendation 2
+leaves that function alone, so if it moves, the text channel was widened after
+all.
+
+**Turn lock still HELD; item 2 next.**
