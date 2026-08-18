@@ -270,11 +270,100 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-18 06:22 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-18 07:0x UTC — ROUND 29 B IS
+                  COMPLETE. NINE ENTRIES, NINE COMMITS, EACH PUSHED THE MOMENT
+                  IT WAS MADE.** Run by `LAPTOP-3CL10CG5`. Seven items
+                  (A29-01…A29-07) plus sub-items 78b and 78c. **NOTHING IS
+                  PART-WAY; NOTHING IS UNSTARTED.** Claimed the lock after
+                  `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`0ca05aa..f9915de`), so the race was won rather
+                  than assumed.** No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **B CHANGED NO CODE, ADDED NO TEST, EDITED NO TEST AND
+                  DELETED NO TEST** — `git log --name-only` over B's whole turn
+                  scoped to `web/` returns **ZERO files**. The throwaway
+                  harness lived OUTSIDE `web/src/` (`web/zz-r29b/`, its own
+                  vitest config so the gate's `src/**` include glob never saw
+                  it), was **never staged into any commit**, and is **DELETED**;
+                  `git status --porcelain --untracked-files=all` is clean.
+                  **B states plainly that the tree carried the untracked
+                  harness BETWEEN items rather than claiming a clean tree at
+                  every intermediate commit.**
+
+                  **RULING 75 OBEYED ABSOLUTELY: NOT ONE TAVILY, ADZUNA,
+                  USAJOBS OR JSEARCH CALL, FOR ANY PURPOSE.** Items 1–7 and
+                  sub-item 9 used **plain `fetchPageHtml` page GETs only — no
+                  search provider was invoked at all**; sub-item 8 made **two
+                  live Vertex Gemini grounded calls through the shipped
+                  adapter**, which is the permitted provider. **No credential
+                  printed, logged, committed or written anywhere — boolean
+                  presence checks only; `.env.local` was NEVER `cat`-ed.** No
+                  third-party page text pasted — every quotation is a
+                  programmatic clip under 90 characters. **`euagenda.eu` NOT
+                  fetched (45a); Ruling 41c's three hosts NOT hunted (45b).**
+
+                  **THE HEADLINE: RULING 78a's FIX FAMILY (i) IS ALREADY
+                  SHIPPED.** `searchGemini` fetches once
+                  (`gemini-search.ts:508`) and reads the title (`:511`) and
+                  `og:description`/`description` (`:516`) off the SAME buffer.
+                  **A's 35.1%-empty figure is the residue AFTER
+                  one-fetch-two-fields, not a measurement of its absence** —
+                  there is no fix to buy there.
+
+                  **AND A29-01 IS SMALLER THAN FILED, PROVEN ROW BY ROW.**
+                  **`EUCHEMSIL 2026` @ `rsc.org` IS WITHDRAWN** — supplied with
+                  its own page text it leaves by **EXPIRY** (the page publishes
+                  `26–31 July 2026`, past at measurement), **71b(c), lawful —
+                  the same class A withdrew its own fifth candidate for.**
+                  **TWO of the four named rows — including the twice-adjudicated
+                  must-keep `The Battery Saloon` — have PRESENT, non-empty
+                  descriptions (154 and 157 chars)**, so they are **VOCABULARY
+                  casualties, not emptiness casualties**, and A29-01's summary
+                  sentence (*"the deciding input is whether the page published a
+                  meta description"*) is **false on them**. `IEX 2026` is
+                  **UNVERIFIED** — A published no full URL. **The aggregate
+                  counts (251/716, 109, 63, 71/138) are carried as A stated
+                  them, UNRECHECKED — see the next paragraph.**
+
+                  **A's 716 OFFERED ROWS AND PER-ROW DROP LISTS DO NOT EXIST.**
+                  A's harness was never staged and is deleted. **So B could not
+                  re-verify any aggregate count, could not test any fix against
+                  the real 190-row `!looksLikeEvent` bucket, and sub-item 9 is a
+                  RECONSTRUCTION over 18 hosts rather than A's 144 rows.**
+                  **B's standing request, filed twice: round 30 A must persist
+                  the offered-row table as a COMMITTED artefact.**
+
+                  **B's OWN INSTRUMENT DEFECT, DISCLOSED BEFORE ANY FIGURE:**
+                  item 3's first pass read `roleTitle`/`companyOrLab` off
+                  `RawJobItem`, whose real fields are `title`/`company`; every
+                  row printed `undefined` and B could have read that as "the
+                  mapper drops everything". **The same class A disclosed, one
+                  layer further in.** Corrected against the source and re-run;
+                  **no banked number comes from the bad pass.**
+
+                  **THE GATE, RE-RUN COLD BY B AFTER THE HARNESS WAS DELETED:
+                  98 files / 2208 tests, 2208 PASSING, ZERO failures**, with
+                  `benchmark.test.ts` green on the gemini provider — **identical
+                  to A's close, as it must be, since B changed nothing.**
+                  **B DOES NOT SET THE GATE (§2): `GATE (0%): NOT MET` stands
+                  exactly as A left it** — seven value items, visual at zero.
+
+                  **HAND-OFF: `WHOSE TURN: C — round 29`**, with three POLICY
+                  questions the manager must rule on BEFORE C builds: channel
+                  H-prime (item 1), commissioning 62d(b)'s deferred design
+                  (item 3), and the 25 s raise on a user-facing request path
+                  (sub-item 8). **Turn lock released (`HELD BY: free`) in this
+                  entry's own commit.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-18 06:2x UTC — ROUND 29 A IS
                   COMPLETE, AND IT IS THE FIRST CENSUS ON `searchProvider:
                   gemini`.** Run by `LAPTOP-3CL10CG5`. **FOUR PARTS, FOUR §4
@@ -6113,6 +6202,258 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
+WHOSE TURN:       **C — round 29.** Round 29 B is COMPLETE: **NINE §4 ENTRIES,
+                  NINE ITEMS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
+                  (`96693c0` item 1, `54f6333` item 2, `8f7bf0d` item 3,
+                  `96f2a35` item 4, `3d40710` item 5, `9084f56` item 6,
+                  `b3d0013` item 7, `9e60c9b` sub-item 8, `3f7dbb6` sub-item 9,
+                  and this close-out), plus the lock claim `f9915de`. **NONE
+                  UNSTARTED. NONE PART-WAY.** Claim the §0d lock first, always.
+
+                  **THE BASELINE C MUST CONFIRM COLD: `npx vitest run`
+                  98 files / 2208 tests, 2208 PASSING — ZERO failures**, with
+                  `benchmark.test.ts` green on the gemini provider. **B RE-RAN
+                  THIS ITSELF after deleting its harness and got exactly that.**
+                  **B CHANGED NOTHING** — `git log --name-only` scoped to `web/`
+                  over B's whole turn returns **ZERO files** — so the suite is
+                  byte-identical to A's close and to round 28's.
+
+                  **READ RULING 79 (the round-29 manager entry) BEFORE
+                  BUILDING. THREE OF B's NINE ITEMS END IN A POLICY QUESTION
+                  AND C MUST NOT DECIDE THEM:** channel H-prime (item 1),
+                  commissioning 62d(b)'s deferred design (item 3), and the 25 s
+                  raise on a user-facing request path (sub-item 8).
+
+                  **THE GATE STAYS `GATE (0%): NOT MET`. B does not set it and
+                  C does not set it (§2); only round 30 A's live measurement can
+                  move it, and only the manager closes, after an independent
+                  re-measurement (Ruling 30).**
+
+                  ---
+
+                  **ITEM 1 (RULING 78a) — A29-01. THE ROUND'S BIGGEST
+                  CORRECTION, AND IT IS TO THE BRIEF.**
+                  **78a's FIX FAMILY (i) IS ALREADY SHIPPED**: `searchGemini`
+                  fetches once (`gemini-search.ts:508`) and reads the title
+                  (`:511`) and `og:description`/`description` (`:516`) off the
+                  SAME buffer. **The 35.1%-empty rate is the residue AFTER
+                  one-fetch-two-fields.** Re-priced as *widen the page text from
+                  the same HTML*, family (i) measures **HARMFUL** on three
+                  counts: it rescues **0 of 3** checkable named rows via an
+                  else-arm; the append form **manufactures date evidence** (the
+                  `rsc.org` page's body supplies `2026-07-31` to
+                  `extractEventDate`, one step from a rendered date, against
+                  Ruling 62b's still-zero invented dates); and it is
+                  **NON-MONOTONE** — A29-02's `Quintus` row flips from ADMITTED
+                  to REFUSED. **DO NOT WIDEN THE TEXT CHANNEL; leave
+                  `pageSnippetFromHtml` byte-for-byte as shipped.**
+                  **FAMILY (ii) IS RIGHT AND CHEAP BUT REACHES ONLY 1 OF THE 4
+                  NAMED ROWS.** Its correct form is **ABSTAIN-ON-ABSENCE** at
+                  `eventweb.ts:1775` and `jobweb.ts:1357`: an **empty-after-trim**
+                  snippet makes the text arm neither admit nor refuse; the title
+                  still votes; **"absent" means EMPTY, never "short"** (the
+                  111-char median is PRESENT). Not vacuous — 251 of 716 rows
+                  have an empty snippet.
+                  **`EUCHEMSIL 2026` @ `rsc.org` IS WITHDRAWN** — it expires
+                  lawfully, 71b(c). **`The Battery Show North America` and
+                  `The Battery Saloon` are VOCABULARY casualties** (154 and 157
+                  char descriptions present), so **NEITHER 78a FAMILY REACHES
+                  THE TWICE-ADJUDICATED MUST-KEEP.** Two structural,
+                  page-derived, non-inventing channels rescue different rows:
+                  **CHANNEL L** (the page's own `schema.org @type: Event` or a
+                  named subtype) rescues `Battery Show NA` at **zero adversarial
+                  cost**; **CHANNEL H-PRIME** (the registrable host names the
+                  kind AND the URL is the bare root, no query) is the **ONLY**
+                  measured rescue for `The Battery Saloon` and costs **2 of 9**
+                  adversarial rows (unscoped it costs 4 of 8).
+                  **B RECOMMENDS: land (ii) + channel L. H-prime is POLICY —
+                  the alternative is recording the must-keep as LOST.**
+                  The **must-keep acceptance corpus** is written out in the §4
+                  entry, `Quintus` included as the non-monotonicity canary.
+                  **Round 28 B's "empty snippet is never a drop" carries its
+                  dated amendment (2026-08-18), written by the agent who wrote
+                  the falsified claim.**
+
+                  **ITEM 2 (A29-02) — ROW CONFIRMED, MECHANISM CORRECTED.** The
+                  false city comes from **`og:description` BY ITSELF** —
+                  dropping `og:siteName` from the join changes nothing, and
+                  dropping the `og:title` brand tail changes nothing. **A's
+                  named mechanism is not the operative cause.** The real one:
+                  the two place channels **use different parsers** — the meta
+                  channel runs `parseCityRegion` (no gazetteer, no ownership
+                  test) while the body channel runs `extractBodyTextPlace`
+                  carrying **Ruling 62a's guard** — although the file's own
+                  boundary comment claims one standard for all three layers.
+                  62a's structured-field exemption is being applied to 181
+                  characters of page prose. **RECOMMEND: route the meta text
+                  through `extractBodyTextPlace` (measured: honest silence, so
+                  the chain falls through to the correct `Chicago`) rather than
+                  reordering the channels.** **62a's guard, clauses and scope
+                  contract are UNTOUCHED — flagged as reached, never reversed.**
+                  Cost named and uncounted (no corpus).
+
+                  **ITEM 3 (A29-03) — ONE GAP, NOT TWO, AND IT IS 63a's FOLDED
+                  DEFERRAL.** Both rows and the sibling reproduce; **A's claim
+                  that the sibling is saved by the topic-label veto and not by
+                  the split is CONFIRMED by execution.** Round 21's
+                  separator-kind test is a proxy for *"this segment is not an
+                  organisation"*, and where one separator kind is used
+                  throughout the proxy has no signal at all. The
+                  employer-candidate chain has a topic-label veto and a
+                  section-label veto but **no positive-organisation test** —
+                  exactly the design 63a folded 62d(a) into.
+                  **62d(b)/63a's REOPEN TRIGGER IS NOT PULLED** — B re-read the
+                  ruling ("*the shape*" is a board naming itself) and concurs
+                  with A rather than stretching it. **But the fix IS the
+                  deferred design, so the deferral's price has now been paid
+                  twice on rendered rows. B REQUESTS A COMMISSION rather than
+                  designing it here**, because 63a recorded that ordering
+                  without the positive test trades one wrong employer for
+                  another. **POLICY — MANAGER DECIDES.** **Explicitly NOT
+                  recommended: widening the separator discriminator to treat a
+                  plain hyphen as chrome — that conjunct is RULING 49a's LOCK**,
+                  and B verified `M.S. Internship Program – Oregon Center for
+                  Electrochemistry` renders correctly in every variant.
+
+                  **ITEM 4 (A29-04) — THE FIX IS STRUCTURE, NOT VOCABULARY.**
+                  B widened A's falsifier pair: `キャリア`, `Carrières`,
+                  `Empleo`, `Karriere`, `採用情報` and `Vagas` are ALL admitted
+                  where `Careers` is dropped. Vocabulary is the wrong axis three
+                  times over — the class is OPEN; **every language's word for
+                  *career* is an ordinary noun in that language, which is
+                  RULING 37/40's trap and B has no corpus to measure false fires
+                  against**; and the **76b/49a constraint forbids widening
+                  `CAREERS_INDEX_TITLE_RE`**, whose documented SECOND call site
+                  is the employer-candidate veto (`Tesla Careers` /
+                  `Kairos Power Careers`). **THE STRUCTURAL RULE: a careers
+                  SECTION ROOT is a path that ENDS at the section segment; a
+                  posting continues past it — measured 0 of 10 wrong**, with
+                  both live must-keep hosts (`lanl.jobs`, and `hyetlithium.com`'s
+                  real posting path) correctly classed as postings. The file
+                  already receives the path but consults it **only after the
+                  aggregator gate**, so on an employer's own site the path is
+                  never looked at. Boundaries: fires only together with *no role
+                  signal in the title*; **absent title text does NOT fire**; new
+                  constant, new call site; `CAREERS_INDEX_TITLE_RE` and
+                  `LISTING_URL_RE` untouched by construction. **SCOPE
+                  CORRECTION: A's "shape 2" (`Careers Open application`) sits at
+                  a genuine posting path on a genuine posting — dropping it
+                  would DELETE A REAL OPPORTUNITY. It is item 3's row and item
+                  3's mechanism, counted once. A29-04 is ONE shape.**
+
+                  **ITEM 5 (A29-05) — TAKE THE TRAIL COUNT, NOT THE SEPARATOR.**
+                  A's implied fix (add `--` and ` / ` as head separators) is
+                  measured **HARMFUL: 3 of 5 real event names truncated**,
+                  worst of them `R&D / Innovation Summit 2026` rendering as
+                  **`R&D`**. One separator is punctuation; a breadcrumb is a
+                  path, so it carries **3 or more** space-delimited separators.
+                  **Threshold ≥3 measures 0 of 8 wrong.** Boundaries:
+                  separators must be space-delimited (`AI/ML` must never count);
+                  **2 is untested rather than claimed safe**; absent title
+                  cannot fire. **Residual flagged: the rule correctly cuts
+                  `Home / Events / 2026 / Battery Summit` but its head is
+                  `Home`** — pair it with the name-quality path rather than
+                  shipping `Home` to a reader.
+
+                  **ITEM 6 (A29-06) — ONE SEAM, SECOND PASS MEASURED
+                  IDEMPOTENT.** Mechanism reproduces exactly; A's withdrawal of
+                  its own "Peer does not decode entities" draft is confirmed
+                  correct. **The adversarial case that would kill a second
+                  decode was built and does NOT fire — `cleanDisplayText` is
+                  idempotent on all four sharpest shapes** (an HTML-ampersand
+                  guide, an escaping workshop, ordinary `R&D`, and `AT&T`).
+                  **The one real cost is named: a title MEANT to display the
+                  literal `&amp;` is byte-identical to this defect and no signal
+                  separates them — B will not invent one.** Shape:
+                  **repeat-until-stable, hard cap 2 passes, at
+                  `pageTitleFromHtml` ONLY, never inside the shared
+                  `cleanDisplayText`.** **Falsifier: if `clean.test.ts` moves,
+                  the repair went into the shared function instead of the seam.**
+                  Frequency **1 of 716**, not inflated.
+
+                  **ITEM 7 (A29-07) — THE DECISIVE SIGNAL SITS WHERE THE GUARD
+                  CANNOT REACH IT.** The page publishes `bepress_citation_title`
+                  — repository markup, publisher-declared, uninventable. **But
+                  `webResultToRawEventItem`'s whole input is
+                  `{title, url, snippet}`, so a citation-meta test CANNOT be
+                  added to that chain — there is nothing there to test.** The
+                  HTML exists one layer up and is discarded after two fields.
+                  Three placements priced: **adapter-drops is REJECTED** (it
+                  makes the adapter take kind decisions it deliberately does not
+                  take, and would fire on the paper surface where a repository
+                  record is exactly what is wanted); **a page-declared kind hint
+                  on `WebResult`** is structurally right but a shared-contract
+                  change; **a title-side artefact-head rule** (`Slides from`,
+                  `Proceedings of`, `Poster from` + an attribution preposition)
+                  needs no HTML and is measurably a larger class than one row.
+                  **RECOMMEND the title-side rule now — and note ITEM 1's
+                  CHANNEL L HAS THE IDENTICAL PLACEMENT PROBLEM AND SOLUTION, so
+                  if both land they must land as ONE contract change, not two.**
+                  B checked rather than assumed that the real MoSES event row
+                  does not match the head-anchored rule.
+
+                  **SUB-ITEM 8 (RULING 78b) — CALL SITE CONFIRMED, AND THE
+                  SURFACE IS A COIN FLIP, NOT AN HONEST ZERO.** The site is
+                  **`feed/pipeline.ts:113`**, and **the papers pipeline does NOT
+                  use the shared helper** — it has its own private
+                  `withSourceTimeout` at `:268-284` with a hard-coded `8000` and
+                  **no override parameter**, so extending 76a here is a **two-part
+                  change**, not one argument. Round 28 C's disclosure of this is
+                  confirmed accurate. **The budgets are incoherent: the adapter's
+                  own soft deadline is `GEMINI_SEARCH_BUDGET_MS = 21_000`, 2.6x
+                  the outer wall it runs inside.** **LIVE TIMING, two
+                  paper-shaped grounded queries through the shipped adapter:
+                  7541 ms (survives 8000) and 11832 ms (KILLED at 8000); both
+                  survive 25000.** So the surface is **nondeterministic** — two
+                  runs of the same profile minutes apart can differ with no
+                  error a reader sees, **a reproducibility defect every future A
+                  census inherits.** Price named: `runFeedPipeline` is on a
+                  REQUEST path (`api/feed/route.ts:159`) and `allSettled` waits
+                  for the slowest, so worst-case paper response goes ~8 s to
+                  ~25 s. **RECOMMEND taking the raise via the SHARED helper so
+                  the three surfaces cannot drift again. POLICY — MANAGER
+                  DECIDES the user-facing 25 s.** Noted: **no shipped test
+                  asserts the 8000 ms constant by value**, so nothing would go
+                  red if it changed silently.
+
+                  **SUB-ITEM 9 (RULING 78c) — THE TITLE LOSS IS ALL BOT-WALL.**
+                  **Limit first: A's captured drop lists DO NOT EXIST, so this
+                  is a RECONSTRUCTION over 18 hosts drawn from the loop's own
+                  record — NOT A's 144 rows, and it must not be quoted as them.**
+                  Two verdicts are marked ambiguous (fabricated posting ids).
+                  **Composition: recovered 11/18 (61%); HTTP 403 bot-wall 5/18;
+                  401/404 ambiguous 2/18; TIMEOUT 0/18; PARSE FAILURE 0/18** —
+                  overall loss 39%, the same band as A's 32.6% on 442 real
+                  fetches. **By class: aggregator 4 of 4 lost; employer ATS
+                  front door 2 of 3; niche board 1 of 6; lab/gov 0 of 2;
+                  employer own site 0 of 3.** **Timeouts are not in it** (slowest
+                  success 5798 ms against a 12 000 ms wall — so any
+                  latency-based fix aims at an absent cause) and **parse
+                  failures are not in it** (every 200 yielded a title).
+                  **THE FINDING THAT SHOULD DECIDE IT: the loss concentrates on
+                  `AGGREGATOR_HOSTS`, where jobweb already requires a posting id
+                  and where round 28 B deliberately kept the pre-screen out — so
+                  a large share of the 32.6% is rows leaving early that a shipped
+                  guard would have judged anyway. The headline figure and the
+                  harm figure are not the same number, and B cannot quantify the
+                  overlap without A's rows rather than estimating it.**
+                  **RECOMMEND ACCEPT, with Ruling 76d's "about 12.5%" restated
+                  PER SURFACE (11.1% events / 32.6% jobs)** rather than carried
+                  as one global number. **REFUSE any fallback title for a walled
+                  host** — hostname-as-title is measured at 31 of 40, model prose
+                  is forbidden, a URL slug is invention. **REFUSE retries or a
+                  longer timeout.**
+
+                  **CARRIED TO THE MANAGER, NOT C's TO DECIDE:** (1) the three
+                  POLICY questions above; (2) **`EUCHEMSIL 2026`'s rendered twin
+                  at `euchemsil2026.com` — a PAST conference rendering as live
+                  via the dateless branch**, an expiry evasion B observed while
+                  withdrawing A's row and deliberately did NOT rank; (3)
+                  **round 30 A must persist its offered-row and drop tables as a
+                  COMMITTED artefact** — B's pricing was bounded by their
+                  deletion twice in one turn.
+                  ---
+                  *Superseded, kept only as history — the round-29 A entry:*
 WHOSE TURN:       **B — round 29.** Round 29 A is COMPLETE: **FOUR §4 ENTRIES,
                   FOUR PARTS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
                   (`0c31737` part 1, `5299d3f` part 2, `17de80e` part 3, and
