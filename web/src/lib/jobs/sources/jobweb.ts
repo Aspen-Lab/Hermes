@@ -1035,6 +1035,45 @@ const ORG_DESIGNATOR_RE =
   /\b(?:ltd|limited|inc|incorporated|llc|llp|plc|pvt|corp|corporation|co|gmbh|ag|sa|bv|nv|ab|oy|as|pty|university|universit[ée]|institute|institut|laboratory|laboratories|labs?|college|hospital|foundation|academy|centre|center)\b\.?\s*$/i;
 
 /**
+ * Round 31 C (Ruling 84a, implementing B's item 1 §1.2 verbatim). A30-01:
+ * `BALDER Project (Licensing Support for a Molten Salt Reactor)` rendered as
+ * the employer for a real `psi.ch` internship posting. No existing guard's
+ * vocabulary covers "Project" — a bare-word veto on "Project" was rejected
+ * WITHOUT being built, because "Project" genuinely appears in real
+ * organisation names (`Project44`, `Project HOPE`, `Project Management
+ * Institute`, `The Manhattan Project`, `Project Canary`). The actual defect
+ * is narrower and structural: a segment shaped
+ * `<label> Project (<long descriptive qualifier>)`, where "Project" is the
+ * last word before an opening parenthesis and the parenthetical itself reads
+ * as a DESCRIPTION (multiple words, no institutional designator) rather than
+ * a short qualifying tag (`(US)`, `(Ltd)`, `(PMI)`).
+ */
+const PROGRAMME_LABEL_TAIL_RE = /\bprojects?\s*\(([^()]{2,80})\)\s*$/i;
+
+// Deliberately NOT the shipped ORG_DESIGNATOR_RE (which is END-anchored, for
+// a different job — admitting a trailing parenthetical AS an employer name).
+// This is an UNANCHORED presence check over the same vocabulary, used to ask
+// "does this parenthetical smell like it is naming/describing an
+// institution ANYWHERE in it" — deliberately excludes "co" and "as" from the
+// shipped list, both high-collision bare short tokens unsafe unanchored.
+//
+// DO NOT "simplify" this back to the shipped, end-anchored `ORG_DESIGNATOR_RE`
+// — the first draft of this veto did exactly that and let
+// `Genome Research Project (Institute of Genomics)` through as a false
+// positive, because "Institute" does not END that inner string. This
+// unanchored form is the reason that adversarial case now survives.
+const ORG_DESIGNATOR_ANYWHERE_RE =
+  /\b(?:ltd|limited|inc|incorporated|llc|llp|plc|pvt|corp|corporation|gmbh|ag|sa|bv|nv|ab|oy|pty|university|universit[ée]|institute|institut|laboratory|laboratories|labs?|college|hospital|foundation|academy|centre|center)\b/i;
+
+function looksLikeProjectLabelWithDescription(candidate: string): boolean {
+  const m = candidate.match(PROGRAMME_LABEL_TAIL_RE);
+  if (!m) return false;
+  const inner = m[1].trim();
+  if (ORG_DESIGNATOR_ANYWHERE_RE.test(inner)) return false; // e.g. "(... Institute)" -- let it through
+  return inner.split(/\s+/).filter(Boolean).length >= 3; // a short tag ("(US)", "(PMI)") is not a description
+}
+
+/**
  * A whole-candidate sentence naming the HOSTING PLATFORM's own posting
  * boilerplate, not the employer (B10-01, items 1+2). `looksLikeHostBrand`
  * is deliberately one-directional — it only rejects a candidate no LONGER
@@ -1783,7 +1822,12 @@ export function webResultToRawJobItem(
           // above `ROLE_TEXT_CANDIDATE_RE` for the measured collision that
           // held it back, filed `POLICY — manager decides`.
           !ROLE_TEXT_CANDIDATE_RE.test(p) &&
-          !BOARD_DOMAIN_BRAND_RE.test(p),
+          !BOARD_DOMAIN_BRAND_RE.test(p) &&
+          // Round 31 C (Ruling 84a, A30-01). A trailing
+          // `Project (<long descriptive qualifier>)` shape — see the doc
+          // comment above `PROGRAMME_LABEL_TAIL_RE` for why this is keyed on
+          // STRUCTURE, not the bare word "Project".
+          !looksLikeProjectLabelWithDescription(p),
         ),
     ),
   );

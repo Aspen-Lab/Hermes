@@ -3349,3 +3349,130 @@ describe("Round 30, Ruling 81b — the careers-section-segment V2 extension", ()
     ).toBe(false);
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────
+// Round 31 C (Ruling 84a, implementing B's item 1 §1.2 verbatim). A30-01:
+// `BALDER Project (Licensing Support for a Molten Salt Reactor)` rendered as
+// the employer for a real `psi.ch` internship. See `looksLikeProjectLabelWithDescription`
+// in jobweb.ts for the full design. Five assertion groups, per the commission.
+describe("Round 31 C — a trailing `Project (<description>)` is not an employer (Ruling 84a)", () => {
+  const employerOf = (title: string, url = "https://careers.acme.test/job/55231") =>
+    webResultToRawJobItem(
+      { title, url, snippet: "We are hiring a research scientist. Apply now." },
+      ["battery", "molten salt", "electrochemistry"],
+    )?.company;
+
+  // GROUP 1 — the live specimen, exact recorded title/url, catches it with
+  // honest silence (no other candidate survives behind it).
+  it("catches the live specimen — `BALDER Project (Licensing Support for a Molten Salt Reactor)`", () => {
+    expect(
+      webResultToRawJobItem(
+        {
+          title:
+            "Summer Internship Opportunity - BALDER Project (Licensing Support for a Molten Salt Reactor)",
+          url: "https://www.psi.ch/en/ahl/summer-internship-2026",
+          snippet:
+            "PSI is looking for a summer intern to support licensing work for a molten salt reactor project. Apply now for this internship opportunity.",
+        },
+        ["molten salt"],
+      )?.company,
+    ).toBeUndefined();
+  });
+
+  // GROUP 2 — the 21-row must-keep corpus (round 30 B item 1 §1.0, verbatim).
+  // None share the `Project (<description>)` shape, so all survive untouched.
+  it.each([
+    "BD",
+    "J&J",
+    "BMS",
+    "Tesla",
+    "INL",
+    "Oak Crest",
+    "Thermo Fisher Scientific",
+    "Battery Ventures",
+    "GSK US",
+    "Johnson & Johnson",
+    "Sandia National Laboratories",
+    "Idaho National Laboratory",
+    "Oregon Center for Electrochemistry",
+    "Ionis Pharmaceuticals",
+    "Department of Energy",
+    "HyET Lithium",
+    "CATL",
+    "AquaBattery",
+    "Ion Exchange",
+    "Ion Exchange Ltd.",
+    "Kairos Power",
+  ])("keeps the must-keep `%s` untouched", (name) => {
+    expect(employerOf(`Battery Scientist Program - ${name}`)).toBe(name);
+  });
+
+  // GROUP 3 — nine constructed real "Project"-named organisations. This is
+  // the adversarial pass that keeps the veto keyed on STRUCTURE, not the
+  // bare word "Project" — a bare-word veto would delete every one of these.
+  it.each([
+    "Project44",
+    "Project HOPE",
+    "Project Management Institute",
+    "The Manhattan Project",
+    "Project HOPE (Global Health)",
+    "Project Canary",
+    // The first-draft regression case: an end-anchored designator check
+    // missed this because "Institute" doesn't END the inner string. Must
+    // SURVIVE — see the doc comment above `ORG_DESIGNATOR_ANYWHERE_RE`.
+    "Genome Research Project (Institute of Genomics)",
+    // Short qualifying tags, not descriptions — caught by the 3-word floor.
+    "XYZ Project (US)",
+    "XYZ Project (Ltd)",
+  ])("does NOT veto the real organisation name `%s`", (name) => {
+    expect(employerOf(`Battery Scientist Program - ${name}`)).toBe(name);
+  });
+
+  // GROUP 4 — the 14-row must-drop corpus (round 30 B item 1 §1.0, verbatim).
+  // Not this veto's job — none share the `Project (<description>)` shape, so
+  // this addition changes nothing about how they are already handled: the
+  // ones a pre-existing guard already vetoes stay `undefined`; the ones that
+  // are still an unaddressed, named residual (`CSE`, `Chemistry`, `Chemical
+  // Engineering`, the `@ Septerna` shape, `Career Connections Center
+  // University of Florida`) still survive as their own full string, exactly
+  // as before this item shipped — confirmed by direct execution, not
+  // assumed.
+  it.each([
+    ["Research Technologist 1", undefined],
+    ["Internship battery R&D", undefined],
+    ["Focused Ion Beam, Electron Microscopy ...", undefined],
+    ["Co-ops", undefined],
+    ["Youth & Young Adult Programs ...", undefined],
+    ["CSE", "CSE"],
+    ["Chemistry", "Chemistry"],
+    ["Chemical Engineering", "Chemical Engineering"],
+    ["Career Services", undefined],
+    ["Kairos Power, Alameda, California, United States", "Kairos Power"],
+    [
+      "Medicinal Chemistry (Graduate Student level) @ Septerna",
+      "Medicinal Chemistry (Graduate Student level) @ Septerna",
+    ],
+    [
+      "Career Connections Center University of Florida",
+      "Career Connections Center University of Florida",
+    ],
+    ["Membrane Scientist for Electrodialysis", undefined],
+    ["EV.Careers", undefined],
+  ] as const)("must-drop corpus row `%s` is unaffected by this veto", (name, expected) => {
+    expect(employerOf(`Battery Scientist Program - ${name}`)).toBe(expected);
+  });
+
+  // GROUP 5 — zero collision with the `isListingPage` matrix row `Project
+  // and Website Coordinator` (jobweb.test.ts, the round 13 live-postings
+  // matrix). That string contains "Project" but never a trailing
+  // `Project (<...>)` parenthetical, so this new employer-slot veto (a
+  // different function entirely, `looksLikeProjectLabelWithDescription`)
+  // cannot match it either.
+  it("does not collide with the isListingPage matrix row `Project and Website Coordinator`", () => {
+    expect(
+      employerOf("Battery Scientist Program - Project and Website Coordinator"),
+    ).toBe("Project and Website Coordinator");
+    // The isListingPage assertion itself is already locked at :814/:820 —
+    // unchanged and re-confirmed still true by the full suite run.
+  });
+});
