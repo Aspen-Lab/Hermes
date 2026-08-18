@@ -81615,3 +81615,105 @@ warnings**. **`enrich.test.ts` — the SolarPaces lock — 56/56.** Three tests
 added, **two restated with the item named, none deleted.**
 
 **Turn lock still HELD; item 3 next.**
+
+### Round 29 — Agent C — ITEM 3 (A29-04): **LANDED. The careers section root is now decided by STRUCTURE, so it is language-independent by construction. Neither locked constant touched.**
+
+**No live call of any kind.** No credential touched. No third-party page text pasted.
+
+## **3.1 WHAT SHIPPED**
+
+`jobs/sources/jobweb.ts`. **A new constant with ONE call site**, as 76b/49a
+requires: `CAREERS_SECTION_SEGMENT_RE` (the ASCII path vocabulary) and the
+conjunction `isCareersSectionRoot(title, pathAndQuery)`, called inside
+`isListingPage` **ABOVE the aggregator gate**. That placement is the item: the
+function already received the path and already had a `LISTING_URL_RE`, but
+`if (!isAggregator) return false;` ran first, so **on an ordinary employer's own
+site the path was never looked at at all.**
+
+**THE RULE:** the last non-empty path segment is a section word **AND** the
+title carries no role evidence. **Both halves are load-bearing and both are
+proven red on their own.**
+
+**`CAREERS_INDEX_TITLE_RE` IS NOT TOUCHED**, so its documented SECOND call site
+— the employer-candidate veto chain (B13-01 Gap A) — is unchanged **by
+construction**, and `Tesla Careers` / `Kairos Power Careers` cannot be silenced
+by this item. **Asserted, not asserted-to-be-obvious.** `LISTING_URL_RE` is not
+read here at all, so 76b/B13-02's aggregator behaviour is byte-identical.
+
+## **3.2 B's TEN-ROW CORPUS, RE-RUN AS TESTS — 0 OF 10 WRONG, CONFIRMED**
+
+All five section roots class as index; all five posting paths class as posting.
+**B's shape-2 row is a REAL POSTING and it KEEPS:**
+`hyetlithium.com/careers/internship-battery-research/` — its path continues past
+the section segment, so the rule cannot reach it whatever its title says. So does
+`lanl.jobs/search/jobdetails/x/1`. **A literal vocabulary fix would have deleted
+the first of those; structure cannot.**
+
+The falsifier pair is closed on **seven** labels, not two: `Careers`, `キャリア`,
+`Carrières`, `Empleo`, `Karriere`, `採用情報`, `Vagas` — same site, same path,
+same verdict. **That is the point of the axis: the rule reads the URL a site
+builds in ASCII, not the words a site prints.**
+
+## **3.3 THE NEGATIVE PROOFS**
+
+| clause disabled | red | which |
+|---|---|---|
+| the whole rule (call site short-circuited) | **3** | the falsifier pair, the five section roots, and the restated brand-first miss |
+| the TITLE half (`!JOB_TEXT_RE.test(title)` removed) | **1** | `BOTH halves … the title half` |
+
+## **3.4 A VACUOUS CLAUSE C WROTE, CAUGHT, AND DELETED RATHER THAN SHIPPED**
+
+C's first draft carried an explicit `pathAndQuery.includes("?")` guard, to stop a
+board that hangs a posting id off a section root (`/careers/?gh_jid=…`) being
+deleted on evidence nobody measured. **The mandated revert returned 0 RED: the
+clause was dead.** The input is `pathAndQuery`, so the query rides in the LAST
+segment and fails the section test by itself — `/careers/?gh_jid=1234` ends at
+`?gh_jid=1234` and `/careers?gh_jid=1234` ends at `careers?gh_jid=1234`.
+**The clause was deleted; the two assertions it was written for were KEPT**, so
+the protection is checked by execution rather than by a comment. **Third
+self-caught vacuity of this turn, and the only one that survived into a first
+draft of shipped code.**
+
+## **3.5 THE ONE EXISTING TEST THAT MOVED — RESTATED, NOT DELETED, AND IT IS A CLOSED MISS RATHER THAN A NEW COST**
+
+`isListingPage("Acme Corporation - Search Jobs", "acme.test", "/careers")` was
+asserted **false** as B16-02 / Ruling 47c's deliberately priced miss. It is now
+**true**.
+
+**B's stated tripwire is NOT tripped:** *"A new path-side rule must not change
+any existing aggregator assertion; if any move, the rule reached
+`LISTING_URL_RE`'s territory and is wrong."* `acme.test` is **not** an
+aggregator, and **no aggregator assertion moved — 1 test moved in 564.**
+
+**And the miss was priced on an explicit ground that no longer holds.** Its own
+comment reads: *"No structural test separates them."* **One exists now, and it is
+not a title test.** `/careers` is a section ROOT; A's real INL requisition —
+the row the miss was protecting — is `/psc/…/job/1515?Page=…`, a deep path with a
+posting id and a query. **The two are separated by structure, on exactly the axis
+the comment said was empty.**
+
+**THE MISS IS NARROWED, NOT ABOLISHED, AND THE REMAINDER IS ASSERTED:** the same
+brand-first title on a non-section-root path (`/en/talent/search`) still
+survives, because there the title is still the only axis and the original
+argument stands untouched.
+
+## **3.6 RESIDUALS, NAMED**
+
+- **The path vocabulary is still a list.** It is far more closed than a natural
+  language one — sites romanise path segments even when the page is not English,
+  which is the whole reason this works — **but a site using a fully localised
+  non-ASCII path is a named miss.** Neither B nor C sighted one.
+- **The role test is the file's already-shipped `JOB_TEXT_RE`**, chosen because
+  inventing a second role vocabulary inside a fix for a vocabulary problem is
+  the exact mistake this item exists to avoid. **RESIDUAL:** a bare role title
+  carrying none of that vocabulary (`Battery Engineer`) at a section-ROOT url
+  would still be dropped. C did not sight one and does not claim the class is
+  empty.
+
+## **3.7 THE GATE, AFTER THIS ITEM**
+
+**98 files / 2249 tests, 2249 passing, ZERO failures.** `tsc --noEmit` clean.
+`eslint src` exactly the one standing `quiz.tsx:46` error, 0 warnings. Eight
+tests added, **one restated with the item named, none deleted.**
+
+**Turn lock still HELD; item 4 next.**

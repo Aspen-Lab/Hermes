@@ -9,6 +9,7 @@ vi.mock("@/lib/sources/gemini-search", async (importOriginal) => ({
 }));
 
 import {
+  CAREERS_INDEX_TITLE_RE,
   isListingPage,
   JOB_PATH_RE,
   jobweb,
@@ -1709,8 +1710,25 @@ describe("the listing guard must not destroy real postings (B16-02, Ruling 47c)"
   //
   // Asserted so that widening this later is a deliberate act with its own
   // evidence rather than a drift.
-  it("does NOT drop a brand-first search page — a deliberate, named, priced miss", () => {
-    expect(isListingPage("Acme Corporation - Search Jobs", "acme.test", "/careers")).toBe(false);
+  // A29-04 (round 29 C, item 3) — **RESTATED, NOT DELETED, AND THE MISS IS NOW
+  // CLOSED FOR THIS ROW.** The comment above accepted the miss on one explicit
+  // ground: *"No structural test separates them."* **One exists now, and it is
+  // not a title test.** `/careers` is a section ROOT — a path that ENDS at the
+  // section segment — whereas A's real INL requisition is
+  // `/psc/…/job/1515?Page=…`: a deep path, a posting id, and a query. The two
+  // rows are separated by structure, on the axis the comment said was empty,
+  // so the trade it was pricing no longer has to be paid.
+  //
+  // **THE MISS IS NOT ABOLISHED, ONLY NARROWED, AND THE REMAINDER IS ASSERTED
+  // BELOW:** a brand-first search page on a path that is NOT a section root
+  // still survives, because there the title is still the only axis and the
+  // original argument stands unchanged.
+  it("drops a brand-first search page ONLY at a section-root path", () => {
+    expect(isListingPage("Acme Corporation - Search Jobs", "acme.test", "/careers")).toBe(true);
+    // The remainder of B16-02's priced miss, unchanged.
+    expect(
+      isListingPage("Acme Corporation - Search Jobs", "acme.test", "/en/talent/search"),
+    ).toBe(false);
   });
 
   // 11. THE STRING SWEEP'S ONE VERDICT CHANGE, ASSERTED AS BENIGN RATHER THAN
@@ -3097,5 +3115,96 @@ describe("A29-01 — absence is not evidence (job side)", () => {
         snippet: "",
       }),
     ).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ROUND 29 C, ITEM 3 (A29-04) — the structural careers-section-root rule.
+// Round 29 B's ten-row corpus, plus the boundaries B stated.
+// ---------------------------------------------------------------------------
+
+describe("A29-04 — a careers section root is a path that ends at the section", () => {
+  it("closes A's falsifier pair — the same page in any language", () => {
+    // One site, one path, one section. Before this item the English label was
+    // refused and every other language reached a reader as a role title.
+    for (const label of [
+      "Careers",
+      "キャリア",
+      "Carrières",
+      "Empleo",
+      "Karriere",
+      "採用情報",
+      "Vagas",
+    ]) {
+      expect(isListingPage(label, "ionexchangeglobal.com", "/int/careers/")).toBe(true);
+    }
+  });
+
+  it("classes B's five section roots as index pages", () => {
+    expect(isListingPage("キャリア", "acme.com", "/careers/")).toBe(true);
+    expect(isListingPage("キャリア", "acme.com", "/careers")).toBe(true);
+    expect(isListingPage("採用情報", "acme.co.jp", "/jp/recruit/")).toBe(true);
+    expect(isListingPage("キャリア", "acme.com", "/careers/jobs/")).toBe(true);
+    expect(isListingPage("Empleo", "acme.es", "/es/empleo")).toBe(true);
+  });
+
+  it("leaves B's five posting paths alone — 0 of 10 wrong", () => {
+    // **B's shape-2 row is a REAL POSTING and must KEEP.** Its path continues
+    // past the section segment, so the rule cannot reach it — which is the
+    // whole point of choosing structure over vocabulary.
+    expect(
+      isListingPage(
+        "Careers Open application",
+        "hyetlithium.com",
+        "/careers/internship-battery-research/",
+      ),
+    ).toBe(false);
+    expect(isListingPage("Postdoc 2026", "acme.com", "/careers/postdoc-2026")).toBe(false);
+    expect(isListingPage("Battery Engineer", "acme.com", "/jobs/12345")).toBe(false);
+    expect(isListingPage("MSR Fuel Cycle", "postdocjobs.com", "/posting/7308863")).toBe(false);
+    expect(
+      isListingPage(
+        "Nuclear Materials and Molten Salt Technologist 1",
+        "lanl.jobs",
+        "/search/jobdetails/x/1",
+      ),
+    ).toBe(false);
+  });
+
+  it("BOTH halves of the conjunction are required — the title half", () => {
+    // B's boundary, verbatim: "A real posting that happens to sit at
+    // `/careers/` with a role-shaped title must not be dropped."
+    expect(isListingPage("Postdoctoral Researcher", "acme.com", "/careers/")).toBe(false);
+    expect(isListingPage("Battery R&D Internship", "acme.com", "/careers")).toBe(false);
+  });
+
+  it("BOTH halves of the conjunction are required — the path half", () => {
+    // A section-shaped title on a path that is not a section root is decided by
+    // the title rules that already existed, not by this one.
+    expect(isListingPage("キャリア", "acme.com", "/about/team")).toBe(false);
+  });
+
+  it("does not fire on a query string", () => {
+    // A board that hangs a posting id off a section root must not be deleted on
+    // evidence nobody measured. C wrote an explicit `includes("?")` guard for
+    // this and the mandated revert proved it VACUOUS — the query rides in the
+    // last path segment and fails the section test by itself. The guard was
+    // deleted; this assertion is kept, so the behaviour stays checked.
+    expect(isListingPage("キャリア", "acme.com", "/careers/?gh_jid=1234")).toBe(false);
+    expect(isListingPage("キャリア", "acme.com", "/careers?gh_jid=1234")).toBe(false);
+  });
+
+  it("an absent title never fires the rule", () => {
+    expect(isListingPage("", "acme.com", "/careers/")).toBe(false);
+    expect(isListingPage("   ", "acme.com", "/careers/")).toBe(false);
+  });
+
+  it("does not touch the two locked constants' own behaviour", () => {
+    // 76b/49a: `CAREERS_INDEX_TITLE_RE` keeps its second call site — the
+    // employer-candidate veto — so these must still be seen as section labels
+    // by that regex and NOT be silenced anywhere by this item.
+    expect(CAREERS_INDEX_TITLE_RE.test("Careers")).toBe(true);
+    expect(CAREERS_INDEX_TITLE_RE.test("Tesla Careers")).toBe(false);
+    expect(CAREERS_INDEX_TITLE_RE.test("Kairos Power Careers")).toBe(false);
   });
 });

@@ -1284,6 +1284,89 @@ function looksLikeTopicLabel(candidate: string, topics: string[]): boolean {
  * file's own tests already require to survive, and the doc comment above says
  * so deliberately. Recorded so nobody re-proposes it.
  */
+/**
+ * A29-04 (round 29 C, item 3). **THE FIX IS STRUCTURE, NOT VOCABULARY.**
+ *
+ * `ionexchangeglobal.com/int/careers/` — one site, one path, one section — is
+ * DROPPED when it prints `Careers` and ADMITTED, as a role title, when it
+ * prints `キャリア`. Round 29 B widened A's falsifier pair and measured the same
+ * split on `Carrières`, `Empleo`, `Karriere`, `採用情報` and `Vagas`: **the
+ * English label is refused and every other language reaches a reader as a job.**
+ *
+ * **WHY NOT JUST ADD THE WORDS.** Three separate reasons, all measured:
+ *  1. A non-English section label is an **OPEN CLASS**. No list finishes, and
+ *     every new locale is a new recorded miss forever.
+ *  2. **RULING 37/40's TRAP, EXACTLY.** `jobs`/`careers` are ordinary nouns in
+ *     real role titles — a leading-word budget false-fired 7 times, including
+ *     `Head of Careers at Imperial College London`. **Every language's word for
+ *     *career* is an ordinary noun in that language too, and there is no corpus
+ *     in those languages to measure the false fires against.**
+ *  3. **THE 76b/49a LOCK FORBIDS THE CHEAP ROUTE.** `CAREERS_INDEX_TITLE_RE`
+ *     has a documented SECOND call site — the employer-candidate veto chain
+ *     (B13-01 Gap A) — so widening it reaches the employer slot and can silence
+ *     `Tesla Careers` / `Kairos Power Careers`. **It is not touched by this
+ *     item, so that cannot happen by construction.**
+ *
+ * **THE DISCRIMINATOR THAT NEEDS NO VOCABULARY: a careers SECTION ROOT is a
+ * path that ENDS at the section segment; a POSTING is a path that CONTINUES
+ * past it.** It is **language-independent by construction** — it reads the URL
+ * a site builds in ASCII, not the words a site prints. B measured **0 of 10
+ * wrong**, with both live must-keep hosts (`lanl.jobs`, and `hyetlithium.com`'s
+ * real posting path) classifying as POSTING so the rule cannot reach them.
+ *
+ * **THE PATH LIST IS A LIST TOO, AND ITS RESIDUAL IS STATED NOT HIDDEN.** Sites
+ * overwhelmingly romanise path segments even when the page is not English —
+ * `ionexchangeglobal.com` prints `キャリア` at `/int/careers/`, which is the whole
+ * point — but **a site using a fully localised non-ASCII path would be a named
+ * miss.** B did not sight one; neither did C.
+ */
+const CAREERS_SECTION_SEGMENT_RE =
+  /^(?:careers?|jobs?|vacancy|vacancies|openings?|opportunities|employment|recruit|recruiting|recruitment|empleo|empleos|karriere|carrieres|vagas|werken-bij)$/i;
+
+/**
+ * A29-04's conjunction, and **BOTH HALVES ARE LOAD-BEARING.**
+ *
+ * **THE PATH HALF.** The last non-empty segment must be a section word:
+ * `/careers/` and `/int/careers/` and `/jp/recruit/` and `/careers/jobs/` are
+ * section roots; `/careers/postdoc-2026` and
+ * `/careers/internship-battery-research/` and `/jobs/12345` and
+ * `/search/jobdetails/x/1` are postings.
+ *
+ * **A QUERY STRING ALSO CANNOT FIRE THIS RULE, AND IT COSTS NO CLAUSE TO SAY
+ * SO.** C first wrote an explicit `includes("?")` guard for the board that
+ * hangs a posting id off a section root (`/careers/?gh_jid=…`) — **and the
+ * mandated revert proved it VACUOUS.** The input here is `pathAndQuery`, so the
+ * query rides in the LAST segment and fails the section test on its own:
+ * `/careers/?gh_jid=1234` ends at `?gh_jid=1234`, `/careers?gh_jid=1234` ends
+ * at `careers?gh_jid=1234`, and neither matches. The redundant clause was
+ * deleted rather than shipped; **the assertion it was written for is kept**, so
+ * the protection is still checked by execution rather than by this paragraph.
+ *
+ * **THE TITLE HALF.** *"A real posting that happens to sit at `/careers/` with
+ * a role-shaped title must not be dropped"* — B's boundary, verbatim. The role
+ * test is the file's **already-shipped** `JOB_TEXT_RE`, chosen because
+ * inventing a second role vocabulary inside a fix for a vocabulary problem is
+ * the exact mistake this item exists to avoid. **RESIDUAL, NAMED:** a bare role
+ * title with none of that vocabulary (`Battery Engineer`) sitting at a section
+ * ROOT url would still be dropped. C did not sight one and does not claim the
+ * class is empty.
+ *
+ * **ABSENT TITLE ⇒ THE RULE DOES NOT FIRE.** It is a kind rule, so a miss falls
+ * to ADMISSION (item 1 §1.3), and a row with no title has already been dropped
+ * upstream anyway.
+ *
+ * **NEITHER LOCKED CONSTANT IS TOUCHED.** `CAREERS_INDEX_TITLE_RE` keeps its
+ * two call sites unchanged; `LISTING_URL_RE` is not read here at all, so the
+ * aggregator behaviour 76b/B13-02 locked stays byte-identical.
+ */
+function isCareersSectionRoot(title: string, pathAndQuery: string): boolean {
+  if (!title.trim()) return false;
+  const segments = pathAndQuery.split("/").filter(Boolean);
+  const last = segments[segments.length - 1];
+  if (!last || !CAREERS_SECTION_SEGMENT_RE.test(last)) return false;
+  return !JOB_TEXT_RE.test(title);
+}
+
 export function isListingPage(
   title: string,
   host: string,
@@ -1298,6 +1381,13 @@ export function isListingPage(
   if (isOwnerSectionIndexTitle(title)) return true; // B17-01a
   if (isHostBrandProgrammePage(title, host)) return true; // B17-01b
   if (isConjoinedSectionLabelTitle(title)) return true; // B28-01 / A28-01
+  // A29-04: the ONE call site of the structural rule, and it is deliberately
+  // ABOVE the aggregator gate. `isListingPage` already receives the path and
+  // already has a `LISTING_URL_RE`, but `if (!isAggregator) return false;`
+  // runs first — so on an ordinary employer's own site the path was **never
+  // looked at at all**, which is exactly why `ionexchangeglobal.com`'s
+  // `/int/careers/` was invisible.
+  if (isCareersSectionRoot(title, pathAndQuery)) return true;
 
   const isAggregator = AGGREGATOR_HOSTS.some(
     (h) => host === h || host.endsWith(`.${h}`),
