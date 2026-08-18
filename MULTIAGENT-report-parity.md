@@ -270,11 +270,125 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-18 17:16 UTC (Agent B, round 30)
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-18 17:5x UTC — ROUND 30 B IS
+                  COMPLETE. BOTH COMMISSIONED ITEMS LANDED, TWO COMMITS, EACH
+                  PUSHED THE MOMENT IT WAS MADE.** Run by `LAPTOP-3CL10CG5`.
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`3f79f2e..c0bdd5e`** for item 1's commit, chained
+                  from the lock claim**), so the race was won rather than
+                  assumed.** No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+                  **B changed no shipped code** — every finding below is
+                  either the SHIPPED mapper functions executed directly on
+                  real strings, or a candidate regex tested in a throwaway
+                  harness (`web/zz-r30b/`, own `vitest.config.ts`, `*.probe.ts`
+                  include), deleted before every commit,
+                  `git status --porcelain --untracked-files=all` verified
+                  clean each time.
+
+                  **RULING 75 OBEYED ABSOLUTELY: NOT ONE TAVILY, ADZUNA,
+                  USAJOBS OR JSEARCH CALL, FOR ANY PURPOSE.** Four live pulls
+                  total, all through the shipped Vertex Gemini adapter
+                  (`searchGemini`) — two for item 1's adversarial sweep, two
+                  for item 2's page-side signal hunt — plus page fetches
+                  through the adapter's own `fetchPagesConcurrently`, no new
+                  fetch category. No credential printed, logged, committed or
+                  written — boolean presence checks only; `.env.local` was
+                  NEVER `cat`-ed. No third-party page text pasted; every quote
+                  is a title or URL under 90 characters, clipped
+                  programmatically.
+
+                  **ITEM 1 (Ruling 79b, the 62d(b)/63a positive-organisation
+                  deferral): NO HONEST FULL TEST EXISTS.** Established by
+                  execution against the full recorded corpus (21 must-keep
+                  strings including all fifteen named acronyms/place-shaped
+                  names, 13 must-drop strings): `CSE` and `BD`/`INL`/`BMS`/
+                  `Tesla` are the IDENTICAL shape — bare short capitalised
+                  tokens, arriving via the SAME `titleEmployer` "at X" capture
+                  in both cases — and separating them requires knowing what
+                  the letters stand for, semantic knowledge no regex
+                  classifier has. **A bounded three-clause partial is designed
+                  and adversarially clean instead**: `ROLE_TEXT_CANDIDATE_RE`,
+                  `CAREERS_OFFICE_HEAD_RE`, `BOARD_DOMAIN_BRAND_RE` — zero
+                  false positives across all 21 must-keeps (constructed corpus
+                  plus two independent live pulls, 12 of 12 real live company
+                  values passed through untouched, including a LIVE re-catch
+                  of `Scientist` as a fresh false company value), seven of
+                  thirteen recorded must-drops caught. **Three residuals named
+                  and left open, not forced**: the `CSE` acronym collision
+                  (the true hard case), the segment-order problem
+                  (`Chemistry`/`Chemical Engineering` — 62d(a)'s held half,
+                  NOT reopened), and the `@ Septerna` shape (a design already
+                  measured and explicitly DECLINED in round 21 — flagged per
+                  Standard 5, not reversed). Blast radius through Ruling 57b
+                  checked: vetoes can only produce silence or promote a
+                  lower-priority candidate, never invent a value; round 30 A
+                  must re-measure pool count, not assume invariance.
+                  **`POLICY — manager decides`**: ship the three-clause
+                  partial (B's recommendation) or hold 79b open pending an
+                  alternative this item's own execution argues against.
+                  **One citation correction to the brief**: the four-instance
+                  corpus (`CSE`, `Internship battery R&D`, `@ Septerna`,
+                  `Career Connections Center University of Florida`) is round
+                  24 A's part 2, not round 26 B item 2 — grepped, the corpus
+                  itself is correctly transcribed, only the attribution was
+                  wrong.
+
+                  **ITEM 2 (Ruling 80b, the empty-snippet admission class):
+                  THREE OF C's FOUR NAMED WRONG SHAPES REPRODUCED LIVE.**
+                  Every empty-snippet admit on a fresh live pull was fetched
+                  and its FULL schema.org record inspected (event surface 7 of
+                  16 offered, job surface 4 of 13 offered). **FIRST FINDING,
+                  A CORRECTION TO THE RULING'S OWN FRAMING: `schema.org` has
+                  ZERO discriminating value on this sample** — the real job
+                  rescue and the worst wrong shape carry the SAME generic
+                  sitewide schema furniture (`WebPage`/`WebSite`/
+                  `BreadcrumbList`/`SearchAction`); neither declares
+                  `JobPosting`. **Three of C's four named shapes reproduced
+                  with real URLs**: `dmse.mit.edu/about-us/career-paths/` and
+                  `physics.missouristate.edu/…/careers.htm` (careers-explorer
+                  pages), `electrochem.org/upcoming-meetings` (a
+                  similar-conferences listing rendering as one fake event),
+                  `faraday.ac.uk/career-development/career-portfolio-
+                  scientist/` (an occupation profile). The fourth ("General 1"
+                  chrome title) stays UNWITNESSED this sweep, named not
+                  claimed. **The real rescue control (`geosi.com/job-opening/
+                  battery-materials-scientist/`) reproduced fresh, confirming
+                  it as the must-keep.** **The signal that actually works is
+                  TITLE+URL STRUCTURE — a bounded extension of the TWO
+                  structural guards ALREADY shipped for this purpose (A29-04
+                  job-side `isCareersSectionRoot`; A27-01 event-side
+                  `isEventHubResult`)**, each one qualifier (a compound word, a
+                  file extension) away from matching today. Adversarially
+                  tested: 0 of 10 regression on A29-04's own matrix, Ruling
+                  64b's must-keep pair and the SolarPACES control replayed
+                  unchanged at their REAL asserted URLs, `geosi.com` untouched,
+                  and a constructed `Career Advisor`-shaped real-posting risk
+                  explicitly NOT caught (closed exact-alternative list, not a
+                  substring/prefix rule — the broader rule was tried and
+                  rejected for exactly this collision risk). **62c's
+                  precedent answered, not assumed: a SIBLING mechanism, not an
+                  extension** — 62c is a post-enrichment gate with its own
+                  dedicated fetch on a row already in the pool; item 2 extends
+                  the ingestion-time structural guards' closed vocabulary, no
+                  new fetch, no new conjunction-with-veto. One residual named:
+                  the occupation-profile's two-segment path is not reached by
+                  a terminal-segment-only rule. Misses fall to admission
+                  throughout; the checks only ever remove a row.
+
+                  **HAND-OFF: `WHOSE TURN: A — round 30, GATE CANDIDATE ROUND
+                  (value + visual, searchProvider: gemini, artefact duty
+                  79e)`.** Turn lock RELEASED (`HELD BY: free`) in this
+                  entry's own commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-18 07:5x UTC — ROUND 29 C IS
                   COMPLETE. ALL SIX ITEMS LANDED, PLUS THE POOL
                   RE-MEASUREMENT. SEVEN §4 ENTRIES, SEVEN COMMITS, EACH PUSHED
@@ -6280,7 +6394,27 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **B — round 30.** Round 29 C is COMPLETE (all six items,
+WHOSE TURN:       **A — round 30, GATE CANDIDATE ROUND (value + visual,
+                  searchProvider: gemini, artefact duty 79e).** Round 30 B is
+                  COMPLETE: **both commissioned items landed, two commits,
+                  each pushed immediately, see STOPPED BECAUSE above.** Item 1
+                  (Ruling 79b) designs a bounded three-clause partial for the
+                  62d(b)/63a positive-organisation test after establishing no
+                  full honest test exists (`CSE` vs `BD`/`INL`/`BMS`/`Tesla`
+                  is the identical shape); item 2 (Ruling 80b) reproduces
+                  three of C's four named wrong shapes live and extends the
+                  two already-shipped structural guards (A29-04, A27-01)
+                  rather than building new machinery, having measured
+                  `schema.org` itself as carrying zero discriminating signal
+                  on this corpus. **B changed no code — both items are
+                  designs for C, with one `POLICY — manager decides` each.**
+                  Claim the §0d lock first, always. **A measures value AND
+                  visual against the shipped `searchProvider: gemini` adapter,
+                  with 79e's artefact duty (commit offered-row and drop tables
+                  in compact form inside the §4 parts).**
+                  ---
+                  Previous entry, kept for continuity:
+WHOSE TURN (superseded):       **B — round 30.** Round 29 C is COMPLETE (all six items,
                   seven commits, see STOPPED BECAUSE above — its hand-off draft
                   was committed by the manager after a mid-write API kill; the
                   words are C's own). **Round 30 opens with B DESIGNING the
@@ -82148,3 +82282,85 @@ Both pulls ran `webResultToRawJobItem` unmodified against real offered rows (que
 **No full "positive organisation test" exists honestly on this corpus** — `CSE` and `BD`/`INL`/`BMS`/`Tesla` are the identical shape, and closing that gap requires semantic knowledge this pipeline does not have and this loop's methodology has repeatedly refused to fake. **A bounded three-clause partial is designed and adversarially clean**: zero false positives across the full 21-row must-keep set (constructed + two independent live pulls), seven of the thirteen recorded must-drops caught, all three clauses closed-vocabulary and additive (nothing reordered, nothing locked touched). **Three named residuals stay open, not forced: the acronym collision (`CSE` and its siblings — the true hard case), the segment-order problem (`Chemistry`/`Chemical Engineering` — already deferred by 62d(a)'s held half, NOT reopened here), and the `@ Septerna` shape (a previously measured-and-declined design, flagged not reversed).**
 
 **`POLICY — manager decides`:** (1) ship the three-clause partial as this round's discharge of Ruling 79b's commission, with the residuals named and watched exactly as `The Battery Saloon` is watched under 79a; or (2) hold 79b open pending a semantic/allowlist alternative — which the recorded `ORG_DESIGNATOR_RE` warning and this item's own execution both argue against building blind. B recommends (1): the partial costs nothing measured, touches no locked constant, and turns two of A29-03's own live wrong-render rows (`Internship battery R&D`, `Membrane Scientist for Electrodialysis`) plus `Career Services`'s sibling shape and the `EV.Careers` latent gap into either correct values or honest silence.
+
+### Round 30 — Agent B — ITEM 2 (Ruling 80b, the empty-snippet admission class): **THREE OF C's FOUR NAMED WRONG SHAPES REPRODUCED LIVE WITH REAL URLS. `SCHEMA.ORG` ITSELF IS MEASURED VALUELESS AS A SIGNAL — NEITHER THE REAL RESCUE NOR ANY OF THE THREE BAD SHAPES DECLARES A DISTINGUISHING TYPE. THE SIGNAL THAT ACTUALLY WORKS IS TITLE+URL STRUCTURE, AND IT IS A BOUNDED EXTENSION OF THE TWO STRUCTURAL GUARDS ALREADY SHIPPED FOR THIS EXACT PURPOSE (A29-04 / A27-01) — A SIBLING OF 62c's MECHANISM, NOT AN EXTENSION OF IT.**
+
+**B changed no code.** Two live `searchGemini` pulls (event queries, job queries — deliberately including generic/reference-shaped phrasing likely to surface index and profile pages, since that is exactly what C's four wrong shapes are), through the shipped adapter, in the same throwaway harness as item 1 (`web/zz-r30b/`, deleted before this commit). **Ruling 75 obeyed absolutely: gemini only, no Tavily/Adzuna/USAJobs/JSearch call.** Every page fetched afterward went through the SAME `fetchPagesConcurrently` (`web/src/lib/opportunities/page-fetch.ts:90`) the adapter itself already calls — no new fetch category, no new host contacted outside the normal pipeline's own reach. No credential printed; `.env.local` never `cat`-ed. No third-party page text pasted anywhere below — every quote is a title or URL under 90 characters, clipped programmatically.
+
+## **2.0 METHOD: EVERY EMPTY-SNIPPET ADMIT, NOT A PRE-FILTERED SUBSET**
+
+For each surface, every offered row with an EMPTY snippet (`(result.snippet ?? "").trim() === ""`) that the SHIPPED `webResultToRawEventItem`/`webResultToRawJobItem` still admitted was kept — this is the same population C's replay measured (C also read every empty-snippet admit, not a pre-filtered "abstain-only" subset), so the comparison is apples to apples. **Event surface: 7 of 16 offered rows.** **Job surface: 4 of 13 offered rows.** Every one of the 11 pages was then fetched directly and its FULL set of `schema.org` `@type` declarations extracted (not just the `Event` check channel L already runs) alongside its title and URL.
+
+## **2.1 THE FIRST FINDING: `SCHEMA.ORG` HAS ZERO DISCRIMINATING VALUE ON THIS SAMPLE, MEASURED NOT ASSUMED**
+
+Ruling 80b's own framing names "the `schema.org` record" as one of three signals in hand. **Executed: of the 11 pages fetched, only ONE declares `Event` in its JSON-LD** (`uvebtech.com`'s real seminar — genuinely a live event, admitted correctly already). **Every other page — five more real conferences, the real job rescue, and all four wrong shapes — declares NO `JobPosting`, NO `Event`, and carries only generic sitewide furniture**: `WebPage`, `WebSite`, `SearchAction`, `EntryPoint`, `BreadcrumbList`, `Organization`, `ImageObject`, `ReadAction`. **The real job rescue (`geosi.com`, below) and the worst of the four wrong shapes carry the SAME schema vocabulary** — `BreadcrumbList`+`WebSite`+`SearchAction` appear on BOTH the genuine posting and the fake occupation-profile page. **This is stated as a correction to the ruling's own working assumption, not silently absorbed**: schema.org cannot be the signal here, because in this live sample it does not separate anything.
+
+## **2.2 THREE OF FOUR NAMED WRONG SHAPES REPRODUCED, WITH REAL URLS, PLUS THE REAL RESCUE CONTROL**
+
+| C's named shape | live specimen found this sweep | title | schema `@type`s |
+|---|---|---|---|
+| **a careers-explorer page** | `dmse.mit.edu/about-us/career-paths/` | `Career Paths - MIT Department of Materials Science and Engineering` | `WebPage`, `WebSite`, `BreadcrumbList`, `SearchAction`, … |
+| **a careers-explorer page** (2nd instance) | `physics.missouristate.edu/MaterialsScience/careers.htm` | `Careers and Outcomes - Materials Science Graduate Program - …` | `ListItem`×4, `BreadcrumbList` only |
+| **a similar-conferences listing** | `electrochem.org/upcoming-meetings` | `Upcoming Meetings - ECS` | `WebPage`, `WebSite`, `BreadcrumbList`, `SearchAction`, … |
+| **an occupation profile** | `faraday.ac.uk/career-development/career-portfolio-scientist/` | `Industry - Scientist` | `WebSite`, `SearchAction`, `Organization`, `WebPage`, `BreadcrumbList`, … |
+| **a "General 1" chrome title** | **NOT FOUND this sweep** | — | — |
+| *(control) the real rescue* | `geosi.com/job-opening/battery-materials-scientist/` | `Battery Materials Scientist \| Green Energy Origin (GEO)` | `WebPage`, `BreadcrumbList`, `WebSite`, `SearchAction`, `Organization`, … |
+
+**The fourth shape ("General 1") is stated as UNWITNESSED this round, not fixed and not refuted** — this sweep's two query sets did not surface a specimen. Whoever measures next should look for forum/discourse pagination chrome specifically (`openmc.discourse.group`-adjacent hosts, per Ruling 42a's own named territory), which neither this sweep nor C's original replay pinned to a URL.
+
+**The `geosi.com` row is a FRESH live instance of the same host/path shape C's replay named** (not a byte-identical replay — the specific posting slug differs — but same host, same `/job-opening/` path convention, same correct rendering: role `Battery Materials Scientist`, employer `Green Energy Origin (GEO)`). It is the must-keep control for everything below.
+
+## **2.3 THE SIGNAL THAT ACTUALLY WORKS: TITLE+URL STRUCTURE — AND IT IS ALREADY SHIPPED, JUST TOO NARROW**
+
+All three reproduced wrong shapes fail the SAME already-shipped, already-`RULING`-approved structural test, one qualifier away from matching it:
+
+- **Job side**, `isCareersSectionRoot` (A29-04, `jobweb.ts:1358`): the terminal URL path segment must EXACTLY equal a closed word (`careers?`, `jobs?`, …). `career-paths` (MIT) and `careers.htm` (Missouri State) are each ONE qualifier — a compound suffix, a file extension — away from an exact match, so today's exact-equality anchor misses both.
+- **Event side**, `isEventHubResult` (A27-01, `eventweb.ts:670`): same shape, `meeting(s)` is simply absent from BOTH the closed path-noun list (`EVENT_HUB_PATH_SEGMENT_RE`) and the closed title-tail list (`EVENT_HUB_TITLE_TAIL_RE`), and the live path (`upcoming-meetings`) is a qualified compound of a word (`meetings`) that isn't even in the list yet.
+
+**Two bounded, closed-vocabulary extensions, adversarially tested against the shipped suites' own recorded rows, not just the new specimens:**
+
+```
+// job side — tolerate a static-page file extension, and the one witnessed compound
+CAREERS_SECTION_SEGMENT_RE_V2 =
+  /^(?:(?:careers?|jobs?|vacancy|vacancies|openings?|opportunities|employment|
+       recruit|recruiting|recruitment|empleo|empleos|karriere|carrieres|vagas|
+       werken-bij)(?:\.html?|\.php|\.aspx?|\.jsp)?|career-paths?)$/i
+
+// event side — add "meeting(s)" to both signals; tolerate ONE hyphen-bounded
+// qualifier prefix on the path noun (not a bare substring match)
+EVENT_HUB_PATH_SEGMENT_RE_V2  = /^(?:events?|…|meetings?|[a-z0-9]+-(?:events?|conferences?|seminars?|workshops?|meetings?))$/i
+EVENT_HUB_TITLE_TAIL_RE_V2    = /(?:^|\s)(?:events|conferences|seminars|workshops|symposia|meetings)$/i
+```
+
+**Adversarial results, executed:**
+
+| check | result |
+|---|---|
+| catches all 3 live specimens (career-paths, careers.htm, upcoming-meetings) | **YES, all 3** |
+| A29-04's OWN recorded 10-row matrix (job side) | **0 of 10 wrong — unchanged** |
+| Ruling 64b's must-keep pair, replayed at their REAL asserted URLs from `eventweb.test.ts:2152-2168` (`Co-located Workshops` @ `thebatteryshow.com/en/co-located-workshops.html`; `DLR Events` @ `event.dlr.de/en/event/emea2026-workshop-on-battery-technology/`) | **both still `false` (kept) — unchanged** |
+| the SolarPACES single-event bare-hub-path control (`eventweb.test.ts:2184-2189`) | **still `false` (kept) — unchanged** |
+| `geosi.com`'s real posting path (`/job-opening/battery-materials-scientist/`) | **not caught by any addition — correctly survives** |
+| **ADVERSARIAL boundary check**: a constructed real `Career Advisor`-titled posting at a `careers-advisor-job`-shaped path | **NOT caught — the extension is a closed exact-alternative list, not a hyphen-prefix or substring rule, deliberately, for exactly this reason** |
+
+**Why a broader rule was considered and rejected.** The obvious generalisation — "the terminal segment CONTAINS the recognised word as a hyphen-token, anywhere" — was tried by hand against the corpus and rejected without shipping: it would also match a real `/careers-advisor-job/`-shaped posting slug for a genuine "Career Advisor" or "Career Coach" role (a real title in HR/coaching fields, and NOT covered by `JOB_TEXT_RE`'s vocabulary either, so the title-half of the conjunction would not save it). The closed-list addition above cannot reach that string at all, by construction — narrower, and the false-drop risk is designed out rather than measured down.
+
+## **2.4 THE NAMED RESIDUAL: THE OCCUPATION-PROFILE SHAPE IS NOT REACHED, AND WHY**
+
+`faraday.ac.uk/career-development/career-portfolio-scientist/` (the "occupation profile," rendering `roleTitle: "Industry"`, `company: "Scientist"`) is **NOT caught by either extension.** Its path is TWO segments deep (`career-development` then `career-portfolio-scientist`), and the terminal segment itself is a three-word compound, not a qualified variant of ONE recognised word — a terminal-segment-only rule cannot honestly reach it without becoming the rejected substring/prefix rule from §2.3. **Left open, named, not forced.** Note the cross-item consistency: this same page's WRONG company value (`Scientist`) is independently caught by item 1's `ROLE_TEXT_CANDIDATE_RE` veto — so even without a page-kind fix, this specific row's employer FIELD stops being wrong; only the row's KIND (it is not a job posting at all) stays unaddressed by item 2.
+
+## **2.5 62c's PRECEDENT, ANSWERED RATHER THAN ASSUMED: A SIBLING, NOT AN EXTENSION**
+
+**Established by reading both mechanisms, not by analogy.** Ruling 62c's conjunction (the dated-permalink URL clause AND a page-declared-article check, with a `JobPosting` veto) lives at the **POST-ENRICHMENT gate** (`pipeline.ts:96-103` / `scoring.ts:211`), consulted on a row ALREADY IN THE POOL, fed by a DEDICATED enrichment-time page fetch (`extractOpportunityPageDetails`) that is a wholly separate code path from ingestion. **Item 2's design lives at INGESTION TIME**, inside the SAME `isListingPage`/`isEventHubResult` structural guards that already run on every offered row before a `RawJobItem`/`RawEventItem` is ever built, extending their CLOSED VOCABULARY — no new fetch (the page was already fetched by the adapter itself), no new conjunction-with-veto mechanism, no new call site. **It is structurally much closer to A29-04's own item-3 fix (also a bounded vocabulary extension to a shipped structural guard) than to 62c.** The two mechanisms are siblings under the same doctrine (misses fall to admission; the check only ever removes a row, never changes a value) but operate at different layers on different data.
+
+## **2.6 WHAT RENDERS ON A MISS, AND THE BLAST RADIUS**
+
+**Exactly as instructed: a miss falls to ADMISSION, the status quo — the row renders exactly as it does today.** Both extensions can only ever cause `isListingPage`/`isEventHubResult` to return `true` where it previously returned `false` — i.e., they can only REMOVE a row from the pool, never alter a rendered value, never promote a different candidate, never invent a card shape. This is the same direction 62c's own instruction requires and the same direction item 1's vetoes take. **No blast radius through Ruling 57b or any scoring mechanism**: a dropped row never reaches the collision guard at all.
+
+## **2.7 TESTS AT RISK, GREPPED**
+
+`web/src/lib/jobs/sources/jobweb.test.ts` — A29-04's own `isCareersSectionRoot`/`isListingPage` assertions (the 10-row matrix replayed above, verbatim). `web/src/lib/events/sources/eventweb.test.ts` — `isEventHubResult`'s suite at lines 2098-2229, specifically the Ruling 64b must-keep pair (2152-2168), the singular-noun boundary (2171-2182), and the bare-hub-path single-event control (2184-2189) — all three re-verified against the V2 regexes directly above, all three unchanged.
+
+## **2.8 VERDICT**
+
+**Three of C's four named wrong shapes reproduced live with real URLs and real page fetches; the fourth ("General 1" chrome title) stays unwitnessed, named, not claimed either way.** `schema.org` is measured to carry zero discriminating signal on this sample — a correction to the ruling's own framing. The working signal is TITLE+URL structure, delivered as a bounded, adversarially-tested extension of the TWO structural guards this loop ALREADY shipped and approved for exactly this purpose (A29-04, A27-01) — a sibling of 62c's mechanism, not an extension of it, established by reading both rather than assumed from the family resemblance. One shape (the occupation-profile, two-segment path) stays a named residual rather than forcing a broader rule the corpus shows would cost a real "Career Advisor"-shaped posting. **Round 30 A scores whatever renders as the ordinary census, per Ruling 80b — this design's acceptance is the must-keep/must-drop corpus above, not a claim of having closed the class.**
