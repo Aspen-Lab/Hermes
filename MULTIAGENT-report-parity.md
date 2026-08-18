@@ -84474,3 +84474,109 @@ Implemented B's §2.1 design exactly as printed in `web/src/lib/opportunities/st
 
 **RULING 88 — round 32 C is VERIFIED AND ACCEPTED; the hand-off stands: `WHOSE TURN: A — round 32, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list + round-32 residual additions: thrlab.tamu.edu, the lco.cl reversed-order shape)`.** A's verification targets this round: A31-01's shapes (wikipedia/dated-blog/brand-tagline rows must now drop at ingestion if offered; absence is absence, not a pass), A31-02's specimen (if `linevsystems.com` re-appears, its Dates tile must now RENDER — the normalizer's first live witness), the standing watch list and named-cost registry, the timeout-flake rate, and the standing tallies. **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet eighth data point: C transcribed faithfully, verified the one ambiguous specimen by execution instead of guessing, and named its own process wobble unprompted — clean.
 
+
+### Round 32 — Agent A (part 1: METHOD, THE COLD GATE, AND THE JOB SURFACE VALUE CENSUS. searchProvider: gemini ON EVERY PULL. A31-01 VERIFIED FIXED LIVE — ALL THREE OFFERED SHAPES DROP AT INGESTION. ZERO NEW FALSE DROPS FROM THE THREE NEW GUARDS. POOL-COUNT RE-MEASURED POST-THREE-GUARDS: NO ANOMALY.
+
+STATUS: PARTIAL BY DESIGN, mirroring round 31's own discipline: part 1 is method + job value + A31-01 verification, part 2 is event value + A31-02 verification + the residual watch list, part 3 is visual + standing tallies + the gate verdict. No gate verdict is set here, and A never closes the gate in any case (Ruling 30).
+
+Claimed the turn lock (`9390841`, LAPTOP-3CL10CG5 @ 2026-08-18 22:52 UTC) after `git pull` and after confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped "Round 32 — Agent A" first — zero prior entries existed, fresh start not a resume. Read Rulings 87a-87d and 88, both Round 32 Agent B entries, both Round 32 Agent C entries, the Round 32 MANAGER verification entries, and round 31 A's three parts in full before any live pull.
+
+## THE COLD BASELINE, CONFIRMED BEFORE ANY MEASUREMENT
+
+| check | expected (Ruling 88) | A measured cold |
+|---|---|---|
+| `npx vitest run` | 99 files / 2381 tests, 2381 passing, ZERO failures | 99 files / 2381 tests, 2381 passing, ZERO failures |
+| `npx tsc --noEmit` | clean | clean, exit 0 |
+
+## METHOD
+
+Live credentials reconfirmed by BOOLEAN CHECK ONLY (`.env.local` never `cat`-ed, no value printed/logged/committed): `GOOGLE_VERTEX_PROJECT` true, `GOOGLE_VERTEX_LOCATION` true, `GOOGLE_APPLICATION_CREDENTIALS` true; `TAVILY_API_KEY`/`BRAVE_API_KEY`/`ADZUNA_APP_ID`/`ADZUNA_APP_KEY`/`USAJOBS_API_KEY`/`USAJOBS_USER_AGENT`/`JSEARCH_API_KEY`/`RAPIDAPI_KEY` all false — byte-identical to round 31 A's confirmed environment. `profile.json`: `tavilyEnabled: false`, `tavilyApiKey` present (unused), `researchTopics: ["LCO","topochemical","ion exchange","molten salt","battery"]`, `careerStage: PhD Year 3`, `industryVsAcademia: industry`. `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }` passed explicitly on every pull, forcing `searchProvider: gemini` by construction.
+
+Instrument: a throwaway harness (`web/zz-r32a/`, own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load — one path bug caught and fixed during setup, see below) called the shipped, exported `buildDailyJobPool`/`buildDailyEventPool` directly, with a fresh in-memory no-op `PoolCache` instance per pull (never reused, so every pull is a genuinely cold network build). `searchGemini` (`@/lib/sources/gemini-search`) was wrapped with `vi.spyOn`, the ORIGINAL function reference captured once before any mock was installed and called through inside the mock implementation — every `{title, url, snippet, pageKind}` row it returned was recorded, tagged by surface and pull number. `isOwnerNameTopicCollision` (`@/lib/opportunities/shared`) was wrapped the same way for the 57b re-measure. Row-level ingestion ground truth was obtained by calling the shipped, EXPORTED `webResultToRawJobItem`/`webResultToRawEventItem` directly on each captured raw result (round 30/31's own technique) — not by attempting to intercept the same-module call inside each adapter's own `fetchImpl`. Nothing under `src/` was modified.
+
+**One setup bug, caught by a smoke test before the real run, named honestly:** the harness's first `vitest.config.ts` drafted `loadEnv("test", process.cwd() + "/..", "GOOGLE_")` (an extra `/..`), which pointed the env loader at the repo root instead of `web/` and silently produced an EMPTY Vertex env — a 1-pull smoke test caught this immediately (`jobweb` never appeared in `fetched` at all, `isGeminiSearchAvailable()` false). Fixed to `process.cwd()` (matching the root config exactly), re-smoke-tested, confirmed `jobweb`/`eventweb` both fetch live rows. The same bug also affected the `profile.json` path read; both fixed together. Caught before the real 5+5 run, zero cost to the actual measurement.
+
+Five pulls per surface, one window each (matching round 31's own stated discipline). Full 10-pull run executed as a single background job (real elapsed time ~7 minutes), progressively written to a JSON file in this session's scratchpad, OUTSIDE the repository. Its compact host-level tables are transcribed below (Ruling 79e). No third-party page text is pasted — every quoted title is clipped to <=70 characters.
+
+Throwaway harness lived OUTSIDE `src/` (`web/zz-r32a/`) and is deleted before this and every other commit this round — `git status --porcelain --untracked-files=all` confirmed clean immediately after deletion, before this entry's commit.
+
+RULING 75 obeyed by construction and CHECKED DIRECTLY: `fetched` never carries a `tavily` key on either surface across all 10 pulls — job fetched keys are exactly `{remotive, arbeitnow, himalayas, jobweb}` every pull; event fetched keys are exactly `{ccfddl, confstech, researchseminars, eventweb}` every pull.
+
+## A31-01 VERIFIED FIXED, LIVE — ALL THREE OFFERED SHAPES DROP AT INGESTION
+
+All three of round 32 C's shipped components were organically re-offered this window and every single offer DROPPED at ingestion, confirmed by direct execution of the shipped `webResultToRawJobItem` on the exact captured row:
+
+**Component A (`NON_JOB_HOSTS`/`isNonJobHost`, Wikipedia):**
+> `en.wikipedia.org/wiki/Topochemical_polymerization` — offered 2 of 5 pulls (3, 4), `ingested: false` BOTH times.
+
+**Component B (`DATE_STRUCTURED_PATH_RE`/`isDateStructuredResearchPath`):**
+> `foundry.lbl.gov/2025/07/11/slowing-down-to-speed-up/` — offered 2 of 5 pulls (3, 4), `ingested: false` BOTH times.
+
+**Component C (`isBrandOnlySearchResultsPage`, jobright.ai brand-tagline):**
+> `"Jobright: Your AI Job Search Copilot"` @ `jobright.ai/jobs/summer-2027-chemical-engineering-intern-jobs-in-united-states` — offered pull 1, `ingested: false`.
+
+**TWO POSITIVE, FIRST-EVER LIVE WITNESSES OF THE SAME COMPONENTS' SAFETY NETS NOT OVER-FIRING, both organic, both this window:**
+
+1. **Component B's title-half safety net, live-witnessed for the first time**: `grad.wisc.edu/2025/11/13/phd-student-internship-opportunities-at-thermo-fisher-scientific/` matches `DATE_STRUCTURED_PATH_RE` exactly (a `/YYYY/MM/DD/` path) but the title — `"PhD Student Internship Opportunities at Thermo Fisher Scientific"` — carries real `JOB_TEXT_RE` vocabulary ("Internship"), so `isDateStructuredResearchPath` correctly returns `false` and the row is KEPT (`ingested: true`, offered 5 of 5 pulls, byte-identical title and URL every time). This is the exact adversarial shape B's own design doc-comment predicted ("a genuine posting that happens to sit at a date-structured path is not silenced") — now live-confirmed, not merely unit-tested.
+2. **Component C's must-keep control, live-witnessed for the first time in real traffic**: `jobright.ai/jobs/info/6a70dbcc357dfc6ff2b3b865?...` — offered pull 4, title `"Internship, Battery Materials, Battery Engineering (Winter/Spring 2027) @ Tesla | Jobright.ai"` (the site's own real-posting numeric-ID URL shape, the same shape as C's shipped test control at `jobweb.test.ts:1317`). `ingested: true`, and it SURVIVES to the final scored pool pull 4. Confirms the brand-only guard's leaf-shape precondition correctly distinguishes a genuine listing page from a genuine individual posting on the SAME host.
+
+**ZERO NEW FALSE DROPS from any of the three new components, checked by direct scan of every `ingested: false` row this window against each component's own trigger condition** (wiki-host, `/YYYY/MM/DD/`-path-without-job-vocabulary, colon-title-at-a-`TOPIC_LANDING_LEAF_RE`-shaped-leaf) — the only rows matching any of the three trigger shapes are the two already-known specimens above (Components A/B) and the one already-known jobright.ai brand-tagline specimen (Component C). A broader colon-in-title scan surfaced several OTHER dropped rows (`energy.gov`, `researchersjob.com`, `extern.com`, `engineering.wisc.edu`, `coopcareers.org`, `interninsider.me`) but every one of these is dropped by a PRE-EXISTING guard unrelated to round 32's three new components (e.g. `energy.gov`'s path literally contains `/articles/`, matching the long-standing `NON_JOB_PATH_RE`) — confirmed by checking that none of them matches any of the three NEW components' own trigger condition, not merely by their presence in the drop list.
+
+## POOL-COUNT / RULING 57b RE-MEASURE, POST-THREE-GUARDS (round-32-specific duty)
+
+`isOwnerNameTopicCollision` (Ruling 57b) wrapped with a call-through spy: **ZERO firings across all 10 pulls (both surfaces, this entire round)** — directly answering the standing "re-measure, don't assume" instruction.
+
+`beforeDedup -> afterDedup` deltas, 5 job pulls: 158->153 (5), 165->158 (7), 161->156 (5), 165->160 (5), 137->132 (5) — small, single-digit, consistent with round 30/31's own delta range, no spike attributable to the three new job-side guards. `poolItemCount` (final scored pool): 6, 8, 6, 7, 0 — pull 5 lost the whole `jobweb` contribution to the source timeout (below).
+
+**A REAL, LIVE, UNPROMPTED TIMEOUT-FLAKE MEASUREMENT (83b re-measure duty):** the `jobweb` (gemini) source hit its hard 25000ms `withSourceTimeout` and returned zero rows on 1 of 5 job pulls (20%) — pull 5, error text `"[jobweb] source-timeout after 25000ms"`, verbatim the same message class round 30/31 measured. Event-side rate is in part 2. Not a round-32 regression — untouched by anything C shipped this round (`jobweb.ts`'s three new guards run in the early-rejection chain, not the timeout wrapper).
+
+## JOB SURFACE ARTEFACT TABLE (Ruling 79e) — COMPACT, HOST-LEVEL, ONE WINDOW, 5 PULLS
+
+99 unique hosts across 5 pulls. Format: `host | first-seen title (<=55 chars) | offered-count | decision`. Decision is ground truth (row present in the final scored pool, any pull this window).
+
+```
+lco.global | Director's Fund | x25 | not in final pool
+ionexchangeglobal.com | Careers - Ion Exchange | x14 | not in final pool
+psi.ch | Summer Student Projects PSI Center for Nuclear Enginee... | x13 | ingested x13, NOT in final pool this window (topic-floor variance -- A30-01, see part 3)
+ertel-ionstream.com | Jobs | Ertel IonStream GmbH | x8 | not in final pool
+acu.edu | NEXT Lab Internships | Abilene Christian University | x8 | not in final pool
+grad.wisc.edu | PhD Student Internship Opportunities at Thermo Fisher ... | x8 | ingested (Component B safety net, correctly kept), not in final pool
+stemgateway.nasa.gov | STEM Gateway | x7 | not in final pool (named, not counted, unchanged)
+energy.gov | Discover Science: Applications Open for Spring 2027 Un... | x7 | not in final pool (pre-existing NON_JOB_PATH_RE, /articles/)
+sites.utexas.edu | Opportunities | x7 | not in final pool
+extern.com | When Do Internship Applications Open? Your 2027 Timeli... | x7 | not in final pool
+ev.careers | Internship, Battery Engineering (Summer 2026) at Tesla | x6 | ADMITTED (pool, company: Tesla -- 57b re-confirmed)
+energy.sandia.gov | Energy Internship Programs | x6 | not in final pool
+ionenviromgt.net | CAREER | Ion Exchange | x6 | not in final pool
+jobs.ethz.ch | Stellenangebote der ETH Zuerich | x6 | not in final pool
+researchersjob.com | PhD Position: Anion Exchange Membrane,Helmholtz Instit... | x6 | not in final pool
+lco.edu | Internship Opportunities - Education for college stude... | x6 | not in final pool
+careers.gevernova.com | GE Vernova Battery Engineering & Technology Intern - S... | x5 | ADMITTED (pool, silent company)
+job-boards.greenhouse.io | Nuclear Engineering Internship - Summer 2027 | x5 | not in final pool
+moltensaltsolutions.com | Careers | Molten Salt Solution | x5 | not in final pool
+pls.llnl.gov | Computational Chemistry and Materials Science (CCMS) S... | x5 | not in final pool
+postdocjobs.com | Postdoctoral Appointee - Membrane Scientist for Electr... | x5 | ADMITTED (pool, silent company -- A29-03, re-confirmed)
+talents.vaia.com | Reactor Physics Intern (Nuclear Engineering) in Bryan ... | x4 | ADMITTED (pool, company: Savannah River National Laboratory / NISSAN -- 57b re-confirmed)
+cefracor.org | AN OPEN POSTDOCTORAL RESEARCHER POSITION | x4 | ADMITTED (pool, silent company)
+pire.illinois.edu | xFU(s)ION Internship Applicant Call | PIRE at CSE - Un... | x4 | ingested (company: "CSE"), NOT in final pool -- CSE-class residual, re-confirmed
+en.wikipedia.org | Topochemical polymerization - Wikipedia | x2 | DROPPED AT INGESTION -- A31-01 Component A, VERIFIED FIXED
+foundry.lbl.gov | Slowing Down to Speed Up: Unveiling the Secrets of Top... | x2 | DROPPED AT INGESTION -- A31-01 Component B, VERIFIED FIXED
+jobright.ai | Jobright: Your AI Job Search Copilot / real-posting URL | x2 | ONE dropped at ingestion (brand-tagline, Component C VERIFIED FIXED), ONE ADMITTED (real posting, must-keep control live-witnessed)
+climatechangejobs.com | Molten Salt Electrochemistry Postdoctoral Researcher a... | x3 | ADMITTED (pool, company: Idaho National Laboratory)
+hyetlithium.com | Careers Open application - Internship battery R&D - Hy... | x3 | ADMITTED (pool, silent company -- A29-03, re-confirmed)
+database.enen.eu | PhD Opportunity in Molten Salt Reactor - European Nucl... | x2 | ADMITTED (pool, company: European Nuclear Education Network -- 57b re-confirmed)
+careerservices.upenn.edu | Postdoctoral Research Associate - Molten Salt Characte... | x2 | ingested, NOT in final pool -- Ruling 34a re-confirmed
+builtinsf.com | Battery Engineering Internship, Electrochemistry & Sim... | x1 | ADMITTED (pool, company: Sila Nanotechnologies)
+startup.jobs | Engineering Intern - Battery Cell at Rivian Automotive | x1 | ADMITTED (pool, company: Rivian Automotive)
+enovix.wd12.myworkdayjobs.com | R&D Intern | x1 | ADMITTED (pool, silent company)
+energyx.com | Internship Program - EnergyX: Lithium Extraction Compa... | x1 | ADMITTED (pool, company: EnergyX)
+bebee.com | Molten Salt Thermochemistry Postdoctoral Researcher - ... | x1 | ADMITTED (pool, company: Lawrence Berkeley National Laboratory)
+lanl.jobs | Nuclear Materials and Molten Salt Technologist 1 - Res... | x1 | ADMITTED (pool, company: Los Alamos National Laboratory)
+faraday.ac.uk | PhD Internships | x3 | DROPPED AT INGESTION (pre-existing listing-shape guard, unrelated to round 32) -- 81b residual, different URL from the named one
+(73 further hosts offered 1-4 times each, all "not in final pool" except the ones named above; every remaining single/low-offer host is a genuine drop, not individually clause-traced this round)
+```
+
+Named-row sanity checks against this table: `hyetlithium.com` and `postdocjobs.com` both re-confirmed ADMITTED with silent company (A29-03 stays ADDRESSED, unregressed). `stemgateway.nasa.gov` still not pooled -- unchanged, still NAMED NOT COUNTED. `ev.careers`/Tesla, `talents.vaia.com`/Savannah River National Laboratory + NISSAN, `database.enen.eu`/European Nuclear Education Network are fresh 57b witness lines re-confirmed this round.
+
+Committed and pushed as its own item, per the write-as-you-go discipline. Part 2 (event surface census, A31-02 verification, and the residual watch list) follows.
+
