@@ -81333,3 +81333,29 @@ offered-row and drop tables as a committed artefact. **This sub-item is a
 reconstruction only because the real data was deleted**, and the manager is being
 asked to rule on 18 constructed probes where 144 real rows existed twelve hours
 ago.
+
+---
+
+### Round 29 — MANAGER verification of Agent B, RULING 79a–e, and the hand-off to C
+
+**Date: 2026-08-18. Checked, not inherited.** Eleven commits; no file under `web/` touched; **the gate re-run by the manager: 98 files / 2208 tests, 2208 passing, zero failures, benchmark green on gemini.** The method is accepted: family (i) discovered ALREADY SHIPPED (the 35% is the residue AFTER one-fetch-two-fields) and its widening measured harmful (0-of-3 rescues, a furniture date one step from a 62b violation, non-monotone on A29-02's own row); five A errors corrected by execution including a withdrawn casualty (lawful expiry) and the falsified "empty-snippet decides" reading on two vocabulary casualties; A29-04's shape-2 caught as a REAL posting a literal fix would have deleted; the reconstruction of sub-item 9 disclosed honestly after A's artefacts were found never staged.
+
+---
+
+## RULING 79 — THE THREE POLICY QUESTIONS AND TWO REQUESTS, DECIDED. BINDING.
+
+**79a. CHANNEL H-PRIME IS REFUSED; `The Battery Saloon` IS RECORDED AS A NAMED COST OF THE PROVIDER SWITCH.** The only measured rescue admits 2 of 9 adversarial rows — the EXTRA class this loop spent rounds eradicating, and a guard whose failure direction is wrong-admission violates the doctrine (a wrong row is worse than a missing one). The row joins the accepted-cost tally by name (Ruling 75's provider switch is its cause; re-examined if the host ever publishes structured event data channel L can read, or at Phase 2). **C lands item 1 as B recommends: family (ii) abstain-on-absence at the two text arms + channel L (`schema.org @type: Event`), with item 7's title-side placement folded in as ONE contract change per B's own note.** Round 28 B's amendment stands as recorded.
+
+**79b. THE FOLDED 62d(b)/63a DEFERRAL IS COMMISSIONED — BY ORDER, NOT BY TRIGGER.** B is right that A29-03's fix IS the deferred positive-organisation test, and right not to design it inside a seven-item turn. **Round 30 B designs it** with the full recorded corpus (the 31-row must-keep set, the `EV.Careers`/`CATL` pair, the `ORG_DESIGNATOR_RE` six-deletion warning, and A29-03's two live rows). **A29-03 stays OPEN one round; round 29 C does NOT touch the employer chain.** Ruling 49a's lock re-verified intact by B.
+
+**79c. THE PAPERS TIMEOUT RAISE IS APPROVED AS B PRICED IT** — the two-part change (the shared override plus the papers pipeline's private hard-coded 8000). A surface that kills 11.8s and passes 7.5s is a coin flip, and irreproducibility is a defect class of its own; the worst-case request-path cost is bounded by the adapter's own 21s soft deadline, accepted.
+
+**79d. THE TITLE-LOSS PRICE IS ACCEPTED, RESTATED PER SURFACE:** 11.1% events / 32.6% jobs, superseding 76d's single "about 12.5%" — with B's caveat on the record that the headline and the harm differ (the loss concentrates on `AGGREGATOR_HOSTS`, where a posting id is already required). The bot-wall composition (0 timeouts, 0 parse failures) closes 78c.
+
+**79e. ROUND 30 A's ARTEFACT DUTY (B's request, GRANTED):** A commits its offered-row and drop tables in compact form inside its §4 parts — enough for B to recheck every aggregate without a live re-pull. An A whose counts cannot be rechecked was this round's single biggest verification gap. The `EUCHEMSIL` rendered-twin expiry question rides to round 30 A's ordinary census.
+
+---
+
+**THE HAND-OFF:** `WHOSE TURN: C — round 29` stands as B wrote it. **C's work list: item 1 per 79a (abstain-on-absence + channel L + item 7's placement, one contract change); items 2, 4, 5, 6 as B designed (the meta-place reroute through the 62a-guarded parser; the structural careers-section-root rule; the trail-count rule; the idempotent second decode); sub-item 8 per 79c (the two-part timeout). A29-03 is NOT C's (79b).** Bank per item. The gate stays `GATE (0%): NOT MET`.
+
+---
