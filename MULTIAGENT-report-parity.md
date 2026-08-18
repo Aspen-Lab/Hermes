@@ -275,6 +275,40 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~18:2x UTC — ROUND 30 C
+                  VERIFIED INDEPENDENTLY, RULINGS 82a-82d APPENDED (§4).**
+                  Gate re-run cold by the manager: **99 files / 2293 tests,
+                  2293 passing, zero failures**; `tsc --noEmit` clean; test
+                  files pure additions, zero deletions. The
+                  `CAREERS_OFFICE_HEAD_RE` collision verified by READING the
+                  locked test (`jobweb.test.ts:2589-2597`), not by trusting
+                  C's word — it is structural, and it is a hole in B's 21-row
+                  corpus (which never contained B13-01 Gap A's fixtures); the
+                  layered defence worked, no strike assigned.
+                  **RULING 82a: the two-of-three partial is ACCEPTED as
+                  Ruling 79b's discharge; `CAREERS_OFFICE_HEAD_RE` is
+                  WITHDRAWN** (a clause that deletes a locked must-keep does
+                  not ship). `Career Connections Center University of Florida`
+                  joins the named-and-watched residuals, reopen trigger = the
+                  shape on a POOL row in any census (it has never pooled; live
+                  cost today is zero). A candidate conjunction redesign
+                  (head-match AND no `ORG_DESIGNATOR_RE` tail) is RECORDED for
+                  a future B to measure — not commissioned, not shipped blind.
+                  **RULING 82b: item 2 verified and accepted** — both V2
+                  extensions byte-faithful to the design, controls re-run.
+                  **RULING 82c: hand-off CONFIRMED as C wrote it —
+                  `WHOSE TURN: A — round 30, GATE CANDIDATE ROUND (value +
+                  visual, searchProvider: gemini, artefact duty 79e,
+                  EUCHEMSIL expiry-twin)`** with the consolidated duty list in
+                  §4 (pool-count re-measure post-vetoes per 57b; A29-03
+                  re-measure — its two rows should now be honest silence; the
+                  nine-entry residual watch list). **If A measures double-zero
+                  on everything unexplained, hand off `WHOSE TURN: MANAGER —
+                  independent re-measurement before any close`. A never
+                  closes the gate.** **RULING 82d: second sonnet data point —
+                  no quality degradation at the C seat.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-18 18:0x UTC — ROUND 30 C IS
                   COMPLETE. BOTH COMMISSIONED ITEMS LANDED, TWO COMMITS, EACH
                   PUSHED THE MOMENT IT WAS MADE.** Run by `LAPTOP-3CL10CG5`.
@@ -82529,3 +82563,21 @@ This commit touches only `web/src/lib/jobs/sources/jobweb.ts` and `web/src/lib/j
 This commit touches only `web/src/lib/jobs/sources/jobweb.ts`, `web/src/lib/jobs/sources/jobweb.test.ts`, `web/src/lib/events/sources/eventweb.ts`, `web/src/lib/events/sources/eventweb.test.ts` (plus this file's own §4 append).
 
 **BOTH ROUND 30 C ITEMS ARE NOW BANKED.** See §1 for the close-out.
+
+### Round 30 — MANAGER (independent verification of C; RULINGS 82a-82d; hand-off to A confirmed)
+
+**Verification, run before any ruling:**
+
+- **Gate, re-run cold by the manager:** `cd web && npx vitest run` — **99 files / 2293 tests, 2293 passing, ZERO failures.** Matches C's close-out exactly (+27 over the 2266 baseline, all additive). `npx tsc --noEmit` clean.
+- **Numstat:** item 1 touches `jobweb.ts`/`jobweb.test.ts` only; item 2 touches the four named surface files only; test files are PURE ADDITIONS (98+ and 52+/43+ lines, zero test deletions). Working tree clean, everything pushed.
+- **The collision, verified by reading the locked test, not C's word for it:** `jobweb.test.ts:2589-2597` ("is WHOLE-SEGMENT anchored — a real name CONTAINING the phrase survives", B13-01 Gap A) asserts `Career Services International Ltd` and `Global Careers Office Solutions Inc` MUST render as employers. `CAREERS_OFFICE_HEAD_RE` is head-anchored with no end anchor BY DESIGN (that is what reaches past the Florida string's tail), so it necessarily matches `Career Services International…` too. **The collision is structural, exactly as C filed it — and it is a hole in B's 21-row must-keep corpus, which never contained B13-01's Gap A fixtures. The gate caught what the corpus missed; this is the layered defence working, and no one gets a strike for it** (the corpus was honest, just incomplete; the locked test existed precisely for this).
+- **Spot-checks:** `ROLE_TEXT_CANDIDATE_RE` (`jobweb.ts:952`) and `BOARD_DOMAIN_BRAND_RE` (`:972`) read exactly as designed with B's reasoning preserved in the doc comments; the Florida residual is asserted HONESTLY as still-wrong (`jobweb.test.ts:2733-2739` expects the full wrong string, so the gap stays visible); `Career Services` re-confirmed vetoed by the PRE-EXISTING `CAREERS_OFFICE_LABEL_RE`, correctly credited as not-new.
+
+**RULING 82a — item 1's `POLICY — manager decides`: OPTION (1). The two-of-three partial is ACCEPTED as the discharge of Ruling 79b's commission (81a's scope amended accordingly).** `CAREERS_OFFICE_HEAD_RE` is WITHDRAWN from the approved design — a clause that deletes a locked must-keep does not ship, full stop. `Career Connections Center University of Florida` joins the NAMED-AND-WATCHED residuals with the same reopen trigger 63a uses: **the shape appearing on a POOL row in any census** (it has never pooled — round 24 A measured all four instances of its class as offered-only, zero pooled — so the live cost of withholding the clause is currently zero). **One candidate redesign is RECORDED FOR A FUTURE B TO MEASURE, not shipped blind:** the conjunction `CAREERS_OFFICE_HEAD_RE.test(c) && !ORG_DESIGNATOR_RE.test(c)` — the collision pair itself separates on the org-designator tail (`…International Ltd`/`…Solutions Inc` end in designators; `…University of Florida` ends in `Florida`, which is not one). Both locked Gap A fixtures survive it BY INSPECTION — but inspection is not a corpus, a real `Career Services Group`-shaped firm (no designator tail) would be falsely vetoed, and the `ORG_DESIGNATOR_RE` warning's own doctrine is measure-before-trusting. Recorded, named, not commissioned this round.
+
+**RULING 82b — item 2 is VERIFIED AND ACCEPTED.** Both V2 extensions shipped byte-faithful to B's design (the job-side single-line collapse checked against the wrapped original; the event-side qualifier alternative's own closed five-word list deliberately excludes `careers?`/`jobs` — read and confirmed at `eventweb.ts:686-689`). The isolation test proving the multi-hyphen slug is rejected by the PATH half alone (not a lucky title mismatch) is exactly the right paranoia and is noted with approval.
+
+**RULING 82c — the hand-off to A stands as C wrote it: `WHOSE TURN: A — round 30, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty 79e, EUCHEMSIL expiry-twin)`.** A's duties this round, consolidated: the full double census (value + visual, five-pull discipline, plates 02/03 of `Peer-design-spec-original.pdf`); pool-count re-measure after item 1's vetoes (57b blast radius — B's item 1 §1.5 instruction, now live); A29-03 re-measure (its two wrong-render rows should now be honest silence — if they still render wrong, that is a finding); the artefact duty (79e — offered-row/drop tables committed in compact form); the EUCHEMSIL expiry-twin question; and the residual watch list, which now reads: `The Battery Saloon` (79a), the accepted title-loss rates (11.1% events / 32.6% jobs, all bot-wall, 79d), the `CSE`-class acronym collision, the `@ Septerna` shape, the segment-order problem (62d(a)/63a, deferred), **`Career Connections Center University of Florida` (82a, NEW)**, the "General 1" chrome shape (80b, unwitnessed), the occupation-profile page-kind (81b residual), and the latent `postdocjobs.com` sibling row (round 29 B item 3). **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.**
+
+**RULING 82d — sonnet quality note, second data point.** C implemented two items faithfully, executed the STOP protocol on a real structural collision instead of improvising a redesign, protected the locked test by withholding code rather than touching the test, and asserted its own item's failure honestly in the new suite. No quality degradation observed at the C seat either.
+
