@@ -275,6 +275,34 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~01:3x UTC — ROUND 32 A
+                  VERIFIED INDEPENDENTLY, RULINGS 89a-89e APPENDED (§4),
+                  ROUND 32 CLOSED.** Gate: three manager runs — run 1 showed
+                  1 FAILED / 2380 (identity lost to the manager's own
+                  truncated capture, owned in §4), runs 2-3 both 2381/2381
+                  green back to back; verdict GREEN on repeat with ONE
+                  UNIDENTIFIED single-run flake on the books — round 33 A:
+                  identity-first on any red (record WHICH test before
+                  re-running), full failure output on every gate run. **RULING
+                  89a: both round-32 fixes VERIFIED FIXED LIVE** (all three
+                  A31-01 shapes drop at ingestion; A31-02's normalizer
+                  end-to-end — Dates tile renders "Mar 3 – 5, 2026").
+                  **RULING 89b: A32-01 → B round 33 item 1** (event side has
+                  no job-content kind guard — mirror of A31-01; the four
+                  individually-cleared job/career-FAIR rows are the must-keep
+                  corpus seed). **RULING 89c: the dateless branch — 83a's
+                  registry entry REWORDED to the measured full-pool scale
+                  (34/35, 97%, this window; doctrine unchanged), AND a second
+                  B item COMMISSIONED under Ruling 69: the dateless-branch
+                  diagnostic — classify every dateless pool row's loss stage
+                  ((a) machine-readable missed / (b) text-only / (c) genuinely
+                  absent), design ONLY for (a)-seams or 62b-provable (b)
+                  channels.** **RULING 89d: pool/57b zero, flake 1/10 stable,
+                  watch list unregressed — ratified.** **RULING 89e: ROUND 32
+                  CLOSED. `WHOSE TURN: B — round 33`, TWO items (A32-01 +
+                  the dateless diagnostic).**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 32 A IS COMPLETE @ 2026-08-18 ~23:1x UTC — THE
                   GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. ONE FRESH
                   UNEXPLAINED VALUE DIFFERENCE (A32-01, event surface), ZERO
@@ -84858,4 +84886,22 @@ Ranked by what a reader loses, worst first.
 ---
 
 **ROUND 32 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
+
+
+### Round 32 — MANAGER (independent verification of A; RULINGS 89a-89e; round 32 CLOSED — B round 33 commissioned with TWO items)
+
+**Verification, run before any ruling:**
+
+- **A changed zero product code** (the manager's own scope check — empty); tree clean; all four commits pushed. **Gate: THREE manager runs at this close, recorded honestly — run 1: 1 FAILED / 2380 passed; runs 2 and 3: 2381/2381 green, back to back.** The failing test's IDENTITY WAS LOST — the manager's own capture kept only the summary tail (an instrumentation error owned here, same class as A's round-30 field-name slip: name it, fix the instrument). **A FLAKE INSIDE THE GATE IS A NEW OBSERVATION** — the only prior flake (round-25's benchmark) lives in a file excluded from the gate. Standing instruction from this entry forward: capture full failure output on every gate run (`--reporter` detail or full-log tee), and round 33 A must treat any single-run red as identity-first evidence (record WHICH test before re-running). The gate verdict for THIS close is GREEN on repeat (2 consecutive clean full runs), with one unidentified single-run flake on the books.
+- **A's method held:** the A31-02 supplementary targeted re-fetch (same recorded URL, pipeline's own fetch, after 0-of-5 organic absence) is EXACTLY the right instrument under Ruling 75 — a verification of a known row, not a host hunt; the four job/career-FAIR rows were individually cleared rather than keyword-swept; the dateless quantification was per-row across all five pulls, not sampled; the visual range was cited and re-derived correctly (83f watch: second consecutive clean citation turn).
+
+**RULING 89a — round 32's two fixes are VERIFIED FIXED LIVE, ratified.** A31-01: all three shapes dropped at ingestion on every offer (wikipedia 2/5, dated-blog 2/5, brand-tagline 1/5), AND both safety nets organically confirmed non-over-firing (a genuine posting at a date-structured URL kept; jobright.ai's real-posting shape kept and pooled). A31-02: end-to-end live — raw `"2026-3-3T09:00-4:00"` → `"2026-03-03T09:00-04:00"` → Dates tile renders "Mar 3 – 5, 2026". The normalizer's first live witness is banked.
+
+**RULING 89b — A32-01 routes to B, round 33, item 1.** The event pipeline has no kind guard for job-content pages — the exact mirror of A31-01. B designs the bounded fix; the must-keep corpus starts from A's own four individually-cleared job/career-FAIR rows (`Nuclear Career Fair - S&T Women in Nuclear`, `2026 Job Fair & Hiring Event Calendar - JobFairX`, `Career Expo & Job Fair`, `Nittany Lion Careers`) — a job/career FAIR is a genuine event, and any design that drops one is not a fix (48a).
+
+**RULING 89c — the dateless branch: registry wording UPDATED, and a SECOND round-33 B item COMMISSIONED.** (1) Ruling 83a's named-cost entry is reworded from "EUCHEMSIL's dateless persistence" to **"the dateless branch, measured at full-pool scale: 34 of 35 final-pool events (97%) render an empty date (round-32 window)"** — the doctrine is UNCHANGED (datelessness itself is priced; only an invented or wrong date reopens it; 62b's zero held across all 34 rows). (2) **But scale changes what diligence requires.** Ruling 69's own goal is that Tier 0 be exemplary, and a 97%-dateless event report is not exemplary even when every blank is honest — especially against the job side's 48% per-row extraction success on its own hard field. **B's round-33 item 2, a bounded DIAGNOSTIC-THEN-DESIGN commission:** take the dateless final-pool rows from a fresh window (or A's recorded 34 where URLs suffice), fetch each page through the pipeline's own mechanism, and CLASSIFY each loss by stage — (a) machine-readable date present (JSON-LD/meta) but not read by our chain → name the exact seam; (b) human-readable date text only → design a bounded, provably-lossless extraction ONLY if one exists (62b absolute — the near-ISO normalizer is the precedent for what "provably lossless" means; anything short of that is named, not shipped); (c) no date evidence on the page → honest absence, counted. The deliverable is the classification table plus designs for (a)-class seams only unless a (b)-class design meets the 62b bar. This is a COVERAGE commission under Ruling 69, not a parity finding — A's EXPLAINED classification stands untouched.
+
+**RULING 89d — the rest of the census, ratified:** pool-count/57b zero collisions across 10 pulls; timeout-flake 1/10 (stable vs round 31); the watch list unregressed item by item (`psi.ch` BALDER's 0-of-5 FINAL-POOL absence is topic-floor variance with the ingestion-stage fix directly re-confirmed intact — A's distinction is precise and correct); `thrlab.tamu.edu` and `lco.cl` still unwitnessed, correctly left alone.
+
+**RULING 89e — ROUND 32 IS CLOSED. `WHOSE TURN: B — round 33`, TWO items: (1) A32-01 (event-side job-content kind guard, 89b); (2) the dateless-branch diagnostic (89c).** Sonnet ninth data point: A's turn was clean — right supplementary instrument, right false-alarm discipline, right escalation of a scale discovery to the manager instead of silently absorbing or silently re-litigating it.
 
