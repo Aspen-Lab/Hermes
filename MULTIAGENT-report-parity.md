@@ -78746,3 +78746,387 @@ the design working.** **Withdrawn. The count of named rows is three, not four.**
 **Part 2 carries the JOB surface, the remaining ranked value items, Ruling 74's
 named cost, the 76b named-miss tally and every remaining tally line.** No gate
 verdict is set in either part 1 or part 2; that is part 4.
+
+---
+
+### Round 29 — Agent A (part 2: **THE JOB SURFACE VALUE CENSUS AND ALL REMAINING TALLIES. `searchProvider: gemini` 5 OF 5; BOTH ADAPTER FALSIFIERS ZERO ACROSS 298 OFFERED ROWS; REDIRECTS 452 OF 452; ZERO VALUE VARIANCE; ZERO BANNED-API CALLS; ALL 208 INGESTION DROPS ATTRIBUTED TO A NAMED SHIPPED GUARD WITH ZERO UNATTRIBUTED. A29-01 GAINS ITS FOURTH AND WORST NAMED ROW — `The Battery Saloon`, A ROW ROUNDS 27 AND 28 BOTH ADJUDICATED A MUST-KEEP, IS NOW REFUSED. SIX FURTHER RANKED DIFFERENCES ARE FILED, EVERY ONE MECHANISM-ATTRIBUTED BY EXECUTION: A WRONG CITY THAT DISPLACES A CORRECT ONE, TWO EMPLOYER SLOTS CARRYING ROLE TEXT, TWO CAREERS-INDEX SHAPES THE VOCABULARY CANNOT SEE (ONE OF THEM NON-ENGLISH), A BREADCRUMB TRAIL AS AN EVENT NAME, AND AN HTML ENTITY RENDERED LITERALLY. A ALSO DISCLOSES A DEFECT IN ITS OWN INSTRUMENT THAT HAD MANUFACTURED A FALSE FINDING.**)
+
+**STATUS: PARTIAL BY DESIGN — part 2 of four.** No gate verdict here (part 4).
+
+---
+
+## **THE INSTRUMENT WAS SELF-CHECKED BEFORE A FIGURE WAS QUOTED, AND IT FAILED THE FIRST CHECK**
+
+Two defects in A's own probe, both caught before any number was banked:
+
+1. **A READ THE WRONG FIELD NAMES OFF THE JOB MAPPER.** The first job probe read
+   `job.title`, `job.employer`, `job.url`, `job.postedAt`. **The shipped `Job`
+   type has none of those** — it is `roleTitle`, `companyOrLab`, `linkPosting`,
+   `postedDate`. Every rendered job row came back `undefined`, which A would have
+   been free to read as "the whole card is blank". **Corrected against
+   `src/types/index.ts` and then LOCKED**: the probe now asserts that no field in
+   a named set is `undefined` on every row, and that assertion is green on 5 of 5
+   pulls (`mapper self-check: [] / [] / [] / [] / []`). This is the exact defect
+   round 27 A caught in itself, and it is why the check is now an assertion
+   rather than a habit.
+2. **A NEARLY FILED "PEER DOES NOT DECODE HTML ENTITIES" AND IT IS FALSE.**
+   Executed: `cleanDisplayText("R&amp;D Intern")` returns **`R&D Intern`** and
+   `pageTitleFromHtml` returns **`R&D Intern`**. The decode works. The real cause
+   is narrower and is filed as A29-06 below — **found only because A ran the
+   function instead of reasoning about it.**
+
+---
+
+## REPRODUCIBILITY — **14 ROWS IN THE UNION, 1 IN 5 OF 5, ZERO VALUE VARIANCE, ZERO RENDER ERRORS**
+
+| | measured |
+|---|---|
+| `searchProvider` reported by the run | **gemini** x5 |
+| pull wall-clock (ms) | 24344 / 16689 / 21279 / 22979 / 15031 |
+| active sources | `remotive` + `himalayas` + `arbeitnow` + `jobweb`, 5 of 5 |
+| **`adzuna` / `usajobs` / `jsearch` ACTIVE** | **NEVER — 0 of 5 pulls** (Ruling 75 §4) |
+| pool items per pull | 6 / 4 / 5 / 7 / 4 |
+| rendered rows per pull | **6 / 4 / 5 / 7 / 4** |
+| union of rendered rows | **14** |
+| rows in **5 of 5** | **1** |
+| minority rows (< 5 of 5) | **13** |
+| beforeDedup / afterDedup | 153/147, 149/142, 152/146, 155/149, 155/148 |
+| source errors | none, 5 of 5 |
+| render errors over **26 row-renders** | **0** |
+| **value variance** across the 5-of-5 row on 19 fields | **0** |
+| **banned-API fuse trips** | **0 / 0 / 0 / 0 / 0** |
+| mapper field self-check | `[]` x5 (no field always-undefined) |
+
+Sources fetched (pull 1): `remotive` 16, `arbeitnow` 60, `himalayas` 60,
+`jobweb` 16.
+
+**RULING 75 §4 IS CONFIRMED BY EXECUTION, NOT BY CONFIGURATION.** The three
+quota-capped adapters never appear in the active-source list on any pull, the
+request supplies no `apiKeys`, every one of their env names reads `false`, and
+the fuse — which throws on the mere URL — never tripped. **Four independent
+proofs that not one banned call was made.**
+
+---
+
+## **THE TWO ADAPTER FALSIFIERS AND THE DROP LADDER — JOB SURFACE**
+
+| falsifier | per pull | total |
+|---|---|---|
+| title is a **bare hostname / registrable domain** | 0 / 0 / 0 / 0 / 0 | **0 of 298** |
+| URL is still a **grounding-api-redirect link** | 0 / 0 / 0 / 0 / 0 | **0 of 298** |
+| the same two on the **RENDERED** rows | 0 x5 | **0 of 26** |
+
+| stage | per pull | total |
+|---|---|---|
+| grounding chunks (12 queries) | 92 / 77 / 101 / 93 / 89 | **452** |
+| **redirects RESOLVED** | 92 / 77 / 101 / 93 / 89 | **452** |
+| **DROP: redirect UNRESOLVABLE** | 0 x5 | **0** |
+| **DROP: pre-screen / duplicate resolved URL / `maxResults` cap** | — | **10** |
+| page-fetched for a title | 91 / 77 / 94 / 92 / 88 | **442** |
+| **DROP: title UNREADABLE** | 37 / 26 / 29 / 26 / 26 | **144 (32.6%)** |
+| **rows OFFERED to the shipped admission** | 54 / 51 / 65 / 66 / 62 | **298** |
+
+**THE UNREADABLE-TITLE RATE IS 32.6% ON THE JOB SURFACE AGAINST 11.1% ON THE
+EVENT SURFACE.** Round 28 C's named cost 2 priced this at "about 12.5%". **On the
+job surface it is nearly three times that**, because job postings sit
+disproportionately on bot-blocked applicant-tracking hosts. **Recorded as a
+measured restatement of an accepted named cost, NOT ranked** — the drop itself is
+honest, and an honest gap is what the design chose over a manufactured row. **But
+the price is materially higher than the ruling recorded, and the manager should
+know that.**
+
+---
+
+## **RULING 48b — THE JOB WRONGLY-DROPPED COLUMN**
+
+All **298** offered rows re-run through the SHIPPED `webResultToRawJobItem`, each
+refusal attributed to the first shipped guard that fires, in the mapper's order:
+
+| # | guard, in shipped order | count |
+|---|---|---|
+| 1–3 | no title/url, unparseable url, non-http protocol | 0 |
+| 4 | posting-id / `cleanJobTitle` arm | **0** |
+| 5 | `NON_JOB_PATH_RE` | **24** |
+| 6 | no job path AND no job text (`JOB_PATH_RE` / `JOB_TEXT_RE` arm) | **138** |
+| 7 | `isListingPage` — whole title | **10** |
+| 8 | `isListingPage` — rendered title head | **36** |
+| — | **UNATTRIBUTED** | **0** |
+| | **admitted at ingestion** | **90** |
+| | **dropped at ingestion** | **208** |
+
+**ZERO UNATTRIBUTED DROPS on this surface too.** Buckets 5, 7 and 8 are lawful
+under 71b(a) and A ranks none of them. **Bucket 6 is the job-surface half of
+A29-01.**
+
+---
+
+# **THE RANKED VALUE DIFFERENCES**
+
+## **A29-01 (BOTH SURFACES) — extended: the job-surface half, and a FOURTH named row that is an ADJUDICATED MUST-KEEP**
+
+Filed in part 1 on the event surface. The job surface shows the same mechanism
+through `JOB_TEXT_RE`, which also reads `title + snippet`:
+
+| | count |
+|---|---|
+| job rows refused on the path/text arm | **138** |
+| …of which the snippet is **EMPTY** | **63** |
+| …that are **ADMITTED** once ordinary job wording is supplied in the snippet | **71 of 138** |
+
+Named rows among the 71, each a real posting: **`Open PhD student position in
+SUSTAINCELL`**, **`Summer Student Projects PSI Center for Nuclear Engineering and
+Sciences`**, **`Job advertisement of the University of Bayreuth — Chair of
+Inorganic Active Materials`**, **`Science Undergraduate Laboratory… | U.S. DOE
+Office of Science (SC)`**.
+
+**AND THE FOURTH EVENT ROW, WHICH IS THE WORST OF THE SET:**
+
+**`The Battery Saloon` at `batteryinnovationsummit.com`** — offered with a
+157-character snippet, **REFUSED** by `!looksLikeEvent`, and **ADMITTED the
+instant a kind-naming clause is added.** This is not an anonymous row:
+**`batteryinnovationsummit.com` is Ruling 61a's named host, recorded ORDINARY and
+CORRECT in round 28; and round 27 item 4's own headline result was that "ten
+dateless-but-past rows leave, `Battery Saloon` SURVIVES".** **A row two
+consecutive rounds adjudicated a must-keep is now refused, and the deciding input
+is whether the page published a meta description.** That is what raises A29-01
+from a corpus observation to the round's first-ranked difference.
+
+---
+
+## **A29-02 (EVENT SURFACE) — A COMPANY NAME RENDERS AS THE EVENT'S CITY, AND THE CORRECT CITY IS DISCARDED TO DO IT. 4 of 5.**
+
+**Row:** `Solid-State Battery Summit 2026`,
+`quintustechnologies.com/events/solid-state-batteries-summit-2026/`.
+
+**What the reader sees:** `location: "Quintus Technologies"`,
+`place: {city: "Quintus Technologies"}`, and the fact tile
+**`Where — Quintus Technologies · in person`**.
+
+**What the page says:** its own text reads
+**`… August 11 2026 - August 12 2026 · Intercontinental Hotel, Chicago, US · Quintus Technologies, The Global Leader in…`**.
+
+**Both halves proven by execution on the live page:**
+
+- `extractBodyTextPlace(pageText)` → **`{city: "Chicago"}`** — the guarded
+  whole-page scan gets it RIGHT.
+- `extractMetaOpportunityDetails(html)` → **`{city: "Quintus Technologies",
+  region: "The Global Leader in isostatic pressing technologies is your partner
+  of choice.", isOnline: false}`**.
+- the shipped `enrichEventCandidates([row])` on the live page →
+  **`place: {city: "Quintus Technologies"}`, `location: "Quintus Technologies"`.**
+
+**MECHANISM, NAMED.** `extractOpportunityPageDetails` resolves place as
+`sanitizePlace(structured?.place) ?? sanitizePlace(metaPlace) ??
+sanitizePlace(extractBodyTextPlace(html, {scope: "page"}))`. **The META channel is
+tried BEFORE the body scan and it beats it.** And `extractMetaOpportunityDetails`
+builds its input by joining **`og:title | og:description | og:siteName`** into one
+string and running `parseCityRegion` over it — so a page whose og:title ends
+`| Quintus Technologies` yields that as a city. **Ruling 62a's venue-ownership
+guard is scoped to `scope: "page"` and therefore never sees this channel at all.**
+
+**This is a wrong value AND a lost correct value in one row**, which is the
+severest shape this loop scores. **The site has no JSON-LD, so nothing outranks
+the meta channel.**
+
+---
+
+## **A29-03 (JOB SURFACE) — THE EMPLOYER SLOT RENDERS ROLE TEXT WHILE THE REAL EMPLOYER SITS IN THE NEXT SEGMENT. TWO LIVE ROWS.**
+
+**Row 1 — 4 of 5.** Provider title
+`Careers Open application - Internship battery R&D - HyET Lithium`
+(`hyetlithium.com/careers/internship-battery-research/`).
+Shipped mapper, executed: **`roleTitle = "Careers Open application"`,
+`companyOrLab = "Internship battery R&D"`.** The real employer, **`HyET
+Lithium`**, is segment three and is discarded. The card therefore reads a section
+label over a role description, with the employer nowhere.
+
+**Row 2 — 1 of 5, and it is a RETURN OF A CLOSED CLASS ON ITS OWN HOST.**
+Provider title `Postdoctoral Appointee - Membrane Scientist for Electrodialysis -
+Job posted on PostdocJobs.com` (`postdocjobs.com/posting/7308863`).
+Executed: **`companyOrLab = "Membrane Scientist for Electrodialysis"`** — a job
+title in the employer slot. **Round 21 item 3(b) / A21-03 closed exactly this, on
+exactly this host**, whose cards were `<role> – <specialisation> - <site
+boilerplate>`; the fix's discriminator is that a `–`/`—` segment is
+role-internal when the title ALSO uses a chrome separator. **This page title uses
+a plain hyphen for the specialisation, so the discriminator cannot see it and the
+specialisation is handed to the employer slot again.** The sibling row
+`Postdoctoral Appointee - Molten Salt Chemical and Electrochemical Engineering -
+…` is saved only by the topic-label veto (`molten salt` is one of the reader's own
+topics) — **the veto, not the split, is what is holding this host up.**
+
+**Ruling 62d(a) reads WRONG this round for the first time in six**: of the **7
+distinct employer values across 26 renders, 2 are not employers**.
+
+---
+
+## **A29-04 (JOB SURFACE) — A CAREERS-INDEX PAGE RENDERS AS A JOB WHOSE WHOLE ROLE TITLE IS A SECTION LABEL. TWO SHAPES, ONE OF THEM NON-ENGLISH, WITH A DECISIVE FALSIFIER PAIR.**
+
+**Shape 1 — 3 of 5.** `キャリア - Ion Exchange` at
+`ionexchangeglobal.com/int/careers/` renders with **`roleTitle: "キャリア"`** —
+the Japanese word for *career*. **The decisive pair, executed on the SHIPPED
+`isListingPage`, same site, same path, same section, differing only by language:**
+
+```
+isListingPage("Careers",  "ionexchangeglobal.com", "/careers/")  =  true   → DROPPED
+isListingPage("キャリア", "ionexchangeglobal.com", "/careers/")  =  false  → ADMITTED
+```
+
+**Both rows were offered in the same window.** The English one is refused and the
+Japanese one reaches a reader. Also measured false, i.e. also admitted:
+**`Carrières`**, **`Empleo`**, **`Karriere`**.
+
+**Shape 2 — 4 of 5.** `Careers Open application` (row 1 of A29-03) —
+`isListingPage("Careers Open application", …) = false`. An English section label
+with two trailing words is enough to clear the whole-title vocabulary.
+
+**THIS IS NOT ONE OF RULING 76b's SEVEN NAMED MISSES** and A has not re-ranked
+any of those (tally below). It is a distinct, nameable gap: the section-label
+vocabulary is **whole-title, English, and closed**, and both live shapes step
+outside it in different directions.
+
+---
+
+## **A29-05 (EVENT SURFACE) — A NAVIGATION BREADCRUMB IS RENDERED AS THE EVENT'S NAME. 2 of 5.**
+
+`ans.org/meetings/ac2026/session/view-3813/` renders with
+**`name: "Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ANS Annual
+Conference / Technical Sessions"`** — the page's whole breadcrumb trail, shown to
+the reader as the event title on both the card and the report.
+
+**MECHANISM:** the shipped `bestEventTitleSegment` exists to take a title HEAD,
+and it splits on the separators this file already knows. **`--` and ` / ` are not
+among them**, so the whole trail survives as the name. The event's actual name is
+the first four words. **The place value on this row (`Dallas, TX, United States`)
+is CORRECT and is not part of this item.**
+
+---
+
+## **A29-06 (JOB SURFACE) — A DOUBLE-ESCAPED PAGE TITLE RENDERS ITS HTML ENTITY LITERALLY. 1 of 5, 1 of 716 offered rows.**
+
+The card reads **`R&amp;D Intern`** instead of `R&D Intern`
+(`enovix.wd12.myworkdayjobs.com/…/R-D-Intern_JR-100458`).
+
+**Attributed by fetching the page:** its `<title>` element is **EMPTY**, and its
+`og:title` content is literally **`R&amp;amp;D Intern`** — double-escaped by the
+applicant-tracking system. `pageTitleFromHtml` takes the og:title branch and
+decodes **once**, leaving `R&amp;D Intern`, and nothing downstream decodes again.
+
+**A states the frequency rather than implying one** (the Ruling 33 lesson): **1
+of 716 offered rows over ten pulls.** It is filed because it is a false rendered
+value with a decidable cause, and it is ranked LAST on the value list for exactly
+that frequency. **It is a consequence of the new channel: no previous provider
+ever handed Peer raw page HTML to decode.**
+
+---
+
+## **A29-07 (EVENT SURFACE) — AN INSTITUTIONAL-REPOSITORY RECORD FOR A SLIDE DECK RENDERS AS A CONFERENCE. 2 of 5.**
+
+`scholarsarchive.byu.edu/facpub/9603/` renders as
+**`type: "conference"`**, name **`Instructional Slides from Molten Salt
+Electrochemistry Symposium (MoSES) 2026`**, `Date not listed`. The row is a
+downloadable slide set ABOUT an event, not the event; the real event
+(`pyro.byu.edu/moses`) renders separately and correctly 5 of 5. Executed:
+`isPaperPageTitle` **false**, `isEventIndexResult` **false**,
+`isEventHubResult` **false**, `looksLikeEvent` **true** (on the word *Symposium*
+inside the artefact's own name). **A repository host is not in `PAPER_PAGE_HOSTS`
+and the "from X" possessive shape is not read.**
+
+---
+
+## **RECORDED AS OBSERVATIONS, DELIBERATELY NOT RANKED**
+
+- **`Internship, Battery Materials, Battery Engineering (Winter/Spring 2027) @
+  Tesla` at `jobright.ai`, 1 of 5** — the employer stays inside the role title
+  and `companyOrLab` is silent, while **the SAME posting from `bebee.com` renders
+  `roleTitle` clean with `companyOrLab: "Tesla"`.** **NOT RANKED: the rendered
+  value is TRUE.** The reader is told the employer; it is in a less useful place.
+  A26-01 governs the *redundant* employer clause, and this is its converse. **Named
+  here so a later round does not rediscover it as a fresh finding.**
+- **`LCO Casino, Lodge & Convention Center` at `eventective.com`, 1 of 5** —
+  Ruling 33's named cost; see part 1's frequency line. Tallied, not ranked.
+
+---
+
+## **ALL REMAINING TALLY LINES, WITH RUNNING COUNTS, STATED AFFIRMATIVELY EVEN AT ZERO**
+
+- **RULING 74's NAMED COST — TALLIED, ROUND 2 OF ITS TALLY, and UNEXERCISED.**
+  `team` is populated on **0 of 26 job renders** this window, so plate 02's
+  `Energy & Materials, 14 researchers` versus Peer's unit-name-only rendering
+  **could not be exercised at all.** **Counted as an accepted named cost, never a
+  defect, not in the difference count** — and recorded as an ABSENCE rather than
+  a pass, exactly as round 28 recorded item 7's residual.
+- **RULING 76b — THE SEVEN NAMED MISSES: TALLIED, NONE PRESENT, NONE RE-RANKED.**
+  Searched by exact string across all 298 offered job rows: `Summer Internship
+  Program` **x0**, `Summer Internship Program (SIP)` **x0**, `Science
+  Undergraduate Laboratory Internships (SULI)` **x0**, `Undergraduate & Graduate
+  Intern Programs` **x0**, `Talent Network` **x0**, `2027 AI College Jobs` **x0**,
+  `Funding & Jobs` **x0**. **Zero reached a reader.** One near-relative appeared —
+  `Science Undergraduate Laboratory… | U.S. DOE Office of Science (SC)`, the SULI
+  page under a truncated title — **and it DROPPED.** The corpus break is the
+  reason the seven are absent; **A tallies them and does not re-rank them.**
+- **RULING 48b — BOTH COLUMNS, BOTH SURFACES.** **WRONGLY DROPPED: NOT ZERO this
+  round — A29-01, on both surfaces, and the loop's unbroken zero on this column
+  ENDS HERE.** Events `418 offered / 134 admitted / 284 dropped / 0 unattributed`;
+  jobs `298 / 90 / 208 / 0`. **WRONGLY KEPT: A29-02 through A29-07.**
+  `stemgateway.nasa.gov` **NAMED AND NOT COUNTED, EIGHTH ROUND** (offered twice as
+  `STEM Gateway` with an empty snippet; dropped).
+- **Ruling 55c — the `Online` must-keep debt: THIRTEENTH ROUND, UNDISCHARGED.**
+  0 of 27 rendered event rows online; **13 offered rows mention online/virtual and
+  none renders.** Ruling 72c's approved facet drop still reads as an intended
+  zero.
+- **Ruling 57b — event surface `designed, organically unwitnessed`: ELEVENTH
+  ROUND.** **0 of 27 event renders carry any organiser.** Job surface: `ev.careers`
+  offered and ADMITTED (see A26-01), pooled 0 of 5.
+- **Ruling 62b's invented-date fuse — ZERO. LOADED and UNTESTED, SEVENTH ROUND,
+  NOT BANKED.** No month-granularity row exists in this window.
+- **Ruling 62d(a) — WRONG THIS ROUND, FIRST TIME IN SIX.** 13 of 26 renders carry
+  an honest silent employer (correct); of the 7 distinct values that DO render,
+  **5 are real and correct** (`Sila Nanotechnologies`, `Savannah River National
+  Laboratory`, `American Battery`, `Idaho National Laboratory`, `Tesla`) and
+  **2 are role text** — see A29-03.
+- **Ruling 62d(b) + 63a's REOPEN TRIGGER — NOT PULLED.** Checked by execution on
+  all 7 distinct employer values: **zero are a host echo, zero are a topic
+  label, zero are chrome.** The two wrong values are a THIRD shape (role text),
+  outside the trigger's own wording, and A does not stretch the trigger to reach
+  them.
+- **A26-01 — ORGANICALLY RE-CONFIRMED, on its own host.** `ev.careers`'s
+  `Internship, Materials Engineer, Cell Engineering (Spring 2026) at Tesla` maps
+  to `roleTitle: "Internship, Materials Engineer, Cell Engineering (Spring 2026)"`
+  with `companyOrLab: "Tesla"` — clause stripped, employer correct.
+- **Ruling 34a (`careerservices.upenn.edu`), Ruling 36 (`ruggedthz.com`),
+  Ruling 52b, Rulings 37 / 44 / B18-02 / B18-03 — NOT OFFERED this window;
+  UNEXERCISED, not passed.** Strike counts unchanged: **Ruling 52b remains at
+  ONE; A22-04 remains OPEN at STRIKE ONE** (no instance offered).
+- **Ruling 61a — HONOURED, AND ITS HOST IS NOW A CASUALTY.**
+  `batteryinnovationsummit.com` was treated as ordinary; it is refused, and that
+  refusal is A29-01's fourth named row rather than a 61a exception being invoked.
+- **Ruling 71a — the struck route kicker CONFIRMED ABSENT**, 0 of 53 live renders.
+- **`grad.wisc.edu` — OFFERED AND CORRECT.** `PhD Student Internship Opportunities
+  at Thermo Fisher Scientific` admits with `companyOrLab: "Thermo Fisher
+  Scientific"`. **The `Funding & Jobs` shape did not appear.**
+- **`relevanceScore` IS NOT A STABLE LIVE OBSERVABLE** — not scored.
+- **THRESHOLDS UNCHANGED AND UNTOUCHED, read from source:**
+  `OPPORTUNITY_MIN_SCORE` **0.35**, `MAX_POSTING_AGE_DAYS` **270**,
+  `MAX_ENRICHMENT_CANDIDATES` **40**, `MAX_OPPORTUNITY_POOL_ITEMS` **200**,
+  `EVENT_QUERY_BUDGET` **16**, `JOB_QUERY_BUDGET` **12**, `RESULTS_PER_SEARCH`
+  **10**, `GEMINI_SOURCE_TIMEOUT_MS` **25000**, `GEMINI_SEARCH_BUDGET_MS`
+  **21000**.
+
+**EXCLUSIONS RE-LISTED BY NAME, WITH WHETHER INVOKED:** 45a (`euagenda.eu` —
+INVOKED, eighth round, **not fetched**, and not offered); 45b (Ruling 41c's three
+hosts — **not hunted**, none appeared); 39a/40 (**not invoked** — the host last
+resort did not fire on any rendered row); 42c (INVOKED); 36 (**unexercised**);
+50a (**unexercised**); 61a (honoured — see above); 33 (**INVOKED, one instance,
+tallied**); `stemgateway.nasa.gov` (NAMED, NOT COUNTED); `grad.wisc.edu`
+(DOCUMENTED-KNOWN, offered and correct, not counted); 42a's Gap B (not reached).
+
+**WHAT THE GREEN `benchmark.test.ts` DOES AND DOES NOT PROVE.** It passed cold on
+the gemini provider, which is Ruling 76d's acceptance test and real evidence that
+the live path is alive and that its value locks hold. **It proves nothing about
+A29-01**: its assertions are present-rows and value locks, and a row that is
+never admitted is never present to be locked. **The rows A29-01 costs are exactly
+the rows the benchmark cannot see.**
+
+---
+
+**Parts 3 and 4 carry the VISUAL census and the gate verdict.**
