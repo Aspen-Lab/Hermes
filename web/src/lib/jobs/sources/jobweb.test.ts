@@ -3476,3 +3476,226 @@ describe("Round 31 C — a trailing `Project (<description>)` is not an employer
     // unchanged and re-confirmed still true by the full suite run.
   });
 });
+
+// ---------------------------------------------------------------------------
+// ROUND 32 C, ITEM 1 (A31-01, Ruling 87a) — the job page-kind guard: three
+// additive components. Component A (`NON_JOB_HOSTS`/`isNonJobHost`) and
+// Component B (`DATE_STRUCTURED_PATH_RE`/`isDateStructuredResearchPath`) run
+// at `webResultToRawJobItem`'s early kind-rejection point, immediately after
+// `NON_JOB_PATH_RE`. Component C (`isBrandOnlySearchResultsPage`) is an
+// additive clause inside `isListingPage`, alongside `isCareersSectionRoot`.
+// Corpus verbatim from Round 32 B's §1.2 table.
+// ---------------------------------------------------------------------------
+describe("Round 32 C, ITEM 1 — job page-kind guard (Components A, B, C; Ruling 87a)", () => {
+  describe("must CATCH — 5 of 5, per B's §1.2 table", () => {
+    it("drops the live en.wikipedia.org specimen (Component A, host)", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Topochemical polymerization - Wikipedia",
+          url: "https://en.wikipedia.org/wiki/Topochemical_polymerization",
+          snippet:
+            "Topochemical polymerization is a type of polymerization reaction.",
+        }),
+      ).toBeNull();
+    });
+
+    it("drops a constructed de.wikipedia.org specimen (Component A, language-subdomain suffix)", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Topochemische Polymerisation – Wikipedia",
+          url: "https://de.wikipedia.org/wiki/Topochemische_Polymerisation",
+          snippet: "Die topochemische Polymerisation ist eine Reaktion.",
+        }),
+      ).toBeNull();
+    });
+
+    it("drops the live foundry.lbl.gov specimen (Component B, date-structured research path)", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Slowing Down to Speed Up",
+          url: "https://foundry.lbl.gov/2025/07/11/slowing-down-to-speed-up/",
+          snippet: "A Molecular Foundry researcher describes a new technique.",
+        }),
+      ).toBeNull();
+    });
+
+    it.each([
+      [
+        "query 1 (summer-2027-chemical-engineering-intern)",
+        "https://jobright.ai/jobs/summer-2027-chemical-engineering-intern-jobs-in-united-states",
+      ],
+      [
+        "query 2 (battery-management-algorithms-internship)",
+        "https://jobright.ai/jobs/battery-management-algorithms-internship-jobs-in-united-states",
+      ],
+    ])(
+      "drops the live jobright.ai brand-tagline row, %s (Component C)",
+      (_label, url) => {
+        expect(
+          webResultToRawJobItem({
+            title: "Jobright: Your AI Job Search Copilot",
+            url,
+            snippet: "",
+          }),
+        ).toBeNull();
+      },
+    );
+  });
+
+  describe("must-keep corpus — 0 of 11 false positives, per B's §1.2 table", () => {
+    it("keeps psi.ch's BALDER row — renders with honest-silent company, NOT dropped", () => {
+      const item = webResultToRawJobItem(
+        {
+          title:
+            "Summer Internship Opportunity - BALDER Project (Licensing Support for a Molten Salt Reactor)",
+          url: "https://www.psi.ch/en/ahl/summer-internship-2026",
+          snippet:
+            "PSI is looking for a summer intern to support licensing work for a molten salt reactor project. Apply now for this internship opportunity.",
+        },
+        ["molten salt"],
+      );
+      expect(item).not.toBeNull();
+      expect(item?.company).toBeUndefined();
+    });
+
+    it("keeps careers.gevernova.com", () => {
+      expect(
+        isListingPage(
+          "Battery Engineer",
+          "careers.gevernova.com",
+          "/global/en/job/GEVEGLOBAL12345/Battery-Engineer",
+        ),
+      ).toBe(false);
+      expect(
+        webResultToRawJobItem({
+          title: "Battery Engineer",
+          url: "https://careers.gevernova.com/global/en/job/GEVEGLOBAL12345/Battery-Engineer",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps talents.vaia.com", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Postdoctoral Research Associate - Talents by Vaia",
+          url: "https://talents.vaia.com/companies/savannah-river-national-laboratory/jobs/1234",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps hyetlithium.com", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Internship Battery R&D",
+          url: "https://hyetlithium.com/careers/internship-battery-research",
+          snippet: "Apply now for this internship.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps postdocjobs.com", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Postdoctoral Fellow | Job posted on PostdocJobs.com",
+          url: "https://postdocjobs.com/job/999003",
+          snippet: "Postdoctoral research position. Apply now.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps ev.careers / Tesla", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Battery Engineering Internship at Tesla | EV.Careers",
+          url: "https://ev.careers/jobs/9917",
+          snippet: "Battery research internship. Apply now.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps enovix.wd12.myworkdayjobs.com", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Battery Manufacturing Engineer",
+          url: "https://enovix.wd12.myworkdayjobs.com/en-US/Enovix/job/Fremont-CA/Battery-Manufacturing-Engineer_R1234",
+          snippet: "Apply now for this open position at Enovix.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps bebee.com", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Battery Research Engineer - San Francisco",
+          url: "https://bebee.com/job/20260101-battery-research-engineer-san-francisco",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps jobright.ai's own real-posting numeric-ID control (jobweb.test.ts admitted-control shape)", () => {
+      expect(
+        webResultToRawJobItem({
+          title:
+            "Internship, Battery Engineering (summer 2026) Jobs in United States",
+          url: "https://jobright.ai/jobs/some-other-role-12345",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("keeps enersys.com's shipped brochure-host must-keep (Ruling 49a) — sanity check on the new brand-only check", () => {
+      expect(
+        isListingPage(
+          "EnerSys Summer Internship - Battery Chemistry",
+          "enersys.com",
+          "/careers/1234",
+        ),
+      ).toBe(false);
+    });
+  });
+
+  describe("adversarial: must NOT drop a genuine posting — 0 of 4, per B's §1.2 table", () => {
+    it("does not drop on 'wikipedia' as a substring, not a suffix, of the host", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Battery Research Scientist",
+          url: "https://wikipedia.org.fake-mirror.test/jobs/12345",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("does not drop a date-structured path whose title carries real job vocabulary (title safety net)", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Postdoctoral Researcher in Battery Chemistry - Apply Now",
+          url: "https://example.test/2026/03/15/postdoctoral-researcher-battery-chemistry/",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("does not drop a `<Company>: <role>` title at a non-listing URL", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Acme Corp: Battery Research Scientist",
+          url: "https://acme.test/careers/battery-research-scientist",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+
+    it("does not drop a brand-shaped title at a non-listing-slug URL", () => {
+      expect(
+        webResultToRawJobItem({
+          title: "Jobright: Your AI Job Search Copilot",
+          url: "https://example.test/careers/battery-engineer-12345",
+          snippet: "Apply now for this open position.",
+        }),
+      ).not.toBeNull();
+    });
+  });
+});

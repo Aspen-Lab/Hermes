@@ -69,6 +69,44 @@ export const JOB_PATH_RE =
 export const NON_JOB_PATH_RE =
   /\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts|collections)(?:\/|$)/i;
 
+// ROUND 32 C, ITEM 1 (A31-01, Ruling 87a) — COMPONENT A: a closed host list
+// for encyclopedias, the same shipped SHAPE as the event side's
+// `DENY_HOSTS`/`PAPER_PAGE_HOSTS` (`eventweb.ts:193-219,246-254`), justified
+// by Ruling 84c's own doctrine that a closed host list is the right tool
+// when the host CLASS is genuinely closed.
+//
+// WHY HOST, NOT PATH. Wikipedia's `/wiki/` path is a MediaWiki software
+// convention that other, unrelated sites also run, so the path alone is not
+// a reliable signal. The host is what is actually closed here. Suffix-matched
+// so every language subdomain is caught (`de.wikipedia.org`, `en.wikipedia.org`,
+// …) — the same idiom `eventweb.ts`'s own `isDeniedUrl` already uses.
+const NON_JOB_HOSTS = ["wikipedia.org"] as const;
+function isNonJobHost(host: string): boolean {
+  return NON_JOB_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+}
+
+// ROUND 32 C, ITEM 1 (A31-01, Ruling 87a) — COMPONENT B: a path-structure
+// signal for date-stamped publishing paths (`/YYYY/MM/DD/…`), mirroring the
+// event side's own preference for path-STRUCTURE over host enumeration where
+// the shape itself is the signal (Ruling 84c, `TICKER_NEWS_PATH_RE`,
+// `eventweb.ts:430`) — a lab or research institute's own dated news/blog
+// post, not a posting.
+//
+// THE TITLE HALF IS NOT NEW INVENTION. It is `isCareersSectionRoot`'s own
+// already-shipped safety net (`:1495-1501`, below) reused rather than
+// redesigned: a suspicious URL shape cannot drop a title that states real
+// job vocabulary, so a genuine posting that happens to sit at a
+// date-structured path is not silenced.
+const DATE_STRUCTURED_PATH_RE = /^\/\d{4}\/\d{2}\/\d{2}\//;
+function isDateStructuredResearchPath(
+  title: string,
+  pathAndQuery: string,
+): boolean {
+  const path = pathAndQuery.split("?")[0] ?? "";
+  if (!DATE_STRUCTURED_PATH_RE.test(path)) return false;
+  return !JOB_TEXT_RE.test(title); // same title-half safety net isCareersSectionRoot already uses (jobweb.ts:1495-1501)
+}
+
 /**
  * Search-results and category pages on job aggregators. These match every
  * job-shaped heuristic (job-ish URL, hiring language, a role in the title) but
@@ -1500,6 +1538,45 @@ function isCareersSectionRoot(title: string, pathAndQuery: string): boolean {
   return !JOB_TEXT_RE.test(title);
 }
 
+/**
+ * ROUND 32 C, ITEM 1 (A31-01, Ruling 87a) — COMPONENT C: the live-confirmed
+ * `jobright.ai` brand-only-title bypass. Additive; reuses the ALREADY-SHIPPED
+ * `TOPIC_LANDING_LEAF_RE` and `looksLikeHostBrand` (`shared.ts:420-434`)
+ * rather than inventing new vocabulary, and does NOT touch `isTopicLandingPage`
+ * itself — zero risk to that function's own locked assertions.
+ *
+ * WHY THIS FIRES WHERE `isTopicLandingPage` DOES NOT. `isTopicLandingPage`
+ * requires the offered TITLE to start with the URL-derived query phrase — a
+ * corroboration check. `jobright.ai`'s live rows carry the SITE'S OWN BRAND
+ * TAGLINE as the offered title instead of the per-query listing phrase, so
+ * that corroboration check fails even though the URL-leaf evidence
+ * (`TOPIC_LANDING_LEAF_RE`, a genuine `<query>-jobs-in-<location>` search
+ * slug) is unambiguous.
+ *
+ * THE REASONING: a title that is purely `"<host's own brand>: <tagline with
+ * no job vocabulary>"` supplies ZERO corroborating OR contradicting evidence
+ * about the query — the same "absence is not evidence" doctrine A29-01/
+ * family(ii) already applies to an empty snippet (`:1580-1601` below). When
+ * title corroboration is structurally unavailable, the already-trusted
+ * URL-leaf signal is allowed to stand un-contradicted rather than being read
+ * as a title MISMATCH.
+ */
+function isBrandOnlySearchResultsPage(
+  title: string,
+  host: string,
+  pathAndQuery: string,
+): boolean {
+  const leaf = (pathAndQuery.split("?")[0] ?? "").split("/").filter(Boolean).pop();
+  if (!leaf || !TOPIC_LANDING_LEAF_RE.test(leaf)) return false;
+  const idx = title.indexOf(":");
+  if (idx === -1) return false;
+  const brand = title.slice(0, idx).trim();
+  const tail = title.slice(idx + 1).trim();
+  if (!brand || !tail) return false;
+  if (JOB_TEXT_RE.test(tail)) return false; // tail carries real job vocabulary -- not chrome
+  return looksLikeHostBrand(brand, host);
+}
+
 export function isListingPage(
   title: string,
   host: string,
@@ -1521,6 +1598,9 @@ export function isListingPage(
   // looked at at all**, which is exactly why `ionexchangeglobal.com`'s
   // `/int/careers/` was invisible.
   if (isCareersSectionRoot(title, pathAndQuery)) return true;
+  // ROUND 32 C, ITEM 1 (A31-01, Ruling 87a) — COMPONENT C, additive, same
+  // pattern as the `isCareersSectionRoot` call directly above.
+  if (isBrandOnlySearchResultsPage(title, host, pathAndQuery)) return true;
 
   const isAggregator = AGGREGATOR_HOSTS.some(
     (h) => host === h || host.endsWith(`.${h}`),
@@ -1577,6 +1657,13 @@ export function webResultToRawJobItem(
   if (hasEmptyPostingIdentifier(`${parsed.pathname}${parsed.search}`)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   if (NON_JOB_PATH_RE.test(parsed.pathname)) return null;
+  // ROUND 32 C, ITEM 1 (A31-01, Ruling 87a) — COMPONENTS A and B, same early
+  // kind-rejection point as `NON_JOB_PATH_RE` directly above, same family,
+  // same failure direction (row -> null, never a value change).
+  if (isNonJobHost(host)) return null;
+  if (isDateStructuredResearchPath(title, `${parsed.pathname}${parsed.search}`)) {
+    return null;
+  }
   // ROUND 29 C, ITEM 1 — **ABSENCE IS NOT EVIDENCE (family (ii)), JOB SIDE.**
   //
   // A29-01: 63 job rows were refused HERE while carrying an empty snippet, and
