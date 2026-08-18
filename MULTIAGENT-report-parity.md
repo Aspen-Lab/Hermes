@@ -79130,3 +79130,168 @@ the rows the benchmark cannot see.**
 ---
 
 **Parts 3 and 4 carry the VISUAL census and the gate verdict.**
+
+---
+
+### Round 29 — Agent A (part 3: **THE VISUAL CENSUS. BOTH ROUND-28 VISUAL ITEMS ARE VERIFIED LANDED ON RENDERED OUTPUT AND NOT ONE FALSIFIER FIRES — V28-01's LABEL STEP HOLDS ON 17 OF 17 SWEPT LABELS ON EACH PLATE FIXTURE AND ON 135 OF 135 LABELS ACROSS ALL 53 LIVE RENDERED REPORTS, WITH ZERO RESIDUE; V28-02's `text-accent` RENDERS ON THE TINTED CALLOUT AND THE LITERAL `5b4bbf` APPEARS ZERO TIMES ANYWHERE. THE `cn()` TRAP IS RE-CHECKED ON RENDERED OUTPUT AND ZERO LABELS LOST THEIR SIZE TOKEN. BOTH PLATES ARE RE-WALKED START TO FINISH AND BOTH ORDERS MATCH §1c AND §P10.2 EXACTLY, TILE BAND INCLUDED. ZERO NEW VISUAL DIFFERENCES. A ALSO DISCLOSES A DEFECT IN ITS OWN PLATE FIXTURE AND CORRECTS IT RATHER THAN REPORTING IT.**)
+
+**STATUS: PARTIAL BY DESIGN — part 3 of four.**
+
+## **METHOD — THE SAME INSTRUMENT AS ROUNDS 26–28**
+
+**Shipped components rendered to static markup**, never a markup fixture's idea
+of them: `JobReport` and `EventReport` through `renderToStaticMarkup`, on
+**plate-shaped fixtures** (every field each plate carries is populated, so a
+missing section can never be confounded with an empty field) **AND on all 53
+live reports rendered during the value census**. That second half is what rounds
+26–28 established as the check that a fixture cannot fake.
+
+**ONE FIXTURE DEFECT, CAUGHT AND CORRECTED, NOT REPORTED AS A FINDING.** A's
+first plate-03 fixture wrote the fee rows as `{item, standard: 850}`. The shipped
+`EventFee` is `{label, standard?: string, …}` — **every amount is a STRING** — and
+`buildEventFacts`'s own `clean()` threw `value?.replace is not a function`. **That
+is A's fixture being wrong, not the product**, and it is corrected against
+`src/types/index.ts` rather than filed. Recorded because round 26 A filed four
+findings that were fixture artifacts and round 28 A filed four more, and the
+discipline that catches them is worth more than the finding rate.
+
+---
+
+## **V28-01 — THE LABEL STEP AT ITS CALL SITES: VERIFIED LANDED, ZERO RESIDUE**
+
+The constants, read off the shipped source at measurement time:
+
+```
+REPORT_LABEL_STEP  = "text-caption font-semibold uppercase tracking-[0.18em]"
+REPORT_LABEL_CLASS = "text-caption font-semibold uppercase tracking-[0.18em] text-text-faint"
+```
+
+`REPORT_LABEL_CLASS`'s VALUE is byte-identical to the pre-split constant, exactly
+as round 28 C claimed, so no pre-existing call site moved.
+
+**THE SWEEP** — every element in the rendered markup carrying `uppercase` **and**
+a `tracking-[…]`, with the report badge excluded **by V28-01's own stated
+boundary** (round 28 C: the badge is a different typeface on the plate,
+`Consolas 8.25`):
+
+| surface | tracked labels | badge (excluded) | swept | **conforming to the step** | **NOT conforming** | **V28-01 residue (`text-micro` / `tracking-[0.14em]`)** |
+|---|---|---|---|---|---|---|
+| plate 02 fixture (job) | 20 | 3 | 17 | **17** | **0** | **0** |
+| plate 03 fixture (event) | 20 | 3 | 17 | **17** | **0** | **0** |
+| **all 53 LIVE rendered reports** | — | excluded | **135** | **135** | **0** | **0** |
+
+**THE FALSIFIER V28-01 EXISTS TO CATCH — a label still on the old
+`text-micro` / `tracking-[0.14em]` step — FIRES ZERO TIMES**, on fixtures and on
+live rows alike.
+
+**THE `cn()` TRAP, RE-CHECKED ON RENDERED OUTPUT RATHER THAN ON SOURCE.** The
+documented failure is that `twMerge` reads `text-caption` as a colour, sees
+`text-text-faint` later, and silently DROPS the size. So the honest check is
+whether the size token survives to the markup:
+
+| surface | labels that LOST their size token |
+|---|---|
+| plate 02 fixture | **0 of 17** |
+| plate 03 fixture | **0 of 17** |
+
+**Zero.** The `timeline-track.tsx` template-literal repair the manager verified in
+source is confirmed here in the rendered output it protects.
+
+---
+
+## **V28-02 — THE LOCKED-BLOCK LABEL COLOUR: VERIFIED LANDED**
+
+| check | plate 02 (job) | plate 03 (event) | 53 live reports |
+|---|---|---|---|
+| tinted callout renders **`text-accent`** on the shared step | — (its callout needs enrichment) | **YES** — `Cheapest way in, for you` renders `text-caption font-semibold uppercase tracking-[0.18em] text-accent` | — |
+| a tinted label wrongly repainted `text-text-faint` | **0** | **0** | **0** |
+| **literal `5b4bbf` anywhere in the rendered report** | **0** | **0** | **0** |
+
+**Ruling 76c's decision is visible in the rendered markup**: the callout carries
+the theme's `text-accent` token and no frozen hex, so the six-accent
+user-selectable system is intact and the plate's own tint is honoured.
+
+The three `Tier 0` chips per report carry `tracking-[0.14em]` and `text-accent`
+and are the **report badge** — excluded by V28-01's own boundary, confirmed by
+the sweep counting them as badges rather than as violations. **A checked this
+rather than assuming it**, because a badge miscounted as a label would have read
+as three false findings per report.
+
+---
+
+## **THE PLATE WALKS — BOTH PLATES, START TO FINISH, BOTH MATCH**
+
+### PLATE 02 (JOB) — rendered spine, document order
+
+```
+h1  Postdoctoral Researcher — Solid-State Battery Interfaces
+dt  Salary · Type · Location · Starts · Apply by · Posted · Visa     ← SEVEN tiles
+h2  Timeline           (track: Posted · Today · Deadline · Start)
+h2  Skills they ask for
+h2  What the role is
+h2  To apply, have ready   (dt Materials · Eligibility · Team)
+h2  Why Peer sent this to you
+h3  Also in this report with an AI key →
+      Sponsorship read when the posting is silent
+      What this employer actually asks for
+      What to emphasise in your application
+```
+
+**§P10.2's order — facts → visa quote → Timeline → Skills they ask for → [What
+the role is | To apply, have ready] → Why Peer sent this to you → locked block —
+MATCHES, checked by position rather than by eye: `true`.** The visa evidence
+quote renders (`We sponsor work visas…`): **present**. **SEVEN tiles, exactly the
+band round 28 A re-derived from the PDF.**
+
+### PLATE 03 (EVENT) — rendered spine, document order
+
+```
+h1  International Battery Interfaces Summit
+dt  Dates · Where · Fee · Abstract due · Register by · Scale         ← SIX tiles
+p   Cheapest way in, for you                      (tinted callout, text-accent)
+h2  Two deadlines, one event   (track: Today · Abstract · Register · Event)
+h2  What actually happens there
+h2  Who’ll be in the room
+h3    Every other organisation attending · 2
+h3    Every other speaker · 2
+h2  What it costs you
+h2  Why Peer sent this to you
+h3  Also in this report with an AI key →
+      The other 2 exhibitors, judged
+      What each talk is actually about
+      A day-by-day plan for you
+      Is your work a fit for the poster call
+```
+
+**§1c's order MATCHES, checked by position: `true`.** Every one of §1c's nine
+named sections is present and in order, and **the locked block's four items are
+exactly §1c's four, in §1c's order.** **SIX tiles in the plate's own order
+(DATES / WHERE / FEE / ABSTRACT DUE / REGISTER BY / SCALE), exactly the band
+round 28 A re-derived from the PDF.**
+
+**THE SERIF ADOPTION (V26-J02 / V26-E02) IS STILL PRESENT**: `font-reading`
+appears on **5** elements in the job report and **1** in the event report — the
+report `<h1>`, the `Why Peer sent this to you` prose, the `What the role is`
+bullets and the visa evidence quote, i.e. the four treatments B measured off the
+PDF.
+
+---
+
+## **THE VISUAL VERDICT**
+
+**PLATE 02: ZERO unexplained visual differences.**
+**PLATE 03: ZERO unexplained visual differences.**
+
+Both round-28 visual items (V28-01, V28-02) are **verified LANDED on rendered
+output**, on plate-shaped fixtures and on 53 live reports, and **not one of their
+falsifiers fires**. Both plates re-walk start-to-finish against §1c and §P10.2
+and both orders match exactly, tile bands included. **No V29-xx item is filed.**
+
+**A says plainly what this does NOT prove.** The census is a STRUCTURE and TOKEN
+census — element order, section presence, and which typographic token each label
+carries — rendered to markup and read programmatically. **It is not a pixel
+comparison against the PDF**, and it cannot see a wrong spacing value, a wrong
+rendered colour after CSS cascade, or a wrong glyph. That has been this
+instrument's stated boundary since round 26 and it is unchanged; the zero above
+is a zero **within that boundary**, not a claim that the two plates are
+pixel-identical.
