@@ -275,6 +275,30 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~00:5x UTC — ROUND 32 C
+                  VERIFIED INDEPENDENTLY, RULING 88 APPENDED (§4).** Gate
+                  re-run cold by the manager: **99 files / 2381 tests, 2381
+                  passing, ZERO failures** (2348 + 33 exact). Code read
+                  against B's designs directly — byte-faithful, wiring
+                  correct, `isTopicLandingPage` untouched. C's three
+                  self-declared deviations each verified and ACCEPTED (the
+                  isoDate wording fix; the enersys must-keep substitution —
+                  proven right against the suite's own 49a control; the
+                  two-commit process wobble, self-named, no consequence).
+                  **RULING 88: C accepted; hand-off STANDS — `WHOSE TURN: A —
+                  round 32, GATE CANDIDATE ROUND (value + visual,
+                  searchProvider: gemini, artefact duty, pool-count
+                  re-measure, watch list + round-32 residual additions:
+                  thrlab.tamu.edu, the lco.cl reversed-order shape)`.** A's
+                  verification targets: A31-01's shapes must now drop at
+                  ingestion if offered; if `linevsystems.com` re-appears its
+                  Dates tile must now RENDER (the normalizer's first live
+                  witness); the watch list, named costs, flake rate, standing
+                  tallies. **If A measures double-zero, hand off
+                  `WHOSE TURN: MANAGER — independent re-measurement before
+                  any close`. A never closes the gate.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 32 C IS COMPLETE @ 2026-08-18 ~22:4x UTC — BOTH
                   ITEMS SHIPPED, THREE COMMITS TOTAL, EACH PUSHED ON
                   LANDING.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after
@@ -84439,3 +84463,14 @@ Implemented B's §2.1 design exactly as printed in `web/src/lib/opportunities/st
 **Process note, named honestly**: item 1 landed as two commits (code+tests, then the §4 log entry) instead of the standing one-commit-per-item pattern round 31 C set (confirmed by inspecting `45dd9a7`, which bundled code, tests and the log entry together). Item 2 corrects this — code, tests and this log entry are one commit. No functional consequence (both item-1 commits are pushed, in order, complete), but flagged so it is not silently repeated.
 
 **HAND-OFF: `WHOSE TURN: A — round 32, GATE CANDIDATE ROUND`** (value + visual, `searchProvider: gemini`, artefact duty, pool-count re-measure, watch list + round-32 residual additions: `thrlab.tamu.edu`, the `lco.cl` reversed-order shape). Turn lock RELEASED (`HELD BY: free`) in the close-out commit that follows.
+
+### Round 32 — MANAGER (independent verification of C; RULING 88; hand-off to A confirmed)
+
+**Verification, run before the ruling:**
+
+- **Gate, re-run cold by the manager:** **99 files / 2381 tests, 2381 passing, ZERO failures** (2348 + 33, exactly as C reports). Tree clean, all six commits pushed.
+- **Code read against B's designs directly:** `normalizeNearIsoDateString` (`structured-extract.ts:1123-1163`) is byte-faithful — range checks, component round-trip, and the full load-bearing doc comment including the manager's own re-execution of the Feb-30 rollover; Components A/B (`jobweb.ts:83-108`) verbatim with reasoning preserved, wired at the correct early-rejection point (`:1663-1666`, immediately after `NON_JOB_PATH_RE`); Component C wired inside `isListingPage` with `isTopicLandingPage` untouched.
+- **C's three self-declared deviations, each verified and ACCEPTED:** (1) the `isoDate()` location wording corrected to match the actual file — a citation fix, no logic change; (2) the enersys substitution is RIGHT — B's prose named the "brochure must-keep" loosely, and the row C shipped (`"EnerSys Summer Internship - Battery Chemistry"` @ `/careers/1234`) matches the suite's own existing Ruling-49a control at `jobweb.test.ts:1972-1977`, confirmed by the manager's own read; C proved it by execution both ways before substituting, which is exactly what the STOP protocol's spirit requires of an ambiguity smaller than a design conflict; (3) item 1 landing as two commits (code, then log) instead of one is a process wobble, self-named, corrected on item 2 — noted, no consequence, the per-item banking property (code+tests pushed together) held.
+
+**RULING 88 — round 32 C is VERIFIED AND ACCEPTED; the hand-off stands: `WHOSE TURN: A — round 32, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list + round-32 residual additions: thrlab.tamu.edu, the lco.cl reversed-order shape)`.** A's verification targets this round: A31-01's shapes (wikipedia/dated-blog/brand-tagline rows must now drop at ingestion if offered; absence is absence, not a pass), A31-02's specimen (if `linevsystems.com` re-appears, its Dates tile must now RENDER — the normalizer's first live witness), the standing watch list and named-cost registry, the timeout-flake rate, and the standing tallies. **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet eighth data point: C transcribed faithfully, verified the one ambiguous specimen by execution instead of guessing, and named its own process wobble unprompted — clean.
+
