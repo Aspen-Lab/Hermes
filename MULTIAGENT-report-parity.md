@@ -83692,3 +83692,100 @@ Named-row sanity checks against this table: `hyetlithium.com` and `postdocjobs.c
 
 Committed and pushed as its own item, per the write-as-you-go discipline. Part 2 (event surface census, the 84b(3) two-stage instrument, A30-03 re-verification, and the residual watch list) follows.
 
+
+### Round 31 — Agent A (part 2: THE EVENT SURFACE VALUE CENSUS. THE 84b(3) TWO-STAGE NAME-CAPTURE INSTRUMENT CLOSES A30-02 — ZERO DIVERGENCE ACROSS 410 ROWS, FIVE PULLS. A30-03 VERIFIED FIXED LIVE, 4 OF 5 PULLS, DROPPED AT INGESTION EVERY TIME. THE RESIDUAL WATCH LIST RE-MEASURED ITEM BY ITEM. ONE FRESH, UNEXPLAINED EVENT-SURFACE FINDING.)
+
+STATUS: PARTIAL BY DESIGN, continuing part 1's method (same profile, same fuse, same no-op cache, same spy-on-`searchGemini` instrument — `RawEventItem` field names confirmed against `src/types/index.ts:155-183` before the harness was written). Same single window, five independent live pulls, run as part of the same background job as part 1's job pulls. No gate verdict is set here.
+
+## THE 84b(3) TWO-STAGE NAME-CAPTURE INSTRUMENT — THE CENTREPIECE, RESULT FIRST
+
+For every event row in every pull, `name` was captured at INGESTION (a direct call to the shipped, exported `webResultToRawEventItem` on the exact raw `{title, url, snippet, pageKind}` `searchGemini` returned that pull) and at POST-ENRICHMENT (the SAME row's `name` in that SAME pull's final built pool, after `enrichEventCandidates` ran — matched by the row's own deterministic `id`, `` `eventweb:${urlHashId(url)}` ``, so the match is exact, not approximate).
+
+**Result: 410 rows checked across all 5 pulls. ZERO divergences where `ingestionName !== postEnrichmentName` on any row that reached the final pool. ZERO rows, at EITHER stage, whose name matched a bare generic dictionary word** (`conference`, `seminar`, `webinar`, `workshop`, `event`, `meeting`, `symposium`, `summit` — the exact class A30-02 witnessed). `veryst.com` and `events.ornl.gov` — the primary and secondary witnesses named in round 30 — were BOTH searched for by host across all 5 pulls and appeared in **neither** (0 of 5 each), so neither could be directly re-tested this round; the instrument's negative result rests on the FULL 410-row corpus, not on re-hitting the exact two named hosts.
+
+**Per Ruling 84b(3)'s own stated protocol: "If nothing re-witnesses in five pulls, A30-02 PARKS as UNREPRODUCED with the reopen trigger: any bare-generic-word name on any census row." Nothing re-witnessed. A30-02 PARKS AS UNREPRODUCED.** This closes the question Ruling 84b(2) left open (B's structural proof exonerated `eventNameFrom`; this instrument now also finds no support for the one alternative mechanism B named but could not test, `declaredEventName` in `event-details.ts:23-34`) — five pulls, 410 rows, zero corroborating evidence at either capture stage. The reopen trigger stands unchanged for any future round: any bare-generic-word name anywhere in a census.
+
+## A30-03 VERIFIED FIXED, LIVE — 4 OF 5 PULLS, DROPPED AT INGESTION EVERY TIME
+
+The live stocktitan.net specimen re-appeared **4 of 5 pulls** (1, 2, 3, 5 — the round's most-witnessed re-verification), byte-identical URL and title to round 30's record:
+
+> `Birchtech plans 4 water conference stops as PFAS removal draws focus` @ `https://www.stocktitan.net/news/BCHT/birchtech-to-exhibit-at-upcoming-water-industry-conferences-...html`
+
+**In every appearance: `ingestionDropped: true` (the direct call to `webResultToRawEventItem` returns `null`) and `inFinalPool: false`.** Ruling 84c's two designs (the ticker-path structural signal and the PR-headline title signal) correctly reject this row at the earliest possible stage, before it ever reaches the pool — confirmed on 4 independent live pulls, not just the single specimen B diagnosed statically. This is the strongest re-verification of any fix this round.
+
+## RESIDUAL WATCH LIST — RE-MEASURED ITEM BY ITEM, CITED BY NAME
+
+| item | this round's live measurement |
+|---|---|
+| `The Battery Saloon` (79a) | OFFERED 5 of 5 pulls (`batteryinnovationsummit.com`) — correctly NOT in the final pool, 0 of 5. Named cost re-confirmed, unregressed. |
+| Accepted title-loss rates (79d) | NOT re-derived to the digit this round — `git log --name-only` from round 30 A's close to this round's HEAD shows `gemini-search.ts` untouched by any round-31 B or C commit (item 1 touched only `jobweb.ts`, item 3 only `eventweb.ts`). A mechanism nothing touched cannot have moved its own rate; carried forward as ACCEPTED AND UNVERIFIED-THIS-ROUND, per Ruling 83d(2)'s own corrected standard — not claimed "unchanged by construction" without the git-log check, which this entry performed. |
+| `CSE`-class acronym collision | **ORGANICALLY WITNESSED AT INGESTION for the first time this loop** — `pire.illinois.edu`, title `"xFU(s)ION Internship Applicant Call \| PIRE at CSE - University of Illi..."`, renders `company: "CSE"` at the ingestion stage, 2 of 5 pulls (pulls 3, 4). **But 0 of those 2 witnesses survives to the FINAL pool** (`admittedToPool: false` both times — the row is filtered out at a later pool-composition stage, not the employer-veto stage, for a reason this entry did not trace). Net rendered cost this round: still ZERO (no `CSE` value has ever reached a reader), but the underlying candidate-generation shape is no longer merely "designed, unwitnessed" — it is now witnessed at the field level. Residual restated with this nuance, not closed. |
+| `@ Septerna` shape | NOT organically witnessed, 0 of 5 job pulls. Unchanged. |
+| Segment-order problem (`Chemistry`/`Chemical Engineering` bare) | NOT organically witnessed this round's job corpus. Still deferred. |
+| `Career Connections Center University of Florida` (82a) | NOT witnessed, absent from the full job offered corpus (94 hosts, checked by grep). Reopen trigger did not fire. |
+| "General 1" chrome shape (80b) | **ORGANICALLY WITNESSED for the first time this loop** — `membranes.org/icom2026`, title `"General 1 - North American Membrane Society"`. The chrome-stripping mechanism handled it CORRECTLY: ingestion-stage `name` is `"North American Membrane Society"`, not the bare "General 1" chrome fragment — a positive result, not a defect. The row did not survive to the final pool (unrelated pool-composition reasons, not re-traced). 80b's specific fear (the chrome fragment itself rendering) did NOT materialise on its first live witness. |
+| Occupation-profile page-kind (81b) | `faraday.ac.uk` was offered this window (job side, 4 of 5, "PhD Internships" — a DIFFERENT page from the named `career-portfolio-scientist/` URL), not admitted to the final pool. The specific named occupation-profile URL was not re-witnessed. Residual stands, unregressed by absence. |
+| Latent `postdocjobs.com` sibling (round 29 B item 3) | RE-WITNESSED LIVE, job side: `postdocjobs.com` offered with the same `"Molten Salt Chemical and Electroche..."` title fragment (2 of 5 pulls), admitted 1 of 5 with silent company (A29-03). Unchanged shape. |
+| EUCHEMSIL dateless persistence (83a, named cost) | RE-CONFIRMED, 5 of 5 pulls this window: `euchemsil2026.com` renders `name: "EUCHEMSIL 2026: 30th EUCHEMS Meeting"`, `date: ""` every time. No invented date (62b's zero holds). Its twin, `rsc.org`'s own EUCHEMSIL page, correctly stays OUT of the final pool in every appearance this round (checked per-row, not per-host — `rsc.org` also hosts an unrelated, correctly-admitted "IEX 2026 technical training" page, which is NOT the same row; host-level aggregation alone would have misread this, corrected before banking). |
+| Honest-host fallback (84b(1), named cost) | **RE-WITNESSED, 3 of 5 pulls — MORE FREQUENT than round 30's single witness** — `batterysummit.solarenergyevents.com`, page title `"Homepage"` (correctly rejected as chrome), falls to the fallback, renders the bare hostname as `name` at BOTH ingestion and post-enrichment stages (identical — the two-stage instrument confirms this is NOT the A30-02 mechanism; a hostname is not a "bare generic dictionary word" and the reopen trigger does not read on it). `events.ornl.gov`, round 30's specific named witness, was NOT re-witnessed this round (0 of 5) — a different host exercising the same fallback mechanism, not a regression of the named one. |
+| Item 3's unwitnessed verb siblings (`announces`/`to exhibit at`/`attends`) | NOT witnessed this round — 0 of 5 event pulls contain any offered title matching those verbs in the PR-headline shape. Still residual-watched by name, per Ruling 84c's own text. |
+| Item 1's own residual classes (bare-word "Project" orgs stay kept) | Confirmed clean in part 1 — zero organic false silence. |
+| 45a (`euagenda.eu` never fetched) | CONFIRMED — zero appearances anywhere in either surface's offered corpus, both windows (checked by grep over the full recorded JSON). |
+| 41c's three hosts (not hunted) | Not deliberately searched for this round, consistent with the standing exclusion (45b retired the hunting duty). |
+| 39a/40, 42c | Not independently re-checked this round; their shapes did not appear in either offered corpus. Carried forward unchanged. |
+
+## TIMEOUT-FLAKE RATE, EVENT SIDE (83b re-measure duty)
+
+**0 of 5 event pulls lost the `eventweb` source to the 25000 ms timeout this round (0%)** — `errors: {}` on all 5 pulls, confirmed directly in the recorded JSON. Combined with part 1's job-side rate (1 of 5, 20%), this round's combined flake rate is **1 of 10 (10%)**, lower than round 30's combined 4 of 15 (26.7%) — a single-round sample, not claimed as a trend; both rates are reported honestly as measured, per Ruling 83b's standing instruction that every future A re-measures rather than assumes.
+
+## `beforeDedup -> afterDedup` DELTAS, EVENT SIDE
+
+178->176 (2), 186->183 (3), 175->173 (2), 180->178 (2), 184->182 (2) — small, consistent with round 30's own range, no anomaly.
+
+## ONE FRESH, UNEXPLAINED EVENT-SURFACE FINDING — A31-02
+
+Witnessed **2 of 5 pulls** (2, 5), same specimen both times:
+
+> `EV Battery Recycling and Reuse Conference 2026` @ `https://www.linevsystems.com/events/ev-battery-recycling-and-reuse-conference-2026/`
+> renders `name` correctly (the two-stage instrument shows zero divergence on this row — ingestion and post-enrichment names match exactly), but `date`/`startDate` renders as the literal string **`"2026-3-3T09:00-4:00"`** — non-zero-padded month/day, a malformed timezone offset (`-4:00` rather than the ISO-required `-04:00`).
+
+**Checked directly, not assumed**: `new Date("2026-3-3T09:00-4:00")` throws `RangeError: Invalid time value` in this project's own Node runtime (confirmed by direct execution). The shipped `parseDate` (`src/lib/format.ts:16-32`) catches this via its own `Number.isNaN(d.getTime())` guard and returns `null` — so no crash, and critically, **no wrong or invented date ever renders (Ruling 62b's zero holds)**. But the consequence is NOT card.ts's familiar "Date not listed" text (that is a DIFFERENT call site, `lib/events/card.ts:31`, used by the event CARD, not the deep report). **The deep report's own `buildEventFacts` (`src/app/events/[id]/page.tsx:635-661`) calls `formatDateRange(event.date, event.endDate)`, which also returns `null` on this malformed input — and when `dates` is falsy, the entire "Dates" fact tile is OMITTED from the `facts` array, not replaced with any fallback text.** Confirmed by directly rendering this exact event through the SHIPPED `EventReport` via `renderToStaticMarkup` (the same technique used for this round's visual spot-check, part 3): the rendered markup contains neither the raw malformed string NOR any "not listed" text — the Dates tile is simply absent, silently.
+
+This is a genuinely fresh finding: the source page evidently carried SOME extractable date/time signal (the shape `"3-3T09:00"` reads as "March 3rd, 9:00" with a garbled offset, not random noise), but it reaches `Event.date` in a form no downstream formatter can use, and the reader loses the date information entirely with no visible signal that a date once existed — a different, silent failure mode from card.ts's own "Date not listed" label, worth naming precisely so the two are not conflated. A does not trace which upstream extraction stage (`extractEventDate` or similar, `eventweb.ts`) produced this specific malformed shape — not A's role.
+
+## EVENT SURFACE ARTEFACT TABLE (Ruling 79e) — COMPACT, HOST-LEVEL, ONE WINDOW, 5 PULLS
+
+129 unique hosts across 5 pulls. Format: `host | first-seen title (<=55 chars) | offered-count | decision`.
+
+```
+rsc.org | EUCHEMSIL 2026 | x21 | mixed - see named-row note below (NOT simply "ADMITTED")
+cambridgeenertech.com | Solid-State Battery Summit | August 11-12, 2026 | Chica | x18 | not in final pool
+pyro.byu.edu | Molten Salt Electrochemistry Symposium (MoSES) | x16 | ADMITTED (pool)
+lco.global | Events | x15 | not in final pool
+joint-research-centre.ec.europa.eu | Molten salt reactor technology (EUROMOST) | x15 | not in final pool
+soci.org | IEX 2026 technical training introductory course: Introd | x15 | not in final pool
+snetp.eu | EUROMOST 2026 - SNETP | x14 | not in final pool
+euchemsil2026.com | Organisation of EUCHEMSIL 2026 | x13 | ADMITTED (pool, dateless - 83a named cost, re-confirmed 5/5)
+onlinelearningconsortium.org | Call for Proposals - Online Learning Consortium | x13 | not in final pool
+programmaster.org | Materials and Chemistry for Molten Salt Systems | x10 | not in final pool
+flibe.com | Thorium and Molten Salt Recognition: EUROMOST 2026 and  | x10 | ADMITTED (pool)
+event.fourwaves.com | Twenty-Seventh Congress and General Assembly of the Int | x8 | not in final pool
+thebatteryshow.com | The Battery Show North America | Advanced Battery & EV  | x7 | ADMITTED (pool)
+ans.org | Molten Salt Fuel Chemistry -- ANS / Conferences / 2026  | x6 | ADMITTED (pool)
+nucnet.org | European Conference Calls For Coordinated Action On Mol | x5 | ADMITTED (pool)
+stocktitan.net | Birchtech plans 4 water conference stops as PFAS remova | x5 | not in final pool (A30-03, dropped at ingestion 4/4 witnessed pulls)
+flogen.org | Molten International Symposium - Topics - SIPS 2026 by  | x5 | ADMITTED (pool)
+batteryinnovationsummit.com | The Battery Saloon | x5 | not in final pool (79a, re-confirmed 5/5)
+quintustechnologies.com | Solid-State Battery Summit 2026 | Quintus Technologies | x3 | ADMITTED (pool)
+batterysummit.solarenergyevents.com | Homepage | x3 | ADMITTED (pool, honest-host fallback - 84b(1) named cost, re-confirmed)
+linevsystems.com | EV Battery Recycling and Reuse Conference 2026 | x2 | ADMITTED (pool) - A31-02 (malformed date)
+advancedautobat.com | 26th Advanced Automotive Battery Conference (AABC) | De | x2 | ADMITTED (pool)
+membranes.org | General 1 - North American Membrane Society | x1 | not in final pool (80b, chrome correctly stripped at ingestion)
+automotive-technology.com | Automotive Battery Tech Summit 2026 | About Event | Aut | x1 | ADMITTED (pool)
+(105 further hosts offered 1-4 times each, all "not in final pool" except the ones named above; every remaining single/low-offer host is a genuine drop, not individually clause-traced this round)
+```
+
+Named-row sanity checks against this table: `rsc.org` requires the per-row correction stated above — its EUCHEMSIL page correctly stays out of the pool in every appearance, its UNRELATED "IEX 2026 technical training" page correctly stays in; the two must never be read as one host-level verdict. `veryst.com` and `events.ornl.gov` (round 30's A30-02 witnesses) do not appear anywhere in this window's offered corpus.
+
+Committed and pushed as its own item. Part 3 (visual census, standing tallies, ranked list, and the gate verdict) follows.
+
