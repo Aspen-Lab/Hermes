@@ -80222,3 +80222,129 @@ holds 62a's restated fixtures (Ruling 62a's restate-never-delete order) and ever
 is the SolarPaces lock at **56/56 solo** and must stay there.
 
 **VERDICT: mechanism corrected, fix (b) recommended, cost named and uncounted.**
+
+### Round 29 — Agent B — ITEM 3 (A29-03): the employer slot carrying role text. **BOTH ROWS REPRODUCE. IT IS ONE GAP, NOT TWO — AND THAT ONE GAP IS RULING 63a's FOLDED DEFERRAL, WHOSE OWN DESIGN IS THE FIX. THE REOPEN TRIGGER IS NOT PULLED, AND B SAYS WHY IN THE TRIGGER'S OWN WORDS.**
+
+**B changed no code.** Every verdict below is the SHIPPED `webResultToRawJobItem`
+executed on the live titles, read off `RawJobItem`'s real fields.
+
+**B's OWN INSTRUMENT DEFECT, DISCLOSED BEFORE ANY FIGURE:** B's first pass read
+`j.roleTitle` / `j.companyOrLab` off the mapper's return and every row printed
+`undefined`, which B could have read as "the mapper drops everything". **Those are
+the RENDERED `Job` field names; `RawJobItem` (`web/src/lib/jobs/types.ts:26-31`)
+is `title` and `company`.** This is **the same defect round 29 A disclosed in
+itself**, one layer further in — A had the `Job` names wrong, B had them right for
+the wrong type. Corrected against the source, then re-run. **No number below comes
+from the bad pass.**
+
+## **3.1 BOTH ROWS, AND THE SIBLING, REPRODUCE EXACTLY**
+
+Shipped mapper, plain-hyphen titles, snippet empty and non-empty alike:
+
+| row | `title` (role slot) | `company` (employer slot) |
+|---|---|---|
+| `Careers Open application - Internship battery R&D - HyET Lithium` | **`Careers Open application`** | **`Internship battery R&D`** — the real employer `HyET Lithium` is segment 3, discarded |
+| `Postdoctoral Appointee - Membrane Scientist for Electrodialysis - Job posted on PostdocJobs.com` | `Postdoctoral Appointee` | **`Membrane Scientist for Electrodialysis`** |
+| *sibling*, same host | `Postdoctoral Appointee` | `Molten Salt Chemical and Electrochemical Engineering` |
+
+**A's claim that the sibling is saved by the TOPIC-LABEL VETO and not by the split
+is CONFIRMED BY EXECUTION:** with the reader's own topics supplied
+(`["molten salt","electrochemistry"]`) the sibling's employer becomes **`(none)`**
+— honest silence — while **both casualties keep their wrong values unchanged**.
+The veto is indeed the only thing holding that host up.
+
+**THE 49a LOCK IS INTACT AND B CHECKED IT RATHER THAN ASSUMING IT.**
+`M.S. Internship Program – Oregon Center for Electrochemistry` renders
+`company = "Oregon Center for Electrochemistry"` in **every** variant B ran
+(empty snippet, populated snippet, topics supplied). Round 27's LANL must-keep
+`Nuclear Materials and Molten Salt Technologist 1` renders its role intact with
+an honest silent employer. **Any fix must keep both, and they are in the
+acceptance corpus below.**
+
+## **3.2 THE MECHANISM, AND WHY IT IS ONE GAP**
+
+`jobweb.ts:1376-1386`:
+
+```
+const splitParts = title.split(/\s+([-–—|·])\s+/);
+const parts      = splitParts.filter((_, i) => i % 2 === 0);
+const separators = splitParts.filter((_, i) => i % 2 === 1);
+const usesChromeSeparator = separators.some((s) => s !== "–" && s !== "—");
+const employerSegments = parts.slice(1).filter((_, i) =>
+  !(usesChromeSeparator && (separators[i] === "–" || separators[i] === "—")));
+```
+
+Both casualty titles use **plain hyphens only**, so `separators` is `["-","-"]`,
+`usesChromeSeparator` is **true**, the filter's second conjunct is **false for
+every segment**, nothing is excluded, and **`parts.slice(1)` hands the FIRST
+remaining segment to the employer slot.**
+
+**A frames this as two things — a new shape on `hyetlithium.com` and the A21-03
+class returning on `postdocjobs.com`. B's verdict: ONE GAP, in two dresses.** In
+both rows the discarded correct employer is a LATER segment and the wrongly
+promoted one is **role text**. Round 21 item 3(b) keyed on separator KIND, which
+is a proxy; the thing it was proxying for is **"this segment is not an
+organisation"**. Where the proxy has no signal — one separator kind throughout —
+the gap is total. **Two hosts, one missing test.**
+
+**And this is not a new design question.** The employer-candidate chain already
+carries a **topic-label veto** and a **section-label veto**
+(`CAREERS_INDEX_TITLE_RE`'s documented second call site). **It has no
+role-text/positive-organisation test — which is exactly the deferred design
+Ruling 63a folded (a) into.**
+
+## **3.3 RULING 62d(b) / 63a — THE TRIGGER IS NOT PULLED, IN THE TRIGGER'S OWN WORDS. B CONCURS WITH A AND ADDS THE PART THAT MATTERS.**
+
+63a's reopen trigger is **"the shape on a pool row in any census"**, where *the
+shape* is the `EV.Careers`/CATL pair — **a job board naming ITSELF in the
+employer slot**, i.e. a host echo / board tail. A's own check found **zero host
+echoes, zero topic labels, zero chrome** among the 7 distinct employer values.
+**B re-read 63a rather than relying on the summary and reaches the same verdict:
+NOT PULLED. B does not stretch it, and the reopen rule is the manager's, not
+B's.**
+
+**BUT THE FIX IS THE DEFERRED DESIGN ITSELF, AND THAT IS THE FINDING.** 63a
+folded (a) into (b) because the manager measured that *"ordering without the
+positive organisation test trades one wrong employer for another"*.
+**`Membrane Scientist for Electrodialysis` and `Internship battery R&D` both fail
+a positive organisation test and both pass everything shipped.** So A29-03 sits
+**inside 62d(b)'s blast radius without pulling its trigger** — the deferral's
+price has now been paid twice on rendered rows, and 62d(a) reads WRONG for the
+first time in six rounds because of it.
+
+**B's RECOMMENDATION, AND IT IS A COMMISSION REQUEST, NOT A DESIGN:**
+**commission 62d(b)'s deferred positive-organisation design, with A29-03's two
+rows added to its recorded corpus** (which already owns the `EV.Careers`/CATL
+pair). **B does not design it here** — 63a recorded that ordering alone makes
+things worse, so a partial fix invented in this entry would repeat the mistake
+the ruling exists to prevent. **POLICY — MANAGER DECIDES** whether to commission
+it now or leave A29-03 latent and watched, as `lanl.jobs`'s `Research
+Technologist 1` and the Michigan row already are.
+
+**WHAT B EXPLICITLY DOES NOT RECOMMEND, with the reason:** widening the
+separator discriminator to treat a plain hyphen as chrome. **Ruling 49a's lock is
+that conjunct** — `M.S. Internship Program – Oregon Center for Electrochemistry`
+uses an en dash and nothing else, and the recorded measurement is that dropping
+the conjunct silences that must-keep. A plain-hyphen widening attacks the same
+load-bearing clause from the other side and B will not spend a locked
+adjudication on a proxy.
+
+**THE ACCEPTANCE CORPUS FOR WHOEVER BUILDS IT:** the two casualties must render
+their real employers (`HyET Lithium`; silence is acceptable for `postdocjobs.com`);
+`M.S. Internship Program – Oregon Center for Electrochemistry` must keep
+`Oregon Center for Electrochemistry` (**49a**); `Nuclear Materials and Molten
+Salt Technologist 1` must keep its role and its silent employer (**round 27 /
+62d**); the `EV.Careers`/CATL pair (**63a's own corpus**); and `ev.careers`'s
+Tesla row must keep `Tesla` (**A26-01**).
+
+**VACUITY NOTE FOR THE FUTURE DESIGN:** a positive organisation test that admits
+every segment is vacuous, and one that admits none silences 5 currently-correct
+employer values (A measured 5 of 7 correct). **Both ends are real and both must
+be measured, not argued.**
+
+**TESTS AT RISK — GREPPED:** `web/src/lib/jobs/sources/jobweb.test.ts` (123
+tests, 2725 lines) holds round 21 item 3(b)'s asserted must-keeps and the 49a
+lock; `web/src/lib/jobs/sources/jobweb.test.ts:2516` is 76b's repaired
+vacuous-going test and must not go vacuous again.
+
+**VERDICT: one gap; trigger NOT pulled; the fix is 63a's folded deferral; commissioning it is the manager's call.**
