@@ -80733,3 +80733,111 @@ sibling predicate sits beside. If option B is ever taken,
 the widened `WebResult`.
 
 **VERDICT: row real, mechanism confirmed, and the finding beyond A's is that the decisive evidence sits in a layer the guard cannot reach. Recommend the title-side rule now; if the page-declared channel is wanted, land it once for this item and item 1's channel L together.**
+
+### Round 29 — Agent B — SUB-ITEM 8 (RULING 78b): the papers web-search call site, CONFIRMED, and the 25 s extension PRICED ON A LIVE TIMING. **THE SOURCE IS NOT DEAD AT 8000 ms — IT IS A COIN FLIP, WHICH IS WORSE.**
+
+**B changed no code.** The timing below is **two live Vertex Gemini grounded
+searches** run through the SHIPPED `searchGemini` on 2026-08-18. **Ruling 75
+obeyed: gemini is the provider; not one Tavily / Adzuna / USAJobs / JSearch
+call.** `isGeminiSearchAvailable()` read **true** in the test process; no
+credential was printed, logged or written.
+
+## **8.1 THE CALL SITE, CONFIRMED — AND IT IS NOT THE FUNCTION 76a AMENDED**
+
+**The site is `web/src/lib/feed/pipeline.ts:113`** —
+`withSourceTimeout(s, bySourceId[s].fetch({ … webSearch: … }))`, inside the
+`Promise.allSettled` over every paper source.
+
+**THE FACT THAT CHANGES THE PRICE:** the papers pipeline **does not use the
+shared helper**. It has its **own private copy**, `feed/pipeline.ts:268-284`:
+
+```
+async function withSourceTimeout<T>(sourceId: string, promise: Promise<T>): Promise<T> {
+  const TIMEOUT_MS = 8000;
+  …
+}
+```
+
+**Two parameters, no `timeoutMs`, the value hard-coded.** By contrast
+`opportunities/shared.ts:32-35` already takes `timeoutMs = 8000`, which is why
+76a could be implemented at the events and jobs call sites as a single argument
+(`events/pipeline.ts:154-163`, `jobs/pipeline.ts:151-157`, both passing
+`GEMINI_SOURCE_TIMEOUT_MS`).
+
+**So "extend 76a to the papers call site" is not a one-argument change.** It is:
+(1) give the private copy an override parameter **or** delete it and import the
+shared one, then (2) pass `GEMINI_SOURCE_TIMEOUT_MS` on the `web` source only.
+**Round 28 C flagged exactly this and carried it rather than widening it without
+a ruling** (`feed/pipeline.ts:126-133`) — that disclosure is confirmed accurate.
+
+## **8.2 THE BUDGETS ARE INCOHERENT WITH EACH OTHER, AND THAT IS MEASURABLE**
+
+`gemini-search.ts:86` sets the adapter's own soft deadline
+**`GEMINI_SEARCH_BUDGET_MS = 21_000`**, and `web-search.ts` calls
+`geminiSearchDeadline()` before fanning out. **The adapter is built to spend up
+to 21 s inside a source the papers pipeline kills at 8 s.** The inner budget is
+**2.6x** the outer wall. Whatever is decided, those two numbers should not
+disagree by that margin.
+
+## **8.3 THE LIVE TIMING — AND IT IS NOT WHAT "PROVABLY EMPTY" IMPLIED**
+
+Two paper-shaped queries (the surface's own `" paper OR preprint OR arxiv"`
+suffix), through the shipped adapter, all three stages:
+
+| query | wall | rows | at **8000 ms** | at **25000 ms** |
+|---|---|---|---|---|
+| `molten salt electrochemistry paper OR preprint OR arxiv` | **7541 ms** | 3 | **survives** | survives |
+| `ion exchange membrane research paper OR preprint OR arxiv` | **11832 ms** | 4 | **KILLED** | survives |
+
+**THE PAPER SURFACE'S WEB SOURCE IS NOT UNIFORMLY DEAD AT 8 s. IT IS
+NONDETERMINISTIC — one of two queries landed inside the wall and one did not.**
+
+**That is a materially different — and worse — condition than the one round 28
+C's disclosure implies**, and B files it as a correction of expectation rather
+than of fact:
+
+- A source that always fails is honest: the surface reports zero fetched, the
+  reason lands in `errors[sourceId]`, and the report renders empty on purpose.
+- **A source that fails about half the time produces a paper surface whose
+  contents depend on grounding latency on the day.** Two runs of the same profile
+  minutes apart can differ with no change to the data, no error a reader sees,
+  and nothing in the report saying so. **That is a reproducibility defect on the
+  measured surface, not merely a missing feature** — and every future A census of
+  the paper surface inherits it.
+
+## **8.4 THE PRICE OF THE RAISE, NAMED**
+
+**The paper pipeline is on a REQUEST path** — `runFeedPipeline` is called from
+`web/src/app/api/feed/route.ts:159`. Its `withSourceTimeout` comment states the
+8 s exists so *"one slow source never drags `Promise.allSettled` past 8s on the
+critical path"*, and `allSettled` waits for the slowest settler.
+
+**So the raise costs exactly this: the paper surface's worst-case response goes
+from about 8 s to about 25 s, on a path a user is waiting on.** Nothing else
+moves — every other paper source keeps its own 8 s and settles earlier, so the
+25 s is only ever paid when the web source is genuinely slow.
+
+**PRECEDENT, AND THE CONSISTENCY ARGUMENT:** the events and jobs surfaces
+already pay this under 76a. Leaving papers at 8 s means **one of three surfaces
+silently uses a different provider budget from the other two**, which is the kind
+of split that produces a census nobody can reconcile.
+
+**B's RECOMMENDATION:** take the raise, and take it as the shared helper
+(delete the private copy, import `opportunities/shared.ts`'s) so the three
+surfaces cannot drift again. **Set the outer wall and `GEMINI_SEARCH_BUDGET_MS`
+deliberately relative to each other rather than 8 vs 21 by accident.**
+**POLICY — MANAGER DECIDES the 25 s on a user-facing request path; 78b approved
+it in principle and the measured cost above is what that principle buys.**
+
+**FALSIFIER FOR WHOEVER LANDS IT:** if, after the raise, a paper-surface census
+still shows the web source reporting zero fetched with a `source-timeout` reason,
+the wall was not the binding constraint and something else is.
+
+**TESTS AT RISK — GREPPED:** `web/src/app/api/feed/route.test.ts` mocks
+`runFeedPipeline` and is insulated. `web/src/lib/feed/paper-daily-cache.test.ts`
+(1 test) constructs `searchConnectors`. **No shipped test asserts the 8000 ms
+constant by value** — B grepped for it; the number appears only in
+`feed/pipeline.ts:272` and `opportunities/shared.ts:35`. **That absence is itself
+worth noting: nothing would go red if the value changed silently.**
+
+**VERDICT: call site confirmed at `feed/pipeline.ts:113`; the private helper has no override parameter so this is a two-part change; and the measurement says the surface is a coin flip at 8 s, not an honest zero.**
