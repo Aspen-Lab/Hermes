@@ -270,11 +270,107 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 33 + 2026-08-19T02:00Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 33 B IS COMPLETE @ 2026-08-19 ~02:5x UTC — BOTH
+                  ITEMS DESIGNED/DIAGNOSED, TWO COMMITS, EACH PUSHED ON
+                  LANDING.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after
+                  `git pull` and after confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`dabf018`). Grepped `Round 33 — Agent B` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  round 32 A's three parts and Rulings 87a-89e in full before
+                  any live pull.
+
+                  **ITEM 1 (A32-01, Ruling 89b, event-side job-content kind
+                  guard) — DESIGNED, `isJobListingContentTitle`, a 7th
+                  additive title-vocabulary kind guard for
+                  `webResultToRawEventItem`.** Five fresh live event pulls
+                  (searchConnectors gemini-only, Ruling 75 checked directly —
+                  `tavily` never in `fetched`, `euagenda.eu` never offered)
+                  found the defect class is NOT the single A32-01 witness:
+                  THREE MORE currently-wrongly-admitted rows this window
+                  (`jobitus.com`, `shine.com`, `iimjobs.com` — all job-board
+                  listing/profile pages, confirmed by direct execution of the
+                  shipped `webResultToRawEventItem`, none of the six existing
+                  guards firing). The signal is TITLE VOCABULARY, NOT PATH
+                  SHAPE — measured and rejected: two of the three fresh
+                  witnesses carry no date-structured path at all, so a
+                  path-based design (the superficial job-side-mirror instinct)
+                  would have missed them. Design: `JOB_LISTING_CONTENT_RE`
+                  (`job openings`/`job vacancy|vacancies`/bare
+                  `vacancy|vacancies`/`company page`) OR `hasRepeatedJobsMention`
+                  (the word "job"/"jobs" stated 2+ times), gated by the
+                  file's own existing `looksLikeEvent` as a safety net — the
+                  same must-keep-vocabulary-wins pattern round 32 C's job-side
+                  trio established. **30 of 30 adversarial cases pass**: 4 of
+                  4 must-catch (the original witness + 3 fresh), 0 of 19
+                  false positives across the must-keep corpus (Ruling 89b's
+                  four job/career-FAIR rows + 3 more this item's own live
+                  trace found + all 12 ADMITTED rows in round 32 A's full
+                  event artefact table), 0 of 7 adversarial constructions
+                  wrong either direction. Zero collision with the existing
+                  2890-line `eventweb.test.ts`, grepped directly.
+
+                  **ITEM 2 (Ruling 89c, the dateless-branch diagnostic) —
+                  CLASSIFIED, 15 unique dateless final-pool rows from a fresh
+                  5-pull live window (39 final-pool rows, 34 dateless, 87%,
+                  independently reproducing round 32 A's own 34/35, 97%
+                  finding on a different window).** FIRST FINDING: all 15
+                  rows were BOTH inside the enrichment top-40 slice AND
+                  fetched successfully (non-null HTML, 9.7KB–497KB) — ruling
+                  out the top-40 cap and fetch failure as explanations before
+                  any content was inspected; the loss is inside extraction
+                  itself. **CLASS COUNTS: (a) 0 confirmed, 1 rejected
+                  candidate. (b) 7 rows carry text, 0 ship — 5 correctly
+                  attributed but left unshipped for lack of a bounded
+                  extraction, 2 DIRECTLY DISPROVE the naive
+                  single-match-is-safe heuristic (a Nobel laureate's death
+                  date; an abstract submission deadline — both would have been
+                  invented, wrong dates under a bare "count===1" design, a 29%
+                  failure rate on this item's own tested corpus). (c) 7 rows,
+                  no safely-usable evidence (2 genuinely bare, 5 too ambiguous
+                  or already-explained, incl. one whose own JSON-LD declares
+                  itself an Event yet states no date at all).** The one
+                  (a)-candidate (`nucnet.org`'s HTML5 `<time datetime>` tags —
+                  a real mechanism gap, no reader exists anywhere in the
+                  chain) is NAMED AND REJECTED WITH DIRECT EVIDENCE: the three
+                  values found belong to unrelated sidebar news headlines, not
+                  the page's own subject — a demonstrated trap, not a signal,
+                  on its one live specimen. **NO CODE SHIPS FROM THIS ITEM.**
+                  The commission's own question is answered: the 87–97%
+                  dateless rate is a SOURCE-SIDE coverage gap, not a defect in
+                  the pipeline's own chain — every row this item traced was
+                  correctly enriched, correctly fetched, and correctly
+                  extracted from whatever the source actually offered.
+
+                  **GATE, COLD, AFTER BOTH ITEMS: `npx vitest run` — 99 files
+                  / 2381 tests, 2381 passing, ZERO failures** (unchanged — B
+                  wrote no test, changed no product code). `npx tsc --noEmit`
+                  clean.
+
+                  **B CHANGED NO PRODUCT CODE.** Two commits, each pushed on
+                  landing (`b6075d1` item 1, `27f61cb` item 2). Throwaway
+                  harness (`web/zz-r33b/`) lived outside `web/src/`, deleted
+                  before both commits, `git status --porcelain
+                  --untracked-files=all` confirmed clean each time. No
+                  credential anywhere; boolean presence only; `.env.local`
+                  never `cat`-ed (only key NAMES checked); no
+                  `PEER_PROFILE_SNAPSHOT_PATH`. Ruling 75 obeyed and CHECKED
+                  DIRECTLY on every live pull (`tavily` never in `fetched`,
+                  `euagenda.eu` never offered); all page re-fetches were of
+                  rows this session's own pipeline had just admitted, not a
+                  host hunt. No large page text pasted anywhere — every quote
+                  clipped to ≤80 characters, most ≤60.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 33 verification and
+                  rulings before C spawns`.** Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~01:3x UTC — ROUND 32 A
                   VERIFIED INDEPENDENTLY, RULINGS 89a-89e APPENDED (§4),
                   ROUND 32 CLOSED.** Gate: three manager runs — run 1 showed
