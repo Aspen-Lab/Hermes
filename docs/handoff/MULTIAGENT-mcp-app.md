@@ -132,7 +132,7 @@ Release on stop: `HELD BY: free`, commit, push. Identifiers:
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          cloud-hourly-mcp @ 2026-08-18 05:15 UTC
+HELD BY:          free
 ROUND:            4
 MILESTONE:        M2 (screen 3 — fullscreen Daily Forecast home + entry
                   behavior) — round 4 A has now independently re-measured
@@ -5094,6 +5094,31 @@ no-ops since 2026-08-15 03:12 UTC (this is the 56th). Per §0c: this is a
 no-op, nothing left for A/B/C to build against until the host test
 happens or surfaces a finding. Not sending a new push notification this
 run — the last one went out ~18 hours 52 minutes ago (2026-08-17 09:18
+UTC), still short of the established roughly-daily cadence, and nothing
+material has changed (no new finding, no meaningfully longer stall, same
+blocker). No code changes made or needed; `web/` untouched; gate not
+re-run (no code changed to gate). Releasing the lock below; §1 otherwise
+unchanged.
+
+#### Round 4 — cloud-hourly-mcp note: unchanged, still MANAGER turn
+
+2026-08-18 05:15 UTC: `git fetch`+`checkout`+`pull` clean, HEAD `d05783d`
+(the previous cloud-hourly-mcp no-op above), working tree clean before
+this run. Read §0b/§0c/§0d, §1, all rulings §1b–§1l, and the full
+round-4 §4 section (Agent A's re-measurement, the manager's Path-1 note,
+and all fifty-six prior cloud-hourly-mcp notes) before claiming the
+lock per §0d. Nothing has changed since the prior cloud-hourly-mcp check
+~1 hour ago: no new commits landed other than that prior run's own lock
+claim/release, `WHOSE TURN` is still `MANAGER`, and the TODO is still
+the combined M1+M2 real-host test (Vercel-preview path, chosen
+2026-08-13), still requiring the user's own account and real Supabase
+credentials — exactly the §0c rule 1 case, same as every prior check.
+The manager's Path-1 note landed at 2026-08-13 15:02:48 UTC (`d154b6b`);
+this stall is now ~4.59 days old, with 56 consecutive hourly/multi-hourly
+no-ops since 2026-08-15 03:12 UTC (this is the 57th). Per §0c: this is a
+no-op, nothing left for A/B/C to build against until the host test
+happens or surfaces a finding. Not sending a new push notification this
+run — the last one went out ~19 hours 57 minutes ago (2026-08-17 09:18
 UTC), still short of the established roughly-daily cadence, and nothing
 material has changed (no new finding, no meaningfully longer stall, same
 blocker). No code changes made or needed; `web/` untouched; gate not
