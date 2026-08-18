@@ -275,6 +275,35 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~00:0x UTC — ROUND 32 B
+                  VERIFIED INDEPENDENTLY, RULINGS 87a-87d APPENDED (§4).**
+                  Spot-checks by the manager's own execution: the Feb-30
+                  rollover is REAL (silently becomes 2026-03-02 — the
+                  round-trip check is load-bearing); BOTH spec quotes verified
+                  verbatim via pypdf (p.2 "…can't find are hidden rather than
+                  shown empty.", p.4 "Same skeleton as the job report…");
+                  `nonEmptyString` and `isTopicLandingPage:482` read as
+                  traced. **RULING 87a: item 1 Components A/B/C APPROVED;
+                  `thrlab.tamu.edu` stays a named open residual;
+                  `lco.cl` POLICY ruled — named, UNSHIPPED structural
+                  observation (48a risk), reopen on any ordinary-census
+                  re-witness (artefact tables now capture URLs); its 57b
+                  value-witness credit STANDS (value vs kind are different
+                  questions).** **RULING 87b: item 2 APPROVED both parts —
+                  normalizer at `structured-extract.ts:1121-1122` with the
+                  round-trip check; NO render change, tile omission is the
+                  spec's own stated rule (verified verbatim); the card.ts
+                  asymmetry is DESIGNED, recorded, not to be re-litigated.**
+                  **RULING 87c: `WHOSE TURN: C — round 32`** — item 1's three
+                  components + item 2's normalizer, one commit per item,
+                  tests per B's §1.2/§2.3 corpus tables; THEN A — round 32
+                  GATE CANDIDATE (value + visual, gemini, artefact duty, pool
+                  re-measure, watch list + this round's residual additions).
+                  **RULING 87d: sonnet seventh data point — clean under
+                  adversity (mid-turn limit death resumed with zero loss;
+                  self-caught 62b violation in its own draft).**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 32 B IS COMPLETE @ 2026-08-18 ~22:2x UTC — BOTH ITEMS
                   DESIGNED, TWO COMMITS, EACH PUSHED ON LANDING.** Run by
                   `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
@@ -84263,4 +84292,20 @@ Read the design spec (`template for web design/Peer-design-spec-original.pdf`) p
 **(a) SHIP**: `normalizeNearIsoDateString`, wired at `structured-extract.ts:1121-1122`, wraps both `startDate` and `endDate`. Adversarially clean, one self-caught bug fixed before banking, zero test collisions, bounded failure direction (only ever improves a value, never invents one). **(b) NO CHANGE**: the spec's own text ("Fields Peer can't find are hidden rather than shown empty") settles this — tile omission is correct, card.ts's "Date not listed" is a deliberately different, shallower surface, and nothing here is ambiguous enough to need a manager ruling.
 
 Committed and pushed as its own item. §1 close-out follows as a separate commit.
+
+
+### Round 32 — MANAGER (independent verification of B; RULINGS 87a-87d; C commissioned)
+
+**Verification, run before any ruling:**
+
+- **B changed zero product code** (the manager's own scope check over B's whole turn — empty); tree clean; all commits pushed. B's mid-turn death on the account limit and SendMessage resume lost nothing — the turn lock was already B's (`0314337`) and both items landed after resume.
+- **Spot-checks, all PASSED by the manager's own execution or read:** (1) **the Feb-30 rollover re-executed**: `new Date("2026-02-30T09:00:00-04:00")` is NOT NaN and silently becomes `2026-03-02` — B's self-caught first-draft bug is real, and the component round-trip check is LOAD-BEARING, not defensive decoration; the do-not-simplify note ships with the design. (2) **Both spec quotes verified verbatim by the manager's own pypdf extraction**: PDF page 2 — "…can't find are hidden rather than shown empty."; PDF page 4 — "Same skeleton as the job report, different questions: …". Part (b)'s answer is textually grounded, and B was right that it is NOT a policy item. (3) `nonEmptyString` (`structured-extract.ts:858-862`) — trim-and-nonempty only, zero date validation, exactly as traced. (4) `isTopicLandingPage` (`jobweb.ts:474-484`) — the `:482` title-corroboration clause reads exactly as B's jobright.ai root-cause requires.
+
+**RULING 87a — item 1 APPROVED: Components A, B and C ship as written in §1.1.** The two residuals are ruled as B recommends: **`thrlab.tamu.edu`** stays a named open residual (0 of 8 re-witness chances; no URL, no evidence to size a fix — designing blind is the thing this loop refuses). **`lco.cl` — the POLICY line: B's recommendation ADOPTED.** The reversed-order title gap (`"<noun> - <owner>"`) is a real, verified vocabulary gap, but an unmeasured title-only rule risks silencing genuine single postings from exactly the small-organisation sites this profile's topics surface (48a's forbidden class). It stays a NAMED, UNSHIPPED structural observation. No dedicated hunt (Ruling 75 forbids host-hunting anyway); the reopen trigger costs nothing: the row or its shape re-appearing in any ordinary census — A's artefact tables now capture URLs, so a re-witness settles genuineness on sight. **One coexistence note:** round 31 A's 57b tally logged `lco.cl`'s employer VALUE as a genuine witness (`Las Campanas Observatory`, correctly extracted); that credit STANDS — value-correctness and row-kind are different questions, and neither record prejudices the other.
+
+**RULING 87b — item 2 APPROVED in both parts.** Part (a): the near-ISO normalizer ships at the single point of origin (`structured-extract.ts:1121-1122`, wrapping both `startDate` and `endDate`), with the component round-trip check and its recorded reason. The 62b line B drew is ratified explicitly: re-formatting a value every component of which is stated in the source is not invention; inventing begins where a component is absent or altered, and the round-trip check is what enforces that boundary mechanically. Part (b): NO render change — tile omission is the spec's own stated rule, verified verbatim; card.ts's "Date not listed" is a different surface with its own convention, and the asymmetry is DESIGNED, not a defect. Recorded so no future round re-litigates it.
+
+**RULING 87c — ROUTING: `WHOSE TURN: C — round 32`.** C implements: item 1's Components A (`NON_JOB_HOSTS`/`isNonJobHost`), B (`DATE_STRUCTURED_PATH_RE`/`isDateStructuredResearchPath`), C (`isBrandOnlySearchResultsPage`) with the §1.1 wiring (A/B immediately after `NON_JOB_PATH_RE`'s call site; C as an additive clause inside `isListingPage`), plus item 2's `normalizeNearIsoDateString` at `structured-extract.ts:1121-1122` — each item ONE commit, tests covering every corpus row in B's §1.2 and §2.3 tables (including the Feb-30 round-trip case and the byte-identical well-formed passthrough against `structured-extract.test.ts:28`'s exact fixture). **THEN A — round 32, GATE CANDIDATE ROUND** (value + visual, gemini, artefact duty, pool-count re-measure, the standing watch list plus this round's residual additions: `thrlab.tamu.edu`, the `lco.cl` reversed-order shape).
+
+**RULING 87d — sonnet, seventh data point: clean under adversity.** The turn absorbed a mid-turn account-limit death and resumed with zero loss; the jobright.ai mechanism was found by execution down to the exact clause; a 62b violation in B's OWN first draft was caught by B's OWN adversarial test and recorded rather than hidden; and twice B declined to design on absent evidence. The 83f watch stays quiet.
 
