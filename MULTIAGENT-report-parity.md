@@ -275,6 +275,43 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~20:3x UTC — ROUND 30 A
+                  VERIFIED INDEPENDENTLY, RULINGS 83a-83f APPENDED (§4),
+                  ROUND 30 CLOSED.** Gate re-run cold by the manager at close:
+                  **99 files / 2293 tests, 2293 passing, zero failures**; A's
+                  zero-product-code claim verified by the manager's own git
+                  scope check, not taken on trust. **RULING 83a: EUCHEMSIL
+                  dateless persistence CONFIRMED EXPLAINED** — moves to the
+                  named-cost registry; reopens only if an invented/wrong DATE
+                  ever renders (62b fuse), never for datelessness. **RULING
+                  83b: the measured timeout flake (3/10 job, 1/5 event pulls
+                  lose the whole gemini contribution at 25s) is a NAMED COST
+                  of the provider switch; 76a's budget does not move; every
+                  future A re-measures the rate.** **RULING 83c: the
+                  `events.ornl.gov` bare-hostname fallback folds into A30-02's
+                  design work (same `eventNameFrom` chain), not a fourth
+                  item.** **RULING 83d: TWO corrections to A's record, both
+                  conclusions SURVIVE the manager's re-derivation:** (1) the
+                  visual baseline commit was mis-cited (`c1ac1f5` is round 30
+                  C's lock claim; the true walk commit is `17de80e`) — the
+                  manager re-ran the corrected range: ZERO tsx/css files
+                  changed, VISUAL ZERO STANDS on the corrected argument; (2)
+                  the title-loss "unchanged by construction" claim is FALSE as
+                  stated (`gemini-search.ts` WAS touched by `7013589` at the
+                  title seam, after the 79d rates were measured) — the rates
+                  stand as ACCEPTED AND UNVERIFIED-THIS-ROUND; the narrower
+                  argument (the second decode cannot rescue a lost title)
+                  holds. **RULING 83e: ROUND 30 CLOSED. `WHOSE TURN: B —
+                  round 31`, work list A30-01 (job, psi.ch project-name
+                  employer), A30-02 (event, bare-word "conference" name, +
+                  ornl secondary witness), A30-03 (event, stocktitan.net
+                  investor-PR admitted, 3/5 — most witnessed).** **RULING 83f:
+                  sonnet third data point — A's turn disciplined and honest
+                  BUT carried 83d's two citation/argument defects, the first
+                  visible wobble since the downgrade; named, watched, reported
+                  to the user; not silently re-upgraded.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 30 A IS COMPLETE @ 2026-08-18 ~19:0x UTC — THE
                   GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. THREE
                   UNEXPLAINED VALUE DIFFERENCES (A30-01, A30-02, A30-03), ZERO
@@ -83017,3 +83054,27 @@ Ranked by what a reader loses, worst first.
 ---
 
 **ROUND 30 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
+
+### Round 30 — MANAGER (independent verification of A; RULINGS 83a-83f; round 30 CLOSED — hand-off to B round 31 confirmed)
+
+**Verification, run before any ruling:**
+
+- **Gate:** manager's own cold run post-C landed 99 files / 2293 tests, 2293 passing; A changed no product code (verified by the manager's OWN `git log --name-only <lock>..HEAD -- web/src/` — empty, not taken from A's word); a fresh manager re-run at this close confirms the same numbers (recorded below if it differs — it did not).
+- **A's method held:** three parts committed write-as-you-go, harness outside `web/src/` and deleted, no credential anywhere, live pass real (the timeout flake is itself proof no snapshot was used), artefact tables landed (86 + 119 hosts), five-pull discipline observed, and part 1's instrument defect was self-caught BEFORE any figure was banked.
+- **Spot-checks that PASSED:** the `eventweb.ts:2069-2074` accepted-cost comment reads verbatim as A quotes it; `isNewsArticleTitle` (`eventweb.ts:416-420`) is exactly the closed two-regex vocabulary A describes; the offered-row tables' named-row sanity checks are internally consistent (`hyetlithium.com`/`postdocjobs.com` admitted-with-silence, `batteryinnovationsummit.com` refused 5 of 5).
+
+**RULING 83a — the EUCHEMSIL expiry-twin: CONFIRMED EXPLAINED.** A's read is ratified: `euchemsil2026.com`'s dateless persistence is the concrete, live-witnessed instance of the future-year escape's OWN documented price (`eventweb.ts:2069-2074` — "a genuinely finished page that mentions any later year survives, dateless"). It moves to the NAMED-COST REGISTRY (alongside 74's headcount, 79a's Battery Saloon, 79d's title-loss rates) — not the watch list, because its reopen condition is different: it reopens ONLY if an invented or wrong DATE ever renders on such a row (the 62b fuse), never for datelessness itself, which is the priced outcome. "Date not listed" on a concluded event is the accepted cost, restated here so no future round re-litigates it from scratch.
+
+**RULING 83b — the `withSourceTimeout` flake (3 of 10 job pulls, 1 of 5 event pulls lost the WHOLE gemini contribution to the 25 000 ms budget): RECORDED AS A MEASURED NAMED COST OF THE PROVIDER SWITCH; 76a's BUDGET DOES NOT MOVE THIS ROUND.** First real frequency measurement, and it is material — but moving the budget is a design change with its own trade-off (a slower report for every user vs. a fuller pool for some pulls), and this loop does not ship design changes from the manager's chair on one round's measurement. Disposition: every future A re-measures the rate as part of the ordinary census; if it worsens materially or ever blocks a gate close (an unstable census value traceable to source loss), it becomes a commissioned B design item on the spot. Phase 2's own latency budget revisits this regardless.
+
+**RULING 83c — `events.ornl.gov`'s bare-hostname name fallback: FOLDED into round 31 B's work list as a SECONDARY WITNESS attached to A30-02**, not a fourth ranked item. Both rows walk the same `eventNameFrom` fallback chain (`eventweb.ts:1778-1817`); B reads that chain once for A30-02 and prices both shapes in one design. A's instinct not to inflate the ranked list was right.
+
+**RULING 83d — TWO CORRECTIONS TO A's MEASUREMENT OF RECORD. Both underlying conclusions SURVIVE the manager's own re-derivation; both arguments, as written, were defective. Recorded without a strike, per the 78d precedent (the record is corrected, the error is named, the work stands).**
+
+1. **The visual structural argument cited the WRONG BASELINE COMMIT.** Part 3 names `c1ac1f5` as "round 29 A part 3's own visual-census-landing commit" — `c1ac1f5` is round 30 C's turn-lock claim (2026-08-18). The true last-exhaustive-walk commit is **`17de80e`** (round 29 A part 3). A's range therefore SKIPPED round 29 B and all six round 29 C items. **The manager re-ran the argument over the CORRECT range:** `git log --name-only 17de80e..HEAD -- 'web/src/**/*.tsx' 'web/src/**/*.css'` → **ZERO files**; the full `web/src/` file list over that range is ten `.ts`/`.test.ts` source-adapter/pipeline files, no rendering-layer file. **VISUAL: ZERO STANDS — on the corrected argument, which is now the measurement of record.**
+2. **The title-loss "unchanged BY CONSTRUCTION" claim is FALSE AS STATED.** Part 2 asserts `gemini-search.ts` was "untouched by any round-29-C, round-30-B, or round-30-C commit". **It was touched — by round 29 C item 5 (`7013589`, +58 lines), at exactly the page-title seam, landing AFTER the 79d rates were measured.** The narrower argument that actually holds, verified by reading item 5's diff: the second decode TRANSFORMS titles already recovered (entity decoding, hard cap 2, measured idempotent) and has no mechanism to rescue a title lost at the redirect/fetch stage — so the loss RATE has no path to move even though the file did. **The rates stand as ACCEPTED (79d) AND UNVERIFIED-THIS-ROUND — not "unchanged by construction". A future A re-measuring them is measuring something real, not ritual.**
+
+**RULING 83e — ROUND 30 IS CLOSED. Hand-off CONFIRMED: `WHOSE TURN: B — round 31`.** B's work list: **A30-01** (job — `BALDER Project (Licensing Support for a Molten Salt Reactor)` @ `psi.ch` in the employer slot; every shipped guard traced as not reaching it, including round 30's own `ROLE_TEXT_CANDIDATE_RE`), **A30-02** (event — `veryst.com`'s real descriptive title discarded for the bare word `"conference"`; trace `eventNameFrom`'s title→slug→snippet chain to the stage that produces it; **includes the `events.ornl.gov` bare-hostname secondary witness per 83c**), **A30-03** (event — `stocktitan.net` investor-PR headline admitted as an event, 3 of 5, the round's most-witnessed finding; `isNewsArticleTitle`'s closed vocabulary does not reach the stock-news shape). Round 31 runs the normal order: B designs, manager rules, C implements, A re-measures.
+
+**RULING 83f — sonnet quality, third data point, REPORTED TO THE USER per the standing instruction.** A's round-30 turn was methodologically disciplined (self-caught instrument defect, honest flake disclosure, correct hand-off under the non-zero rule) **but carried the two citation/argument defects of 83d — the first visible quality wobble since the downgrade.** Both conclusions survived the manager's independent re-derivation, so the cost was manager verification time, not a wrong record. Disposition: named, watched, reported; NOT silently re-upgraded — if the pattern recurs at B or C seats in round 31, the user decides the model question, not the manager.
+
