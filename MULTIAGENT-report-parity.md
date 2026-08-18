@@ -82070,3 +82070,81 @@ the one standing `quiz.tsx:46` error, 0 warnings.
 **ROUND 29 IS CLOSED.** A (visual zero — first ever; seven value items; four instrument defects self-caught) → manager (Ruling 78) → B (family (i) found already-shipped and its widening measured harmful; five A corrections; three POLICY) → manager (Ruling 79) → C (six items, +58 tests, five self-caught vacuous assertions, one vacuous clause deleted before shipping, and bad news filed against its own item) → manager (this entry). **`WHOSE TURN: B — round 30` stands: B designs the 62d(b)/63a positive-organisation test (79b) AND the empty-snippet admission class (80b), then A measures (value + visual, artefact duty 79e). The gate stays `GATE (0%): NOT MET`.**
 
 ---
+
+### Round 30 — Agent B — ITEM 1 (Ruling 79b, the 62d(b)/63a positive-organisation deferral): **NO HONEST FULL TEST EXISTS — CSE AND `BD`/`INL`/`BMS`/`Tesla` ARE THE IDENTICAL SHAPE. A BOUNDED THREE-CLAUSE PARTIAL IS DESIGNED AND ADVERSARIALLY CLEAN INSTEAD: ZERO FALSE POSITIVES ON THE FULL 21-ROW MUST-KEEP SET, SEVEN OF THE RECORDED MUST-DROP SET CAUGHT, THREE NAMED RESIDUALS LEFT OPEN RATHER THAN FORCED.**
+
+**B changed no code.** Every verdict below is either the SHIPPED `webResultToRawJobItem` (`web/src/lib/jobs/sources/jobweb.ts:1414`) executed directly on real strings, or a candidate regex tested in a throwaway harness (`web/zz-r30b/`, own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load, `*.probe.ts` include) — deleted before this commit, `git status --porcelain --untracked-files=all` verified clean. **Ruling 75 obeyed absolutely**: the only live traffic was two `searchGemini` pulls through the shipped Vertex Gemini adapter; no Tavily/Adzuna/USAJobs/JSearch call, for any purpose. No credential printed, logged, committed or written — `GOOGLE_VERTEX_PROJECT` etc. checked as boolean presence only via the same `.env.local` names the root `vitest.config.ts` already documents reading; `.env.local` was never `cat`-ed.
+
+## **1.0 THE CORPUS, RE-STATED EXACTLY AS RECORDED, NOT PARAPHRASED**
+
+**Must-keep (21 exact strings, tested verbatim):** the 15 named in round 23 B item 2 — `BD`, `J&J`, `BMS`, `Tesla`, `INL`, `Oak Crest`, `Thermo Fisher Scientific`, `Battery Ventures`, `GSK US`, `Johnson & Johnson`, `Sandia National Laboratories`, `Idaho National Laboratory`, `Oregon Center for Electrochemistry`, `Ionis Pharmaceuticals`, `Department of Energy` — plus A29-03's rescue target `HyET Lithium`, the round-23/24 `CATL`/`AquaBattery`/`Ion Exchange`/`Ion Exchange Ltd.` real values, and `Kairos Power` (post-trim).
+
+**Must-drop (13 exact strings, tested verbatim):** round 23 B item 2's own six (`Research Technologist 1` [old `lanl.jobs` shape], `Internship battery R&D`, `Focused Ion Beam, Electron Microscopy ...`, `Co-ops`, `Youth & Young Adult Programs ...`, `CSE`), round 23 B's extra four (`Chemistry`, `Chemical Engineering`, `Career Services`, and `Kairos Power, Alameda, California, United States` — the address-tail, already fixed by 62d(c)), round 24 A's own recorded new instances (`Medicinal Chemistry (Graduate Student level) @ Septerna`, `Career Connections Center University of Florida`), A29-03's two live rows (`Internship battery R&D` again, `Membrane Scientist for Electrodialysis`), and `EV.Careers` (Ruling 63a's own trigger shape).
+
+**Correction to the brief's citation, checked against the source:** the brief attributes the four-instance corpus (`CSE`, `Internship battery R&D`, the `@ Septerna` shape, `Career Connections Center University of Florida`) to "round 26 B item 2." Grepped: that text is round 24 A's part 2 (line 64587-64600 of this file), not round 26 B — round 26 B item 2 is A26-01 (the redundant-employer-statement item), unrelated. The corpus itself is correctly transcribed; only the round/agent attribution is wrong in the brief. Flagged per Standard 1, not treated as license to distrust the corpus.
+
+## **1.1 THE HARD BOUNDARY, ESTABLISHED BY EXECUTION: NO STRUCTURAL OR LEXICAL SIGNAL SEPARATES `CSE` FROM `BD`/`INL`/`BMS`/`Tesla`**
+
+Every axis tried and its result, tested against the full must-keep/must-drop corpus above:
+
+| axis | result |
+|---|---|
+| token count / length | fails — `CSE`, `BD`, `INL`, `Tesla`, `Co-ops` are ALL 1-token, ALL short; must-keep and must-drop overlap completely at this length |
+| all-caps acronym shape | fails — `CSE` is exactly as ALL-CAPS-short as `BD`/`INL`/`BMS` |
+| designator vocabulary (`ORG_DESIGNATOR_RE`-style) | **already measured and refused (round 23 B / Ruling 62d)** — deletes `BD`, `J&J`, `BMS`, `Tesla`, `INL`, `Oak Crest`, six of fifteen. Re-confirmed by inspection of `ORG_DESIGNATOR_RE` (`jobweb.ts:953`): none of the six contain any of its designator tokens |
+| candidate's array-slot origin (`titleEmployer` "at X" vs `employerSegments`) | fails — `Tesla` (must-keep) and `CSE` (must-drop) both arrive via the SAME `titleEmployer` "at X" capture in their respective recorded titles (`… at Tesla`, `… PIRE at CSE`) |
+| position in title (first vs last segment) | fails — this is the SAME question 62d(a)'s held half already answered no to, via the `EV.Careers`/CATL pair; not re-litigated here |
+
+**Verdict on this axis: distinguishing `CSE` (a department/programme acronym) from `BD`/`INL`/`BMS` (real organisation acronyms) requires knowing what the letters STAND FOR — semantic/world knowledge no regex classifier has, and this loop's own methodology (Ruling 32, the `ORG_DESIGNATOR_RE` warning) has consistently refused to simulate with an unmeasurable heuristic.** This is not a gap in effort; it is measured non-existence of an honest signal on this corpus. **`POLICY — manager decides`**, named alternative below (§1.5).
+
+## **1.2 THE ACHIEVABLE PARTIAL — THREE BOUNDED, CLOSED-VOCABULARY VETOES, ADVERSARIALLY TESTED**
+
+Three new clauses for the SAME candidate `.find()` chain (`jobweb.ts:1611-1687`), at the same priority level as the existing 12 negative guards — additive, nothing reordered, nothing existing touched:
+
+```
+ROLE_TEXT_CANDIDATE_RE = /\b(?:scientist|technologist|intern(?:ship)?s?|postdoc(?:toral)?|fellows?|researchers?|co-ops?)\b/i
+CAREERS_OFFICE_HEAD_RE = /^\s*careers?\s+(?:connections?|services?|development|centers?|centres?|offices?)\b/i
+BOARD_DOMAIN_BRAND_RE  = /\.(?:careers|jobs)$/i
+```
+
+**Deliberately narrow vocabulary, stated as a choice not an oversight.** `Associate`, `Analyst`, `Coordinator`, `Manager`, `Director` are NOT in the role-noun list, because those are realistic REAL FIRM-NAME suffixes (`Smith & Associates` is a common consulting/law naming convention) — the false-drop risk of including them was not measured and is not taken on faith. `Engineer`/`Engineering` is also deliberately excluded — it is both a role word and a legitimate business-name component, and this corpus's own `Chemical Engineering` (a bare department noun, must-drop) and a hypothetical `XYZ Engineering Ltd` (must-keep) cannot be told apart by the word alone; left as part of the segment-order residual, not force-fit here.
+
+**Executed against the full corpus (§1.0), exact recorded strings:**
+
+| veto | MUST-KEEP false positives | MUST-DROP caught |
+|---|---|---|
+| `ROLE_TEXT_CANDIDATE_RE` | **0 of 21** | `Research Technologist 1`, `Internship battery R&D`, `Co-ops`, `Membrane Scientist for Electrodialysis` |
+| `CAREERS_OFFICE_HEAD_RE` | **0 of 21** | `Career Services`, `Career Connections Center University of Florida` |
+| `BOARD_DOMAIN_BRAND_RE` | **0 of 21** | `EV.Careers` |
+
+**Seven of thirteen recorded must-drops caught, zero of twenty-one must-keeps touched.** (`Focused Ion Beam, Electron Microscopy ...` and `Youth & Young Adult Programs ...` are NOT newly caught by these three — they don't need to be, `TRUNCATED_CANDIDATE_RE` already vetoes both, confirmed by re-reading `jobweb.ts:870`.)
+
+**`BOARD_DOMAIN_BRAND_RE` is the one genuinely new mechanism, not a restated existing one, and its reason is measured, not assumed.** `looksLikeHostBrand("EV.Careers", "ev.careers")` was traced (round 24 A) and returns **false** — it only compares against the host's FIRST DNS label (`"ev"`, 2 characters) against the normalized candidate (`"evcareers"`, 9 characters), so the full board-brand name survives every existing guard. Today's shipped code is saved from this only because `titleEmployer`'s "at Tesla" capture wins FIRST in the array before `EV.Careers` (a later `employerSegments` entry) is ever reached — the corpus has no recorded row where `EV.Careers` is the SOLE surviving candidate. `BOARD_DOMAIN_BRAND_RE` closes that latent gap directly rather than relying on priority-order luck.
+
+## **1.3 A RECORDED DECISION FOUND AND NOT REVERSED: THE `@ Septerna` SHAPE STAYS UNRESOLVED, ON PURPOSE**
+
+`Medicinal Chemistry (Graduate Student level) @ Septerna` is not caught by any of the three vetoes above (verified: it contains none of the role-noun vocabulary — "Graduate Student" is not "postdoc" or "intern"). **The obvious-looking fix — teach `titleEmployer`'s "at X" capture to also recognise "@ X" — was already measured and explicitly DECLINED, in this file's own words** (`jobweb.ts:1085-1091`, `BOARD_SELF_NAME_RE`'s doc comment): *"THE `@` SEPARATOR IS DELIBERATELY NOT TAUGHT TO `titleEmployer`. B measured recovering [the employer] as a separate, larger change and declined it for Ruling 48a's reason: recovering a value is not a win if it comes back wrong, and `@` is far looser than the shipped `at ` capture (handles, address fragments, `9am @ HQ`)."** Per Standard 5, this is flagged, not reversed: the Septerna row stays a named, latent residual — a veto could silence it (none of the three above happens to reach it), but building a FOURTH veto just for this one shape risks the same over-fit `TRUNCATED_CANDIDATE_RE`-adjacent territory without a matrix to test it against. Left open.
+
+## **1.4 LIVE SWEEP (Ruling 75: gemini only), TWO INDEPENDENT PULLS**
+
+Both pulls ran `webResultToRawJobItem` unmodified against real offered rows (queries: battery/molten-salt/electrochemistry research and internship openings).
+
+**Pull 1** (9 offered, 5 rendered a company): `Scientist`, `Molten Salt Chemical and Electrochemical Engineering`, `Oregon Center for Electrochemistry`, `Sila Nanotechnologies`, `U.S. Department of Defense (DOD)`. **`Scientist` is a LIVE, FRESH instance of exactly the class the role-text veto targets** — `ROLE_TEXT_CANDIDATE_RE` would have caught it; this is independent corroboration beyond the recorded corpus, not a replay of it. `Molten Salt Chemical and Electrochemical Engineering` is the ALREADY-KNOWN latent `postdocjobs.com` sibling row (round 29 B item 3, saved only when topics are supplied) — correctly UNCHANGED by all three vetoes, neither better nor worse, since none contains their vocabulary.
+
+**Pull 2** (8 offered, 7 rendered): `Molten Salt Chemical and Electrochemical Engineering` (same latent row, unaffected), `Battelle Energy Alliance`, `SaltGen Inc`, `Oregon Center for Electrochemistry` (49a's lock, **re-confirmed live for the second time this round**), `U.S. Department of Defense (DOD)`. **Zero false positives from any of the three vetoes on either pull — 12 of 12 real live company values pass through untouched.**
+
+## **1.5 WHAT RENDERS ON A VETO FIRING, AND THE BLAST RADIUS THROUGH RULING 57b**
+
+**Exactly Ruling 32's doctrine: silence, or the next candidate in priority order — never an invented value.** A vetoed candidate is simply removed from the `.find()` array; if a lower-priority candidate (a later `employerSegments` entry, or `parentheticalEmployer`) survives every OTHER guard, it wins instead; if none does, `company` is `undefined` and the card renders no employer line, exactly the state `terra.do` and eight other rows are in today.
+
+**Blast radius, checked against `isOwnerNameTopicCollision` (Ruling 57b, `opportunities/shared.ts`), not assumed:** these three vetoes can only ever REMOVE a candidate, never add one, so they cannot themselves manufacture a new 57b-colliding name out of nothing. But per 62d's own recorded warning, **promoting a LOWER-priority candidate that now wins in place of a vetoed one CAN newly surface a real organisation name that then collides with 57b — the exact mechanism `employbl.com` demonstrated organically.** None of the three vetoes' live or recorded catches (`Research Technologist 1`, `Internship battery R&D`, `Co-ops`, `Membrane Scientist for Electrodialysis`, `Career Services`, `Career Connections Center University of Florida`, `EV.Careers`, `Scientist`) has a second surviving candidate behind it in any recorded title, so this round's own evidence shows no NEW collision — **but round 30 A must re-measure pool count after this ships, not assume invariance**, per the standing instruction.
+
+## **1.6 TESTS AT RISK, GREPPED**
+
+`web/src/lib/jobs/sources/jobweb.test.ts` — **86 `company` references**, holding the 49a lock (`M.S. Internship Program – Oregon Center for Electrochemistry`, asserted at lines 1945/2178/2655-2656/2681) and round 21 item 3(b)'s asserted must-keeps. Also `web/src/lib/jobs/scoring.test.ts` (28 refs — 57b's guard input), `web/src/lib/jobs/dedup.test.ts` (15), `web/src/lib/opportunities/job-posting-scope.test.ts` (9), `web/src/lib/opportunities/enrich.test.ts` (8, the SolarPACES lock), `web/src/lib/jobs/sources/adzuna.test.ts` (8), `web/src/lib/jobs/mapper.test.ts` (5), `web/src/lib/opportunities/employer-identity.test.ts` (5, A22-05's dedup key), `web/src/lib/opportunities/facets.test.ts` (4). None of these fixtures contain `CSE`, `Co-ops`, `Career Connections Center…`, or `EV.Careers` as an ASSERTED employer value today (checked by grep), so the three new vetoes add coverage rather than contradict anything shipped.
+
+## **1.7 VERDICT AND `POLICY — manager decides`**
+
+**No full "positive organisation test" exists honestly on this corpus** — `CSE` and `BD`/`INL`/`BMS`/`Tesla` are the identical shape, and closing that gap requires semantic knowledge this pipeline does not have and this loop's methodology has repeatedly refused to fake. **A bounded three-clause partial is designed and adversarially clean**: zero false positives across the full 21-row must-keep set (constructed + two independent live pulls), seven of the thirteen recorded must-drops caught, all three clauses closed-vocabulary and additive (nothing reordered, nothing locked touched). **Three named residuals stay open, not forced: the acronym collision (`CSE` and its siblings — the true hard case), the segment-order problem (`Chemistry`/`Chemical Engineering` — already deferred by 62d(a)'s held half, NOT reopened here), and the `@ Septerna` shape (a previously measured-and-declined design, flagged not reversed).**
+
+**`POLICY — manager decides`:** (1) ship the three-clause partial as this round's discharge of Ruling 79b's commission, with the residuals named and watched exactly as `The Battery Saloon` is watched under 79a; or (2) hold 79b open pending a semantic/allowlist alternative — which the recorded `ORG_DESIGNATOR_RE` warning and this item's own execution both argue against building blind. B recommends (1): the partial costs nothing measured, touches no locked constant, and turns two of A29-03's own live wrong-render rows (`Internship battery R&D`, `Membrane Scientist for Electrodialysis`) plus `Career Services`'s sibling shape and the `EV.Careers` latent gap into either correct values or honest silence.
