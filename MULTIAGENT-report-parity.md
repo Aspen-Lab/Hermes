@@ -270,11 +270,89 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 @ 2026-08-18 07:35 UTC — Agent C, round 29
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **finished the turn @ 2026-08-18 07:5x UTC — ROUND 29 C IS
+                  COMPLETE. ALL SIX ITEMS LANDED, PLUS THE POOL
+                  RE-MEASUREMENT. SEVEN §4 ENTRIES, SEVEN COMMITS, EACH PUSHED
+                  THE MOMENT IT WAS MADE.** Run by `LAPTOP-3CL10CG5`.
+                  **NOTHING IS PART-WAY; NOTHING IS UNSTARTED; NO ITEM WAS
+                  BANKED OUT FOR BUDGET.** Claimed the lock after `git pull` and
+                  after confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; **the claiming push was
+                  ACCEPTED (`19cb14f..eadcc26`), so the race was won rather than
+                  assumed.** No branch, worktree or PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **RULING 75 OBEYED ABSOLUTELY: NOT ONE TAVILY, ADZUNA,
+                  USAJOBS OR JSEARCH CALL, FOR ANY PURPOSE.** Items 1–6 made
+                  **no live call at all** — every figure is unit execution. The
+                  pool re-measurement made **one live pull through the shipped
+                  Vertex Gemini adapter only**, which is the permitted provider.
+                  **No credential printed, logged, committed or written —
+                  boolean presence checks only; `.env.local` was NEVER
+                  `cat`-ed.** No third-party page text pasted; every clip is a
+                  programmatic title under 70 characters.
+
+                  **THE GATE, COLD BEFORE THE FIRST EDIT AND AGAIN AT CLOSE:**
+                  cold — **98 files / 2208 tests, 2208 passing, zero failures**,
+                  benchmark green on gemini, `tsc` clean, `eslint` the one
+                  standing `quiz.tsx:46` error / 0 warnings — **exactly the
+                  baseline B and the manager left.** At close — **99 files /
+                  2266 tests, 2266 PASSING, ZERO failures** (one new test FILE,
+                  **58 new tests**), `tsc --noEmit` clean, `eslint src` the same
+                  single standing error and **0 warnings**. **`enrich.test.ts`
+                  (the SolarPaces lock) SOLO: 56/56.** **`benchmark.test.ts`
+                  SOLO after the source changes: 1 file, 1 test, PASSED, 16.1 s
+                  wall — a LIVE gemini run, GREEN.**
+
+                  **NO TEST WAS EVER DELETED. FOUR were RESTATED with the item
+                  named** (two in item 2, one in item 3, one renamed in item 2).
+
+                  **THE HEADLINE, AND IT IS BAD NEWS C IS FILING AGAINST ITS OWN
+                  WORK: THE POOL RE-MEASUREMENT FINDS A WRONG-ADMISSION COST IN
+                  ITEM 1's ABSTAIN CLAUSE.** Deterministic capture-and-replay,
+                  one fixed clock, self-check passed (the restored pass
+                  reproduced the first exactly). 42 offered rows live at
+                  2026-08-18 07:38 UTC; 16 carry an empty snippet (**38%**,
+                  corroborating A's 35.1% on a window A's deleted harness cannot
+                  re-check). **Events 17→21, jobs 6→8. All 7 joiners carry an
+                  EMPTY snippet — every one is the abstain clause.** C read each
+                  one: **1 is a real posting rescued** (`geosi.com`), **1 is
+                  A29-01's own `rsc.org` row**, 1 marginal, and **4 look WRONG**
+                  (a "similar conferences" listing, a `General 1` chrome title,
+                  a careers-explorer page, an occupation profile). **That is a
+                  worse wrong-admission rate than the 2-of-9 for which Ruling
+                  79a REFUSED channel H-prime.** **C did NOT reverse the ruling
+                  — it ships as 79a ordered and the evidence is filed as item 1
+                  of the carry list, POLICY, manager decides.**
+                  **CHANNEL L CAUSED ZERO JOINERS:** 7 of 27 event rows do
+                  declare `@type: Event`, but all 7 were already admitted, so
+                  its live effect here is an **ABSENCE, banked as one.**
+                  **The one LEAVER is item 3 working organically:**
+                  `ans.org/nuclear/careers/`.
+
+                  **FIVE VACUOUS ASSERTIONS C WROTE AND CAUGHT ITSELF**, all by
+                  the mandated revert rather than by reading, all disclosed in
+                  their own §4 entries: a job fixture on a `/opportunity/` path
+                  (admitted by `JOB_PATH_RE`, would have passed reverted); a
+                  "guards do not weaken" fixture using `Research Scientist` at
+                  `/privacy-policy` (admitted before the item too); a Quintus
+                  `og:description` with a second comma (never reproduced the
+                  defect); and **one vacuous CLAUSE that reached shipped code** —
+                  item 3's `includes("?")` guard, **deleted rather than shipped**
+                  once the revert returned 0 red, with its assertions kept.
+
+                  **HAND-OFF: `WHOSE TURN: B — round 30`, NOT A.** Round 30
+                  opens with **B designing the commissioned 62d(b)/63a deferral
+                  (Ruling 79b), THEN A measures.** That order is written into
+                  the hand-off explicitly below. **Turn lock RELEASED
+                  (`HELD BY: free`) in this entry's own commit.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **finished the turn @ 2026-08-18 07:0x UTC — ROUND 29 B IS
                   COMPLETE. NINE ENTRIES, NINE COMMITS, EACH PUSHED THE MOMENT
                   IT WAS MADE.** Run by `LAPTOP-3CL10CG5`. Seven items
@@ -6202,7 +6280,16 @@ ROUND:            **21 IS CLOSED — A, B AND C ARE ALL DONE AND MANAGER-VERIFIE
                   named must-keep holds, and zero regressions appeared on either
                   surface. **A does not close the gate in any case; see THE GATE
                   RULE.**
-WHOSE TURN:       **C — round 29.** Round 29 B is COMPLETE: **NINE §4 ENTRIES,
+WHOSE TURN:       **B — round 30.** Round 29 C is COMPLETE (all six items,
+                  seven commits, see STOPPED BECAUSE above — its hand-off draft
+                  was committed by the manager after a mid-write API kill; the
+                  words are C's own). **Round 30 opens with B DESIGNING the
+                  commissioned 62d(b)/63a positive-organisation test (Ruling
+                  79b) plus the manager's round-30 scoping in the Ruling 80
+                  entry, THEN A measures (value + visual, artefact duty 79e).**
+                  ---
+                  Previous entry, kept for continuity:
+WHOSE TURN (superseded):       **C — round 29.** Round 29 B is COMPLETE: **NINE §4 ENTRIES,
                   NINE ITEMS, ONE COMMIT EACH, EACH PUSHED IMMEDIATELY**
                   (`96693c0` item 1, `54f6333` item 2, `8f7bf0d` item 3,
                   `96f2a35` item 4, `3d40710` item 5, `9084f56` item 6,
