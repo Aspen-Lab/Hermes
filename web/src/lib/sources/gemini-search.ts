@@ -435,12 +435,66 @@ function metaContent(html: string, keys: readonly string[]): string | undefined 
  * Brave's `title` fields are. It is NOT the grounding chunk's title, which is a
  * hostname (fact 3), and it is NOT anything the model wrote.
  */
+/**
+ * A29-06 (round 29 C, item 5). **ONE SEAM, ONE EXTRA PASS, MEASURED IDEMPOTENT
+ * ON EVERY ADVERSARIAL SHAPE ROUND 29 B COULD BUILD.**
+ *
+ * A page that escaped its own title TWICE (`R&amp;amp;D Intern`) reaches a card
+ * reading `R&amp;D Intern`: `cleanDisplayText` decodes one entity layer and one
+ * layer is left. **The decoder is not broken — it runs once against a page that
+ * escaped twice.**
+ *
+ * **REPEAT-UNTIL-STABLE WITH A HARD CAP OF 2, and each half of that is
+ * deliberate.** Not unbounded: an unbounded loop over attacker-shaped input is a
+ * cost with no measured benefit, and 2 passes covers every sighting. Not
+ * "always decode twice" either: repeat-until-stable is the same result on every
+ * measured case **and is self-documenting about why it stops.**
+ *
+ * **B's ADVERSARIAL SET — the titles whose LITERAL text contains an entity —
+ * are all idempotent, 4 of 4:** `Writing &amp; in HTML: a guide`,
+ * `Ampersand (&amp;) escaping workshop`, `R&amp;D Intern`,
+ * `AT&amp;T Labs Intern`. Once an entity is decoded to a bare `&`, a second
+ * pass has nothing left to match.
+ *
+ * **THE ONE COST, NAMED HONESTLY RATHER THAN PRESENTED AS A CLEAN FIX:** a page
+ * whose title is *meant* to display the seven characters `&amp;` — a document
+ * about HTML escaping that escaped itself correctly as `&amp;amp;` — **is
+ * byte-identical to this defect by construction. There is no signal that
+ * separates them and none is invented here.** The trade is one
+ * literal-`&amp;`-displaying title lost against every double-escaped real title
+ * recovered. **1 of 716 offered rows, 0.14% — the loop's smallest ranked item,
+ * not inflated.**
+ *
+ * **WHY HERE AND NOT IN `cleanDisplayText`:** that function is shared by the
+ * whole rendering surface, and changing it would move behaviour on rows this
+ * item never measured. **The defect is in what the adapter reads out of raw
+ * HTML, so the repair belongs where the raw HTML is read.** `text/clean.ts` and
+ * its tests are untouched — if `clean.test.ts` ever moves for this item, the
+ * repair was made in the shared function instead of at the seam.
+ */
+const TITLE_DECODE_MAX_PASSES = 2;
+
+function decodeTitleUntilStable(once: string): string {
+  // `once` has already had pass 1 applied by `metaContent` or by the `<title>`
+  // branch below, so this loop spends the REMAINING passes.
+  let current = once;
+  for (let pass = 1; pass < TITLE_DECODE_MAX_PASSES; pass += 1) {
+    const next = cleanDisplayText(current);
+    if (!next || next === current) return current;
+    current = next;
+  }
+  return current;
+}
+
 export function pageTitleFromHtml(html: string | null): string | undefined {
   if (!html) return undefined;
   const og = metaContent(html, ["og:title"]);
-  if (og) return og;
+  if (og) return decodeTitleUntilStable(og);
   const match = html.match(TITLE_TAG_RE);
-  return cleanDisplayText(match?.[1]) || undefined;
+  // **ABSENT TITLE ⇒ NOTHING TO DECODE.** The row still DROPS on no-title
+  // exactly as it did; this adds no admission and invents nothing.
+  const fromTag = cleanDisplayText(match?.[1]);
+  return fromTag ? decodeTitleUntilStable(fromTag) : undefined;
 }
 
 /**

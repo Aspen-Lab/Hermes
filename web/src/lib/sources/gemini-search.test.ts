@@ -852,3 +852,50 @@ describe("searchGemini carries the page's declaration onto the row", () => {
     expect(rows).toHaveLength(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// ROUND 29 C, ITEM 5 (A29-06) — the idempotent second decode, at ONE seam.
+// `text/clean.ts` and `clean.test.ts` are NOT touched by this item; if they
+// ever move for it, the repair was made in the shared function by mistake.
+// ---------------------------------------------------------------------------
+
+describe("pageTitleFromHtml — the double-escaped title", () => {
+  const og = (content: string) => `<meta property="og:title" content="${content}">`;
+  const tag = (content: string) => `<html><head><title>${content}</title></head></html>`;
+
+  it("recovers a title the page escaped TWICE", () => {
+    expect(pageTitleFromHtml(og("R&amp;amp;D Intern"))).toBe("R&D Intern");
+  });
+
+  it("fixes the SAME defect on the <title> branch", () => {
+    // Both branches read raw HTML, so both carry the defect.
+    expect(pageTitleFromHtml(tag("R&amp;amp;D Intern"))).toBe("R&D Intern");
+  });
+
+  it("is IDEMPOTENT on all four of B's adversarial shapes", () => {
+    // A title whose LITERAL, intended text contains an entity is the danger of
+    // decoding twice. Once the entity is a bare `&`, a second pass has nothing
+    // left to match — so the extra pass costs zero on every case B could build.
+    expect(pageTitleFromHtml(og("Writing &amp; in HTML: a guide"))).toBe(
+      "Writing & in HTML: a guide",
+    );
+    expect(pageTitleFromHtml(og("Ampersand (&amp;) escaping workshop"))).toBe(
+      "Ampersand (&) escaping workshop",
+    );
+    expect(pageTitleFromHtml(og("R&amp;D Intern"))).toBe("R&D Intern");
+    expect(pageTitleFromHtml(og("AT&amp;T Labs Intern"))).toBe("AT&T Labs Intern");
+  });
+
+  it("stops at TWO passes — not unbounded", () => {
+    // A triple escape leaves one layer behind ON PURPOSE. An unbounded loop
+    // over attacker-shaped input is a cost with no measured benefit, and two
+    // passes covers every sighting.
+    expect(pageTitleFromHtml(og("R&amp;amp;amp;D Intern"))).toBe("R&amp;D Intern");
+  });
+
+  it("an absent title still DROPS — no invention, no new admission", () => {
+    expect(pageTitleFromHtml("<html><head></head></html>")).toBeUndefined();
+    expect(pageTitleFromHtml(og(""))).toBeUndefined();
+    expect(pageTitleFromHtml(null)).toBeUndefined();
+  });
+});

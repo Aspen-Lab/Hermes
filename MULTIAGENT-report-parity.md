@@ -81794,3 +81794,82 @@ added, **none edited, none deleted** — no existing `bestEventTitleSegment` or
 name-strip assertions that read the same function.
 
 **Turn lock still HELD; item 5 next.**
+
+### Round 29 — Agent C — ITEM 5 (A29-06): **LANDED. Repeat-until-stable with a hard cap of 2, at the ONE seam. The shared cleaner is byte-unchanged and that is PROVEN, not asserted.**
+
+**No live call of any kind.** No credential touched. No third-party page text pasted.
+
+## **5.1 WHAT SHIPPED**
+
+`sources/gemini-search.ts`. `TITLE_DECODE_MAX_PASSES = 2` +
+`decodeTitleUntilStable`, applied at **both branches** of `pageTitleFromHtml` —
+`og:title` and the `<title>` element. Both read raw HTML, so both carry the
+defect; B's row was the `og:title` branch and C fixed the sibling in the same
+seam rather than leaving a known twin open.
+
+**`text/clean.ts` IS NOT TOUCHED, AND `git diff --stat` ON IT IS EMPTY.** The
+repair is where the raw HTML is read, not in the function the whole rendering
+surface shares.
+
+## **5.2 THE SHAPE, AND WHY EACH HALF OF IT**
+
+**Repeat-until-stable, not "always decode twice"** — same result on every
+measured case, and self-documenting about why it stops. **Capped at 2, not
+unbounded** — an unbounded loop over attacker-shaped input is a cost with no
+measured benefit, and 2 covers every sighting. **A triple escape therefore
+leaves one layer behind ON PURPOSE, and that is asserted** so the cap is a
+decision on the record rather than an accident.
+
+## **5.3 THE NEGATIVE PROOFS**
+
+| cap | red | which |
+|---|---|---|
+| **1** (today's shipped behaviour) | **3** | `recovers a title the page escaped TWICE`, `fixes the SAME defect on the <title> branch`, `stops at TWO passes` |
+| **3** | **1** | `stops at TWO passes — not unbounded` |
+| **2** (shipped) | **0** | — |
+
+**The cap is uniquely red in BOTH directions**, which is the strongest form
+available for a numeric threshold.
+
+## **5.4 IDEMPOTENCE, RE-RUN AS ASSERTIONS — 4 OF 4**
+
+B's adversarial set is the titles whose LITERAL, intended text contains an
+entity, and all four are unchanged by the extra pass:
+`Writing &amp; in HTML: a guide`, `Ampersand (&amp;) escaping workshop`,
+`R&amp;D Intern`, `AT&amp;T Labs Intern`. Once an entity is decoded to a bare
+`&`, a second pass has nothing left to match.
+
+## **5.5 THE ONE COST, NAMED**
+
+A page whose title is *meant* to display the seven characters `&amp;` — a
+document about HTML escaping that escaped itself correctly — **is byte-identical
+to this defect by construction. There is no signal that separates them and C
+invented none.** One literal-`&amp;`-displaying title lost against every
+double-escaped real title recovered. **Recorded in the code as a NAMED COST, not
+presented as a clean fix.**
+
+## **5.6 A CORRECTION TO B's TESTS-AT-RISK LIST**
+
+B named `web/src/lib/text/clean.test.ts` as the file that must stay
+byte-unchanged. **THAT FILE DOES NOT EXIST IN THE TREE** — `find src -name
+clean.test.ts` returns nothing, and `src/lib/text/` contains only `clean.ts`.
+**So `cleanDisplayText` has no dedicated test file, and B's stated tripwire
+("if `clean.test.ts` moves, the repair was made in the shared function") could
+never have fired.** C substitutes a tripwire that can: **`git diff` on
+`src/lib/text/clean.ts` is empty.** Filed as a correction to B's grep, not to
+B's design — the design was right and is what shipped.
+
+## **5.7 FREQUENCY, NOT INFLATED**
+
+**1 of 716 offered rows, 0.14%** — the loop's smallest ranked item. B's falsifier
+(*"if a corpus shows the second pass changing 0 rows, the seam was placed
+wrong"*) is satisfied here by execution: the second pass changes this row and
+leaves all four adversarial shapes alone.
+
+## **5.8 THE GATE, AFTER THIS ITEM**
+
+**98 files / 2260 tests, 2260 passing, ZERO failures.** `tsc --noEmit` clean.
+`eslint src` exactly the one standing `quiz.tsx:46` error, 0 warnings.
+**`enrich.test.ts` SOLO: 56/56.** Five tests added, none edited, none deleted.
+
+**Turn lock still HELD; item 6 next.**
