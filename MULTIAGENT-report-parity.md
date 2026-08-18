@@ -270,11 +270,109 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 31 + 2026-08-18 20:31 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 31 B IS COMPLETE @ 2026-08-18 ~21:0x UTC — THREE
+                  ITEMS, THREE COMMITS, EACH PUSHED ON LANDING.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
+                  after confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`9ef8677`). Grepped `Round 31 — Agent B` first —
+                  zero prior entries existed, fresh start not a resume. **B
+                  changed no product code anywhere** — all three commits
+                  (`9a87785` item 1, `785c787` item 2, `9404932` item 3)
+                  touch only this file; throwaway harness (`web/zz-r31b/`)
+                  lived outside `web/src/` and was deleted before every
+                  commit, `git status --porcelain --untracked-files=all`
+                  confirmed clean each time.
+
+                  **ITEM 1 (A30-01, job) — DESIGNED, CLEAN, NO POLICY
+                  QUESTION.** Diagnosed the exact candidate path by direct
+                  execution of the shipped `webResultToRawJobItem`: no
+                  existing guard's vocabulary covers "Project". Designed a
+                  fourth, additive veto keyed on STRUCTURE (a trailing
+                  multi-word descriptive parenthetical after "Project", not
+                  the bare word — the `ORG_DESIGNATOR_RE` doctrine's own
+                  warning taken seriously and tested against nine
+                  constructed real "Project"-named organisations, not just
+                  the 21-row must-keep corpus). 0 of 21 must-keeps touched, 0
+                  of 9 adversarial real-org names touched, 0 of 14
+                  must-drops touched (not this veto's job), catches the live
+                  specimen, zero test collisions grepped. Recommend: ship as
+                  written.
+
+                  **ITEM 2 (A30-02, event) — SPLIT VERDICT, ONE `POLICY —
+                  manager decides`.** Direct execution of the shipped,
+                  exported `eventNameFrom` with A's EXACT recorded title/URL
+                  produces the correct full title, not `"conference"` —
+                  contradicted both by execution and by an exhaustive read
+                  of every return path in the function (no stage can ever
+                  emit a bare dictionary word; the codebase's only literal
+                  `"conference"` fallback lives in `classifyEventType`,
+                  populates `Event.type` not `.name`, and does not even fire
+                  for this exact title since it contains "Seminar").
+                  **`POLICY — manager decides`**: is A30-02 an
+                  uncorroborated/withdrawn finding (a third record
+                  correction this round, per 83f's watch), or does round 31
+                  A re-witness live with ingestion-stage `name` captured
+                  SEPARATELY from post-enrichment `name` (B named one
+                  plausible, unconfirmed alternative mechanism in
+                  `enrich.ts`'s `extractDeclaredEventName`, unguarded
+                  against generic/chrome shapes, outside this item's
+                  commissioned scope)? B recommends the re-witness. **The
+                  `events.ornl.gov` secondary witness (Ruling 83c) DID
+                  reproduce exactly** and is EXPLAINED, not a defect — the
+                  bare-hostname render is B9-04 Fix 1 / Ruling 32's own
+                  tested, locked "honest host" fallback (`eventweb.ts:
+                  1867-1875`, locked by `eventweb.test.ts:724-731`'s
+                  `"ecs.confex.com"` assertion) working exactly as designed;
+                  real recovery at the slug stage would need open-class word
+                  segmentation (`msrworkshop2025` has no delimiter), which
+                  this loop's own doctrine refuses to fake. **No code change
+                  recommended for either sub-finding.**
+
+                  **ITEM 3 (A30-03, event) — DESIGNED, CLEAN, HOST-HUNTING
+                  QUESTION ANSWERED FROM THE RECORD.** Two independent,
+                  additive extensions to `isNewsArticleTitle`: a
+                  PATH-structure signal (a ticker-slug immediately after
+                  `/news/`, sidestepping the host-list question entirely by
+                  generalising on URL STRUCTURE rather than naming hosts)
+                  and a TITLE-structure signal (subject + `plans`/`schedules`
+                  + digit, single-witness-derived and named as narrower).
+                  Both adversarially clean against round 30 A's own
+                  ADMITTED-row corpus and the commission's own named
+                  adversarial case (a real organiser "announcing..." title
+                  stays correctly caught by the EXISTING, unmodified
+                  guard). Read Rulings 41c and 45a/45b in full at their
+                  source (`:16550-16553`, `:45843-45856`): both are
+                  MEASUREMENT-METHOD rulings governing this loop's own live
+                  census work, not a production-code host-list prohibition
+                  — `DENY_HOSTS`/`PAPER_PAGE_HOSTS` are shipped precedent
+                  for exactly this class of guard. Zero tests at risk
+                  grepped (`isNewsArticleTitle` has no dedicated unit
+                  coverage today — a pre-existing gap, not introduced or
+                  owed by this item). Recommend: ship both.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 31 verification
+                  and rulings before C spawns` (the loop's own normal
+                  order, restated by Ruling 83e).** Item 2 carries the one
+                  `POLICY — manager decides` question above; items 1 and 3
+                  are clean designs with no policy question, ready for C to
+                  implement once the manager rules. Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+
+                  No credential printed, logged, committed or written
+                  anywhere across all three items; boolean presence only;
+                  `.env.local` never `cat`-ed. No third-party page text
+                  pasted — every quote is a title/URL already on this
+                  file's own record or a short code fragment. No branch,
+                  worktree or PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~20:3x UTC — ROUND 30 A
                   VERIFIED INDEPENDENTLY, RULINGS 83a-83f APPENDED (§4),
                   ROUND 30 CLOSED.** Gate re-run cold by the manager at close:
