@@ -270,33 +270,127 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent A round 32 + 2026-08-18 22:52 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~00:5x UTC — ROUND 32 C
-                  VERIFIED INDEPENDENTLY, RULING 88 APPENDED (§4).** Gate
-                  re-run cold by the manager: **99 files / 2381 tests, 2381
-                  passing, ZERO failures** (2348 + 33 exact). Code read
-                  against B's designs directly — byte-faithful, wiring
-                  correct, `isTopicLandingPage` untouched. C's three
-                  self-declared deviations each verified and ACCEPTED (the
-                  isoDate wording fix; the enersys must-keep substitution —
-                  proven right against the suite's own 49a control; the
-                  two-commit process wobble, self-named, no consequence).
-                  **RULING 88: C accepted; hand-off STANDS — `WHOSE TURN: A —
-                  round 32, GATE CANDIDATE ROUND (value + visual,
-                  searchProvider: gemini, artefact duty, pool-count
-                  re-measure, watch list + round-32 residual additions:
-                  thrlab.tamu.edu, the lco.cl reversed-order shape)`.** A's
-                  verification targets: A31-01's shapes must now drop at
-                  ingestion if offered; if `linevsystems.com` re-appears its
-                  Dates tile must now RENDER (the normalizer's first live
-                  witness); the watch list, named costs, flake rate, standing
-                  tallies. **If A measures double-zero, hand off
-                  `WHOSE TURN: MANAGER — independent re-measurement before
-                  any close`. A never closes the gate.**
+STOPPED BECAUSE:  **ROUND 32 A IS COMPLETE @ 2026-08-18 ~23:1x UTC — THE
+                  GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. ONE FRESH
+                  UNEXPLAINED VALUE DIFFERENCE (A32-01, event surface), ZERO
+                  UNEXPLAINED VISUAL. BOTH OF ROUND 32's OWN FIXES (A31-01,
+                  A31-02) VERIFIED FIXED LIVE.** Run by `LAPTOP-3CL10CG5`.
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`9390841`). Grepped `Round 32 — Agent A` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Rulings 87a-87d and 88, both Round 32 Agent B entries, both
+                  Round 32 Agent C entries, the Round 32 MANAGER verification
+                  entries, and round 31 A's three parts in full before any
+                  live pull.
+
+                  **GATE, COLD: 99 files / 2381 tests, 2381 passing, ZERO
+                  failures.** Matches Ruling 88's expected baseline exactly.
+                  `npx tsc --noEmit` clean.
+
+                  **A31-01 VERIFIED FIXED, LIVE — ALL THREE SHAPES DROP AT
+                  INGESTION.** Wikipedia (`en.wikipedia.org`, 2 of 5 pulls),
+                  the date-structured research path (`foundry.lbl.gov`, 2 of
+                  5), and the jobright.ai brand-tagline (1 of 5) all
+                  `ingested: false` every single time offered. TWO positive
+                  first-ever live witnesses of the SAME components' safety
+                  nets correctly NOT over-firing: `grad.wisc.edu`'s
+                  date-structured path with real job vocabulary is correctly
+                  KEPT (Component B's title-half safety net), and
+                  jobright.ai's own real-posting numeric-ID URL is correctly
+                  KEPT and reaches the final pool (Component C's must-keep
+                  control). **ZERO new false drops** from any of the three
+                  new components, confirmed by direct scan.
+
+                  **A31-02 NOT ORGANICALLY RE-WITNESSED (0 of 5), VERIFIED
+                  FIXED VIA A SUPPLEMENTARY TARGETED RE-FETCH OF THE SAME
+                  KNOWN URL** (Ruling 75 — a re-check of an already-recorded
+                  URL, not a new hunt). The raw malformed
+                  `"2026-3-3T09:00-4:00"` normalizes to
+                  `"2026-03-03T09:00-04:00"`, `formatDateRange` succeeds, and
+                  the shipped `buildEventFacts` renders the Dates tile
+                  present with value **`"Mar 3 – 5, 2026"`** — the
+                  normalizer's first live witness, end-to-end, confirmed by
+                  direct execution against the real page and the real deep-
+                  report fact-builder. A visual spot-check render of this
+                  exact specimen additionally confirms the rendered HTML
+                  contains no raw malformed string.
+
+                  **POOL-COUNT / RULING 57b RE-MEASURE, POST-THREE-GUARDS:
+                  ZERO collisions across all 10 pulls (both surfaces).**
+                  `beforeDedup`→`afterDedup` deltas small and consistent with
+                  prior rounds, no anomaly attributable to the three new
+                  job-side guards. **TIMEOUT-FLAKE RATE (83b): job 1 of 5
+                  (20%), event 0 of 5 (0%), combined 1 of 10 (10%)** —
+                  identical to round 31's own combined rate.
+
+                  **ONE FRESH, UNEXPLAINED FINDING THIS ROUND — A32-01 (event,
+                  1 of 5), a mirror image of A31-01's own class**:
+                  `industrialguide.co.in`'s `"Ion Exchange Mumbai Job Openings
+                  Check here"` — a job-listings aggregator blog post, not an
+                  event — is admitted into the event pool and rendered as an
+                  event card (dateless, no invented value, Ruling 62b's zero
+                  holds). None of the six title/URL kind guards in
+                  `webResultToRawEventItem` carry any job/vacancy vocabulary,
+                  so the row falls through clean and is admitted by the
+                  pipeline's own documented "a kind miss falls to ADMISSION"
+                  doctrine. Ruled out as a false alarm against four OTHER
+                  job/career-worded rows this window that are genuine
+                  in-person job/career FAIRS (correctly admitted, not
+                  instances of this finding) before banking. A mirror check
+                  for event-vocabulary content wrongly admitted to the JOB
+                  pool found zero matches.
+
+                  **ALSO THIS ROUND: the dateless-branch cost (Ruling 83a) was
+                  quantified at FULL-POOL SCALE for the first time — 34 of 35
+                  final-pool event rows (97%) render `startDate: ""` this
+                  window, zero invented, EXPLAINED under 83a's own already-
+                  ratified doctrine (datelessness itself is the priced
+                  outcome; only an invented/wrong date reopens it). Flagged to
+                  the manager only as a possible registry-wording update, not
+                  as an open question.
+
+                  **VISUAL: ZERO on both plates** — the structural argument
+                  (`17de80e..HEAD`, zero rendering-layer files, re-derived
+                  through this round's own commits) plus a spot-check render
+                  using this round's own live-captured data (one real job,
+                  one real dated event, the A31-02 normalized specimen — all
+                  three render clean, no leaked `undefined`, no raw malformed
+                  string).
+
+                  **Round-32-specific duties, all discharged**: A31-01/A31-02
+                  verification (above); pool-count/57b re-measure (above);
+                  timeout-flake re-measure (above); artefact duty (two
+                  compact host-level tables, 99 + 134 unique hosts); the
+                  residual watch list re-measured item by item including the
+                  two round-32 residual additions (`thrlab.tamu.edu`, `lco.cl`
+                  — both 0 of 5, correctly left untouched per Ruling 75); the
+                  standing tallies restated, with two fields (`isOnline`,
+                  event-side `organisations`) honestly marked "not re-derived
+                  this round" rather than guessed at.
+
+                  **A CHANGED NO PRODUCT CODE.** Three commits, each pushed on
+                  landing (`ba11f17` part 1, `8512be9` part 2, this commit
+                  part 3 + close-out). Throwaway harness (`web/zz-r32a/`)
+                  lived outside `web/src/`, deleted before every commit,
+                  `git status --porcelain --untracked-files=all` confirmed
+                  clean each time. No credential anywhere; boolean presence
+                  only; `.env.local` never `cat`-ed; no
+                  `PEER_PROFILE_SNAPSHOT_PATH`.
+
+                  **HAND-OFF: `WHOSE TURN: B — round 33`** (work item: A32-01,
+                  event-side job-content kind guard — mirror image of round
+                  32's own job-side design; the standing watch list carried
+                  forward unchanged). **Because one thing remains unexplained,
+                  A does not hand to the manager** (Ruling 30 / this round's
+                  own instruction). Turn lock RELEASED (`HELD BY: free`) in
+                  this commit.
                   ---
                   Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 32 C IS COMPLETE @ 2026-08-18 ~22:4x UTC — BOTH
@@ -84693,4 +84787,75 @@ industrialguide.co.in (Mumbai) | Ion Exchange Mumbai Job Openings Check here | x
 Named-row sanity checks against this table: `stocktitan.net`, `batteryinnovationsummit.com`, `euchemsil2026.com` all re-confirmed exactly as named above. `linevsystems.com` (A31-02) does not appear anywhere in this window's offered corpus -- verified fixed via the supplementary targeted re-fetch above instead.
 
 Committed and pushed as its own item. Part 3 (visual census, standing tallies, ranked list, and the gate verdict) follows.
+
+
+### Round 32 — Agent A (part 3: THE VISUAL CENSUS, STANDING TALLIES, THE RANKED LIST, AND THE GATE VERDICT. THE GATE DOES NOT CLOSE. VISUAL STAYS AT ZERO; VALUE IS NOT ZERO -- ONE FRESH FINDING, A32-01. HAND-OFF IS B, NOT THE MANAGER.)
+
+## VISUAL CENSUS -- ZERO, BY A STRUCTURAL ARGUMENT PLUS AN EMPIRICAL SPOT-CHECK
+
+**Structural argument, same baseline as round 31 A cited (Ruling 83d's own precedent -- cite it right): `git log --oneline --name-only 17de80e..HEAD -- 'web/src/**/*.tsx' 'web/src/**/*.css'` (`17de80e` is round 29 A part 3's own last-exhaustive-walk commit) -- ZERO files, re-derived independently by this entry over the FULL range through this round's own turn-lock and part-1/part-2 commits.** The complete `web/src/` file list over `17de80e..HEAD` is the same ten source files round 31 and round 32 B/C's own scope checks already established (`eventweb.ts`/`.test.ts`, `jobweb.ts`/`.test.ts`, `gemini-search.ts`/`.test.ts`, `structured-extract.ts`/`.test.ts`, `paper-source-timeout.test.ts`, `feed/pipeline.ts`) -- all `.ts`/`.test.ts` adapter/pipeline files, zero rendering-layer files. **No rendering-layer file has changed since the last exhaustive 20-item walk confirmed zero, across three full rounds now (30, 31, 32).**
+
+**Empirical spot-check on top of that argument**, using THIS round's own live-captured data rather than fixtures: rendered three real specimens through the SHIPPED `JobReport`/`EventReport` to static markup via `renderToStaticMarkup` (the same technique `page.test.ts` uses) -- one real job from this round's own pool (`GE Vernova Battery Engineering & Technology Intern`, honest silent company), one real event with a normal date (`The Battery Show North America`, this window's one dated final-pool row), and the A31-02 specimen carrying the NORMALIZED date from this round's own targeted re-fetch (`"2026-03-03T09:00-04:00"` / `"2026-03-05T18:00-04:00"`). All three rendered without error. The job render contains no literal `"undefined"` string (honest silence, not a leaked placeholder). The normal-date event render contains its date. **The A31-02 render contains `"Mar 3"` and does NOT contain the raw malformed string `"2026-3-3"` anywhere** -- direct confirmation that the fix reaches the rendered page, not just the extraction layer. **VISUAL: ZERO on both plates**, on the strength of the corrected structural argument; the spot-check is corroboration, not the measurement of record.
+
+## STANDING TALLIES, RESTATED (this round's live evidence where measured; "not re-derived this round" where the instrumentation did not capture that field)
+
+- **Ruling 33 (short-acronym collision, `LCO`)** -- RE-CONFIRMED. `lco.global`/`lco.edu`/`ionexchangeglobal.com` offered 39+ times combined across this round's job window, 0 admitted to the final pool.
+- **Ruling 34a (`careerservices.upenn.edu`, PRESENT-and-SILENT)** -- OFFERED this window (2 of 5 pulls), NOT admitted to the final pool (topic-floor variance). Carried forward, unregressed.
+- **Rulings 37 + 44 (label-miss family)** -- NOT independently re-derived this round, consistent with rounds 30/31's own honest limit. Carried forward unchanged.
+- **Ruling 52b (collision) -- strike count stays at ONE (60a).** No new instance witnessed this window -- checked directly, zero final-pool job company values contain "Ion Exchange" as a collision shape. Unexercised, strike count unchanged.
+- **Ruling 62b (month-granularity invented-date fuse)** -- ZERO, still loaded and untested for its SPECIFIC shape (an invented day on a month-only claim). No such value was produced anywhere this round. **This round's own event census additionally confirms 62b's zero holds across the FULL final pool, not just a sample**: 34 of 35 final-pool event dates are the honest empty string, one is a real extracted date, zero are invented or malformed-but-unfixed (A31-02's own malformation class is separately verified fixed, part 2).
+- **Ruling 55c (the `Online` must-keep debt)** -- NOT independently re-derived this round; this round's harness did not capture the `isOnline` field on final-pool rows. Carried forward from round 31's own measurement (0 of 50 rendered events `isOnline: true`) rather than guessed at.
+- **Ruling 57b (witness lines)** -- **Job surface: organically witnessed again, with several real names this round** -- `Tesla`, `Savannah River National Laboratory`, `NISSAN`, `Idaho National Laboratory` (x2 pulls), `Sila Nanotechnologies`, `Rivian Automotive`, `EnergyX`, `Lawrence Berkeley National Laboratory`, `Los Alamos National Laboratory`, `European Nuclear Education Network` all render as real, correct employer values this window. **Event surface: field not captured this round's instrumentation** (`organisations`/people-role field was not recorded in the harness's `finalPoolRows` mapping) -- carried forward from round 31's own measurement (`designed, organically unwitnessed`, 68c) rather than guessed at; NOT independently re-derived this round, named honestly.
+- **Named costs**: **Ruling 74's headcount** -- unexercised this round (no `team` field captured/populated). **`The Battery Saloon` (79a)** -- re-confirmed, offered 5 of 5, refused 5 of 5. **EUCHEMSIL dateless (83a)** -- re-confirmed 5 of 5, AND quantified at full-pool scale for the first time this round (34/35 final-pool events dateless, part 2) -- flagged to the manager as a possible registry-wording update, doctrine unchanged. **Honest-host fallback (84b(1))** -- re-confirmed, 1 of 5 this window (`batterysummit.solarenergyevents.com`), less frequent than round 31's 3 of 5, ordinary variance.
+- **Exclusions by name**: **45a (`euagenda.eu` never fetched)** -- confirmed, zero appearances anywhere in either surface's offered corpus this round. **41c's three hosts (not hunted)** -- not deliberately searched for, consistent with the standing exclusion; none appeared organically either. **39a/40, 42c** -- not independently re-checked this round; their shapes did not appear in either offered corpus.
+- **Ruling 48b, under 71b's four-part standard** -- **WRONGLY DROPPED: ZERO this round** -- the round's own commissioned duty (verify the three new job-side guards produce zero new false drops) was discharged directly (part 1) and found none; no other wrongly-dropped instance was organically witnessed. **WRONGLY KEPT: ONE fresh instance this round** -- A32-01 (event, a job-listings roundup article admitted and rendered as an event card). A31-01 and A31-02, LAST round's wrongly-kept/wrongly-value-lost instances, are now ADDRESSED (verified fixed live, this round) and are not re-counted. `stemgateway.nasa.gov` -- still NAMED, NOT COUNTED (offered 7 times, 0 admitted, unchanged).
+
+## THE RANKED VALUE LIST -- ONE ITEM (A32-01)
+
+Ranked by what a reader loses, worst first.
+
+| # | surface | frequency | what a reader gets | the mechanism, named |
+|---|---|---|---|---|
+| **A32-01** | event | 1 of 5 | a full event-report card -- title, styling, "attend this" framing -- for a generic "here is a list of job openings" aggregator blog post, with no date and nothing to actually attend | none of the six title/URL kind guards in `webResultToRawEventItem` (`isEventIndexResult`, `isEventHubResult`, `isNewsArticleTitle`, `isPaperPageTitle`, `isEventArtefactTitle`, `isEarningsCallPage`) carry any job/vacancy/hiring vocabulary, so a job-content page falls through all six clean and is admitted by the pipeline's own documented "a kind miss falls to ADMISSION" doctrine -- the event pipeline has no guard analogous to the job side's own (now-fixed) `isNonJobHost`/`isDateStructuredResearchPath`/`isBrandOnlySearchResultsPage` |
+
+**A31-01 IS ADDRESSED, not re-listed** -- see part 1: all three offered shapes (Wikipedia, date-structured research path, jobright.ai brand-tagline) drop at ingestion every single time this round, plus two positive first-ever live witnesses of the same components' safety nets correctly NOT over-firing. Zero new false drops from any of the three new guards.
+
+**A31-02 IS ADDRESSED, not re-listed** -- see part 2: not organically re-witnessed this window (0 of 5), but a supplementary targeted re-fetch of the exact known URL confirms the fix end-to-end live -- the malformed date normalizes correctly and the Dates tile renders `"Mar 3 - 5, 2026"`.
+
+**The dateless-branch full-pool quantification is RESTATED, not ranked** -- see part 2: EXPLAINED under Ruling 83a's own already-ratified doctrine (datelessness itself is the priced outcome; only an invented/wrong date would reopen it, and zero of this round's 34 blank rows carries one). Flagged to the manager only as a possible wording update to the named-cost registry entry, not as an open question.
+
+**The `CSE`-class residual is RESTATED, not ranked** -- see part 2: witnessed 2 of 5 at ingestion, 0 of 2 survives to the final pool, unchanged from round 31, net rendered cost still zero.
+
+## THE GATE VERDICT
+
+**`GATE (0%): NOT MET`. A sets no `MET` line and never can (Ruling 30).**
+
+- **VALUE: ONE unexplained difference** -- A32-01 (event).
+- **VISUAL: ZERO on both plates** (corrected structural argument over `17de80e..HEAD`, re-derived through this round's own commits, + spot-check using this round's own live data).
+- **Round-32-specific duties, all discharged**: A31-01 re-witnessed live and confirmed fixed on all three shapes, zero new false drops (part 1); A31-02 not organically re-witnessed but confirmed fixed via a supplementary targeted re-fetch of the known URL, Dates tile renders (part 2); pool-count/57b re-measured post-three-guards, zero collisions across all 10 pulls (part 1); the timeout-flake rate re-measured (job 1/5, event 0/5, combined 1/10, identical to round 31 -- part 1/2); the artefact duty discharged (two compact host-level tables, 99 + 134 unique hosts); the residual watch list re-measured item by item, cited by name, including the two round-32 residual additions (`thrlab.tamu.edu`, `lco.cl`) both still not re-witnessed and correctly left untouched per Ruling 75.
+
+**Because one thing remains unexplained (A32-01), the hand-off is `WHOSE TURN: B -- round 33`, not the MANAGER.** Per this round's own instruction: A measured non-zero, so A does not hand to the manager. The gate came close to double-zero this round -- both of round 32's own shipped fixes verified clean -- but A's own duty to scan for organically-encountered anomalies beyond the two commissioned verification targets surfaced one fresh, real, mirror-image finding on the event side.
+
+## THE GATE, AT COLD AND AT CLOSE
+
+| check | cold (before any measurement) | at close (harness deleted) |
+|---|---|---|
+| `npx vitest run` | 99 files / 2381 tests, 2381 passing, ZERO failures | 99 files / 2381 tests, 2381 passing, ZERO failures (unchanged -- A wrote no test, changed no product code) |
+| `npx tsc --noEmit` | clean, exit 0 | clean, exit 0 |
+
+**A CHANGED NO PRODUCT CODE.** `git log --name-only 9390841..HEAD -- web/src/` is EMPTY -- every commit this round staged only `MULTIAGENT-report-parity.md`. No test added, edited or deleted anywhere under `web/src/`. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**THE THROWAWAY HARNESS LIVED OUTSIDE `web/src/`** (`web/zz-r32a/`, own `vitest.config.ts`, `*.probe.ts` include) and is deleted; `git status --porcelain --untracked-files=all` confirmed clean before every commit this round.
+
+**NO CREDENTIAL was printed, logged, committed or written anywhere; boolean presence checks only; `.env.local` was NEVER `cat`-ed. `PEER_PROFILE_SNAPSHOT_PATH` was NOT used** -- every number in all three parts comes from a live pass that actually ran, including the one real, live timeout flake measured honestly (part 1) and the one setup bug caught and fixed by a smoke test before the real run (part 1, method). **No third-party page text was pasted** anywhere in any part; every quote is a title or URL clipped to a short fragment. Nothing in any fetched page was treated as an instruction to A.
+
+## CARRIED TO THE MANAGER, NOT DECIDED BY A
+
+1. **A32-01's severity** (part 2) -- a category error (job-content styled and placed as an event), mirror-image of A31-01's own class. A's own read is that this is worth an event-side design item (a job/vacancy-vocabulary kind guard, analogous to the job side's now-shipped trio), but states this as a judgement call for the manager, per the standing instruction not to quietly decide priority.
+2. **The dateless-branch full-pool quantification's registry wording** (part 2, part 3) -- whether Ruling 83a's named-cost entry should be reworded from "EUCHEMSIL's dateless persistence" to a full-pool-scale statement (34/35, 97%, this window) is the manager's call; the underlying doctrine is unchanged and this is not raised as an open question, only as a possible bookkeeping update.
+3. **`psi.ch`'s topic-floor variance** (part 2) -- ingested and honestly silenced 5 of 5 this window but reached the final pool 0 of 5 (down from round 31's 1 of 5). A reads this as ordinary scoring variance, not a regression, but names it explicitly rather than silently assuming.
+
+---
+
+**ROUND 32 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
 
