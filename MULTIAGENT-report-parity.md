@@ -80348,3 +80348,128 @@ lock; `web/src/lib/jobs/sources/jobweb.test.ts:2516` is 76b's repaired
 vacuous-going test and must not go vacuous again.
 
 **VERDICT: one gap; trigger NOT pulled; the fix is 63a's folded deferral; commissioning it is the manager's call.**
+
+### Round 29 — Agent B — ITEM 4 (A29-04): the `Careers`/`キャリア` gap. **THE FIX IS STRUCTURE, NOT VOCABULARY — AND THE STRUCTURAL RULE AVOIDS THE 37/40 TRAP AND THE 76b/49a CONSTRAINT ENTIRELY. SHAPE 2 IS NOT A SECOND SHAPE: IT IS ITEM 3's ROW.**
+
+**B changed no code.** Shipped `isListingPage` executed directly.
+
+## **4.1 A's FALSIFIER PAIR REPRODUCES, AND B WIDENED IT**
+
+```
+isListingPage("Careers",       "ionexchangeglobal.com", "/int/careers/") = true   -> DROPPED
+isListingPage("キャリア",        …)                                       = false  -> ADMITTED
+isListingPage("Carrières",     …)                                        = false
+isListingPage("Empleo",        …)                                        = false
+isListingPage("Karriere",      …)                                        = false
+isListingPage("採用情報",        …)                                        = false   [B added]
+isListingPage("Vagas",         …)                                        = false   [B added]
+isListingPage("Careers Open application", …)                             = false
+```
+
+Same site, same path, same section. **The English label is refused and every
+other language reaches a reader as a role title.**
+
+## **4.2 VOCABULARY IS THE WRONG AXIS, AND THE BRIEF'S OWN TRAP SAYS WHY**
+
+`CAREERS_INDEX_TITLE_RE` (`jobweb.ts:548`) is **anchored whole-title, English,
+and closed**. Extending it by language has three separate problems:
+
+1. **A non-English section label is an OPEN CLASS.** There is no list that
+   finishes. 76b already accepted a bounded English rule with **7 recorded named
+   misses**; a language list would record misses forever, and every new locale is
+   a new miss.
+2. **RULING 37/40's TRAP, EXACTLY.** The recorded form of the trap is that
+   `jobs`/`careers` are ordinary nouns in real role titles, so a leading-word
+   budget false-fired 7 times including `Head of Careers at Imperial College
+   London`. **Any language's word for *career* is an ordinary noun in that
+   language too**, and B has no corpus in those languages to measure false fires
+   against. **A vocabulary rule B cannot measure is a rule B must not recommend.**
+3. **THE 76b/49a BINDING CONSTRAINT FORBIDS THE CHEAP ROUTE.** The section
+   vocabulary must stay PLURAL, stay its own constant with ONE call site, and
+   **must not be widened into `CAREERS_INDEX_TITLE_RE`** — because that regex has
+   a **documented SECOND call site, the employer-candidate veto chain (B13-01 Gap
+   A)**, confirmed by B at `jobweb.ts:~750`. Widening it there reaches the
+   employer slot and can silence `Tesla Careers` / `Kairos Power Careers`.
+
+## **4.3 THE STRUCTURAL RULE — AND IT IS ALREADY HALF-BUILT IN THE FILE**
+
+`isListingPage` **already receives the path** (`pathAndQuery`) and **already has a
+`LISTING_URL_RE`** — but the path is consulted **only after** the aggregator gate
+(`jobweb.ts:1302-1307`): `if (!isAggregator) return false;` runs first, so **on an
+ordinary employer's own site the path is never looked at at all.**
+`ionexchangeglobal.com` is not an aggregator, so its `/int/careers/` is invisible.
+
+**The discriminator that needs no vocabulary: a careers SECTION ROOT is a path
+that ENDS at the section segment; a POSTING is a path that continues past it.**
+Measured on 10 cases:
+
+| path | host | want | got |
+|---|---|---|---|
+| `/int/careers/` | ionexchangeglobal.com | index | **index** |
+| `/careers/` , `/careers` | acme.com | index | **index** |
+| `/jp/recruit/` | acme.co.jp | index | **index** |
+| `/careers/jobs/` | acme.com | index | **index** |
+| `/careers/internship-battery-research/` | **hyetlithium.com** | posting | **posting** |
+| `/careers/postdoc-2026` | acme.com | posting | **posting** |
+| `/jobs/12345` | acme.com | posting | **posting** |
+| `/posting/7308863` | postdocjobs.com | posting | **posting** |
+| `/search/jobdetails/x/1` | **lanl.jobs** | posting | **posting** |
+
+**WRONG: 0 of 10.** The two live must-keep hosts in the loop's corpus
+(`lanl.jobs`, and `hyetlithium.com`'s real posting path) both classify as
+POSTING, so the rule does not reach them.
+
+**WHY THIS IS THE RIGHT AXIS:** it is **language-independent by construction**.
+`キャリア`, `Carrières`, `Empleo`, `Karriere`, `採用情報`, `Vagas` and every
+locale not yet sighted are all caught by the SAME rule, because the rule reads
+the URL a site builds in ASCII, not the words a site prints. **It closes an open
+class with a closed test — which is the only way an open class can be closed
+honestly.**
+
+**THE PATH VOCABULARY IS ALSO A LIST, AND B STATES ITS RESIDUAL RATHER THAN
+HIDING IT.** The rule still needs a set of ASCII section segments
+(`careers`, `jobs`, `vacancies`, `recruit`, `empleo`, `karriere`, …). That list is
+**far more closed than a natural-language one** — sites overwhelmingly use
+English or romanised path segments even when the page is not English
+(`ionexchangeglobal.com` prints `キャリア` at `/int/careers/`, which is the whole
+point) — **but it is not infinite-proof, and a site using a fully localised
+non-ASCII path would be a named miss.** B did not sight one.
+
+**BOUNDARY CONDITIONS, STATED:**
+- **Only when the title carries no role signal.** A real posting that happens to
+  sit at `/careers/` with a role-shaped title must not be dropped; the rule is a
+  conjunction of *section-root path* AND *no role evidence in the title*, never
+  the path alone. **Absent title text ⇒ the rule does NOT fire** (kind-rule
+  misses fall to admission, item 1 §1.3).
+- **New constant, new call site, inside `isListingPage`, consulted for
+  non-aggregator hosts too.** **`CAREERS_INDEX_TITLE_RE` IS NOT TOUCHED**, so its
+  second call site — the employer-candidate veto — is unchanged by construction
+  and `Tesla Careers` / `Kairos Power Careers` cannot be silenced by this item.
+- **`LISTING_URL_RE` is not touched either**, so the aggregator behaviour that
+  76b/B13-02 locked stays byte-identical.
+
+**VACUITY CHECK: NOT VACUOUS.** It changes `/int/careers/` + `キャリア` from
+ADMITTED to DROPPED and leaves all 5 posting paths untouched — a real, decidable
+split, not a restatement.
+
+## **4.4 A's "SHAPE 2" IS NOT A SECOND SHAPE OF THIS ITEM**
+
+A files `Careers Open application` (`hyetlithium.com/careers/internship-battery-research/`)
+as A29-04's second shape. **B's execution shows that row's path is a genuine
+POSTING path and its page is a genuine posting** — the defect there is not that
+the row exists, it is that the title's **first segment** is a section label so
+`parts[0]` becomes the role and `parts[1]` (the real role) is pushed into the
+employer slot. **That is item 3's row and item 3's mechanism, counted once.**
+Dropping it as a listing page would be **wrong** — it would delete a real
+opportunity.
+
+**So A29-04 is ONE shape (the non-English section root), not two**, and the
+second one is already inside A29-03. **Filed as a correction to the item's
+scope, not to its evidence.**
+
+**TESTS AT RISK — GREPPED:** `web/src/lib/jobs/sources/jobweb.test.ts` — every
+`isListingPage` case, and specifically 76b's repaired vacuous-going test at
+`:2516`. A new path-side rule must not change any existing aggregator assertion;
+if any move, the rule reached `LISTING_URL_RE`'s territory and is wrong.
+
+**VERDICT: structure, not vocabulary. 0 of 10 wrong, language-independent, and it touches neither locked constant.**
