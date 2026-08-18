@@ -82702,3 +82702,104 @@ interndock.com | Summer 2027 Internships - Live Roles by Type | Apply Now | x2 |
 **Named-row sanity checks against this table**: `hyetlithium.com` and `postdocjobs.com` both ADMITTED with silent company (A29-03, confirmed above). `stemgateway.nasa.gov` — offered 7 times, not in final pool this window (round 29 A's own "NAMED, NOT COUNTED, eighth round" row; still not pooled, unchanged). No `CSE`, `@ Septerna`, `Career Connections … Florida`, or `EV.Careers`-bare-shape host appears anywhere in this window's offered corpus — see part 3's residual-watch-list restatement.
 
 Committed and pushed as its own item, per the write-as-you-go discipline. Part 2 (event surface + EUCHEMSIL twin) follows.
+
+
+### Round 30 — Agent A (part 2: **THE EVENT SURFACE VALUE CENSUS. THE EUCHEMSIL EXPIRY-TWIN QUESTION IS RESOLVED LIVE, EXACT VALUES. THE RESIDUAL WATCH LIST IS RE-MEASURED ITEM BY ITEM. TWO FRESH, UNEXPLAINED EVENT-SURFACE FINDINGS.**)
+
+**STATUS: PARTIAL BY DESIGN**, continuing part 1's method (same profile, same fuse, same no-op cache, same spy-on-`searchGemini` instrument — field names for `Event` confirmed against `src/types/index.ts:155-183` BEFORE the harness was written this time, precisely to not repeat part 1's self-disclosed job-field mistake). **One window, five independent live pulls.** No gate verdict is set here.
+
+## **THE EUCHEMSIL EXPIRY-TWIN QUESTION — RESOLVED, EXACT LIVE VALUES**
+
+Carried from round 29's close (§1.1a / the manager's "POLICY, whether it opens as a round-30 item" note, ridden into A's ordinary census per Ruling 79e's own text). **Measured this round, live, 4 of 5 pulls** (the fifth, pull 3, lost its whole `eventweb` source to a real timeout — see part 1's flake note — so it is a non-witness, not a contrary result):
+
+> `EUCHEMSIL 2026: 30th EUCHEMS Meeting` @ `https://www.euchemsil2026.com/`
+> renders in the final pool with **`date: ""`** in all 4 appearances (pulls 1, 2, 4, 5), which `card.ts:31/41` turns into the label **"Date not listed"**.
+
+**Cross-checked against its twin, `rsc.org`'s own EUCHEMSIL page**: that row does **NOT** appear anywhere in this window's final pool (0 of 5) or, checked against the offered-row table below, its EUCHEMSIL-titled variant is absent from the offered corpus too this window — consistent with round 29 B's finding that the `rsc.org` copy correctly EXPIRES (its own page states `31 July 2026`, and today, `2026-08-18`, is past that). **The asymmetry stands exactly as round 29 recorded it**: the twin that carries a machine-readable date leaves lawfully; the twin whose 200-character `og:description` carries no date-shaped token at all cannot leave, because `anchor.length === 0` and the "every year token is past" bare-year rule cannot fire either (the title itself contains `2026`, which is not `< currentYear` since `currentYear` is also 2026 — read directly at `eventweb.ts:2036-2038`).
+
+**Disposition: EXPLAINED, not a fresh finding — cited to the code's own accepted-cost comment**, not silently absorbed. `eventweb.ts:2069-2074` states the trade-off in its own words: *"the future-year escape costs something and is kept anyway … its named price: a genuinely finished page that mentions any later year survives, dateless, exactly as it does today."* This round's contribution is turning that comment's abstract claim into a concrete, live-witnessed, 4-of-4 (within-window) instance with an exact rendered value (`"Date not listed"`, not a wrong date — no invented date is ever produced, Ruling 62b's zero holds). **A states this as its own judgement call, per the mandate to flag rather than silently decide**: the design comment already prices this exact class of cost, `euchemsil2026.com` is the concrete row it describes, and nothing about round 30's shipped changes touched this mechanism (`eventweb.ts`'s dateless branch, lines ~2030-2084, is untouched by both round-30 C items — confirmed by re-reading the diff scope in part 1). If the manager wants this reclassified as an open item rather than an accepted, already-priced cost, that is the manager's call to make, not A's — flagged here explicitly for that reason.
+
+## **RESIDUAL WATCH LIST — RE-MEASURED ITEM BY ITEM, CITED BY NAME**
+
+| item | this round's live measurement |
+|---|---|
+| **`The Battery Saloon`** (79a) | **OFFERED 5 of 5 pulls** (`batteryinnovationsummit.com`, confirmed in the offered-row table below) — **correctly NOT in the final pool, 0 of 5**. The named cost is re-confirmed live and unregressed: still refused for the same reason 79a records (no snippet, no JSON-LD, `extractPageText` returns 0 chars), still not rescued by channel H-prime (79a refused that rescue). |
+| **Accepted title-loss rates** (11.1% events / 32.6% jobs, 79d) | **NOT re-derived to the digit this round — cited as unchanged BY CONSTRUCTION.** `git log --name-only` from round 29 A's close to this round's HEAD shows `gemini-search.ts` (the sole file responsible for title/redirect recovery) untouched by any round-29-C, round-30-B, or round-30-C commit. A mechanism nothing touched cannot have moved its own rate; re-measuring the exact percentage would need additional instrumentation on `resolveGroundingRedirect`/`fetchPagesConcurrently` this round did not build (out of scope for A per §2 — A does not investigate, and re-deriving a rate nothing could have changed is not this round's job). The prior figures stand, named, not re-derived. |
+| **`CSE`-class acronym collision** | **NOT organically witnessed** in either window (0 of 10 job pulls, 0 of 5 event pulls contain a `CSE`-shaped row). Consistent with prior rounds' language ("designed, organically unwitnessed"); the residual is unchanged, not closed, not regressed. |
+| **`@ Septerna` shape** | **NOT organically witnessed**, 0 of 10 job pulls. Unchanged, named, not closed (round 30 B's §1.3 explicitly declined to build a fourth veto for it). |
+| **Segment-order problem** (`Chemistry`/`Chemical Engineering`, 62d(a)/63a) | **NOT organically witnessed** this round's job corpus (no bare `Chemistry` or `Chemical Engineering` candidate survived to final `companyOrLab` in either window). Still deferred, per 62d(a)'s held half; A does not reopen it. |
+| **`Career Connections Center University of Florida`** (82a, NEW) | **NOT witnessed at all** — absent from both windows' full offered-host corpus (checked by grep over the raw offered titles, both windows, 289 + prior-window rows). **Reopen trigger (82a: "the shape appearing on a POOL row in any census") did NOT fire this round.** Live cost stays at zero. |
+| **"General 1" chrome shape** (80b, unwitnessed) | **STILL UNWITNESSED.** Not present in this round's event offered corpus (119 unique hosts, checked). A did not specifically hunt `openmc.discourse.group`-adjacent forum/discourse pagination territory (42a) beyond the ordinary topic-driven query set — the same honest limit round 29 B named for its own sweep. |
+| **Occupation-profile page-kind** (81b residual, `faraday.ac.uk/career-development/career-portfolio-scientist/`) | **`faraday.ac.uk` WAS offered this window** (job side, x5, "PhD Internships" — a DIFFERENT `faraday.ac.uk` page, not the specific `career-portfolio-scientist/` occupation-profile URL) — **not in final pool**. The specific named occupation-profile URL itself was not re-witnessed this round. Residual stands as named, unregressed by absence. |
+| **Latent `postdocjobs.com` sibling row** (round 29 B item 3, `Molten Salt Chemical and Electrochemical Engineering`) | **RE-WITNESSED LIVE**, job side: `postdocjobs.com` offered with title fragment `"Postdoctoral Appointee - Molten Salt Chemical and Electroche…"` in the artefact table (x5, window 2) — the same sibling shape, present and, per its own recorded design, correctly saved only when topics are supplied (unchanged, not re-derived to the exact field value this round since it was not the specific row A29-03 targeted). |
+
+## **TWO FRESH, UNEXPLAINED EVENT-SURFACE FINDINGS**
+
+**A30-02 — a bare generic word as an event's whole NAME, witnessed 1 of 5.**
+
+> Real page title: `Join us at the International Battery Seminar & Exhibit 2026 in Orlando! | Veryst Engineering`
+> URL: `https://www.veryst.com/news-events/join-us-international-battery-seminar-exhibit-2026-orlando`
+> Rendered `name`: **`"conference"`**
+
+A descriptive, real, page-owned title exists and is discarded in favour of a single generic word. This is worse than A29-05's breadcrumb-trail class (already fixed) in one respect — it is not even a real fragment of the page's own text reordered, it is a bland placeholder. `place` still rendered correctly (`{city: null}` — not asserted here since this row happened to carry no place value this pull; the defect is scoped to `name` only). Not the same host or shape as any named residual above.
+
+**A30-03 — a financial/investor-PR headline admitted as an event, witnessed 3 of 5.**
+
+> `Birchtech plans 4 water conference stops as PFAS removal draws focus` @ `https://www.stocktitan.net/news/BCHT/…`
+> renders as an event named exactly that headline, `place: {city: "San Diego"}`, `date: ""`.
+
+Checked directly against the shipped `isNewsArticleTitle` (`eventweb.ts:416-420`): `NEWS_TITLE_RE`'s closed vocabulary (`the year ahead`, `year in review`, `top/best N`, `what to expect/watch`, `a look back/ahead`, `recap`, `highlights from`, `report from`, `announcing`, or the bare words `news`/`press release`/`blog post`/`newsletter`) does not match this headline, and the URL's path (`/news/BCHT/birchtech-to-exhibit-at-upcoming-water-industry-conferences-…`) does not match `NEWS_HEADLINE_PATH_RE` either (same closed list). **This is a genuinely new shape the existing guard's vocabulary does not reach: a stock/investor-relations headline about a company's OWN attendance at several conferences, phrased as an announcement, not a report.** `stocktitan.net` is a financial-news aggregator (not previously named in this loop). The rendered "event" is really a company's PR about attending real, separately-existing conferences — a mis-classification, not a wrong field on a real event.
+
+**A minor, lower-priority observation in the same family, NOT separately ranked**: `events.ornl.gov/msrworkshop2025/`'s real page `<title>` is literally `"Home"` (witnessed 1 of 5) — correctly rejected as generic chrome by the title-recovery/naming path, and `eventNameFrom`'s fallback then renders the bare hostname `"events.ornl.gov"` as the event's name rather than dropping the row or naming it more usefully. A does not investigate which stage of `eventNameFrom`'s multi-step fallback (title → slug → snippet-mining, `eventweb.ts:1778-1817`) produces this specific fallback — that is B's remit — and does not rank it as a distinct numbered item because its witness count (1 of 5) and its low real-world stakes (the URL slug itself, `msrworkshop2025`, suggests this specific row may also be a stale 2025 posting that a different mechanism should have already dropped) make it a weaker specimen than A30-02/A30-03. Named here so it is not silently lost, not ranked as a fourth item.
+
+## **EVENT SURFACE ARTEFACT TABLE (Ruling 79e) — COMPACT, HOST-LEVEL, ONE WINDOW**
+
+119 unique hosts across ~400 offered rows (5 pulls). Format: `host | first-seen title (≤60 chars) | offered-count | decision`.
+
+```
+rsc.org | IEX 2026 technical training introductory course: Introductio | x24 | ADMITTED (pool)
+joint-research-centre.ec.europa.eu | Molten salt reactor technology (EUROMOST) | x18 | not in final pool
+cambridgeenertech.com | Solid-State Battery Summit | August 11-12, 2026 | Chicago, I | x16 | not in final pool
+euchemsil2026.com | EUCHEMSIL 2026: 30th EUCHEMS Meeting | x16 | ADMITTED (pool, dateless — expiry-twin, see above)
+pyro.byu.edu | Molten Salt Electrochemistry Symposium (MoSES) | x16 | ADMITTED (pool)
+soci.org | IEX 2026 technical training introductory course: Introductio | x14 | not in final pool
+snetp.eu | EUROMOST 2026 - SNETP | x14 | not in final pool
+lco-nsn.gov | Calendar - The Official Website of Lac Courte Oreilles | x13 | not in final pool
+onlinelearningconsortium.org | OLC Accelerate 2026 - Online Learning Consortium | x13 | not in final pool
+lco.global | Call for Proposals 2026A | x11 | not in final pool
+event.fourwaves.com | Twenty-Seventh Congress and General Assembly of the Internat | x10 | not in final pool
+programmaster.org | Materials and Chemistry for Molten Salt Systems | x9 | not in final pool
+flibe.com | Thorium and Molten Salt Recognition: EUROMOST 2026 and the N | x8 | ADMITTED (pool)
+ans.org | Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ANS A | x8 | ADMITTED (pool)
+orcities.org | League of Oregon Cities:: Conferences | x8 | not in final pool
+sophion.com | ICMS Cambridge UK 2026 - Sophion | x7 | not in final pool
+quintustechnologies.com | Solid-State Battery Summit 2026 | Quintus Technologies | x6 | ADMITTED (pool)
+chemicalprobes.org | Chemical Probes Hackathons | Chemical Probes Portal | x6 | not in final pool
+batteryinnovationsummit.com | The Battery Saloon | x5 | not in final pool (79a, re-confirmed)
+vividglobalsummits.com | AGSPOLYMERS2026 | Global Summit on Polymers & Composite Mate | x5 | not in final pool
+lawconferenceofchampions.com | Law Conference of Champions - Presented by Troutman Amin, LL | x5 | not in final pool
+innovatrix.eu | 5th Battery Gigafactory Summit USA | Innovatrix | x4 | not in final pool
+thebatteryshow.com | The Battery Show North America | Advanced Battery & EV Tech | x4 | ADMITTED (pool)
+ionenviromgt.net | CAREER | Ion Exchange | x4 | not in final pool
+aquabattery.com | Become Our Next ION Exchange Membrane Expert | x4 | not in final pool
+premc.org | SCF 2026 - Homepage - PremC | x4 | not in final pool
+jobs.ethz.ch | Stellenangebote der ETH Zuerich | x4 | not in final pool
+conferences.iaea.org | Workshop on the Current Status of Structural Material Develo | x4 | not in final pool
+event.dlr.de | EMEA2026: Workshop on Ion Exchange Membranes for Energy Appl | x4 | not in final pool (Ruling 64b lock, unchanged)
+semiconductorx.com | Semiconductor Conferences 2026 - Industry Events Calendar | x4 | not in final pool
+flogen.org | Molten International Symposium - Topics - SIPS 2026 by FLOGE | x4 | ADMITTED (pool, place correctly silent — contamination host)
+stocktitan.net | Birchtech plans 4 water conference stops as PFAS removal dra | x3 | ADMITTED (pool) — A30-03
+my.calcities.org | Meeting Home Page | x3 | not in final pool
+llmhackathon.github.io | Open Scientific Intelligence (OSI) Hackathon for the Physica | x3 | not in final pool
+ionscience.com | Events/Exhibitions - ION Science Ltd | x3 | not in final pool
+iona.edu | Iona University Career and Internship Fair | Iona University | x3 | not in final pool
+ecpe.org | Details | x3 | not in final pool
+iongroup.com | Events | x3 | not in final pool
+ionexchangeglobal.com | Careers - Ion Exchange | x3 | not in final pool
+powergen.com | Molten Salt Reactors: Natura Resources' Blueprint for Abunda | x3 | not in final pool
+(remaining ~85 hosts offered 1-2 times each; ADMITTED among them: nucnet.org, ibatterysummit.com, djk.co.jp, batterysummit.solarenergyevents.com, veryst.com [A30-02], events.ornl.gov, recyclinginternational.com — every other single/double-offer host is a genuine drop, not individually clause-traced this round)
+```
+
+**Named-row sanity checks against this table**: `thebatteryshowsouth.com` (round 29's withdrawn expiry candidate) offered but correctly absent from the final pool — unregressed. `scholarsarchive.byu.edu`'s slide-deck row (A29-07, fixed round 29 C) offered but correctly absent — unregressed. No `openmc.discourse.group`-shaped host appears anywhere in this window.
+
+Committed and pushed as its own item. Part 3 (visual census, ranked lists, gate verdict, hand-off) follows.
