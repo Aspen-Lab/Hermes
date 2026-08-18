@@ -275,6 +275,28 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~21:4x UTC — ROUND 31 C
+                  VERIFIED INDEPENDENTLY, RULING 85 APPENDED (§4).** Gate
+                  re-run cold by the manager: **99 files / 2348 tests, 2348
+                  passing, ZERO failures** (2293 + 46 + 9 exact). Shipped code
+                  read against B's designs directly — verbatim, including the
+                  do-not-simplify comment; one benign divergence recorded (B's
+                  heredoc lost an accent in the designator class; C shipped
+                  the shipped-sibling's intent, `universit[ée]`). **RULING 85:
+                  C accepted; hand-off STANDS — `WHOSE TURN: A — round 31,
+                  GATE CANDIDATE ROUND (value + visual, searchProvider:
+                  gemini, artefact duty, pool-count re-measure post-veto,
+                  PLUS Ruling 84b(3)'s two-stage name-capture duty)`.** A's
+                  consolidated duties listed in the §4 ruling: double census,
+                  pool re-measure, the two-stage instrument (A30-02 closes
+                  this round one way or the other), timeout-flake rate (83b),
+                  the watch list + item 3's unwitnessed verb siblings, the
+                  named-cost registry re-confirmations. **If A measures
+                  double-zero, hand off `WHOSE TURN: MANAGER — independent
+                  re-measurement before any close`. A never closes the
+                  gate.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 31 C IS COMPLETE @ 2026-08-18 ~21:3x UTC — BOTH
                   ITEMS SHIPPED, TWO COMMITS, EACH PUSHED ON LANDING.** Run
                   by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
@@ -83560,3 +83582,16 @@ Committed and pushed as its own item. Item 3 (A30-03, event, Ruling 84c) follows
 No credential printed, logged, committed or written. No live network call — pure static execution against constructed and recorded strings, consistent with a pure-implementation turn (Ruling 75 not exercised, nothing to report against it). No third-party page text pasted beyond what was already on this file's own record.
 
 Committed and pushed as its own item. §1 close-out follows as a separate commit.
+
+### Round 31 — MANAGER (independent verification of C; RULING 85; hand-off to A confirmed)
+
+**Verification, run before the ruling:**
+
+- **Gate, re-run cold by the manager:** `cd web && npx vitest run` — **99 files / 2348 tests, 2348 passing, ZERO failures** (2293 + 46 + 9, exactly as C reports). `tsc --noEmit` clean per C, consistent with the green suite.
+- **Numstat:** item 1 (`45dd9a7`) touches `jobweb.ts`/`jobweb.test.ts` only; item 3 (`8e1d01d`) touches `eventweb.ts`/`eventweb.test.ts` only; test files pure additions (127+/115+ lines). Working tree clean, all four commits pushed.
+- **Code read against B's designs, not C's word:** `PROGRAMME_LABEL_TAIL_RE`/`ORG_DESIGNATOR_ANYWHERE_RE`/`looksLikeProjectLabelWithDescription` (`jobweb.ts:1051-1075`) match §1.2 verbatim, with the do-not-simplify comment preserving the first-draft regression's reason; `TICKER_NEWS_PATH_RE`/`isTickerNewsPath`/`PR_ANNOUNCEMENT_HEADLINE_RE` (`eventweb.ts:430-459`) match §3.2 verbatim, both wired as additive disjuncts in `isNewsArticleTitle` (`:465-469`), raw-path read preserved.
+- **One benign divergence, recorded:** B's state-file rendering of the designator vocabulary printed `universit[ee]` (an accent lost in the heredoc); C shipped `universit[ée]`, matching the shipped sibling `ORG_DESIGNATOR_RE`'s own character class — the intent, not the typo. Correct call; noted so the discrepancy between B's §4 text and the shipped regex never reads as an unexplained edit.
+- **C's self-correction accepted:** the 14-row must-drop corpus's behaviour split (8 pre-vetoed / 5 named-residual survivors / 1 address-trimmed) was determined by direct execution with a deleted debug probe, not assumed — the right instinct, same discipline as A's round-30 instrument fix.
+
+**RULING 85 — round 31 C is VERIFIED AND ACCEPTED; the hand-off stands as C wrote it: `WHOSE TURN: A — round 31, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure post-veto, PLUS Ruling 84b(3)'s two-stage name-capture duty)`.** A's consolidated duty list for this candidate round: the full double census against plates 02/03; pool-count re-measure after item 1's veto (§1.4's standing instruction); the 84b(3) two-stage instrument (ingestion vs post-enrichment `name` on every event row — the A30-02 question closes this round, one way or the other); the timeout-flake rate re-measure (83b); the residual watch list as consolidated in 82c PLUS item 3's unwitnessed verb siblings (`announces`/`to exhibit at`/`attends`) and item 1's own residual classes; the named-cost registry re-confirmations (79a Battery Saloon, 83a EUCHEMSIL, 84b(1) honest-host). **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet fifth data point: C implemented verbatim, resolved the one ambiguity in the right direction, and proved its corpus claims by execution — clean.
+
