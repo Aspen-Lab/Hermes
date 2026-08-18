@@ -891,6 +891,87 @@ const CAREERS_OFFICE_LABEL_RE =
   /^\s*careers?\s+(?:services?|centers?|centres?|offices?)\s*$/i;
 
 /**
+ * ROUND 30, RULING 81a (B's item 1, the three-clause partial that discharges
+ * Ruling 79b's commission). Ruling 79b asked for a full positive-organisation
+ * test separating real employer acronyms (`BD`, `INL`, `BMS`, `Tesla`) from
+ * department/programme acronyms (`CSE`) reaching the same slot. B measured,
+ * on the full recorded corpus, that **no honest signal exists**: both shapes
+ * are short, both are ALL-CAPS-or-title-case, both arrive via the identical
+ * `titleEmployer` "at X" capture, and telling them apart requires knowing
+ * what the letters STAND FOR — semantic knowledge no regex classifier has
+ * (see `ORG_DESIGNATOR_RE` above, already refused for the same reason under
+ * Ruling 62d). **That full test is not built here, and is not claimed to be
+ * built.**
+ *
+ * **TWO OF THE THREE DESIGNED CLAUSES SHIP HERE.** The third,
+ * `CAREERS_OFFICE_HEAD_RE` (a HEAD-anchored careers-office label, meant to
+ * reach `Career Connections Center University of Florida`), was implemented
+ * exactly as designed and then measured, on the FIRST gate run, to also veto
+ * the shipped must-keep `Career Services International Ltd`
+ * (`jobweb.test.ts`, "is WHOLE-SEGMENT anchored — a real name CONTAINING the
+ * phrase survives", B13-01 Gap A) — the same collision that guard's own
+ * whole-segment anchor was built to avoid. A head anchor with no end anchor
+ * is REQUIRED to reach past the trailing institution name in the target
+ * string, so the collision is structural, not a tuning slip. Per this
+ * round's own STOP protocol: not shipped, filed `POLICY — manager decides`
+ * in the round log rather than redesigned inline. Round 30 C's own §4 entry
+ * has the full measurement.
+ *
+ * The other two residuals from B's design are named and watched, not
+ * solved: the `CSE`-class acronym collision (the true hard case above), the
+ * segment-order problem (`Chemistry` / `Chemical Engineering` — 62d(a)'s own
+ * held half, not reopened), and the `Medicinal Chemistry (Graduate Student
+ * level) @ Septerna` shape (teaching `titleEmployer` to also recognise
+ * `@ X` was already measured and explicitly DECLINED — see
+ * `BOARD_SELF_NAME_RE`'s doc comment above — because `@` is far looser than
+ * the shipped `at ` capture and a recovered value that comes back wrong is
+ * not a win, Ruling 48a).
+ */
+
+/**
+ * A ROLE/TITLE WORD, not an organisation name, reaching the employer slot.
+ * Live and recorded instances: `Research Technologist 1`,
+ * `Internship battery R&D`, `Co-ops`, `Membrane Scientist for
+ * Electrodialysis`, and a fresh live catch of the bare word `Scientist`.
+ *
+ * **DELIBERATELY NARROW VOCABULARY, A CHOICE NOT AN OVERSIGHT.** `Associate`,
+ * `Analyst`, `Coordinator`, `Manager`, `Director` are NOT in this list,
+ * because those are realistic REAL FIRM-NAME suffixes (`Smith & Associates`
+ * is a common consulting/law naming convention) — the false-drop risk of
+ * including them was not measured and is not taken on faith.
+ * `Engineer`/`Engineering` is also deliberately excluded: it is both a role
+ * word and a legitimate business-name component, and this corpus's own
+ * `Chemical Engineering` (a bare department noun, must-drop) and a
+ * hypothetical `XYZ Engineering Ltd` (must-keep) cannot be told apart by the
+ * word alone — left as part of the segment-order residual above, not
+ * force-fit into this list.
+ *
+ * Failure direction: an unlisted role word survives — the status quo, never
+ * a new wrong value.
+ */
+const ROLE_TEXT_CANDIDATE_RE =
+  /\b(?:scientist|technologist|intern(?:ship)?s?|postdoc(?:toral)?|fellows?|researchers?|co-ops?)\b/i;
+
+/**
+ * A JOB-BOARD BRAND NAME expressed as a domain-shaped string, e.g.
+ * `EV.Careers`. Tests the CANDIDATE STRING's own tail, not the page host.
+ *
+ * **A MEASURED, NOT ASSUMED, GAP.** `looksLikeHostBrand("EV.Careers",
+ * "ev.careers")` returns FALSE — it only compares the candidate against the
+ * host's FIRST DNS LABEL (`"ev"`, 2 characters), so the full board-brand
+ * name clears that guard untouched. Today's shipped code is saved from this
+ * only because `titleEmployer`'s "at Tesla" capture wins FIRST in the array
+ * before `EV.Careers` (a later `employerSegments` entry) is ever reached —
+ * the recorded corpus has no row where `EV.Careers` is the SOLE surviving
+ * candidate. This clause closes that latent gap directly rather than relying
+ * on priority-order luck.
+ *
+ * Failure direction: an unlisted board-brand domain string survives — the
+ * status quo, never a new wrong value.
+ */
+const BOARD_DOMAIN_BRAND_RE = /\.(?:careers|jobs)$/i;
+
+/**
  * A23-01(c) / Ruling 62d. `Nuclear Engineering Internship - Summer 2027 at
  * Kairos Power, Alameda, California, United States | Intern Insider` renders
  * the RIGHT employer with a full postal address welded on. The instruction is
@@ -1682,7 +1763,14 @@ export function webResultToRawJobItem(
           // renders as its employer. Whole-segment anchored, exactly as
           // B13-01 Gap A set it, so a real employer whose name merely CONTAINS
           // one of these words survives untouched.
-          !CAREERS_OFFICE_LABEL_RE.test(p),
+          !CAREERS_OFFICE_LABEL_RE.test(p) &&
+          // Round 30, Ruling 81a (B's item 1, the three-clause partial
+          // discharging Ruling 79b's commission). Two of three clauses
+          // ship; `CAREERS_OFFICE_HEAD_RE` does not — see the block comment
+          // above `ROLE_TEXT_CANDIDATE_RE` for the measured collision that
+          // held it back, filed `POLICY — manager decides`.
+          !ROLE_TEXT_CANDIDATE_RE.test(p) &&
+          !BOARD_DOMAIN_BRAND_RE.test(p),
         ),
     ),
   );

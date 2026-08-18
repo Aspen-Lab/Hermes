@@ -2685,6 +2685,104 @@ describe("A23-01(c) — bounded employer-candidate rejections", () => {
   });
 });
 
+// Round 30, Ruling 81a (B's item 1, the three-clause partial discharging
+// Ruling 79b's commission). ONLY TWO OF THE THREE DESIGNED CLAUSES SHIP —
+// `ROLE_TEXT_CANDIDATE_RE` and `BOARD_DOMAIN_BRAND_RE` — see their doc
+// comments in jobweb.ts for the full reasoning and the residuals left open
+// on purpose, not solved here (the `CSE`-class acronym collision, the
+// segment-order problem, the `@ Septerna` shape). The THIRD designed clause,
+// `CAREERS_OFFICE_HEAD_RE`, was implemented and then found to also veto the
+// shipped must-keep "Career Services International Ltd" (the "is
+// WHOLE-SEGMENT anchored" test above) — a structural collision, not a
+// tuning slip, filed `POLICY — manager decides` in round 30 C's §4 entry.
+// `Career Connections Center University of Florida`, the shape that clause
+// was meant to reach, stays a NAMED, UNADDRESSED residual — asserted below
+// as still rendering its full (wrong) string, not silence.
+describe("Round 30, Ruling 81a — the three-clause partial", () => {
+  const employerOf = (title: string, url = "https://careers.acme.test/job/44231") =>
+    webResultToRawJobItem(
+      { title, url, snippet: "We are hiring a research scientist. Apply now." },
+      ["battery", "molten salt", "electrochemistry"],
+    )?.company;
+
+  // CLAUSE 1 — ROLE_TEXT_CANDIDATE_RE. Recorded must-drops plus the fresh
+  // live catch (`Scientist`) B's item 1 §1.4 reproduced against a real pull.
+  it.each([
+    "Battery Scientist Program - Research Technologist 1",
+    "Battery Scientist Program - Internship battery R&D",
+    "Battery Scientist Program - Co-ops",
+    "Battery Scientist Program - Membrane Scientist for Electrodialysis",
+    "Molten Salt Research Program - Scientist",
+  ])("vetoes the role-text candidate in `%s`", (title) => {
+    expect(employerOf(title)).toBeUndefined();
+  });
+
+  // CLAUSE 2 WAS NOT SHIPPED (see the describe-block comment above): `Career
+  // Services` is still vetoed, but only by the PRE-EXISTING whole-segment
+  // `CAREERS_OFFICE_LABEL_RE`, not by anything new this round.
+  it("still vetoes `Career Services` — via the pre-existing whole-segment guard", () => {
+    expect(employerOf("Battery Scientist Program - Career Services")).toBeUndefined();
+  });
+
+  // NAMED RESIDUAL, ASSERTED HONESTLY: `Career Connections Center University
+  // of Florida` was the shape `CAREERS_OFFICE_HEAD_RE` was designed to reach.
+  // With that clause withheld (the `Career Services International Ltd`
+  // collision above), nothing else in the chain catches it, so it renders
+  // its full string as the employer — today's status quo, unchanged by this
+  // round, recorded so the gap is visible rather than silently reopened.
+  it("does NOT yet veto `Career Connections Center University of Florida` — a named, unaddressed residual", () => {
+    expect(
+      employerOf(
+        "Battery Scientist Program - Career Connections Center University of Florida",
+      ),
+    ).toBe("Career Connections Center University of Florida");
+  });
+
+  // CLAUSE 3 — BOARD_DOMAIN_BRAND_RE. Ruling 63a's own trigger shape.
+  // `looksLikeHostBrand` cannot see it (it only compares the host's FIRST DNS
+  // label), so without this clause the full board-brand string would survive
+  // as the sole candidate whenever it is not beaten to the chain by a
+  // higher-priority segment.
+  it("vetoes the board-brand domain string in `EV.Careers`", () => {
+    expect(employerOf("Battery Scientist Program - EV.Careers")).toBeUndefined();
+  });
+
+  // HONEST SILENCE: every surviving candidate vetoed renders `company`
+  // `undefined`, never an invented value (Ruling 32) — asserted end to end
+  // with two DIFFERENT new clauses each removing one of two candidates.
+  it("renders honest silence when every candidate is vetoed by a different new clause", () => {
+    expect(
+      employerOf("Battery Scientist Program - Research Technologist 1 - EV.Careers"),
+    ).toBeUndefined();
+  });
+
+  // MUST-KEEP INVARIANCE — the 21-row corpus B's item 1 §1.0 lists verbatim.
+  // None of these real organisation names contain either shipped new
+  // clause's vocabulary, so all continue to survive untouched.
+  it.each([
+    ["Battery Scientist Program - BD", "BD"],
+    ["Battery Scientist Program - J&J", "J&J"],
+    ["Battery Scientist Program - BMS", "BMS"],
+    ["Battery Scientist Program - Tesla", "Tesla"],
+    ["Battery Scientist Program - INL", "INL"],
+    ["Battery Scientist Program - Oak Crest", "Oak Crest"],
+    [
+      "M.S. Internship Program – Oregon Center for Electrochemistry",
+      "Oregon Center for Electrochemistry",
+    ],
+    [
+      "Battery Scientist Program - Sandia National Laboratories",
+      "Sandia National Laboratories",
+    ],
+    ["Battery Scientist Program - Kairos Power", "Kairos Power"],
+    ["Battery Scientist Program - CATL", "CATL"],
+    ["Opening For Marketing Intern (Ion Exchange Ltd.)", "Ion Exchange Ltd."],
+    ["Battery Scientist Program - HyET Lithium", "HyET Lithium"],
+  ])("keeps the must-keep `%s` untouched", (title, expected) => {
+    expect(employerOf(title)).toBe(expected);
+  });
+});
+
 // ───────────────────────────────────────────────────────────────────────
 // B28-01 / A28-01 (round 28, item 1; Ruling 76b). THE CONJOINED SECTION
 // LABEL. See the doc comment above `isConjoinedSectionLabelTitle` in
