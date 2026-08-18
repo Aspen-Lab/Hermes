@@ -83996,3 +83996,85 @@ Ranked by what a reader loses, worst first.
 
 **RULING 86f — ROUND 31 IS CLOSED. `WHOSE TURN: B — round 32`, work list: A31-01 (with 86c's three-row trace addition) and A31-02.** Sonnet sixth data point: A's turn was clean — corrected baseline cited and re-derived, the malformed-date row rendered rather than reasoned about, the rsc.org host-level/row-level distinction handled precisely. No 83f recurrence; the wobble stands as a one-turn event.
 
+
+### Round 32 — Agent B — ITEM 1 (A31-01, job: no page-kind/host guard analogous to the event side's `DENY_HOSTS`/`PAPER_PAGE_HOSTS`/`isNewsArticleTitle`): **THREE MANDATORY TRACES EXECUTED LIVE (10 live pulls total, this item); TWO NEW, ADDITIVE, ADVERSARIALLY-TESTED GUARD COMPONENTS DESIGNED, COVERING BOTH ORIGINAL WITNESSES PLUS A LIVE-CONFIRMED THIRD DEFECT CLASS (`jobright.ai`, 3 of 5 re-pulls, mechanism identified by execution). TWO OF THE THREE ROUTING-ADDITION HOSTS COULD NOT BE RE-WITNESSED LIVE AND ARE LEFT AS NAMED RESIDUALS, NOT GUESSED AT.**
+
+**B changed no code.** Claimed the turn lock (`0314337`) after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 32 — Agent B` first — zero prior entries existed, fresh start not a resume. Read round 31 A's three parts, round 31 B's three items, round 31 C's two items, and Rulings 84a-84e/85/86a-86f in full before any live pull. Every candidate function below was written and adversarially tested standalone in a throwaway harness (`web/zz-r32b/`, own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load per Ruling 75/76d, `*.probe.ts` include) — deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean immediately after, gate re-run cold after deletion: **99 files / 2348 tests, 2348 passing, ZERO failures, unchanged from round 31's close.**
+
+## 1.0 THE THREE MANDATORY TRACES (Ruling 86c's routing addition), EACH BY LIVE EXECUTION WHERE POSSIBLE
+
+**`jobright.ai` ("Jobright: Your AI Job Search Copilot") — LIVE-CONFIRMED 3 of 5 re-pulls, MECHANISM IDENTIFIED BY EXECUTION. NOT A GENUINE ADMIT — belongs in the must-drop class, not must-keep.** Built a harness calling the shipped, exported `buildDailyJobPool` with a spy on `searchGemini` (same instrument round 31 A used), fresh no-op `PoolCache` per pull. Five pulls: `jobright.ai` offered 3 of 5, byte-identical title every time, two different query URLs:
+```
+"Jobright: Your AI Job Search Copilot" @ https://jobright.ai/jobs/summer-2027-chemical-engineering-intern-jobs-in-united-states
+"Jobright: Your AI Job Search Copilot" @ https://jobright.ai/jobs/battery-management-algorithms-internship-jobs-in-united-states
+```
+Both URLs are genuine query-results pages (the same `<query>-jobs-in-<location>` search-slug convention as round 19's own `jobright.ai` fix, A19-01/Ruling 52a, `jobweb.ts:1203-1321`), confirmed by direct execution: the shipped `webResultToRawJobItem` on both rows returns a NON-null `RawJobItem` (`title: "Jobright: Your AI Job Search Copilot", company: undefined`) — an ingestion-stage ADMIT, matching A's own "ADMITTED (pool)" record. **Root cause, traced to the exact clause:** `isTopicLandingPage` (`jobweb.ts:474-484`) requires the URL leaf to match `TOPIC_LANDING_LEAF_RE` (`jobweb.ts:465-466`, it does — both leaves end `...-jobs-in-united-states`) **AND** the OFFERED TITLE to start with the URL-derived phrase (`jobweb.ts:482`, `title.trim().toLowerCase().startsWith(phrase + " ")`). Round 19's fix widened the punctuation classes on the assumption the offered title would always carry the per-query listing phrase (`"Internship, Battery Engineering... Jobs in United States"`); THIS round's live rows instead carry the SITE'S OWN BRAND TAGLINE as the offered title — a title that corroborates nothing about the specific query — so the corroboration check fails and the guard does not fire, even though the URL-structure evidence is unambiguous. **This explains Ruling 86c's own observation** ("round 30's window had it correctly OUT of the pool"): round 30 evidently drew the county/query-phrase title variant (caught); round 31 and this round both drew the brand-tagline variant (missed) — an UPSTREAM TITLE-EXTRACTION VARIANCE for the same site, not a guard regression.
+
+**`thrlab.tamu.edu` ("Molten Salts Research & Development") — NOT RE-WITNESSED LIVE. Structural reasoning recorded, no guard shipped for it.** Searched for this host across all 5 dedicated pulls above PLUS 3 further wide-check pulls run for item 1's corpus validation (§1.3) — **0 of 8 chances this session.** Round 31 A itself only saw it 1 of 5 pulls; this is expected variance on a single-digit-offered host, not a failure to look (matches dozens of similar not-reproduced-this-window results already recorded throughout this file). Ruling 75 forbids hunting a named host outside the pipeline's own live mechanism (41c/45a/45b), so no alternative fetch was attempted. **What the title alone tells us, honestly bounded:** it fails `JOB_TEXT_RE` (`jobweb.ts:1532-1533`, no hiring/vacancy/internship/postdoc vocabulary at all) and carries no listing vocabulary either — the SAME bare-informational shape as the already-witnessed `foundry.lbl.gov` specimen (a lab's own programme/research-area name, not a role). Without the real URL I cannot determine which gate let it through (a job-shaped path, an absent snippet under the A29-01/family-(ii) bypass, or something else) or whether my two shipped-below guard components would even reach it (`isNonJobHost` needs a matching host; `isDateStructuredResearchPath` needs a `/YYYY/MM/DD/` path I have no evidence for). **NOT DESIGNED FOR — named as an open residual, not guessed at**, exactly this loop's own standing discipline when the evidence to size a fix is absent (round 31 B item 2's own language: "not designed, and said so rather than force-fit").
+
+**`lco.cl` ("Jobs - Las Campanas Observatory", admitted WITH a company value) — NOT RE-WITNESSED LIVE (0 of 8 chances, same session). A REAL STRUCTURAL GAP verified by reading the regex source, but genuineness of THIS row is UNRESOLVED, and NO GUARD IS SHIPPED for the title shape alone.** Round 31 A's own part 3 already separately logged this exact row as a "fresh 57b witness line (real, correct employer value)" — meaning A judged the extracted COMPANY FIELD correct, which is a different question from whether the ROW ITSELF is a single posting or an index page A never checked. Read the three existing title-shape guards against this exact string, by execution and by source: `CAREERS_INDEX_TITLE_RE` (`jobweb.ts:548-549`) is anchored `^...$` around a BARE section word — fails, because `"Jobs - Las Campanas Observatory"` has trailing text after "Jobs". `LISTING_SECTION_TITLE_RE` (`jobweb.ts:584-585`) requires the section noun be followed by `at|in|near|with` — fails, this title uses a dash, not a preposition. `isOwnerSectionIndexTitle`/`OWNER_INDEX_TITLE_RE` and `isHostBrandProgrammePage`/`BRAND_PROGRAMME_TITLE_RE` (`jobweb.ts:683-704`) both require the OWNER NAME to come BEFORE the section noun (`"Tesla Careers"`, `"EnerSys ... Program"`) — fails, this title is noun-FIRST, owner-SECOND, dash-separated, the reverse order none of the three existing checks was ever built to read. **This is a genuine, verified vocabulary gap** (order/punctuation, not a new word). **But I deliberately do NOT design a guard for it**, because I have no adversarial corpus for the reversed-order shape and a real risk is visible without one: many small organisations' simple site templates title EVERY page `"<Page> - <Site Name>"`, including a genuine SINGLE posting page — so a title-only "noun - owner" rule risks silencing a real vacancy from exactly the kind of small lab/observatory this profile's own topics surface (Ruling 24's own name: "measure before buying"). **`POLICY — manager decides` on this one line**: is the residual worth a future round's live re-witness (to get the real URL and settle genuineness), or should it stay a named, unshipped structural observation? I recommend the latter — shipping an unmeasured title rule here risks exactly the false-silence class Ruling 48a forbids.
+
+## 1.1 THE DESIGN — TWO NEW ADDITIVE COMPONENTS, PLUS ONE FOR THE LIVE-CONFIRMED THIRD CLASS
+
+**Component A — closed host list for encyclopedias**, the same shipped SHAPE as the event side's `DENY_HOSTS`/`PAPER_PAGE_HOSTS` (`eventweb.ts:193-219,246-254`), justified by Ruling 84c's own ratified doctrine that a closed host list is the right tool when the host CLASS is genuinely closed:
+```ts
+const NON_JOB_HOSTS = ["wikipedia.org"] as const;
+function isNonJobHost(host: string): boolean {
+  return NON_JOB_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+}
+```
+Wikipedia's `/wiki/` path is a MediaWiki software convention other sites also run for unrelated purposes, so the signal is the HOST (suffix-matched, catching every language subdomain — `de.wikipedia.org` etc. — the same suffix idiom `eventweb.ts:269-274`'s `isDeniedUrl` already uses), not the path.
+
+**Component B — path-structure signal for date-stamped publishing paths**, mirroring the event side's own preference for path-STRUCTURE over host enumeration (Ruling 84c, `TICKER_NEWS_PATH_RE` at `eventweb.ts:430`):
+```ts
+const DATE_STRUCTURED_PATH_RE = /^\/\d{4}\/\d{2}\/\d{2}\//;
+function isDateStructuredResearchPath(title: string, pathAndQuery: string): boolean {
+  const path = pathAndQuery.split("?")[0] ?? "";
+  if (!DATE_STRUCTURED_PATH_RE.test(path)) return false;
+  return !JOB_TEXT_RE.test(title); // same title-half safety net isCareersSectionRoot already uses (jobweb.ts:1495-1501)
+}
+```
+The title-half safety net is not new invention — it is `isCareersSectionRoot`'s own already-shipped pattern (a suspicious URL cannot drop a title that states real job vocabulary), reused rather than redesigned.
+
+**Component C — the live-confirmed `jobright.ai` brand-only-title bypass**, additive, reuses the ALREADY-SHIPPED `TOPIC_LANDING_LEAF_RE` and `looksLikeHostBrand` (`shared.ts:420-434`) rather than inventing new vocabulary, and does NOT touch `isTopicLandingPage` itself (zero risk to that function's 9+ existing locked assertions in `jobweb.test.ts:1203-1404`):
+```ts
+function isBrandOnlySearchResultsPage(title: string, host: string, pathAndQuery: string): boolean {
+  const leaf = (pathAndQuery.split("?")[0] ?? "").split("/").filter(Boolean).pop();
+  if (!leaf || !TOPIC_LANDING_LEAF_RE.test(leaf)) return false;
+  const idx = title.indexOf(":");
+  if (idx === -1) return false;
+  const brand = title.slice(0, idx).trim();
+  const tail = title.slice(idx + 1).trim();
+  if (!brand || !tail) return false;
+  if (JOB_TEXT_RE.test(tail)) return false; // tail carries real job vocabulary -- not chrome
+  return looksLikeHostBrand(brand, host);
+}
+```
+The reasoning: a title that is purely `"<host's own brand>: <tagline with no job vocabulary>"` supplies ZERO corroborating OR contradicting evidence about the query — the same "absence is not evidence" doctrine A29-01/family(ii) already applies to an empty snippet (`jobweb.ts:1580-1601`). When title corroboration is structurally unavailable, the already-trusted URL-leaf signal is allowed to stand un-contradicted rather than being read as a title MISMATCH.
+
+**Wiring** (not shipped, C's job): Components A and B run at the SAME early point `NON_JOB_PATH_RE` already runs, `jobweb.ts:1579`, immediately after it — an early kind-rejection, same family, same failure direction. Component C is one more additive clause inside `isListingPage` (`jobweb.ts:1503-1531`), same pattern as the existing `isCareersSectionRoot` call at `:1523`.
+
+## 1.2 ADVERSARIALLY TESTED, EXECUTED — 21 STANDALONE TESTS PLUS TWO LIVE-DATA SWEEPS
+
+| group | corpus | result |
+|---|---|---|
+| must CATCH | live `en.wikipedia.org` specimen (re-witnessed live THIS round too, see §1.3), `de.wikipedia.org` (suffix, constructed), live `foundry.lbl.gov` specimen, both live `jobright.ai` specimens (two different query URLs) | **5 of 5 caught** |
+| must-keep corpus (Ruling 86c's named 9, `lco.cl` excluded per §1.0's own reasoning) | `psi.ch` BALDER, `careers.gevernova.com`, `talents.vaia.com`, `hyetlithium.com`, `postdocjobs.com`, `ev.careers`/Tesla, `enovix.wd12.myworkdayjobs.com`, `bebee.com`, PLUS `jobright.ai`'s own real-posting numeric-ID shape (`jobweb.test.ts:1317`'s own admitted-control URL) and `enersys.com`'s shipped brochure must-keep (Ruling 49a) as a sanity check on the new brand-only check | **0 of 11 false positives** |
+| adversarial: must NOT drop a genuine posting | host containing "wikipedia" as a SUBSTRING not a suffix; a date-structured ATS URL whose title carries real job vocabulary; a `"<Company>: <role>"` title at a non-listing URL; a brand-shaped title at a non-listing-slug URL | **0 of 4 false positives** |
+| LIVE SWEEP 1 — every row that survives ingestion TODAY, 3 fresh pulls | 27 + 30 + 23 = **80 real ingestion-survivor rows**, captured via the same `searchGemini` spy | **1 correct catch** (a fresh live re-witness of the `en.wikipedia.org` specimen, pull 1), **ZERO unexplained new rejections** |
+| LIVE SWEEP 2 — final scored pool, 2 fresh pulls | pool sizes 4 and 0 (small, topic-floor variance, not this item's concern) | **ZERO collisions** |
+
+Total live pulls this item: **10** (5 dedicated trace pulls + 3 wide-check pulls + 2 final-pool-collision pulls), plus 1 targeted page fetch for item 2 (reported separately). All within Ruling 75's bounded-probe discipline; zero timeouts this item.
+
+## 1.3 FAILURE DIRECTION AND BLAST RADIUS
+
+**All three components can only ever cause `webResultToRawJobItem`/`isListingPage` to return null/true where they previously did not — the same direction as every existing guard in this file (Ruling 32).** Components A and B run BEFORE any candidate-extraction logic, so they cannot alter any employer/title VALUE, only remove a row outright. Component C runs inside `isListingPage`, same contract. A miss on any of the three falls to admission — the status quo, never a new invented value.
+
+**Tests at risk, grepped directly**: `wikipedia` — zero hits in `jobweb.test.ts`. A `/YYYY/MM/DD/` path shape — zero hits. A colon-containing title combined with a `-jobs`/`-vacancies`/`-openings`-shaped URL leaf — three colon-titled tests exist (`"EnerSys Internship Program: Powering Future Innovators"`, `"Acme Internships: Apply Now"`, `"Internship Program: Battery Characterization Track"`), all three call sites use non-listing-shaped test paths (`/en/careers/enersys-internship-program`, `/careers/1234`, `/careers/role` — confirmed by reading `jobweb.test.ts:1976,1979,2795` directly), so Component C's OWN leaf-shape precondition fails first in every case — **zero collision, verified by reading the exact test paths, not assumed.**
+
+## 1.4 VERDICT
+
+**Two witnesses closed with a designed, adversarially-clean fix (Components A+B); one live-confirmed third class closed (Component C, jobright.ai); two routing-addition hosts honestly left as unresolved residuals rather than guessed at (`thrlab.tamu.edu` — no design attempted, no evidence to size one; `lco.cl` — a real vocabulary gap named but NOT shipped, `POLICY — manager decides` on priority, per §1.0).** Recommend: C implements Components A, B and C as written in §1.1; the two residuals are named for a future round's live re-witness, not designed against on no evidence.
+
+Committed and pushed as its own item. Item 2 (A31-02, the malformed-date extraction stage plus the render-parity question) follows.
+
