@@ -275,6 +275,30 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~03:1x UTC — ROUND 33 B
+                  VERIFIED INDEPENDENTLY, RULINGS 90a-90d APPENDED (§4).**
+                  Gate re-run with the full-capture discipline: **99 files /
+                  2381 tests, 2381 passing, zero failures** (round-32's flake
+                  did not recur). Spot-checks passed (`looksLikeEvent` is the
+                  front-door check the safety net reuses; the wiring point
+                  reads as cited). **RULING 90a: item 1 APPROVED —
+                  `isJobListingContentTitle` ships as the 7th kind guard,
+                  §1.2 verbatim.** **RULING 90b: item 2 ACCEPTED, commission
+                  CLOSED with zero code — a finding, not a failure**: the
+                  pipeline is exonerated by execution; the dateless branch is
+                  a SOURCE-SIDE coverage gap (87-97%, two windows, full
+                  classification on file); the `<time>` trap and the
+                  single-match heuristic (29% wrong) are locked as
+                  do-not-build records; the attribution-phrase lead is named
+                  for a future round, not commissioned. **RULING 90c:
+                  `WHOSE TURN: C — round 33` (ONE item: the 7th guard + the
+                  30-case corpus as tests), THEN A — round 33 GATE CANDIDATE.
+                  If A measures double-zero: `WHOSE TURN: MANAGER —
+                  independent re-measurement before any close`.** **RULING
+                  90d: sonnet eleventh data point — the loop's strongest
+                  diagnostic turn.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 33 B IS COMPLETE @ 2026-08-19 ~02:5x UTC — BOTH
                   ITEMS DESIGNED/DIAGNOSED, TWO COMMITS, EACH PUSHED ON
                   LANDING.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after
@@ -85190,3 +85214,19 @@ Seven rows carry no safely-usable date evidence (`nucnet.org`'s own machine-read
 **This directly answers the commission's own question** ("why does per-row date extraction succeed on almost nothing?"): on this item's own 15-row live sample, the loss is NOT in our own pipeline — every row was enriched, every fetch succeeded, and the shipped extractor correctly reads whatever machine-readable signal a page actually offers. **The 87-97% dateless rate is overwhelmingly a SOURCE-SIDE coverage gap** (most of these event pages simply do not publish a machine-readable date, or publish date-shaped text too ambiguous/misattributed to trust), not a defect this loop can safely code its way out of without accepting exactly the invented-date risk Ruling 62b exists to prevent. Ruling 83a's own doctrine (datelessness itself is the priced outcome) is reaffirmed by this item's own evidence, not merely restated.
 
 Committed and pushed as its own item. §1 close-out follows as a separate commit.
+
+### Round 33 — MANAGER (independent verification of B; RULINGS 90a-90d; C commissioned for item 1 only)
+
+**Verification, run before any ruling:**
+
+- **B changed zero product code** (the manager's own scope check — empty); tree clean; all four commits pushed. Gate re-run by the manager with the round-32 full-capture discipline (log retained, failure-identity-first): **99 files / 2381 tests, 2381 passing, ZERO failures, zero failure lines in the retained log** — the round-32 flake did not recur this run.
+- **Spot-checks, all PASSED:** `looksLikeEvent` (`eventweb.ts:189-191`) is exactly the `EVENT_SIGNAL_RE` front-door check B's safety net reuses; the recommended wiring point (`isEarningsCallPage` at `:1965`, before `const text` at `:1966`) reads exactly as cited; the design's structure (two triggers, either sufficient, both gated by the event-vocabulary rescue) matches the Ruling-87a Components-B/C precedent it claims.
+
+**RULING 90a — item 1 APPROVED: `isJobListingContentTitle` ships as the 7th additive kind guard, exactly as §1.2 prints it** (the `JOB_LISTING_CONTENT_RE` phrase list, `hasRepeatedJobsMention` at ≥2, the `looksLikeEvent` rescue), wired immediately after `isEarningsCallPage`. The live trace that widened the must-catch corpus from one witness to four — and cleared eleven job/career-worded rows as already-correct with no new work — is exactly what a design turn should do with its own live window. The path-shape rejection is ratified (two of three fresh witnesses carry no date path; a title-only signal covers all four with zero collisions).
+
+**RULING 90b — item 2 is ACCEPTED AND THE COMMISSION CLOSES HONESTLY WITH ZERO CODE — which is a finding, not a failure.** The classification (15 unique dateless final-pool rows, fresh window: 0 confirmed (a) / 7 (b) with 0 shippable / 7 (c), + 1 rejected (a)-candidate) exonerates the pipeline by execution: every row enriched, every fetch succeeded, the extractor reads whatever the page actually offers. **Three records this ruling locks:** (1) the `nucnet.org` `<time datetime>` TRAP — a generic `<time>` reader would have shipped an invented date from an unrelated sidebar article; NO future round adds one on the strength of a single specimen; the abstract mechanism gap (no `<time>` reader anywhere) stays named-unbuilt. (2) The single-match heuristic is DISPROVED at 29% wrong-attribution on B's own corpus (a laureate's death date; an abstract deadline) — the near-ISO normalizer's "provably lossless" bar correctly blocked both would-be inventions; 62b's zero held because the bar held. (3) The **attribution-phrase lead** (5 safe specimens share an explicit attribution phrase beside the date; both traps lack one) is recorded as a FUTURE-ROUND LEAD requiring a real corpus — named, not commissioned. **Ruling 83a's registry entry gains its final attribution: the dateless branch is a SOURCE-SIDE coverage gap (87-97% across two independently-measured windows, full classification on file at this entry), not a pipeline defect.** Ruling 69's exemplary-Tier-0 question for the DATE field is answered: exemplary here means honest silence, because the alternative is inventing dates.
+
+**RULING 90c — ROUTING: `WHOSE TURN: C — round 33` (ONE item: implement `isJobListingContentTitle` per §1.2 with the 30-case corpus as tests), THEN A — round 33, GATE CANDIDATE ROUND** (value + visual, gemini, artefact duty, pool re-measure, the watch list, the flake-identity-first gate discipline). If A measures double-zero: `WHOSE TURN: MANAGER — independent re-measurement before any close`.
+
+**RULING 90d — sonnet, eleventh data point: the strongest diagnostic turn of the loop.** B widened its own commission's corpus by live trace, disproved its own candidate designs by execution instead of shipping them, refused two separate traps (the `<time>` reader, the single-match heuristic) with direct evidence, and closed a commission with zero code where zero code was the correct answer.
+
