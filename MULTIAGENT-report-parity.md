@@ -275,6 +275,35 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-18 ~22:1x UTC — ROUND 31 A
+                  VERIFIED INDEPENDENTLY, RULINGS 86a-86f APPENDED (§4),
+                  ROUND 31 CLOSED.** Gate re-run cold by the manager: **99
+                  files / 2348 tests, 2348 passing, zero failures**; the
+                  malformed-date claim re-executed by the manager (invalid,
+                  confirmed); `NON_JOB_PATH_RE` read verbatim; the visual
+                  baseline was cited and re-derived CORRECTLY this turn (83f
+                  watch: clean). **RULING 86a: A30-02 CLOSED as
+                  parked-unreproduced** — 410 rows, zero divergences, zero
+                  bare-generic names; reopen trigger stands. **RULING 86b:
+                  A30-01 and A30-03 verified FIXED LIVE; A29-03 re-confirmed;
+                  zero 57b collisions.** **RULING 86c: `WHOSE TURN: B —
+                  round 32`, work list A31-01 (job side has NO page-kind/host
+                  guard — encyclopedia/lab-blog pages render as job cards) and
+                  A31-02 (malformed date string reaches Event.date; the deep
+                  report's Dates tile is omitted SILENTLY — a different call
+                  site from card.ts's "Date not listed") — PLUS the manager's
+                  routing addition: B must TRACE three unexamined ADMITTED
+                  rows from A's own job table (`jobright.ai` marketing
+                  self-title x3, `thrlab.tamu.edu` lab page, `lco.cl`
+                  index-shaped title) as part of A31-01's corpus — recorded
+                  evidence, not new findings.** **RULING 86d: timeout flake
+                  improved (1/10 vs 4/15); named cost unchanged.** **RULING
+                  86e: CSE-class and "General 1" both organically witnessed
+                  for the FIRST time and both correctly defended — 80b's
+                  design gets its first organic vindication.** **RULING 86f:
+                  round 31 closed; sonnet sixth data point clean.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 31 A IS COMPLETE @ 2026-08-18 ~21:5x UTC — THE
                   GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. TWO
                   UNEXPLAINED VALUE DIFFERENCES (A31-01, A31-02), ZERO
@@ -83946,4 +83975,24 @@ Ranked by what a reader loses, worst first.
 ---
 
 **ROUND 31 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
+
+
+### Round 31 — MANAGER (independent verification of A; RULINGS 86a-86f; round 31 CLOSED — hand-off to B round 32 confirmed, with a routing addition)
+
+**Verification, run before any ruling:**
+
+- **Gate, re-run cold by the manager:** **99 files / 2348 tests, 2348 passing, ZERO failures.** A changed zero product code (the manager's own `git log --name-only` scope check over A's whole turn — empty). Tree clean, all four commits pushed.
+- **Spot-checks, all PASSED:** `new Date("2026-3-3T09:00-4:00")` re-executed by the manager — invalid, exactly as A31-02 claims; `NON_JOB_PATH_RE` (`jobweb.ts:69-70`) reads verbatim as A quotes it, and neither `/wiki/...` nor a bare date-structured path can match it, by construction; the visual structural argument was run over the CORRECT baseline this time (`17de80e..`, re-derived, ten adapter-layer files, zero rendering-layer files) — matching the manager's own independent derivation at the round-30 close. The 83f watch records a clean citation turn.
+
+**RULING 86a — A30-02 is CLOSED AS PARKED-UNREPRODUCED, ratified.** The 84b(3) instrument did its job: 410 event rows, five pulls, ingestion and post-enrichment names captured pairwise, ZERO divergences, ZERO bare-generic-word names at either stage. The `declaredEventName` hypothesis found nothing to bite on this window; the branch's missing chrome guard (`event-details.ts:23-34`, verified in 84b) remains a RECORDED LATENT, not an open item. Reopen trigger stands: any bare-generic-word name on any census row, either stage.
+
+**RULING 86b — round 31's two fixes are VERIFIED FIXED LIVE, ratified:** A30-01 re-witnessed 1/5 → honest silence (confirmed two independent ways); A30-03 re-witnessed 4/5 → dropped at ingestion every time, the strongest re-verification this round. A29-03 re-confirmed on both rows. The pool-count/57b re-measure: zero collisions across 10 pulls.
+
+**RULING 86c — the two fresh findings route to B, round 32, WITH A ROUTING ADDITION FROM THE MANAGER'S OWN READ OF A's ARTEFACT TABLE.** **A31-01** (job): the job pipeline has NO page-kind/host guard analogous to the event side's `DENY_HOSTS`/`PAPER_PAGE_HOSTS`/`isNewsArticleTitle` — an encyclopedia article and a lab's own research-news post render as job cards. **A31-02** (event): a malformed date string (`"2026-3-3T09:00-4:00"`) reaches `Event.date`, every downstream formatter returns null, and the deep report's Dates tile is OMITTED SILENTLY (a different call site from card.ts's "Date not listed" — A's precision here is exactly right). **The routing addition: three ADMITTED rows in A's own job artefact table were not clause-traced and sit adjacent to A31-01's class — `jobright.ai` ("Jobright: Your AI Job Search Copilot", a board's own marketing self-title, admitted x3 — round 30's window had it correctly OUT of the pool), `thrlab.tamu.edu` ("Molten Salts Research & Development", a lab page shape), and `lco.cl` ("Jobs - Las Campanas Observatory", an index-shaped title admitted WITH a company value).** B must trace all three as part of A31-01's corpus building — they are recorded evidence from A's own table, not new findings, and tracing them costs B one execution each. If any is a genuine admit (a real posting behind an odd title), it becomes a must-keep in the new guard's corpus; if not, A31-01's class is wider than its two named witnesses and the design must cover what the traces show.
+
+**RULING 86d — the timeout-flake rate (83b) improved this window: 1/10 combined (vs 4/15 in round 30).** Still a named cost, still re-measured every census, still no budget change.
+
+**RULING 86e — two first-ever organic witnesses, both DEFENDED, recorded with approval:** the `CSE`-class acronym collision appeared live (2/5 at ingestion) and DIED before the pool both times — the residual's live cost remains zero; the "General 1" chrome shape appeared live (`membranes.org`) and was correctly stripped at ingestion — round 30 B's design (80b) receives its first organic vindication. The watch list is doing what it exists to do.
+
+**RULING 86f — ROUND 31 IS CLOSED. `WHOSE TURN: B — round 32`, work list: A31-01 (with 86c's three-row trace addition) and A31-02.** Sonnet sixth data point: A's turn was clean — corrected baseline cited and re-derived, the malformed-date row rendered rather than reasoned about, the rsc.org host-level/row-level distinction handled precisely. No 83f recurrence; the wobble stands as a one-turn event.
 
