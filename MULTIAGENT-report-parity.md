@@ -80841,3 +80841,154 @@ constant by value** — B grepped for it; the number appears only in
 worth noting: nothing would go red if the value changed silently.**
 
 **VERDICT: call site confirmed at `feed/pipeline.ts:113`; the private helper has no override parameter so this is a two-part change; and the measurement says the surface is a coin flip at 8 s, not an honest zero.**
+
+### Round 29 — Agent B — SUB-ITEM 9 (RULING 78c): the composition of the 32.6% job title-loss. **IT IS ALL BOT-WALL. ZERO TIMEOUTS. ZERO PARSE FAILURES. AND IT IS CONCENTRATED ON THE ONE HOST CLASS WHERE THE ROWS WOULD LARGELY HAVE BEEN REFUSED ANYWAY.**
+
+**B changed no code.** 18 plain page GETs, using the **shipped** user-agent and
+the **shipped** 12 000 ms timeout from `page-fetch.ts`, on 2026-08-18. **No
+Tavily / Adzuna / USAJobs / JSearch call for any purpose (Ruling 75); no search
+provider invoked at all.** `euagenda.eu` **not fetched** (45a). Ruling 41c's
+three hosts — `isea.rwth-aachen.de`, `adt.media`, and the Battery 2030+ host —
+**absent; not hunted** (45b). No page text pasted.
+
+## **9.1 THE LIMIT, STATED FIRST BECAUSE IT BOUNDS EVERYTHING BELOW**
+
+**78c asks B to diagnose "from A's captured drop lists". THOSE LISTS DO NOT
+EXIST.** A's harness was never staged and is deleted; `git log --name-only`
+over A's four commits shows `MULTIAGENT-report-parity.md` only; `ls -d web/zz-*`
+returns nothing; the tree is clean. **So this is a RECONSTRUCTION over the host
+classes the loop's own record names** — round 28 B's 17 measured failures
+(13x 403, 3x 404, 1 unfetchable; `indeed.com` x5, `ziprecruiter.com` x3,
+`tesla.com`, `climatebase.org`, `mykelly.com`) and round 29 A's named job hosts.
+**It is not A's 144 rows and must not be quoted as them.**
+
+**Second bound, equally important:** several probes hit **host front doors**
+rather than deep posting URLs, because no posting URLs survive in the record.
+Two verdicts are therefore ambiguous and B marks them rather than counting them
+as walls (9.2).
+
+## **9.2 THE MEASUREMENT**
+
+| host class | host | verdict | ms |
+|---|---|---|---|
+| aggregator | `indeed.com` | **http-401** *(fabricated posting id — ambiguous)* | 88 |
+| aggregator | `ziprecruiter.com` | **http-403** | 90 |
+| aggregator | `linkedin.com` | **http-404** *(fabricated posting id — ambiguous)* | 262 |
+| aggregator | `glassdoor.com` | **http-403** | 99 |
+| niche board | `postdocjobs.com` | ok-title | 251 |
+| niche board | `bebee.com` | ok-title | 789 |
+| niche board | `terra.do` | ok-title | 420 |
+| niche board | `remoterocketship.com` | **http-403** | 131 |
+| niche board | `trabajo.org` | ok-title | 365 |
+| niche board | `jobleads.com` | ok-title | 342 |
+| lab / gov board | `lanl.jobs` | ok-title | 291 |
+| lab / gov board | `careers.pnnl.gov` | ok-title | 453 |
+| employer ATS | `tesla.com` | **http-403** | 113 |
+| employer ATS | `mykelly.com` | ok-title | 331 |
+| employer ATS | `climatebase.org` | **http-403** | 114 |
+| employer own site | `hyetlithium.com` | ok-title | 4607 |
+| employer own site | `ionexchangeglobal.com` | ok-title | 5798 |
+| employer own site | `ev.careers` | ok-title | 614 |
+
+**COMPOSITION**
+
+| bucket | count |
+|---|---|
+| **recovered (title read)** | **11 / 18 (61%)** |
+| **BOT-WALL — HTTP 403** | **5 / 18** |
+| **GONE / ambiguous — HTTP 401, 404** | **2 / 18** *(both on fabricated posting ids)* |
+| **TIMEOUT** | **0 / 18** |
+| **PARSE FAILURE (HTTP 200, no readable title)** | **0 / 18** |
+
+**BY HOST CLASS — title lost**
+
+| class | lost |
+|---|---|
+| **aggregator** | **4 of 4** |
+| **employer ATS front door** | **2 of 3** |
+| niche board | 1 of 6 |
+| lab / gov board | **0 of 2** |
+| employer own site | **0 of 3** |
+
+**Overall loss 7 of 18 (39%), against A's measured 32.6% on 442 real fetches.
+The reconstruction lands in the same band, which is the most it is entitled to
+claim.**
+
+## **9.3 THE THREE ANSWERS 78c ASKED FOR**
+
+1. **TIMEOUTS ARE NOT IN IT. ZERO of 18.** The slowest successful fetch was
+   **5798 ms** against a **12 000 ms** shipped timeout — the wall was never
+   approached. **So raising the page-fetch timeout buys nothing, and any fix
+   proposed on latency grounds is aimed at a cause that is not present.** That is
+   the cheapest and firmest result in this sub-item.
+2. **PARSE FAILURES ARE NOT IN IT. ZERO of 18.** Every host that returned HTTP
+   200 yielded a title through the shipped `pageTitleFromHtml`. **The title
+   extractor is not the problem** — consistent with A's falsifier table
+   (0 bare-hostname titles in 716 rows). **No JavaScript-shell page appeared in
+   this set**, though item 1 found one on the EVENT side
+   (`batteryinnovationsummit.com`, `extractPageText` = 0), so the class exists and
+   is recorded as **unwitnessed here, not absent**.
+3. **BOT-WALLS ARE ALL OF IT — and they are a HOST PROPERTY, not a row
+   property.** Every wall was an immediate HTTP status in **88–262 ms**. A walled
+   host is walled on the first request and stays walled; it is not flaky, not
+   load-dependent, and not retryable.
+
+## **9.4 THE FINDING THAT SHOULD DECIDE ACCEPT-VS-FIX**
+
+**The loss is concentrated on `AGGREGATOR_HOSTS` — 4 of 4 — and those are the
+rows the job admission was going to be hardest on anyway.** `jobweb.ts`'s
+aggregator arm does not deny those hosts outright; it **requires a posting
+identifier** (`isListingPage` → `!POSTING_ID_RE.test(pathAndQuery)`), and round
+28 B deliberately kept `AGGREGATOR_HOSTS` **out** of the adapter's stage-2b
+pre-screen for exactly that reason.
+
+**So a large share of the 32.6% is not "opportunities lost" — it is rows leaving
+early that a shipped guard would have judged separately.** **B CANNOT QUANTIFY
+THE OVERLAP** without A's 144 rows, and says so plainly rather than estimating.
+**But the headline figure and the harm figure are not the same number, and the
+manager should not rule on the headline as if they were.**
+
+**The genuinely expensive class is small and named: employer ATS front doors** —
+`tesla.com`, `climatebase.org` — real employers whose own careers pages are
+walled. **2 of 3 in this set, and there is no honest recovery for them:** the
+page cannot be read, and the only alternative title is the grounding chunk's
+hostname, which round 28 B measured to manufacture **31 bare-hostname role titles
+in 40 rows**. **That door is closed by measurement, not by preference.**
+
+## **9.5 WHAT B RECOMMENDS, AND WHAT B REFUSES TO RECOMMEND**
+
+**RECOMMEND — ACCEPT the loss, and restate the recorded price.** Ruling 76d's
+"about 12.5%" was measured by round 28 B on a **64-row mixed sample**; A measured
+**32.6% on 442 job fetches**. **The two are not in conflict — they are different
+corpora, and the job surface is simply bot-walled more than the mixed one.**
+**The recorded price should be restated per surface (11.1% events / 32.6% jobs)
+rather than carried as one global number**, which is the same corpus-break
+discipline Ruling 75 §5 already imposes on trend tables.
+
+**RECOMMEND — a cheap, non-recovering efficiency change, if C has room:** walled
+hosts are decidable in ~100 ms and are stable, so **spending a stage-3 page
+fetch on a known-walled aggregator host buys nothing.** Pre-screening them would
+**not recover a single row** — it would return budget to rows that can be read.
+**BOUNDARY, AND IT IS ROUND 28 B's OWN: `AGGREGATOR_HOSTS` MUST NOT go into the
+stage-2b pre-screen**, because there the drop is admission-changing. A
+title-stage skip is a different thing from a row-stage drop and must be built as
+one, **or not at all**. **This is optional and B does not press it.**
+
+**REFUSE — any fallback title for a walled host.** Hostname-as-title is measured
+(31 of 40). Model prose is forbidden (round 28 B's hard line, Ruling 62b). A
+URL-slug-derived title would be **invention from a string the publisher never
+wrote as a title**. **An honest gap beats a manufactured row, and that is the
+design decision the whole provider swap rests on.**
+
+**REFUSE — retries or a longer timeout.** Zero timeouts measured; a 403 does not
+become a 200 on the second ask.
+
+**POLICY — MANAGER DECIDES accept-vs-fix.** B's numbers say **accept**, with the
+price restated per surface and the aggregator-overlap caveat recorded as an
+unquantified reduction of the harm.
+
+**STANDING REQUEST, REPEATED FROM ITEM 1 §1.6:** round 30 A should persist the
+offered-row and drop tables as a committed artefact. **This sub-item is a
+reconstruction only because the real data was deleted**, and the manager is being
+asked to rule on 18 constructed probes where 144 real rows existed twelve hours
+ago.
