@@ -85006,3 +85006,91 @@ export function isJobListingContentTitle(title: string): boolean {
 **SHIP `isJobListingContentTitle`** (`JOB_LISTING_CONTENT_RE` + `hasRepeatedJobsMention`), wired as a 7th additive kind guard immediately after `isEarningsCallPage` in `webResultToRawEventItem`, title-only (no URL needed, matching `isPaperPageTitle`/`isEventArtefactTitle`'s own contract). Catches all four must-catch rows (the original A32-01 witness plus three fresh live witnesses this item's own trace found), zero false positives across nineteen must-keep rows and seven adversarial constructions, zero test-suite collision.
 
 Committed and pushed as its own item. Item 2 (the dateless-branch diagnostic, Ruling 89c) follows.
+
+
+### Round 33 — Agent B — ITEM 2 (Ruling 89c: the dateless-branch diagnostic, commissioned under Ruling 69's exemplary-Tier-0 goal): **CLASSIFIED, FRESH LIVE WINDOW, 15 UNIQUE DATELESS FINAL-POOL ROWS TRACED STAGE-BY-STAGE. ZERO CONFIRMED (a)-CLASS SEAMS — EVERY ROW WAS BOTH ENRICHMENT-FETCHED AND SUCCESSFULLY DOWNLOADED, RULING OUT THE TOP-40 CAP AND FETCH FAILURE AS EXPLANATIONS. ONE NEAR-MISS (a)-CANDIDATE FOUND AND REJECTED WITH DIRECT EVIDENCE. NO (b)-CLASS DESIGN SHIPS: THE NAIVE "SINGLE MATCH" HEURISTIC IS DISPROVED ON ITS OWN TESTED CORPUS (2 OF 7 WOULD HAVE INVENTED A WRONG DATE). 7 OF 15 ARE HONEST (c) ABSENCE, PLUS THE ONE REJECTED (a)-CANDIDATE, INCLUDING ONE ROW WHOSE OWN JSON-LD DECLARES ITSELF AN EVENT BUT STATES NO DATE AT ALL.**
+
+**B changed no code.** Same throwaway harness as item 1 (`web/zz-r33b/`), five additional short-lived probe files for this item's own stages, all deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean.
+
+## 2.0 METHOD — A FRESH LIVE WINDOW, TRACED END TO END
+
+Reused item 1's own five live event pulls (same window, same `buildDailyEventPool` calls) with three additional spies: `enrichEventCandidates` (`@/lib/opportunities/enrich`) call-through-wrapped to record the exact top-40 pre-enrichment candidate slice per pull; `fetchPagesConcurrently` (`@/lib/opportunities/page-fetch`) call-through-wrapped to record, per URL, whether the fetch succeeded and the byte length; the final scored pool (`pool.items`) captured per pull with `id`/`name`/`url`/`startDate`/`endDate`.
+
+**Pool sizes and dateless counts, this window, per pull:**
+
+| pull | eventweb fetched | final pool | dateless |
+|---|---|---|---|
+| 0 | 0 (source-timeout, 25000ms) | 0 | 0 |
+| 1 | 33 | 6 | 6 |
+| 2 | 40 | 13 | 11 |
+| 3 | 38 | 7 | 6 |
+| 4 | 41 | 13 | 11 |
+
+**39 total final-pool rows this window, 34 dateless (87%)** — the same dominant pattern round 32 A measured at full-pool scale (34/35, 97%, a different window), independently reproduced. One pull (0 of 5, 20%) lost `eventweb` entirely to the 25000ms source timeout, matching this loop's own standing 83b flake-rate range; not a regression, not this item's concern. Deduplicated to **15 unique dateless-row URLs** across the 34 occurrences.
+
+## 2.1 FIRST FINDING — EVERY ROW WAS ENRICHED AND FETCHED. THE LOSS IS INSIDE EXTRACTION, NOT UPSTREAM OF IT.
+
+Cross-referenced all 15 unique URLs against the enrichment-candidate spy and the fetch spy: **all 15 were inside their pull's own top-40 pre-enrichment slice (`enrichEventCandidates`'s own `MAX_ENRICHMENT_CANDIDATES` cap never excluded any of them), and all 15 fetches succeeded** (`fetchPagesConcurrently` returned non-null HTML every time, 9.7KB to 497KB). **This rules out the two most plausible upstream seams the commission itself named as candidates** (rows silently excluded from the top-40 enrichment slice; a page fetch failing outright) **before any content was even inspected.** Whatever is happening, it happens AFTER the real page's HTML is already in hand — confirmed by execution, not inferred.
+
+## 2.2 THE CLASSIFICATION TABLE — ALL 15 ROWS
+
+Re-fetched each of the 15 URLs fresh through the pipeline's own `fetchPagesConcurrently` (Ruling 75 — a re-check of rows this session's own pipeline just admitted, not a host hunt) and ran the shipped `extractJsonLdOpportunities`/`extractOpportunityPageDetails` directly, plus independent scans for every JSON-LD `@type` present (not only the ones our own `opportunityKind()` recognises), `<meta>` date tags, microdata `itemprop` dates, HTML5 `<time datetime>` elements, and bounded prose date-shape matching (month-first, day-first, and bare-ISO forms) over body text. No raw page text is quoted below; every clip is ≤60 characters.
+
+| # | host | class | evidence (clipped) |
+|---|---|---|---|
+| 1 | flogen.org | (b), REJECTED — wrong attribution | single match `"July 16, 2026"` is a Nobel laureate's death date ("...Dr. Rudy Marcus (Passed away on July 16, 2026)"), not the event's date |
+| 2 | rsc.org | (c), ambiguous | two distinct prose dates, `"8 July 2026"` and `"25 May 2026"`; no structured signal at all |
+| 3 | euchemsil2026.com | (c), genuine absence | one `LocalBusiness` JSON-LD block (irrelevant schema); zero prose date matches in any of 3 scan forms — re-confirms Ruling 83a's own long-named specimen |
+| 4 | pyro.byu.edu | (b), REJECTED — wrong attribution | single match `"May 22, 2026"` is the ABSTRACT SUBMISSION DEADLINE ("The deadline to submit an abstract is May 22, 2026"), not the event date |
+| 5 | flibe.com | (b), correctly attributed, UNSHIPPED | single match, `"...EUROMOST 2026 will be held May 26–29, 2026 in Baden-Baden, Germany"` |
+| 6 | quintustechnologies.com | (c), ambiguous | 5 distinct prose dates (Aug 11/12, Aug 11-12, Oct 12, Oct 15 — a multi-session events hub) |
+| 7 | nucnet.org | (a)-CANDIDATE, REJECTED — hazard | `<time datetime="2026-06-03">`/`<time datetime="2026-06-02">` exist and are unread by our chain, BUT both belong to headlines of OTHER, unrelated sidebar news articles, not this article's own subject (see §2.3) |
+| 8 | batterysummit.solarenergyevents.com | (c), ambiguous | 4 distinct prose dates + a range (Aug 17, Jul 22, Jul 17, Jun 8, Sep 15-16) — matches its own already-named cost (84b(1), "honest-host fallback") |
+| 9 | thebatteryshow.asia | (c), doubtful | one distinct value, `"14-16 July 2027"` — year does not match this window's 2026 events, not trusted without further work |
+| 10 | techland.org | (b), correctly attributed, UNSHIPPED | single match, `"...Dates: June 9-11, 2026 Location: Messe Stuttgart, Germany"` |
+| 11 | elbcexpo.org | (b), correctly attributed, UNSHIPPED | single match, `"...takes place at the Austria Center, Vienna from 15–18 September 2026"` |
+| 12 | ans.org | (b), correctly attributed, UNSHIPPED | single match, `"...Technical Session ... Tuesday, June 2, 2026 | 1:00–2:45PM MDT | Governor's Square 10"` |
+| 13 | automotive-technology.com | (c), structured-but-empty + too ambiguous | own JSON-LD DOES declare `@type: Event` (recognised by our chain as `kind: "event"`) but its `startDate` field is itself empty on the source; 7 distinct prose dates from a packed multi-day agenda |
+| 14 | batteryexpo.vn | (c), genuine absence (caveat) | zero matches in any scan form; caveat — the prose scan is English-month-name only, a non-English date format could be missed |
+| 15 | averna.com | (b), correctly attributed, UNSHIPPED | single match, `"...43rd edition..." ... "March 24-26, 2026"` |
+
+**Tally: (a) 0 confirmed / 1 rejected candidate (`nucnet.org`, §2.3). (b) 7 rows carry evidence; 5 correctly attributed but UNSHIPPED (§2.4); 2 disprove the naive heuristic. (c) 7 rows, no safely-usable evidence (§2.5). 1 + 7 + 7 = 15.**
+
+## 2.3 THE (a)-CANDIDATE, NAMED AND REJECTED WITH DIRECT EVIDENCE — DO NOT ADD A GENERIC `<time>` READER ON THIS ROW
+
+`nucnet.org` is the only row anywhere in this window's evidence that carries a genuine machine-readable date signal our chain has literally zero reader for: `extractOpportunityPageDetails`/`extractMetaOpportunityDetails`/`extractJsonLdOpportunities` (`structured-extract.ts`) never inspect an HTML5 `<time datetime="...">` element at all — that is a real, structural gap in the abstract. **But reading the context around each `<time>` tag (Ruling 75 re-fetch, `nucnet.org` is a news aggregator) proves the three values on this page are NOT about this article's own subject**:
+
+```
+"3 June 2026" -- immediately follows the headline "...Says Energy Commissioner" (a DIFFERENT news story)
+"2 June 2026" -- immediately follows the headline "Commissioner Calls For Europe..." (a DIFFERENT news story)
+"9 February 2024" -- immediately follows "Idaho Lab Conducts First Design Review Of Odin Microreactor" (unrelated, and 2 years stale)
+```
+
+All three sit inside what is structurally a "related articles" widget — each `<time>` tag is paired with a DIFFERENT headline, never with the page's own conference story. A naive "read the first/any `<time datetime>` on the page" design would have shipped an INVENTED, wrong date here — exactly the Ruling 62b failure this loop exists to prevent. **Verdict: named as a real class-(a) mechanism gap in the abstract (no `<time>` reader anywhere in the chain), but NOT designed for — the one live specimen is a demonstrated trap, not a signal, and one specimen is not a corpus.** Recorded so a future round does not add a generic `<time>`-tag reader on the strength of this row alone.
+
+## 2.4 THE (b)-CLASS — MEASURED AND REJECTED, WITH DIRECT COUNTER-EVIDENCE, NOT ASSUMED SAFE
+
+Seven rows carry exactly one date-shaped prose match under a bounded scan (month-first, day-first, and bare-ISO forms, all three checked). The commission's own bar is Ruling 62b, "provably lossless," with the near-ISO normalizer as the precedent for what that means — but that precedent is a **reformatting fix on an ALREADY-TRUSTED field** (JSON-LD's own declared `startDate`); it never had to answer "is this text even the event's own date." A page-wide prose scan answers a categorically different, harder question, and this item tested whether "exactly one match" is a safe proxy for "this is the right date."
+
+**It is not, proved by execution on this item's own corpus, not assumed:**
+
+- `flogen.org`'s ONE match is a Nobel laureate's death date, not the symposium's date.
+- `pyro.byu.edu`'s ONE match is an abstract submission deadline, not the event's date.
+
+**2 of 7 (29%) of the single-match rows would have shipped an invented, wrong date under a bare "count === 1 ⇒ correct" design.** That is far too high a failure rate for anything Ruling 62b governs, so **no extraction ships this round.**
+
+The other five single-match rows ARE correctly attributed on inspection — each match sits immediately beside an explicit attribution phrase (`"will be held ... in"`, `"Dates: ... Location:"`, a day-of-week + time + room line, `"takes place ... from"`) rather than floating in unrelated prose. This is a real, observable difference between the safe five and the unsafe two, and it suggests a **possible future direction — gate the extraction on an attribution phrase immediately preceding the date, not on match-count alone** — but that pattern is inferred from only 5 positive and 2 negative specimens, nowhere near enough to adversarially test and bound the way the near-ISO normalizer's regex was. Per this loop's own "land what is confirmed, not what merely seems likely" discipline, **this is named as a future-round lead, not designed here.**
+
+## 2.5 THE (c)-CLASS — HONEST ABSENCE, ONE ROW WORTH NAMING SPECIALLY
+
+Seven rows carry no safely-usable date evidence (`nucnet.org`'s own machine-readable-but-misattributed evidence is covered separately in §2.3 and is not re-counted here). Two are genuinely bare (`euchemsil2026.com` — re-confirms Ruling 83a's own long-named specimen; `batteryexpo.vn` — caveat noted, English-only month scan). Five carry evidence too ambiguous or already-explained to trust (`rsc.org`, `quintustechnologies.com`, `batterysummit.solarenergyevents.com` — this one matches its OWN already-named cost, Ruling 84b(1) — `thebatteryshow.asia`, and `automotive-technology.com`).
+
+**`automotive-technology.com` is worth naming on its own**: its page's own JSON-LD DOES declare `@type: "Event"`, and the shipped `extractJsonLdOpportunities` DOES recognise it (`kind: "event"`) — this is the only row in the whole corpus where our chain successfully identifies a page as machine-readable Event content at all. But the JSON-LD's own `startDate` property is itself empty on the source (confirmed both by the shipped extractor and by an independent raw-JSON-LD scan). This is not a parsing bug — it is the publisher's own incomplete declaration, corroborated by the page's prose carrying SEVEN distinct dates from what is evidently a packed multi-day agenda, too noisy to safely mine even if a design existed. **Genuine (c): the chain works correctly here and there is still nothing safe to extract.**
+
+## 2.6 VERDICT
+
+**No code ships from this item.** The commission's own three-way split resolves cleanly and honestly: **zero (a)-class seams** (the one candidate mechanism, `<time datetime>`, is a demonstrated trap on its only witness and is explicitly rejected rather than shipped); **zero (b)-class designs** (direct evidence disproves the naive single-match heuristic at a 29% failure rate on this item's own tested corpus; a more careful attribution-phrase design is a plausible lead for a FUTURE round with a larger corpus, not designed here); **7 of 15 rows are honest (c) absence** (plus the one rejected (a)-candidate, functionally also unusable), including one row (`automotive-technology.com`) whose own JSON-LD correctly declares itself an Event yet states no date at all — the chain works, the source doesn't carry one.
+
+**This directly answers the commission's own question** ("why does per-row date extraction succeed on almost nothing?"): on this item's own 15-row live sample, the loss is NOT in our own pipeline — every row was enriched, every fetch succeeded, and the shipped extractor correctly reads whatever machine-readable signal a page actually offers. **The 87-97% dateless rate is overwhelmingly a SOURCE-SIDE coverage gap** (most of these event pages simply do not publish a machine-readable date, or publish date-shaped text too ambiguous/misattributed to trust), not a defect this loop can safely code its way out of without accepting exactly the invented-date risk Ruling 62b exists to prevent. Ruling 83a's own doctrine (datelessness itself is the priced outcome) is reaffirmed by this item's own evidence, not merely restated.
+
+Committed and pushed as its own item. §1 close-out follows as a separate commit.
