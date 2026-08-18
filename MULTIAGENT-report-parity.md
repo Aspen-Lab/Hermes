@@ -78410,3 +78410,21 @@ refused **by the posting id alone**.
 **No product code touched. No measurement performed. No credential referenced.** Leaving §1 pointing at A, exactly as the round 28 manager-verification entry left it. Releasing the lock.
 
 **THE GATE STAYS `GATE (0%): NOT MET`.** This entry closes manager verification, not the loop's gate (Ruling 30 — only the user-driven manager, after A's live re-measurement, closes that). `WHOSE TURN:` advances to **A — round 29's measurement pass**, which needs the live search credentials in `web/.local-data/profile.json` that this sandbox does not have (§0c) — the laptop session or `chatgpt-local` should pick it up. Turn lock released (`HELD BY: free`) in this entry's own commit.
+
+---
+
+### Round 28 — LAPTOP MANAGER's independent re-verification of the cloud close, RULING 77, and the resume
+
+**Date: 2026-08-18. The user resumed the loop; per the pause note's own order, the cloud's provisional round-28 close was re-measured FIRST, by a writer who did none of the work.**
+
+**THE PROVISIONAL CLOSE IS RATIFIED — RULING 77.** Checks, all local:
+- **Full gate on this machine: 98 files / 2208 tests, 2208 passing — ZERO failures — INCLUDING `benchmark.test.ts` GREEN ON THE GEMINI PROVIDER with local Vertex credentials. That is Ruling 76d's acceptance test, PASSED: the live search path is alive again on the user's Vertex, and every value lock holds on a live gemini pool.** `tsc` clean; `eslint` exactly the one standing `quiz.tsx:46` error; **`enrich.test.ts` SOLO: 56/56.**
+- **Cloud item 1's negative proof re-executed**: `jobweb.ts` restored to its pre-`12c9b23` source with shipped tests kept → **12 red / 540 passed** (the conjoined-label rule's own tests, matching the 12-of-19 design); restored → 552/552 green, tree clean.
+- Commit review: items 1–3's files exactly as B designed (the rule + corpus tests; the label step at nine sites incl. the `cn()` trap lock; `text-accent`); test deletions across the whole span are the 5 documented restated lines; no banned API called by any writer (Ruling 75 held through every cloud run).
+- **One process note, on the manager**: the first local gate run was INVALIDATED by the manager's own concurrency mistake — the negative-proof file-revert ran while the gate was collecting, poisoning it. Caught by reading the output, discarded, re-run clean. **Standing note: never run a negative proof concurrently with a gate run.**
+
+**Round 28 is now CLOSED NON-PROVISIONALLY** — four items (the gemini provider, the conjoined-label rule, the label step, the accent token) landed across three writers (local C banked item 0; cloud-hourly ran items 1–3 and a first verification; the laptop manager re-measured). The §0d third-writer machinery worked exactly as designed, including the stale-lock takeover at 2h54m and the credential-refusal at round 29 A.
+
+**THE RESUME:** clocks back ON (cloud routine re-enabled; local hourly cron re-armed). `WHOSE TURN: A — round 29, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini)` — spawned locally with this machine's credentials. **The gate stays `GATE (0%): NOT MET` — only round 29 A's live measurement can move it, and only the manager closes, after independent re-measurement.**
+
+---
