@@ -410,11 +410,63 @@ function urlPathPhrase(url: string | undefined): string | undefined {
 }
 
 /**
+ * Round 31 C (Ruling 84c, implementing B's item 3 §3.2 design A verbatim).
+ * A30-03: `stocktitan.net` investor-PR headlines admit as events because
+ * `isNewsArticleTitle`'s closed vocabulary doesn't reach financial-newswire
+ * PR shapes. This is a PATH-STRUCTURE signal, not a host-name list — a
+ * short, ALL-UPPERCASE segment (a stock ticker, e.g. `BCHT`) immediately
+ * after `/news/` is specific to financial-newswire URL conventions, and
+ * generalises across every host using this convention without naming one
+ * (see `DENY_HOSTS`/`PAPER_PAGE_HOSTS` above for the shipped precedent of a
+ * closed host/path signal; Rulings 41c/45a are measurement-method rulings
+ * about this loop's OWN live-census probing, not a production-code
+ * host-list prohibition).
+ *
+ * Reads the RAW (un-lowercased) URL path, since `urlPathPhrase()` lowercases
+ * everything and would destroy the very signal (the ALL-CAPS shape) that
+ * makes this reliable — a separate small check, not a change to
+ * `urlPathPhrase`/`NEWS_HEADLINE_PATH_RE`.
+ */
+const TICKER_NEWS_PATH_RE = /\/news\/[A-Z]{1,5}\//;
+
+function isTickerNewsPath(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    return TICKER_NEWS_PATH_RE.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Round 31 C (Ruling 84c, implementing B's item 3 §3.2 design B verbatim).
+ * A30-03's title-shape sibling: mirrors this file's own precedented
+ * "subject (1-5 title-case-ish words) + closed PR-style verb" convention
+ * (the same shape `PRESENT_NARRATIVE_RE` already uses for
+ * `attends?|announces?|hosts?|presents?|joins?|visits?`, applied here to a
+ * DIFFERENT consumer — whole-row rejection, not segment selection — so it
+ * is designed and tested separately rather than importing that constant).
+ * Requires BOTH a leading proper-noun-shaped subject AND the verb
+ * `plans`/`schedules` AND an immediately following digit.
+ *
+ * Only "plans"/"schedules" are included, not the fuller PR-verb family
+ * (`announces`, `to exhibit at`, `attends`) — those are UNWITNESSED on this
+ * item (one live specimen only) and are NOT added blind, per this loop's own
+ * "land what is confirmed" practice. Named as a residual for a future round
+ * if any of those verbs is ever organically witnessed in this shape.
+ */
+const PR_ANNOUNCEMENT_HEADLINE_RE =
+  /^\s*[A-Z][\w&.,'-]*(?:\s+[A-Z]?[\w&.,'-]*){0,4}\s+(?:plans?|schedules?)\s+(?:to\s+)?\d+\b/;
+
+/**
  * `url` is optional so every existing one-argument caller keeps working
  * unchanged — the path check simply does not run without it.
  */
 export function isNewsArticleTitle(title: string, url?: string): boolean {
-  if (NEWS_TITLE_RE.test(title.trim())) return true;
+  const trimmedTitle = title.trim();
+  if (NEWS_TITLE_RE.test(trimmedTitle)) return true;
+  if (PR_ANNOUNCEMENT_HEADLINE_RE.test(trimmedTitle)) return true;
+  if (isTickerNewsPath(url)) return true;
   const phrase = urlPathPhrase(url);
   return phrase !== undefined && NEWS_HEADLINE_PATH_RE.test(phrase);
 }

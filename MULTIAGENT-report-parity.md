@@ -83470,3 +83470,22 @@ Committed and pushed as its own item. §1 close-out follows as a separate commit
 No credential printed, logged, committed or written. No live network call — pure static execution against constructed and recorded strings, consistent with a pure-implementation turn (Ruling 75 not exercised, nothing to report against it).
 
 Committed and pushed as its own item. Item 3 (A30-03, event, Ruling 84c) follows.
+
+### Round 31 — Agent C — ITEM 3 (Ruling 84c, implementing B's item 3 §3.2 VERBATIM, BOTH designs): **SHIPPED. `TICKER_NEWS_PATH_RE`/`isTickerNewsPath` (design A) AND `PR_ANNOUNCEMENT_HEADLINE_RE` (design B) LANDED AS TWO ADDITIVE DISJUNCTS INSIDE `isNewsArticleTitle`. 9 NEW TESTS, INCLUDING RULING 84c's OWN COMMISSIONED BASE-CASE LOCK.**
+
+**C changed only `web/src/lib/events/sources/eventweb.ts` and its test file.** B's §3.2 code copied verbatim: `TICKER_NEWS_PATH_RE = /\/news\/[A-Z]{1,5}\//` and `isTickerNewsPath(url)` (`eventweb.ts:430-437`), reading the RAW un-lowercased `new URL(url).pathname` — the doc comment states why (`urlPathPhrase` lowercases and would destroy the ALL-CAPS signal). `PR_ANNOUNCEMENT_HEADLINE_RE` (`eventweb.ts:458-459`) with its doc comment stating only `plans`/`schedules` are included and that `announces`/`to exhibit at`/`attends` are UNWITNESSED and residual-watched, not added blind. Both wired as additional disjuncts inside `isNewsArticleTitle` (`eventweb.ts:465-471`) — additive, the pre-existing `NEWS_TITLE_RE` and `NEWS_HEADLINE_PATH_RE` checks untouched.
+
+**Tests added** (`eventweb.test.ts`, new `describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84c)")` block, end of file, plus one import added to the existing import list):
+
+1. **Live specimen caught by both designs**: `isNewsArticleTitle(LIVE_TITLE, LIVE_URL)` true with both present; a neutral title + the real ticker URL alone still true (design A independently sufficient); the real title with no URL alone still true (design B independently sufficient).
+2. **The file's own named counterexample** (`battery2030.eu`'s real `/news/call-for-abstracts` page, doc comment at `eventweb.ts:383-394`) — confirmed NOT caught, `isNewsArticleTitle` still returns `false`.
+3. **Round 30 A's nine ADMITTED real event titles** — `it`-block loop, all nine still return `false` (unaffected), including this round's own `veryst.com` A30-02 title.
+4. **Six numbered/ordinal + PR-adjacent titles** with no trailing digit after a plans/schedules-shaped verb — all return `false`.
+5. **balchem `/news/conference-call-q4` and `gain.inl.gov/news/events`** — both confirmed still `false` (neither path segment is a 1-5-char all-caps ticker; the balchem row is the documented ACCEPTED `isEarningsCallPage` under-catch, the gain.inl.gov row is A27-01's `isEventHubResult` must-keep — both pre-existing and unrelated).
+6. **RULING 84c's base-case lock for the EXISTING guard (zero coverage before this item)**: an `"Announcing the 2026 Battery Gigafactory Summit: Registration Now Open"` title fires `isNewsArticleTitle` (true, via the pre-existing anchored `announcing\b` clause, unchanged by this item); a constructed real event title merely CONTAINING "announcing" mid-sentence (`"Registration is open for the 2026 Battery Summit, announcing new speakers"`) does NOT fire (false) — confirming the anchor discipline B's §3.1 explains.
+
+**Gate after this item**: `npx vitest run src/lib/events/sources/eventweb.test.ts` — 236 passed (227 pre-existing + 9 new), zero failures. `npx tsc --noEmit` — clean, zero errors.
+
+No credential printed, logged, committed or written. No live network call — pure static execution against constructed and recorded strings, consistent with a pure-implementation turn (Ruling 75 not exercised, nothing to report against it). No third-party page text pasted beyond what was already on this file's own record.
+
+Committed and pushed as its own item. §1 close-out follows as a separate commit.

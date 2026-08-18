@@ -21,6 +21,7 @@ import {
   isEarningsCallPage,
   isEventArtefactTitle,
   isEventHubResult,
+  isNewsArticleTitle,
   looksLikeEventTitle,
   ownedTitleSpan,
   resolveSearchProvider,
@@ -2771,5 +2772,119 @@ describe("A29-05 — a breadcrumb trail is not an event name", () => {
     expect(bestEventTitleSegment("Battery Summit 2026 | Register | Home")).toBe(
       "Battery Summit 2026",
     );
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────
+// Round 31 C (Ruling 84c, implementing B's item 3 §3.2 VERBATIM, both
+// designs). A30-03: `stocktitan.net` investor-PR headlines are admitted as
+// events because `isNewsArticleTitle`'s closed vocabulary doesn't reach
+// financial-newswire PR shapes. See `TICKER_NEWS_PATH_RE`/`isTickerNewsPath`
+// (design A, path structure) and `PR_ANNOUNCEMENT_HEADLINE_RE` (design B,
+// title structure) in eventweb.ts for the full design. This guard had ZERO
+// dedicated test coverage before this item — the base-case lock at the end
+// of this block is Ruling 84c's own commissioned addition, closing that gap
+// for the EXISTING guard before it grows two new disjuncts.
+describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84c)", () => {
+  const LIVE_TITLE = "Birchtech plans 4 water conference stops as PFAS removal draws focus";
+  const LIVE_URL =
+    "https://www.stocktitan.net/news/BCHT/birchtech-to-exhibit-at-upcoming-water-industry-conferences-x.html";
+
+  it("catches the live specimen with both title and URL present", () => {
+    expect(isNewsArticleTitle(LIVE_TITLE, LIVE_URL)).toBe(true);
+  });
+
+  it("design A (ticker path) alone catches it, independent of the title", () => {
+    // A neutral, non-PR-shaped title paired with the real URL — only the
+    // ALL-CAPS ticker-slug path signal can be firing here.
+    expect(isNewsArticleTitle("Water Industry Conferences Overview", LIVE_URL)).toBe(true);
+  });
+
+  it("design B (title shape) alone catches it, independent of the URL", () => {
+    // The real title with no URL at all — only the subject+plans+digit
+    // signal can be firing here.
+    expect(isNewsArticleTitle(LIVE_TITLE)).toBe(true);
+  });
+
+  it("does NOT catch the file's own named counterexample — battery2030.eu's real /news/ page", () => {
+    // The doc comment above `NEWS_HEADLINE_PATH_RE` names this exact page as
+    // why bare "news" is deliberately excluded from the anchored path check.
+    // `call-for-abstracts` is lowercase, not a 1-5-char all-caps ticker, so
+    // design A cannot collide with it either.
+    expect(
+      isNewsArticleTitle(
+        "Call for Abstracts for the Battery 2030+ Annual Conference 2026",
+        "https://battery2030.eu/news/call-for-abstracts",
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps admitting round 30 A's own nine ADMITTED real event titles", () => {
+    for (const title of [
+      "IEX 2026 technical training...",
+      "EUCHEMSIL 2026: 30th EUCHEMS Meeting",
+      "Molten Salt Electrochemistry Symposium (MoSES)",
+      "Thorium and Molten Salt Recognition: EUROMOST 2026...",
+      "Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ANS A...",
+      "Solid-State Battery Summit 2026 | Quintus Technologies",
+      "The Battery Show North America | Advanced Battery & EV Tech...",
+      "Molten International Symposium - Topics - SIPS 2026 by FLOGE...",
+      "Join us at the International Battery Seminar & Exhibit 2026 in Orlando! | Veryst Engineering",
+    ]) {
+      expect(isNewsArticleTitle(title)).toBe(false);
+    }
+  });
+
+  it("does not catch numbered/ordinal real event titles or PR-adjacent titles with no trailing digit", () => {
+    for (const title of [
+      "5th Battery Gigafactory Summit USA",
+      "2026 ANS Annual Conference",
+      "27th International Conference on Ion Exchange",
+      "The 250th ECS Meeting",
+      "Advanced Planning Solutions Conference",
+      "Schedule Optimization Summit",
+    ]) {
+      expect(isNewsArticleTitle(title)).toBe(false);
+    }
+  });
+
+  it("leaves the balchem earnings-call and gain.inl.gov event-hub /news/ paths untouched", () => {
+    // Neither path segment after `/news/` is a 1-5-char all-caps ticker, so
+    // design A cannot fire on either — both are pre-existing, unrelated
+    // must-keeps (the balchem row is the documented, ACCEPTED
+    // `isEarningsCallPage` under-catch; the gain.inl.gov row is A27-01's
+    // `isEventHubResult` must-keep).
+    expect(
+      isNewsArticleTitle(
+        "Conference Call for Fourth Quarter and Full Year 2026 Financial Results",
+        "https://www.balchem.com/investors/news/conference-call-q4",
+      ),
+    ).toBe(false);
+    expect(
+      isNewsArticleTitle(
+        "Events - Gateway for Accelerated Innovation in Nuclear",
+        "https://gain.inl.gov/news/events",
+      ),
+    ).toBe(false);
+  });
+
+  // RULING 84c's base-case lock for the EXISTING guard — zero coverage
+  // today, and it is about to grow two new disjuncts, so present behaviour
+  // is locked first.
+  describe("base case: the pre-existing `announcing` clause (zero prior coverage)", () => {
+    it("an announcing-led title fires isNewsArticleTitle", () => {
+      expect(
+        isNewsArticleTitle("Announcing the 2026 Battery Gigafactory Summit: Registration Now Open"),
+      ).toBe(true);
+    });
+
+    it("a real event title merely CONTAINING 'announcing' mid-sentence does not fire", () => {
+      // `announcing\b` sits INSIDE `NEWS_TITLE_RE`'s start-anchor group — it
+      // only fires if the title's first word is literally "announcing", not
+      // when a real event's own title happens to contain the word later on.
+      expect(
+        isNewsArticleTitle("Registration is open for the 2026 Battery Summit, announcing new speakers"),
+      ).toBe(false);
+    });
   });
 });
