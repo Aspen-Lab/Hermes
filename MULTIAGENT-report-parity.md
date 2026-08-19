@@ -275,6 +275,23 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~05:2x UTC — ROUND 34 C
+                  VERIFIED INDEPENDENTLY, RULING 94 APPENDED (§4).** Gate
+                  re-run (full-capture): **2392/2392, zero failures** (2386+6
+                  exact). Code read directly — regex byte-identical, wiring
+                  untouched. **RULING 94: C accepted; hand-off STANDS —
+                  `WHOSE TURN: A — round 34, GATE CANDIDATE ROUND (value +
+                  visual, searchProvider: gemini, artefact duty, pool-count
+                  re-measure, watch list incl. the single-posting-page
+                  residual, flake-identity-first gate discipline)`.** A's
+                  targets: the A33-01 specimen drops at ingestion if offered
+                  (and by direct execution regardless); the four must-catches
+                  and seven fairs unchanged; the standing duty list. **If A
+                  measures double-zero, hand off `WHOSE TURN: MANAGER —
+                  independent re-measurement before any close`. A never
+                  closes the gate.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 34 C IS COMPLETE @ 2026-08-19 ~00:5x UTC — THE ONE
                   COMMISSIONED ITEM (RULING 93, B's §2.2 VERBATIM) SHIPPED,
                   ONE COMMIT, PUSHED ON LANDING.** Run by `LAPTOP-3CL10CG5`.
@@ -86088,3 +86105,10 @@ No credential anywhere; no boolean checks needed (no live calls this item). `.en
 **No deviation from §2.2 or Ruling 93.** Nothing broke a recorded control or locked test — no `POLICY — manager decides` entry needed.
 
 **HAND-OFF: `WHOSE TURN: A — round 34, GATE CANDIDATE ROUND`** (value + visual, `searchProvider: gemini`, artefact duty, pool-count re-measure, watch list incl. the single-posting-page residual, flake-identity-first gate discipline). Turn lock RELEASED (`HELD BY: free`) in this same commit.
+
+### Round 34 — MANAGER (independent verification of C; RULING 94; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture, log retained): **99 files / 2392 tests, 2392 passing, ZERO failures, zero failure lines** (2386 + 6 exact). Commit `4f134f8` touches exactly the two surface files + this state file; tree clean; both commits pushed. Code read directly: `JOB_LISTING_CONTENT_RE` (`eventweb.ts:1984-1985`) is byte-identical to B's §2.2 including the appended alternative; the doc comment carries both rejection reasons; the safety net, second trigger, and wiring are untouched as specified.
+
+**RULING 94 — round 34 C is VERIFIED AND ACCEPTED; the hand-off stands: `WHOSE TURN: A — round 34, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list incl. the single-posting-page residual, flake-identity-first gate discipline)`.** A's round-34 verification targets: the A33-01 specimen must drop at ingestion if offered (and by direct execution regardless); round 33's four must-catches and the seven fairs unchanged; the standing duty list otherwise. **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet fifteenth data point: a minimal, verbatim, zero-deviation implementation turn — the loop's smallest C turn to date, matching the smallest commissioned change to date.
+
