@@ -270,53 +270,66 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent C round 6 + 2026-08-19 22:16 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       C — Phase 3 round 6 (Ruling 123g). **This line was STALE on
-                  arrival** — it still named MANAGER even though the
-                  manager's round 5 verification and rulings (123a-123g, §4
-                  `### Phase 3 Round 5 — MANAGER`) were already COMPLETE and
-                  had already routed to C with six items; synced here in C
-                  round 6's claim commit, the same pattern four consecutive
-                  prior agents this phase each found and fixed. B's round 5
-                  is COMPLETE: Deliverable 1 resolved
-                  the F11/dedup merge-vs-drop conflict by execution (the
-                  dedup pass is score-driven, not host-preferential; a bare
-                  host-level fix for djk.co.jp's own org-domain shape is
-                  PROVEN unsafe — it would break the events.ornl.gov
-                  must-keep; the rule is stated so a future guard and the
-                  dedup pass cannot fight, though THIS round's own shipped
-                  guard doesn't actually reach djk.co.jp, so no live
-                  collision exists yet). Deliverable 2 designed F11's
-                  bounded fix — `prnewswire.com`/`news.metal.com` host-deny
-                  additions plus a narrow unanchored `event-report(s)` path
-                  regex, all verified against a 13-URL must-keep corpus by
-                  direct execution; `ornl.gov`/`pi-kem.co.uk`/`djk.co.jp`
-                  dispositioned (title vocabulary reaches none of them,
-                  re-fetched live). Deliverable 3 designed Disposition 1's
-                  fired-reopen-threshold fix — root cause is `HTML_ENTITIES`
-                  missing `laquo` (not a missing cleaning call, gemini path
-                  confirmed since Tavily is mechanically off this phase),
-                  fix verified end-to-end through the real, unmodified
-                  `eventNameFrom`. Deliverable 4 designed the paper-surface
-                  gemini-discovery branch, verified with one live Vertex
-                  call — but ALSO corrects the brief's own framing: this
-                  fixes the query-boost side-channel's diagnostic signal
-                  only, NOT A's own "paper web-row count" tally (a separate,
-                  already-gemini-enabled, deliberately-excluded mechanism —
-                  reading `pipeline.ts` in full surfaced this distinction).
-                  Budget-remaining items: F10 (COMMERCE_PATH_RE) and the
-                  numeric-thread-ID sub-shape of F12 (Disposition 6's own
-                  reopen threshold FIRED on `permies.com` — checked
-                  explicitly) both DESIGNED; J7 split (the ZIP-ending
-                  location shape DESIGNED, "Cell" stays dispositioned); J8
-                  not reopened. Zero product code changed — B changes none.
-                  See §4 `### Phase 3 Round 5 — Agent B` (5 entries) for
-                  full detail, every URL, every guard trace, every
-                  must-keep corpus.
+WHOSE TURN:       A — Phase 3 round 7 (convergence candidate 2: verify all
+                  six of round 6 C's fixes live under aiTier 2, re-census
+                  both surfaces, report the paper web-row count by name per
+                  Ruling 120e — and note Ruling 123's own reading note: item
+                  3 fixes the query-boost side-channel only and will NOT
+                  move that count). C's round 6 is COMPLETE: all six
+                  commissioned items (Ruling 123g) landed, one commit each,
+                  pushed individually, B's designs implemented verbatim with
+                  zero redesign. (1) F11's `NEWS_MEDIA_HOSTS` sibling list +
+                  `EVENT_REPORT_PATH_RE`/`isEventReportPath`
+                  (`eventweb.ts`), wired into `isDeniedUrl` and
+                  `isNewsArticleTitle` respectively. (2) `laquo` added to
+                  `HTML_ENTITIES` (`clean.ts`), `raquo` deliberately not
+                  added. (3) the gemini branch in `tavily-discovery.ts`
+                  (`canRunGeminiDiscovery` + `runTavilyDiscovery`'s
+                  useTavily/useGemini dispatch) — PLUS an
+                  execution-verified reachability finding A/the manager
+                  should see before round 7's re-census: the branch is
+                  correct and independently unit-verified, but UNREACHABLE
+                  through the real `runFeedPipeline` today, because
+                  `pipeline.ts:107-108`'s own outer `tavilyPromise` gate
+                  recomputes the SAME `canRunTavilyDiscovery(req)`
+                  predicate before ever calling `runTavilyDiscovery`, so
+                  `useGemini`'s own `!useTavily` guard condition is
+                  structurally false whenever the real pipeline reaches
+                  this function, under every profile — not fixed here, out
+                  of this item's scope per Ruling 123d's own fence, flagged
+                  rather than silently shipped (full trace in §4 `### Phase
+                  3 Round 6 — Agent C, ITEM 3`). **Consequence for round 7:
+                  A's own re-census will NOT see this mechanism activate
+                  live through the app, because nothing routes to it yet —
+                  this is expected, not a sign the fix failed.** (4) F10's
+                  `product-category` token on `COMMERCE_PATH_RE`
+                  (`eventweb.ts`). (5) F12's forum-thread URL port
+                  (`FORUM_THREAD_URL_RE`/`isForumThreadUrl`, byte-identical
+                  to `jobweb.ts`'s own shipped regex) as its OWN guard in
+                  `eventweb.ts`, NOT an `isDeniedUrl` clause (Ruling
+                  123e(2)) — catches only the numeric-thread-ID sub-shape;
+                  F3's original non-numeric witness stays dispositioned,
+                  unwidened. (6) J7's ZIP-ending location shape
+                  (`TRAILING_ZIP_RE`, an OR-clause inside
+                  `looksLikeBareLocation`, `jobweb.ts`) —
+                  `TRAILING_STATE_CODE_RE` itself byte-unchanged; `"Cell"`
+                  stays dispositioned, not attempted. **53 new tests total
+                  across all six items** (20+3+9+5+4+12 = 53, matching the
+                  cold baseline of 2471 to the final 2524 exactly), every
+                  one additive, nothing deleted or weakened. **Zero POLICY
+                  items filed** — the one
+                  substantive deviation from B's literal printed code
+                  (item 3's conditional `connector` read) was explicitly
+                  named IN B's own blast-radius note as required, just not
+                  reprinted in B's code snippet; implementing it is
+                  following the design, not departing from it. See §4 `###
+                  Phase 3 Round 6 — Agent C` (6 entries, one per item) for
+                  full detail, every file:line, every test, every corpus.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
@@ -365,6 +378,171 @@ reference):
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 3 ROUND 6 C IS COMPLETE @ 2026-08-19 ~22:16-23:0x
+                  UTC. ALL SIX COMMISSIONED ITEMS (RULING 123g) DONE, ONE
+                  COMMIT EACH, PUSHED INDIVIDUALLY, B's DESIGNS IMPLEMENTED
+                  VERBATIM.** Run by `LAPTOP-3CL10CG5`. Claimed the lock
+                  after `git pull` (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`
+                  (claiming push ACCEPTED at `f46c7fb`). Grepped `Phase 3
+                  Round 6` first — zero prior entries, fresh start not a
+                  resume. **Found and fixed the same stale-top-block pattern
+                  every prior round's claiming agent this phase has found**:
+                  §1 still read "MANAGER — Phase 3 round 5 verification and
+                  rulings before C spawns" even though the manager's own
+                  Rulings 123a-123g had already done that verification,
+                  approved every design, and routed to C round 6 — synced in
+                  the lock-claim commit, before touching anything else.
+
+                  **GATE, COLD FIRST: 100 files / 2471 tests, 2471 passing,
+                  ZERO failures**, `tsc --noEmit` clean, matching the
+                  brief's stated baseline exactly.
+
+                  **ITEM 1 (F11, Rulings 123b/123e(1)) — `web/src/lib/events/
+                  sources/eventweb.ts`.** New `export const NEWS_MEDIA_HOSTS
+                  = ["prnewswire.com", "news.metal.com"] as const` (its own
+                  sibling list, per Ruling 123e(1) — NOT appended to
+                  `DENY_HOSTS`), wired into `isDeniedUrl` as a third
+                  `.some(...)` clause beside `DENY_HOSTS`/`PAPER_PAGE_HOSTS`.
+                  New `EVENT_REPORT_PATH_RE`/`isEventReportPath(url)`
+                  (mirroring `isTickerNewsPath`'s exact shape — the named
+                  precedent), wired into `isNewsArticleTitle` as one more
+                  clause. Byte-for-byte B's Deliverable 2 design; the one
+                  judgment call was `isEventReportPath`'s parameter type
+                  (`string | undefined` with an early guard, matching
+                  `isTickerNewsPath`'s own real shape, not B's abbreviated
+                  sketch — required because the real call site can pass
+                  `undefined`). 20 new tests: must-catch (`prnewswire.com`,
+                  `news.metal.com`, `fz-juelich.de`'s `event-report(s)`
+                  path, plus an isolated `isNewsArticleTitle` check), and
+                  the full 13-URL must-keep corpus (a host-suffix-match
+                  loop reproducing `isDeniedUrl`'s own algorithm, plus two
+                  full-pipeline controls: `events.ornl.gov` honest-host
+                  fallback, `battery-business-forum.com` forum contrast).
+                  Commit `897bdcd`.
+
+                  **ITEM 2 (`laquo`, Ruling 123c) — `web/src/lib/text/
+                  clean.ts:11` (one new key, `laquo: "-"`, grouped with the
+                  `ndash`/`mdash`/`minus` dash-family entries).** `raquo`
+                  deliberately NOT added — unwitnessed. 3 new tests in
+                  `eventweb.test.ts` (no test file exists for `clean.ts`
+                  itself, confirmed absent, matching B's own finding): the
+                  end-to-end recovery through the REAL `pageTitleFromHtml` +
+                  `eventNameFrom` (not B's own local parallel copy) —
+                  recovers `"Molten Salt Reactor Workshop"` exactly from the
+                  live F13 witness; an `mdash` regression check; a `raquo`
+                  still-undecoded control. Commit `ad79c25`.
+
+                  **ITEM 3 (gemini branch, Ruling 123d) — `web/src/lib/
+                  feed/tavily-discovery.ts`.** New `canRunGeminiDiscovery`
+                  (mirrors `geminiWebSearchOptions`'s opt-out shape
+                  byte-for-byte) and `runTavilyDiscovery`'s dispatch
+                  rewritten to `useTavily`/`useGemini` (mirrors
+                  `paperWebSearch`'s ternary order — Tavily preferred,
+                  gemini the fallback). One deviation from B's literal
+                  printed snippet, and it is exactly what B's OWN
+                  blast-radius note required in prose but did not reprint
+                  in code: `connector` is now read only inside the
+                  `useTavily` branch, closing the null-deref B flagged. New
+                  test file `tavily-discovery.test.ts` (none existed), 9
+                  tests, network boundary mocked, everything else real.
+                  **A REACHABILITY GAP FOUND BY EXECUTION, NOT THIS ITEM'S
+                  TO FIX (Ruling 123d's own scope fence):** `pipeline.ts:
+                  107-108`'s own outer `tavilyPromise` gate is ITSELF
+                  `canRunTavilyDiscovery(req)` — the same pure predicate on
+                  the same `req` `runTavilyDiscovery` recomputes internally
+                  — so `useGemini`'s `!useTavily` condition is structurally
+                  false every time the real pipeline reaches this function,
+                  under every profile, not only Phase 3's. The branch is
+                  correct and independently verified working when called
+                  directly; it is simply not wired to activate through
+                  `runFeedPipeline` today. Not fixed here — a different
+                  file, outside this item's printed design and outside
+                  Ruling 123d's own scope fence, a judgment call reserved
+                  to B/the manager. Full trace in §4's own ITEM 3 entry.
+                  Commit `63a2708`.
+
+                  **ITEM 4 (F10, Rulings 123f/123g item 4) — `web/src/lib/
+                  events/sources/eventweb.ts`.** `COMMERCE_PATH_RE` gains
+                  one alternative, `product-category` (inserted after
+                  `product|products`) — one measured token, same discipline
+                  as J2's identical fix on the job surface. 5 new tests:
+                  must-catch (direct regex + full-pipeline drop on the
+                  `dynalene.com` witness), regression (`product`/`products`/
+                  `shop` unchanged), must-keep (9 of F11's 13-URL corpus
+                  paths with a verified real path; the remaining 3 hosts
+                  named as not independently re-verified this item), and
+                  the `permies.com` adversarial cross-check. Commit
+                  `52e22c1`.
+
+                  **ITEM 5 (F12, Rulings 123f/123e(2)/123g item 5) —
+                  `web/src/lib/events/sources/eventweb.ts`.** New
+                  module-private `FORUM_THREAD_URL_RE`/`isForumThreadUrl`,
+                  byte-identical to the job surface's own shipped regex
+                  (`jobweb.ts:368-369`), ported as its OWN guard (Ruling
+                  123e(2) — NOT an `isDeniedUrl` clause), placed beside
+                  `isDateStructuredResearchPath` (the named placement
+                  precedent) with a call-site clause in the same layer, no
+                  title safety net (matching the job surface's own
+                  unconditional precedent). 4 new tests: catches
+                  `permies.com`'s numeric-thread-ID witness; leaves F3's
+                  original non-numeric witness and the
+                  `battery-business-forum.com` contrast control admitted;
+                  an adversarial numeric-path-elsewhere control. Commit
+                  `b06aadc`.
+
+                  **ITEM 6 (J7, Rulings 123f/123g item 6) — `web/src/lib/
+                  jobs/sources/jobweb.ts:913-940` (approx).** New
+                  module-private `TRAILING_ZIP_RE = /,\s*\d{5}(?:-\d{4})?$/`;
+                  `looksLikeBareLocation` changed from a single
+                  `TRAILING_STATE_CODE_RE` check to that check OR
+                  `TRAILING_ZIP_RE` — `TRAILING_STATE_CODE_RE` itself
+                  byte-unchanged, the one call site needed no edit. `"Cell"`
+                  NOT attempted, per A's own open-class caution. 12 new
+                  tests: 3 must-catch (the live `diedremoire.com` witness
+                  end to end, URL-independence, ZIP+4 form), 2 regression on
+                  the state-code contract, 2 regression on clause 3's
+                  address-tail trim (the nuance B checked explicitly —
+                  neither case ends in a ZIP, so `trimEmployerAddressTail`
+                  is unaffected), 5 adversarial must-keeps (`3M`,
+                  `7-Eleven`, `Booking.com`, `23andMe`, `Mercor`). Commit
+                  `39a8c25`.
+
+                  **FINAL GATE: 101 files / 2524 tests, 2524 passing, ZERO
+                  failures** (2471 cold baseline + 53 new tests across all
+                  six items). `tsc --noEmit` clean, exit 0, confirmed after
+                  every single item. `npx eslint .` across the whole `web/`
+                  tree: exactly the one standing, pre-existing
+                  `quiz.tsx:46` error — zero new warnings or errors
+                  anywhere across all six items' touched/new files. `git
+                  status --porcelain --untracked-files=all` clean before
+                  every one of the seven commits (claim + six items). No
+                  credential ever printed, logged, committed, or read
+                  whole. No test deleted or weakened — every change this
+                  round is additive. No branch, worktree, or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **ZERO POLICY ITEMS FILED.** No approved design broke a
+                  recorded control or needed an open-class list — the two
+                  named escape-clause triggers. Item 3's own reachability
+                  finding did not meet either trigger (nothing breaks,
+                  nothing needs an open-class list; a miss still falls to
+                  the stated status quo) and is recorded as a flagged fact
+                  for round 7, not a stop.
+
+                  Full detail, every file:line, every test, every corpus,
+                  in §4 `### Phase 3 Round 6 — Agent C` (6 entries, one per
+                  item). Commits: `f46c7fb` (lock claim), `897bdcd` (item
+                  1), `ad79c25` (item 2), `63a2708` (item 3), `52e22c1`
+                  (item 4), `b06aadc` (item 5), `39a8c25` (item 6, this
+                  close-out included in the same commit). `WHOSE TURN: A —
+                  Phase 3 round 7 (convergence candidate 2)`. C does not
+                  declare a phase complete or a candidate round valid —
+                  only the manager's/A's own independent fresh window can
+                  confirm this stands. Turn lock RELEASED (`HELD BY: free`)
+                  in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 3 ROUND 5 B IS COMPLETE @ 2026-08-19 ~21:33-22:07
                   UTC. ALL FOUR COMMISSIONED DELIVERABLES (RULING 122e) PLUS
                   THREE OF FOUR BUDGET-REMAINING ITEMS. ZERO PRODUCT CODE
