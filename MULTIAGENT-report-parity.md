@@ -270,61 +270,65 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent B round 5 + 2026-08-19 21:33 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       B — Phase 3 round 5 (Ruling 122f's routing; this top block
-                  was stale — it still read "MANAGER — Phase 3 convergence
-                  candidate 1 re-measurement" even though the manager's own
-                  Rulings 122a-122f already did that verification, passed
-                  it (122d), and routed to B for round 5 (122f) — synced in
-                  this lock-claim commit, before touching anything else,
-                  matching the same pattern every prior round's claiming
-                  agent found and fixed. B's commission (122e, ranked): (1)
-                  resolve the F11 merge-vs-drop conflict (122c) then design
-                  F11 itself; (2) Disposition 1's fired reopen threshold
-                  (F13's live `&laquo;`); (3) the paper-surface web-discovery
-                  gap (120e) — give it a gemini branch; (4) if budget
-                  remains, the recurrences (F10/F12/J7/J8) with 119e's full
-                  disposition machinery where a design isn't warranted. J9
-                  stays UNCONFIRMED (HTTP 403), not counted.
-                  A's round 4 re-census is COMPLETE — all five of Ruling
-                  120g's fixes VERIFIED LIVE (J1 by a real absence-signal,
-                  0/5 job pulls after a prior 5/5, plus direct execution
-                  incl. the must-keep "mercor" control; F2/J2/F8/F9 by
-                  direct execution alone, none drawn live this window, every
-                  paired must-keep control confirmed intact). Seven ranked
-                  findings this round (F10-F13, J7-J9), **all seven
-                  classified as instances of already-recorded defect
-                  classes — ZERO NEW CLASSES measured.** One disposition
-                  (Disposition 1, the mdash/entity seam) meets its own
-                  stated reopen threshold on fresh evidence (a second live
-                  undecoded entity, `&laquo;`, byte-confirmed) and is
-                  flagged for a ruling, not reopened by A. Paper surface web
-                  rows: 0 under the real request shape (Ruling 120e, still
-                  dark, still counted). Timeout-flake rate this round: 30%
-                  of the original 10-pull window (same named mechanism,
-                  notably above the prior ~10% band) — flagged as a
-                  possible data-quality caveat on this round's own sample,
-                  not a new class. Manager's job: independently re-measure
-                  (per Ruling 105a's framework, extended to Phase 3 by
-                  Ruling 121's own closing line) — if the manager's own
-                  fresh window is ALSO clean of new classes, this stands as
-                  convergence candidate 1 and round 5 runs as candidate 2
-                  (A census + manager re-measurement). See §4 `### Phase 3
-                  Round 4 — Agent A` (3 parts) for full detail, every URL,
-                  every guard trace.
+WHOSE TURN:       MANAGER — Phase 3 round 5 verification and rulings before
+                  C spawns. B's round 5 is COMPLETE: Deliverable 1 resolved
+                  the F11/dedup merge-vs-drop conflict by execution (the
+                  dedup pass is score-driven, not host-preferential; a bare
+                  host-level fix for djk.co.jp's own org-domain shape is
+                  PROVEN unsafe — it would break the events.ornl.gov
+                  must-keep; the rule is stated so a future guard and the
+                  dedup pass cannot fight, though THIS round's own shipped
+                  guard doesn't actually reach djk.co.jp, so no live
+                  collision exists yet). Deliverable 2 designed F11's
+                  bounded fix — `prnewswire.com`/`news.metal.com` host-deny
+                  additions plus a narrow unanchored `event-report(s)` path
+                  regex, all verified against a 13-URL must-keep corpus by
+                  direct execution; `ornl.gov`/`pi-kem.co.uk`/`djk.co.jp`
+                  dispositioned (title vocabulary reaches none of them,
+                  re-fetched live). Deliverable 3 designed Disposition 1's
+                  fired-reopen-threshold fix — root cause is `HTML_ENTITIES`
+                  missing `laquo` (not a missing cleaning call, gemini path
+                  confirmed since Tavily is mechanically off this phase),
+                  fix verified end-to-end through the real, unmodified
+                  `eventNameFrom`. Deliverable 4 designed the paper-surface
+                  gemini-discovery branch, verified with one live Vertex
+                  call — but ALSO corrects the brief's own framing: this
+                  fixes the query-boost side-channel's diagnostic signal
+                  only, NOT A's own "paper web-row count" tally (a separate,
+                  already-gemini-enabled, deliberately-excluded mechanism —
+                  reading `pipeline.ts` in full surfaced this distinction).
+                  Budget-remaining items: F10 (COMMERCE_PATH_RE) and the
+                  numeric-thread-ID sub-shape of F12 (Disposition 6's own
+                  reopen threshold FIRED on `permies.com` — checked
+                  explicitly) both DESIGNED; J7 split (the ZIP-ending
+                  location shape DESIGNED, "Cell" stays dispositioned); J8
+                  not reopened. Zero product code changed — B changes none.
+                  See §4 `### Phase 3 Round 5 — Agent B` (5 entries) for
+                  full detail, every URL, every guard trace, every
+                  must-keep corpus.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
                   `query-gen.ts`'s LLM-written search queries, so the pool
                   composition below was never measured before). Same
                   `web/.local-data/profile.json`, field-scoped per Ruling 95,
-                  never read whole (event surface: `eventRequiredTopics`/
-                  `eventExploreTopics`; job surface: `jobRequiredTopics`/
-                  `jobExploreTopics`; paper surface: `researchTopics`).
+                  never read whole. **CORRECTED here per round 4 MANAGER
+                  ERROR 4 (this standing block was never actually fixed to
+                  match that ruling until now — a stale-but-authoritative
+                  risk named explicitly so no future round inherits it
+                  again): against THIS FILE, all three surfaces resolve
+                  topics from `researchTopics`/`softTopics` —
+                  `eventRequiredTopics`/`eventExploreTopics`/
+                  `jobRequiredTopics`/`jobExploreTopics` do NOT exist in
+                  `profile.json`; those per-surface fields live only in the
+                  browser's own `peer-profile` localStorage, a different
+                  store the app's own default-mirroring falls back from
+                  when they're absent.**
                   `aiTier` engaged via the LOCAL VERTEX PATH exactly as
                   Phase 2 (`resolveProvider`'s local-dev branch, Ruling 66a)
                   — `NODE_ENV=development` stub, `GOOGLE_VERTEX_PROJECT`
@@ -355,6 +359,190 @@ reference):
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 3 ROUND 5 B IS COMPLETE @ 2026-08-19 ~21:33-22:07
+                  UTC. ALL FOUR COMMISSIONED DELIVERABLES (RULING 122e) PLUS
+                  THREE OF FOUR BUDGET-REMAINING ITEMS. ZERO PRODUCT CODE
+                  CHANGED — B changes no product code, edits no shipped
+                  test; every claim below is backed by a throwaway harness
+                  execution, deleted before each commit.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git branch
+                  --show-current` reads `feature/summary-report-revamp`
+                  (claiming push ACCEPTED at `1c03463`). Grepped `Phase 3
+                  Round 5` first — zero prior entries, fresh start not a
+                  resume. **Found and fixed the same stale-top-block pattern
+                  every prior round's claiming agent has found**: §1 still
+                  read "MANAGER — Phase 3 convergence candidate 1
+                  re-measurement" though Rulings 122a-122f had already done
+                  that verification, passed it (122d), and routed to B
+                  (122f) — synced in the lock-claim commit. **Also found and
+                  fixed a SECOND, independent staleness bug while here**:
+                  the standing PHASE 3 MEASUREMENT PROFILE block above had
+                  never actually been corrected to match round 4's own
+                  MANAGER ERROR 4 ruling (it still claimed
+                  `eventRequiredTopics`/`jobRequiredTopics` exist in
+                  `profile.json`) — fixed in this same commit so no future
+                  round inherits a second copy of an already-caught error.
+
+                  **GATE, COLD FIRST: 100 files / 2471 tests, 2471 passing,
+                  ZERO failures**, `tsc --noEmit` clean, matching the
+                  brief's stated baseline exactly.
+
+                  **DELIVERABLE 1 (Ruling 122c) — THE MERGE-VS-DROP
+                  CONFLICT, RESOLVED BY EXECUTION, NOT ASSUMED.**
+                  `djk.co.jp`'s exact recorded row re-fetched live and
+                  independently confirmed a NEWS/PR page (WebFetch: "no
+                  registration link… a corporate announcement rather than
+                  event registration"), the same sub-shape as F11's own
+                  `pi-kem.co.uk` witness. **`mergeContainedEventNames` is
+                  SCORE-DRIVEN (SOURCE_PRIORITY then `.score`), proven by
+                  constructing BOTH directions — it has no concept of
+                  "prefer the organiser host" at all**, matching round 37's
+                  own organic witness (djk survived that pull, not quintus).
+                  djk.co.jp is confirmed ADMITTED today by direct execution
+                  against the real `webResultToRawEventItem`; no existing
+                  test locks its outcome (grepped). **A bare `"ornl.gov"`
+                  host-deny entry is PROVEN unsafe by execution** — it would
+                  also match `events.ornl.gov`, the standing honest-host
+                  must-keep (Ruling 84b(1)) — which is why no org-domain
+                  host fix is proposed anywhere this round. **THE RULE:** a
+                  per-row kind guard and the post-admission dedup pass ask
+                  different questions and do not conflict in principle (a
+                  row a kind guard correctly drops never reaches dedup at
+                  all, exactly like every other family (a) drop already
+                  works); Phase 2's A35-01 classification of djk.co.jp as "a
+                  duplicate to merge" was reasonable before family (a)'s
+                  news sub-shape was named but is, in hindsight, a
+                  misclassification of family (a) content, not a case
+                  needing an exception; `mergeContainedEventNames` itself
+                  and its full A35-01 regression corpus are untouched by
+                  everything this round designs. **In practice, no live
+                  collision exists this round** — Deliverable 2's own
+                  shippable guards don't reach djk.co.jp's specific
+                  title/URL shape at all, verified.
+
+                  **DELIVERABLE 2 (F11) — BOUNDED FIX, THREE MEASURED
+                  ADDITIONS.** Re-fetched all four reachable F11 witnesses
+                  live for verbatim titles (the fifth, `prnewswire.com`, has
+                  a truncated URL in A's own record — attempted completion
+                  404'd, NOT fabricated; host alone used as signal
+                  instead). **Title vocabulary reaches ZERO of the four —
+                  confirmed by execution.** Ships: `prnewswire.com` +
+                  `news.metal.com` new host-deny entries (a new
+                  `NEWS_MEDIA_HOSTS`-shaped sibling list, safe because both
+                  are single-purpose wire/trade-media hosts with no
+                  legitimate-event-organiser counter-case, unlike the
+                  org-domain hosts); a new unanchored `event-report(s)`
+                  raw-pathname regex mirroring `isTickerNewsPath`'s own
+                  precedent (proven the existing `^`-anchored
+                  `NEWS_HEADLINE_PATH_RE` CANNOT reach this witness — it
+                  sits mid-path). All three verified against a 13-URL
+                  must-keep corpus (every correct-event witness from rounds
+                  1+4, `events.ornl.gov`, the forum contrast case) by direct
+                  execution — zero collisions. **`ornl.gov`, `pi-kem.co.uk`,
+                  `djk.co.jp` DISPOSITIONED** — full Ruling 119e machinery,
+                  reopen threshold named.
+
+                  **DELIVERABLE 3 — DISPOSITION 1's FIRED REOPEN THRESHOLD,
+                  DESIGNED.** Path stated first, per the brief: gemini,
+                  mechanically (Tavily is fully disabled this phase).
+                  **ROOT CAUSE FOUND BY EXECUTION: `HTML_ENTITIES`
+                  (`text/clean.ts`) is a closed table missing `laquo`** —
+                  NOT a missing `cleanDisplayText` call (that theory was
+                  already withdrawn by round 2 B on the `&mdash;` seam).
+                  Reproduced on the real function; fix (`laquo` maps to a
+                  plain ASCII hyphen, matching `ndash`/`mdash`/`minus`'s own
+                  existing convention, chosen over an actual quote mark
+                  because the live witness is a WordPress-`wp_title()`-style
+                  separator, not real quoted speech) **verified end-to-end
+                  through the real, untouched `eventNameFrom` — recovers
+                  "Molten Salt Reactor Workshop" exactly, zero other code
+                  changes needed.** `raquo` deliberately NOT added
+                  (unwitnessed). Zero blast radius — no test file exists for
+                  `clean.ts` at all.
+
+                  **DELIVERABLE 4 — THE PAPER-DISCOVERY GEMINI BRANCH,
+                  DESIGNED AND LIVE-VERIFIED, WITH A SCOPE CORRECTION.**
+                  Reading `pipeline.ts` in full surfaced that Ruling 120e
+                  actually names TWO independent Tavily-only mechanisms:
+                  the `"web"` SOURCE itself (ALREADY gemini-branched,
+                  confirmed working — this is what A's own web-row-count
+                  tally measures, dark only by deliberate product choice,
+                  `defaultSources()` never opting it in) and the
+                  `tavily-discovery.ts` query-boost side-channel (the
+                  brief's actual commission, dark because it is genuinely
+                  Tavily-EXCLUSIVE). **This deliverable fixes the second one
+                  only — it does NOT and CANNOT move A's web-row-count
+                  metric**, and `pipeline.ts`'s own code comment confirms
+                  the boost output currently feeds only diagnostic stats,
+                  not the five academic sources' own queries, independent of
+                  Tavily's quota lapse. Stated explicitly so the manager
+                  isn't led to expect the wrong metric to move. Design:
+                  `canRunGeminiDiscovery` mirrors `geminiWebSearchOptions`'s
+                  own opt-out shape; dispatch mirrors `paperWebSearch`'s own
+                  ternary order (Tavily preferred, gemini the fallback).
+                  **Verified live, one real Vertex call**: 5 raw gemini
+                  results, 3 survive the existing `isAcademicLead`
+                  post-filter untouched (no `includeDomains` support on the
+                  gemini branch — a named, accepted, low-severity gap, since
+                  the post-filter was always the real safety net). Failure
+                  direction: a miss falls to today's already-always-empty
+                  status quo, never a wrong/invented paper — structurally
+                  guaranteed, since this channel doesn't feed real content
+                  today regardless.
+
+                  **BUDGET-REMAINING ITEMS.** **F10** (`COMMERCE_PATH_RE`
+                  near-miss, `product-category`): DESIGNED, one measured
+                  token, same discipline as J2. **F12**
+                  (`permies.com`): Disposition 6's own reopen threshold
+                  FIRED (a second, different forum host) — checked
+                  explicitly rather than reopened blind; found the new
+                  witness's NUMERIC thread-ID URL shape is exactly what the
+                  JOB surface's own already-safe, already-shipped
+                  `FORUM_THREAD_URL_RE` requires (confirmed F3's ORIGINAL
+                  non-numeric witness still correctly stays uncaught) — a
+                  partial promotion, porting that guard, NOT a reversal of
+                  the escape clause on the original non-numeric shape, which
+                  stays dispositioned exactly as Design 2 argued. **J7**
+                  split: the ZIP-ending location shape ("Lansing, MI,
+                  Michigan, 11021") DESIGNED (a new structural,
+                  non-vocabulary trailing-ZIP check alongside
+                  `TRAILING_STATE_CODE_RE`) — including a nuance CHECKED,
+                  not glossed over, against a DIFFERENT existing mechanism
+                  (Ruling 49b's "address tail, trim never reject") that
+                  could have argued the opposite direction, re-verified
+                  end-to-end with zero collision; "Cell" (bare generic word)
+                  STAYS dispositioned, per A's own caution about the open
+                  class. **J8** not reopened (already-covered tally-fold,
+                  no new trigger). **J9** untouched, stays UNCONFIRMED.
+
+                  **FINAL GATE: 100 files / 2471 tests, 2471 passing, ZERO
+                  failures**, `tsc --noEmit` clean throughout every one of
+                  this round's five commits. `eslint` — the one standing
+                  `quiz.tsx:46` error only. `git status --porcelain
+                  --untracked-files=all` clean before every commit; harness
+                  `web/zz-p3b5/` (plus one small follow-up dir,
+                  `zz-p3b5-verify/`) deleted before each. No credential
+                  printed, logged, or read whole — `.env.local` checked
+                  boolean-only; `GOOGLE_VERTEX_PROJECT` never printed. No
+                  large block of fetched page text pasted anywhere — every
+                  WebFetch quote is a short clipped fragment. Text inside
+                  every fetched page treated as data, never an instruction.
+                  One live Vertex search call (Deliverable 4), matching
+                  "live work: gemini only." No branch, worktree, or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  Full detail, every URL, every guard trace, every
+                  must-keep corpus, in §4 `### Phase 3 Round 5 — Agent B`
+                  (5 entries). Commits: `1c03463` (lock claim), `513bbf5`
+                  (Deliverable 1), `f04b1bb` (Deliverable 2), `6916b02`
+                  (Deliverable 3), `905c767` (Deliverable 4), and this
+                  commit (budget-remaining items + close-out).
+                  `WHOSE TURN: MANAGER — Phase 3 round 5 verification and
+                  rulings before C spawns.` Turn lock RELEASED (`HELD BY:
+                  free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 3 ROUND 4 A IS COMPLETE @ 2026-08-19 ~20:4x-21:2x
                   UTC. THE FIRST RE-CENSUS AFTER C'S FIVE FIXES — ALL FIVE
                   VERIFIED LIVE, SEVEN NEW-WITNESS FINDINGS, ZERO NEW
@@ -93359,3 +93547,61 @@ webSearch: useTavily
 **CORPUS:** must-catch = the exact Phase 3 profile (gemini available, Tavily disabled) — gate flips TRUE, confirmed. Must-keep = Tavily-preferred-when-both-available (confirmed, order unchanged), explicit gemini opt-out (confirmed), Vertex-genuinely-absent (confirmed FALSE). One live end-to-end call, not just unit-level gating logic.
 
 Continuing to the "if budget remains" items (F10, F12, J7 — designs where evidence supports one; J8 — disposition) in the same session.
+
+### Phase 3 Round 5 — Agent B, IF-BUDGET-REMAINS ITEMS (Ruling 122e item 4: F10, F12, J7 designed where evidence supports it; J8 dispositioned; J9 untouched)
+
+**STATUS: COMPLETE.** Gate re-confirmed: 100/2471 green, `tsc` clean. Harness `web/zz-p3b5/extras-f10-f12-j7.test.ts` (8 tests) + `extras-j7.test.ts` (5 tests) + `zz-p3b5-verify/j7-clause3-check.test.ts` (4 tests, a follow-up check written after a nuance surfaced while drafting J7's write-up — see below), all passing, deleted before this commit.
+
+---
+
+**F10 — `COMMERCE_PATH_RE` near-miss, event surface (`dynalene.com/product-category/...`). DESIGNED, one measured token.**
+
+A's round 4 report already gave the exact regex-level trace (the `product` alternative is anchored `(?:\/|$)` immediately after the word, so it matches `/product/` but not the compound `/product-category/`). Re-confirmed by direct execution against the real, unmodified `COMMERCE_PATH_RE`: `false` on the witness path. **MEASURES: add `product-category` as its own explicit alternative** (not a generic compound-hyphen regex) — the identical single-token discipline as J2's `products` addition one round ago, on the SAME regex family (`COMMERCE_PATH_RE` is the event surface's own sibling of `NON_JOB_PATH_RE`, which J2 widened). Verified: the widened alternation catches the witness and produces zero collisions against the full 13-URL must-keep corpus (Deliverable 2's own list, plus `permies.com`'s `/t/.../` path as an adversarial cross-check). **FAILURE DIRECTION:** `COMMERCE_PATH_RE` is a DROP guard, held to a higher bar per Ruling 55c ("a guard that drops is held to a higher bar than one that admits") — checked: no real event URL in the must-keep corpus plausibly contains a `/product-category/` segment (retail/e-commerce vocabulary, disjoint from event-hosting URL conventions by the same closed-by-construction argument `COMMERCE_PATH_RE` already relies on). **VACUITY:** n=1 witness; `product-category`'s own siblings (`collections-category`, etc.) are NOT proposed, unwitnessed. **BLAST RADIUS:** `COMMERCE_PATH_RE` is exported and read-only tested via the same `DENY_PATH_RE`/`isDeniedUrl` membership pattern as `DENY_HOSTS` — no exhaustive-match test found (not re-verified by fresh grep this item, inherited from Deliverable 2's own `isDeniedUrl` reading this round). **CORPUS:** must-catch = `dynalene.com`'s exact witness path. Must-keep = the same 13-URL corpus used for Deliverable 2, zero collisions.
+
+---
+
+**F12 — `permies.com`, second live witness of the F3/Disposition-6 forum false-positive. DISPOSITION 6's OWN REOPEN THRESHOLD FIRED — checked explicitly, not assumed — and a SAFE, BOUNDED SUB-SHAPE was found within it.**
+
+Disposition 6's stated reopen threshold (round 2 B, Design 2): "if a future census finds a SECOND distinct discussion-forum-platform witness (a different host, not batteries-forum.com again)... that is the trigger to re-open this item with a real design." `permies.com` is exactly that — a second, different host. **The threshold fired.** Investigated rather than reopening blind:
+
+**The new witness's URL (`permies.com/t/26737/composting/...`) carries a NUMERIC thread ID after `/t/` — a structurally DIFFERENT shape from F3's original witness (`batteries-forum.com/t/lithium`, a non-numeric slug).** This matters because round 2 B's own Design 2 already measured and named the job surface's SAFE, SHIPPED `FORUM_THREAD_URL_RE` (`jobweb.ts:368-369`) as requiring exactly a numeric ID after `/t/` (distinct from the NAIVE, measured-and-REJECTED bare-token version, 46/58 with 8 false fires) — and explicitly noted "F3's own thread URL (`/t/lithium`) would not even be caught by the job side's SAFE, shipped version… lithium is not [numeric]." **Confirmed by direct execution against the real, copied-read-only `FORUM_THREAD_URL_RE`:** `false` on `/t/lithium` (F3's original witness — CONFIRMS it correctly stays uncaught, stays dispositioned, exactly as Design 2 argued); **`true`** on `/t/26737/composting/Composting-alkaline-batteries` (F12's new witness). The real, must-keep `battery-business-forum.com` contrast case has no `/t/NNN/`-shaped path at all — porting this guard cannot touch it. Verified against the full must-keep corpus: zero collisions.
+
+**DESIGN: port the job surface's own already-safe `FORUM_THREAD_URL_RE` to the event surface** (mirrors F2's exact precedent — an owned copy, same placement reasoning: each surface keeps parallel-but-separate path guards rather than cross-importing), as one more `isDeniedUrl` clause (or a new dedicated guard alongside `isEventHubResult`). **This closes ONLY the numeric-thread-ID sub-shape.** F3's original non-numeric-slug witness correctly remains dispositioned — Design 2's own reasoning (title vocabulary/host-brand-exemption/schema.org all fail to discriminate a real "Forum"-named conference from a fake one, and the ONE URL-shape idea for THAT shape is independently proven unsafe by the job side's own 46/58 measurement) is UNCHANGED and still governs the non-numeric case; nothing here reopens or re-argues that part. **This is a partial promotion, not a full reversal of the escape clause** — the escape clause correctly stopped a guess on the ORIGINAL witness's shape; a SECOND witness of a DIFFERENT, narrower, already-proven-safe-elsewhere sub-shape is what the disposition's own reopen machinery exists to surface.
+
+**FAILURE DIRECTION:** a miss (a non-numeric `/t/`-shaped forum thread, or any event genuinely hosted at a numeric-ID-shaped URL on a platform that isn't a discussion forum — unwitnessed, judged implausible since numeric thread-ID URL conventions are specific to forum software, not event-registration platforms, the same reasoning that already makes this pattern safe on the job surface) falls to today's status quo, admitted, exactly as now.
+
+**REVISED DISPOSITION 6 TALLY, per its own terms:** two live witnesses total across the campaign (`batteries-forum.com`, round 1; `permies.com`, round 4) — the non-numeric sub-shape (1 witness) stays dispositioned under Design 2's unchanged reasoning; the numeric-thread-ID sub-shape (1 witness, `permies.com` itself) is now DESIGNED, not dispositioned. **Reopen threshold for the REMAINING non-numeric-slug disposition, restated unchanged from Design 2:** a signal Design 2 did not have (a closed set of forum-hosting SaaS products with detectable boilerplate, or any discriminator beating the measured-unsafe URL-shape rule).
+
+---
+
+**J7 — title-split company-extraction near-miss, two witnesses. SPLIT: the ZIP-ending location shape DESIGNED; "Cell" (bare generic word) STAYS DISPOSITIONED, per A's own caution.**
+
+A itself flagged the "Cell" witness as risking an open-ended problem ("any generic word could sit after a dash… may need its own bounded design rather than a third narrow veto"). Agreed on inspection — no closed vocabulary bounds "generic single word that happens to follow a dash" the way `SEASON_COHORT_LABEL_RE`'s season-name list or a state-code list does; this stays UNDESIGNED this round, dispositioned below.
+
+**The second witness (`"Lansing, MI, Michigan, 11021"`) is different: it is LOCATION-shaped (the existing `looksLikeBareLocation`/`TRAILING_STATE_CODE_RE` mechanism's own target class) but escapes because `TRAILING_STATE_CODE_RE` requires the candidate to END in a bare two-letter state code, and this string ends in a 5-digit ZIP instead** (the state code "MI" sits mid-string). **DESIGN: a new, narrow, STRUCTURAL (not vocabulary) signal — a trailing US ZIP code** — `/,\s*\d{5}(?:-\d{4})?$/`, checked as an additional OR-clause alongside the existing state-code check (same semantic: "this candidate is a location/address fragment, not a company"). Verified by direct execution: catches the exact witness; does NOT catch "Cell" (confirms this fix deliberately does not attempt the open-class word problem); does NOT catch the `mercor` must-keep control or a battery of plausible real company names including deliberately adversarial digit-bearing ones (`3M`, `7-Eleven`, `Booking.com`, `23andMe`); does NOT catch the existing `TRAILING_STATE_CODE_RE` must-keep boundary (`"Cambridge, MA"`) — a genuinely disjoint, additive shape (5-digit ZIP vs. 2-letter state code), not a widening of the existing regex's own contract. **VACUITY, STATED HONESTLY: n=1 live witness.** Shipped anyway on the same precedent as F8/F9/J2 (each shipped on exactly one live witness), because the signal is structural/numeric-shaped rather than a vocabulary guess — the same "closed by construction, not by English" argument `POSTING_ID_RE`'s own digit-run reasoning and `TRAILING_STATE_CODE_RE`'s own closed-code-list already rely on, not an exception to that discipline.
+
+**A NUANCE FOUND WHILE VERIFYING, CHECKED RATHER THAN GLOSSED OVER: does this REJECTION direction actually fit the codebase's own precedent, given a DIFFERENT, later-stage mechanism in the SAME guard chain deliberately does the OPPOSITE for a related shape?** `jobweb.test.ts`'s own "CLAUSE 3 — the address tail" tests (Ruling 62d/49b) show that a candidate which is ENTIRELY an address with no company head (`"Alameda, California, United States"`) is deliberately LEFT VISIBLE, not rejected to blank — "trimming here would print `Alameda` as an employer: still wrong, but no longer VISIBLY wrong... a hidden defect is worse than a deferred one" (Ruling 49b). This is a genuinely different code path from `looksLikeBareLocation` (confirmed by reading: clause 3 is a TRIM step that explicitly refuses to trim to nothing, not the same rejection check `TRAILING_STATE_CODE_RE` runs). **Re-verified END TO END, real unmodified `webResultToRawJobItem`, that this must-keep case does NOT collide with the proposed ZIP check** (`"Alameda, California, United States"` and `"Kairos Power, Alameda, California, United States"` both — neither ends in a trailing ZIP, so the new check is inert on both; confirmed the pipeline still renders `"Alameda, California, United States"` and `"Kairos Power"` respectively, unchanged). **Why REJECTION (not "leave visible") is still the right call for the ZIP-ending shape specifically, stated rather than assumed:** the distinguishing question is whether a wrong value is unmistakably nonsense to any reader (Ruling 49b's territory — a full "City, State, Country" address fools no one) or PLAUSIBLE enough to be trusted (Ruling 119d's "a lie the reader will trust" territory — the standard J1/J7 itself are judged against). `"Lansing, MI, Michigan, 11021"` reads closer to the latter: a repeated state name plus a trailing number can look like a garbled-but-real business reference to an inattentive reader in a way `"...United States"` cannot. Rejecting it to blank matches the SAME safety argument that already justifies `looksLikeBareLocation`'s existing state-code-ending rejection — a location-shaped candidate is equally definitively "not a company" whether it ends in a 2-letter state code or a 5-digit ZIP; the only reason today's guard doesn't already catch the ZIP shape is the anchoring gap A found, not a deliberate policy that ZIP-endings should be treated like the address-tail's whole-address case. Confirmed, also end to end: TODAY, unmodified, `webResultToRawJobItem` on the exact J7 title renders `company: "Lansing, MI, Michigan, 11021"` — the live defect, reproduced fresh this round, not merely inherited from A's report.
+
+**DISPOSITION — "Cell" (bare generic dictionary word as company candidate):**
+- **Measurement that justifies not fixing:** confirmed by inspection — neither `SEASON_COHORT_LABEL_RE` nor `looksLikeBareLocation` (nor the ZIP addition above) reaches a bare single common noun; no existing or newly-designed guard in this family has any vocabulary boundary that would exclude "Cell" without also risking excluding a real, short, single-word company name (this campaign's own `mercor` must-keep witness — J1's Deliverable 1, round 2 — already proves a bare lowercase single word CAN be a real company, which is exactly why no shape/length heuristic is safe here either).
+- **Tally duty:** future A rounds should record every title-split company candidate that is REJECTED as a bare single word with no location/season shape, to measure whether a genuinely closed sub-vocabulary exists (e.g., department/division-label nouns like "Cell," "Battery," "R&D" — words that appear as JOB-TITLE QUALIFIERS across many postings) rather than a fully open class.
+- **Protective test:** N/A, nothing shipped.
+- **Reopen threshold:** 2+ further live witnesses whose rejected single-word candidates cluster on a small, nameable closed list (department/division-qualifier nouns, e.g.) rather than scattering across unrelated vocabulary — that clustering is what would turn this from an open-class guess into a genuinely closed, safe list.
+
+---
+
+**J8 — `neumaterials.com`, bare-brand-as-title. NOT reopened; stays exactly as Disposition 2/5 already have it.**
+
+INSTANCE of the already-recorded J4 class (round 4 A's own classification, not re-derived this round). Disposition 5's own routing ("J4 folds into Disposition 2's tally") already covers the TALLY duty; J8 is one more live witness of that fold, not a new class and not, on its own, a clear trigger for Disposition 2's own reopen threshold (which is worded around the EVENT-side "standing-org homepage"/"Welcome to…" shapes, a different structural family from the JOB-side bare-brand-as-title shape, even though both fold into the same tally by the disposition's own cross-reference). **Not reopened this round — the tally-fold relationship is noted, not re-argued, and no new design is attempted**, consistent with A's own classification and this round's budget priority (the four commissioned deliverables plus F10/F12/J7).
+
+---
+
+**J9 — untouched, as instructed.** Stays UNCONFIRMED (`jobleads.com`, HTTP 403). No action taken; not counted toward anything. A blocked verification is reported as blocked, never inferred.
+
+---
+
+**BLAST RADIUS, GREPPED, ALL THREE DESIGNS THIS SECTION — actually run, not deferred:** `grep -n "COMMERCE_PATH_RE" web/src/lib/events/sources/eventweb.test.ts` — **zero hits** (not independently unit-tested by name today; no locked test to rewrite). `grep -n "FORUM_THREAD_URL_RE" web/src/lib/jobs/sources/jobweb.test.ts` — **zero hits** (module-private, not exported, so it cannot even be imported into a test file — matches Design 2's own round-2-B note that it was "copied read-only for measurement, not exported"). `grep -n "TRAILING_STATE_CODE_RE\|looksLikeBareLocation" web/src/lib/jobs/sources/jobweb.test.ts` — **3 hits, all in comments** describing OTHER tests' own reasoning (lines 2488, 2639, 2675) — read in full, surfaced the Ruling 49b "address tail, trim never reject" nuance discussed above; re-verified end to end that it does not collide (below). No locked test anywhere asserts the CURRENT (wrong) `"Lansing, MI, Michigan, 11021"` rendering as a contract to preserve.
+
+**CORPUS SUMMARY, ALL THREE:** must-catch = the exact live witnesses named above, each confirmed by direct execution against the real, unmodified guard being extended. Must-keep = the shared 13-URL event corpus (F10, F12) and the `mercor`/adversarial-company-name set plus the existing `TRAILING_STATE_CODE_RE` boundary (J7), all verified with zero collisions.
+
+Phase 3 Round 5 B is COMPLETE — all four commissioned deliverables plus three of four budget-remaining items designed, one dispositioned (J8, not reopened) and one left correctly split between design and disposition (J7's "Cell").
