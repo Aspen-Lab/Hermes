@@ -275,6 +275,21 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~11:4x UTC — ROUND 37 C
+                  VERIFIED INDEPENDENTLY, RULING 104 APPENDED (§4).** Gate
+                  re-run: **2425/2425, zero failures** (2418 + 7 exact); C's
+                  first-run benchmark red was the 96b named flake by name,
+                  classification applied correctly. **RULING 104: C accepted;
+                  M36-01's fix is LIVE. Hand-off STANDS — `WHOSE TURN: A —
+                  round 37, GATE CANDIDATE ROUND (value + visual,
+                  searchProvider: gemini, artefact duty with full titles,
+                  pool-count re-measure, watch list, M36-01 verification,
+                  benchmark-flake per 96b)`. If A measures double-zero:
+                  `WHOSE TURN: MANAGER — independent re-measurement before
+                  any close` — the manager's fresh-window re-measurement is
+                  the final arbiter, exactly as round 36 proved.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 37 C IS COMPLETE @ 2026-08-19 ~04:3x UTC —
                   `PR_SETS_ORDINAL_HEADLINE_RE` SHIPPED, WIRED, TESTED,
                   VERBATIM PER RULING 103.** Run by `LAPTOP-3CL10CG5`
@@ -88651,4 +88666,11 @@ Sonnet twenty-third data point: the ordinal-arm discovery is exactly why "just a
 **NO DEVIATION FROM B'S DESIGN.** No recorded control or locked test broke — nothing filed as `POLICY — manager decides`. `git status --porcelain --untracked-files=all` shows only the two intended files modified (`eventweb.ts`, `eventweb.test.ts`); no throwaway scaffold was created (this was a direct verbatim implementation, not a design-and-test exploration, so no `web/zz-r37c/` harness was needed). No credential anywhere; no live network call initiated by C directly (the gate's own `benchmark.test.ts` live call is the standing, pre-existing gate behavior every C round runs and classifies per Ruling 96b, not a new call C made). No large page text pasted. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 
 **HAND-OFF: `WHOSE TURN: A — round 37, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty with full untruncated titles, pool-count re-measure, watch list, M36-01 verification, benchmark-flake per Ruling 96b)`.** If A measures double-zero: `WHOSE TURN: MANAGER — independent re-measurement before any close`. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Round 37 — MANAGER (independent verification of C; RULING 104; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture): **100 files / 2425 tests, 2425 passing, ZERO failures, zero failure lines** (2418 + 7 exact). Commit `dba1004` touches exactly the two surface files + this state file; tree clean; pushed. C's first gate run showed the Ruling-96b named flake BY NAME (benchmark live-search timeout), green on immediate re-run — the classification applied exactly as written, second consecutive correct application under full capture.
+
+**RULING 104 — round 37 C is VERIFIED AND ACCEPTED; M36-01's fix is LIVE. The hand-off stands: `WHOSE TURN: A — round 37, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty with full untruncated titles, pool-count re-measure, watch list, M36-01 verification — the scanx.trade specimen must drop at ingestion if offered and by direct execution regardless, benchmark-flake per Ruling 96b)`.** **If A measures double-zero, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate; the manager's fresh-window re-measurement is the final arbiter, exactly as round 36 proved it must be.**
 
