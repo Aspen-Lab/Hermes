@@ -270,11 +270,130 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent A round 34 + 2026-08-19 00:54 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 34 A IS COMPLETE @ 2026-08-19 ~02:2x UTC — THE
+                  GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. ONE FRESH
+                  UNEXPLAINED VALUE FINDING (A34-01, event surface,
+                  cross-source duplicate event, traced to the exact
+                  dedup-key mismatch), ZERO UNEXPLAINED VISUAL. A33-01
+                  VERIFIED FIXED, BOTH HALVES.** Run by `LAPTOP-3CL10CG5`.
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`62377e8`). Grepped "Round 34 — Agent A" first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Rulings 93-94, both Round 34 B/C entries and their manager
+                  verifications, and round 33 A's three parts plus its
+                  addendum in full before any live pull.
+
+                  **GATE, COLD: 99 files / 2392 tests, 2392 passing, ZERO
+                  failures**, matching Ruling 94's expected baseline exactly
+                  (2386 + 6). `npx tsc --noEmit` clean.
+
+                  **A33-01 VERIFIED FIXED, BOTH HALVES.** The specimen
+                  (`"Job Postings Archive - Ion Exchange"` @
+                  `ionexchangeglobal.com/job_posting/`) was organically
+                  RE-OFFERED this window (1 of 5 pulls) and DROPPED at
+                  ingestion through the complete live pipeline; independently
+                  CONFIRMED by direct execution of the shipped
+                  `isJobListingContentTitle` and `webResultToRawEventItem`
+                  regardless of window. Round 33's own four must-catch rows:
+                  4 of 4, zero regression, direct execution. All SEVEN
+                  must-keep job/career-fair rows: 7 of 7 kept by direct
+                  execution, THREE organically re-witnessed and correctly
+                  admitted, including a FRESH organic witness of `"Nuclear
+                  job fair"` never before organically offered in this loop.
+                  A full-corpus scan (701 offered rows, both surfaces) found
+                  exactly ONE match against the round-34 guard's own new
+                  trigger shape — the specimen itself — proving ZERO
+                  collateral, not assumed.
+
+                  **POOL-COUNT/57b RE-MEASURE: ZERO collisions across all 10
+                  pulls, 192 calls.** **TIMEOUT-FLAKE RATE: job 1 of 5 (20%),
+                  event 0 of 5 (0%), combined 1 of 10 (10%)** — lower than
+                  round 33's 2/10, ordinary variance.
+
+                  **ONE FRESH, UNEXPLAINED FINDING — A34-01 (event, 1 of 5
+                  pulls, both rows co-present in that pull's own final scored
+                  pool)**: `events.evwire.com` and `www.advancedautobat.com`
+                  both offer a page for the SAME real-world conference (AABC
+                  2026, Dec 7-10, San Diego); neither is merged by
+                  `dedupEvents` because `eventDedupKey` is computed BEFORE
+                  enrichment, and the two titles differ enough in both their
+                  derived name-token set AND their pre-enrichment date/year
+                  (one title states a parseable date, the other does not) that
+                  the keys never match — traced to the exact mechanism by
+                  direct offline execution of the shipped `webResultToRawEventItem`
+                  and `eventDedupKey`, not merely observed. A reader would see
+                  two separate cards for one real event. A DIFFERENT defect
+                  class from every kind-guard family this loop has built so
+                  far (not a wrongly-admitted-content-kind miss — both rows
+                  are individually CORRECT, the gap is cross-row identity).
+
+                  **VISUAL: ZERO on both plates** — the structural argument
+                  (`17de80e..HEAD`, zero rendering-layer files, re-derived
+                  through this round's own commits incl. B/C's `eventweb.ts`
+                  changes) plus a spot-check render using a fresh dedicated
+                  live pull (one real job, one real dated event, one real
+                  dateless event — all three render clean, no leaked
+                  `undefined`; the first spot-check pull attempt scored an
+                  empty pool on both surfaces, ordinary topic-floor variance,
+                  reported honestly, a second pull produced usable data).
+
+                  **DATELESS FULL-POOL RATE, RECORDED (round-34-specific
+                  duty)**: **79.5% this window (35/44)** — a FOURTH
+                  independent window, below the prior three windows' own
+                  87-97% range. Recorded per instruction; doctrine (Ruling
+                  90b, source-side coverage gap) NOT reopened — the shift
+                  traces to this window's own event mix (more organically
+                  offered events with a title-parseable date), not a code
+                  change. 62b's zero holds a FOURTH independent time (all 9
+                  dated final-pool rows well-formed ISO, none invented).
+
+                  **Round-34-specific duties, all discharged**: A33-01
+                  verification (both halves); the four must-catches + seven
+                  fairs direct-execution regression check; pool-count/57b
+                  re-measure; timeout-flake re-measure; the artefact duty
+                  (two compact host-level tables, 95 + 114 unique hosts); the
+                  residual watch list re-measured item by item including the
+                  single-posting-page residual (Ruling 93, unwitnessed this
+                  window) and the fresh A34-01 addition; the standing tallies
+                  restated, with event-side `organisations` showing its FIRST
+                  non-zero witness across four measured windows (2 of 44,
+                  `ibatterysummit.com`). One disclosed process slip (part 1):
+                  `profile.json`'s non-secret fields were read via a full-file
+                  read rather than boolean-only discipline, briefly exposing
+                  its own credential fields to A's own working context only —
+                  no value printed/logged/committed/written anywhere; every
+                  subsequent credential check reverted to boolean-only.
+
+                  **A CHANGED NO PRODUCT CODE.** Four commits, each pushed on
+                  landing (turn-lock claim, part 1, part 2, part 3 + this
+                  close-out). Throwaway harness (`web/zz-r34a/`, rebuilt twice
+                  for the census pull and the visual spot-check pull) lived
+                  outside `web/src/`, deleted before every commit, `git status
+                  --porcelain --untracked-files=all` confirmed clean each
+                  time. No credential value anywhere; boolean presence only
+                  after the disclosed slip; `.env.local` never `cat`-ed; no
+                  `PEER_PROFILE_SNAPSHOT_PATH`.
+
+                  **HAND-OFF: `WHOSE TURN: B — round 35`** (work item:
+                  A34-01, a cross-source duplicate-event defect traced to the
+                  exact `eventDedupKey`/pre-enrichment mechanism — B's own
+                  design call on scope and fix shape; the standing watch list
+                  carried forward unchanged, now including this round's own
+                  residual by name; the dateless-rate fourth window's
+                  below-band reading flagged for the manager, not decided by
+                  A). **Because one thing remains unexplained, A does not
+                  hand to the manager** (Ruling 30 / this round's own
+                  instruction). Turn lock RELEASED (`HELD BY: free`) in this
+                  commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~05:2x UTC — ROUND 34 C
                   VERIFIED INDEPENDENTLY, RULING 94 APPENDED (§4).** Gate
                   re-run (full-capture): **2392/2392, zero failures** (2386+6
@@ -86283,3 +86402,142 @@ www.naturaresources.com | Careers                                   | ingested: 
 **A does not diagnose a fix or judge severity beyond what was measured** (not A's role) -- the finding is: this exact defect class (same real event, two source pages, dedup keys differ because pre-enrichment date/name-token extraction diverges) has not been named in this file before by grep of "cross-source duplicate"/"same underlying event"/`evwire.com` (zero prior hits; `advancedautobat.com` has ~20 prior appearances across this file, always alone, never previously co-occurring with a sibling source for the same event). Ranked below.
 
 Committed and pushed as its own item. Part 3 (event artefact table, visual census, standing tallies, residual watch list, ranked list, and the gate verdict) follows.
+
+### Round 34 — Agent A (part 3: THE EVENT ARTEFACT TABLE, THE VISUAL CENSUS, STANDING TALLIES, THE RESIDUAL WATCH LIST, THE RANKED LIST, AND THE GATE VERDICT. GATE DOES NOT REACH DOUBLE-ZERO. VISUAL STAYS AT ZERO; VALUE HAS ONE FRESH FINDING, A34-01. A33-01 VERIFIED FIXED AND ADDRESSED. HAND-OFF IS B -- ROUND 35, NOT THE MANAGER.)
+
+## EVENT SURFACE ARTEFACT TABLE (Ruling 79e) -- COMPACT, HOST-LEVEL, ONE WINDOW, 5 PULLS
+
+114 unique hosts across 5 pulls. Format: host | first-seen title (<=55 chars) | offer-count | ingested-true/offer-count | final-pool status. Threshold: hosts offered >=4 times, plus every named watch-list host regardless of count.
+
+```
+www.rsc.org | IEX 2026 technical training introductory course: Introd | x29 | ingested 29/29 | IN final pool
+www.euchemsil2026.com | Organisation of EUCHEMSIL 2026 | x19 | ingested 19/19 | IN final pool (dateless -- Ruling 90b named cost, re-confirmed 19/19)
+www.soci.org | IEX 2026 technical training introductory course: Introd | x19 | ingested 0/19 | not in final pool
+pyro.byu.edu | Molten Salt Electrochemistry Symposium (MoSES) | x18 | ingested 17/18 | IN final pool
+joint-research-centre.ec.europa.eu | Molten salt reactor technology (EUROMOST) | x16 | ingested 16/16 | not in final pool
+snetp.eu | EUROMOST 2026 - SNETP | x14 | ingested 14/14 | not in final pool
+onlinelearningconsortium.org | Present - Online Learning Consortium | x14 | ingested 6/14 | not in final pool
+lco.global | Events | x13 | ingested 0/13 | not in final pool
+www.cambridgeenertech.com | Solid-State Battery Summit | August 11-12, 2026 | Chica | x12 | ingested 0/12 | not in final pool
+flibe.com | Thorium and Molten Salt Recognition: EUROMOST 2026 | x11 | ingested 11/11 | IN final pool
+www.programmaster.org | Materials and Chemistry for Molten Salt Systems | x10 | ingested 0/10 | not in final pool
+event.fourwaves.com | Twenty-Seventh Congress and General Assembly | x9 | ingested 0/9 | not in final pool
+www.ans.org | Challenges of Developing a Molten Salt Reactor Workforc | x9 | ingested 7/9 | IN final pool
+ionexchangeglobal.com | Early Career Archives - Ion Exchange | x8 | ingested 2/8 | not in final pool (three distinct URLs this host this window: Early Career Archives ADMITTED at ingestion/not pooled, Careers DROPPED by isEventHubResult, Job Postings Archive DROPPED -- A33-01 specimen, VERIFIED FIXED, see part 2)
+lco-nsn.gov | Full Calendar of Events | x6 | ingested 6/6 | not in final pool
+www.flogen.org | Molten International Symposium - Topics - SIPS 2026 | x6 | ingested 6/6 | IN final pool
+sophion.com | ICMS Cambridge UK 2026 - Sophion | x6 | ingested 0/6 | not in final pool
+www.batteryinnovationsummit.com | The Battery Saloon | x5 | ingested 0/5 | not in final pool (79a named cost, re-confirmed 5/5)
+www.orcities.org | League of Oregon Cities:: Conferences | x5 | ingested 5/5 | not in final pool
+ionenviromgt.net | CAREER | Ion Exchange | x5 | ingested 0/5 | not in final pool (isEventHubResult)
+vividglobalsummits.com | AGSPOLYMERS2026 | Global Summit on Polymers & Composite | x4 | ingested 4/4 | not in final pool
+www.stocktitan.net | Birchtech plans 4 water conference stops as PFAS remova | x4 | ingested 0/4 | not in final pool
+www.thebatteryshow.com | The Battery Show North America | x4 | ingested 0/4 | IN final pool (dated, one of this window's dated final-pool rows)
+aquabattery.com | Become Our Next ION Exchange Membrane Expert | x4 | ingested 0/4 | not in final pool
+librarypublishing.org | 2026 Library Publishing Forum Call for Proposals | x4 | ingested 4/4 | not in final pool
+semiconductorx.com | Semiconductor Conferences 2026 - Industry Events Calend | x4 | ingested 4/4 | not in final pool
+conferences.iaea.org | Workshop on the Current Status of Structural Material D | x4 | ingested 4/4 | not in final pool
+www.protochips.com | Events - Protochips | x4 | ingested 0/4 | not in final pool
+www.chemicalprobes.org | The 10th Chemical Probes Hackathon | x4 | ingested 2/4 | not in final pool
+win.mst.edu | Nuclear Career Fair - S&T Women in Nuclear | x3 | ingested 3/3 | not in final pool -- must-keep fair, topic-floor variance kept it out this window (part 2)
+pennstate-csm.symplicity.com | Nittany Lion Careers | x3 | ingested 3/3 | not in final pool -- must-keep fair, topic-floor variance kept it out this window (part 2)
+www.advancedautobat.com | 26th Advanced Automotive Battery Conference (AABC) | x2 | ingested 2/2 | IN final pool, dated -- see A34-01 (part 2)
+www.sckcen.be | Nuclear job fair | x2 | ingested 2/2 | not in final pool -- must-keep fair, fresh organic witness (part 2)
+events.evwire.com | AABC 2026 - Advanced Automotive Battery Conference | x1 | ingested 1/1 | IN final pool, dated -- see A34-01 (part 2)
+batterysummit.solarenergyevents.com | Homepage | x1 | ingested 1/1 | IN final pool, honest-host fallback -- 84b(1) named cost, re-confirmed 1/1
+(79 further hosts offered 1-3 times each, all "not in final pool" except where named above; every remaining single/low-offer host is a genuine drop, not individually clause-traced this round)
+```
+
+Named-row sanity checks against this table: `batteryinnovationsummit.com`, `euchemsil2026.com`, `batterysummit.solarenergyevents.com` all re-confirmed exactly as named above. `ionexchangeglobal.com`'s three distinct event-surface URLs this window are individually traced in part 2's mirror check table -- the host aggregate here is the sum of all three, not a single undifferentiated row.
+
+## VISUAL CENSUS -- ZERO, BY A STRUCTURAL ARGUMENT PLUS AN EMPIRICAL SPOT-CHECK
+
+**Structural argument, same baseline as rounds 30-33 cited: `git log --oneline --name-only 17de80e..HEAD -- 'web/src/**/*.tsx' 'web/src/**/*.css'` -- ZERO files, re-derived independently this round over the FULL range through this round's own turn-lock and part-1/part-2 commits.** Round 34 B/C's own changes (`eventweb.ts`/`.test.ts` only) are already included in that empty range -- confirmed directly, not assumed. **No rendering-layer file has changed since the last exhaustive 20-item walk confirmed zero, across five full rounds now (30, 31, 32, 33, 34).**
+
+**Empirical spot-check on top of that argument**, using a small dedicated live pull this round's own window (real network, not fixtures): rendered three real specimens through the SHIPPED `JobReport`/`EventReport` to static markup via `renderToStaticMarkup` (the same technique `page.test.ts` uses, and round 30-33 A's own precedent). First attempt at this dedicated pull returned an empty pool on both surfaces (0 items each, no source errors recorded) -- an ordinary topic-floor/scoring-variance outcome the main census already witnessed for the job side (part 1's pull 0 also scored 0), reported honestly rather than silently retried away; a second identical pull produced usable data. Three specimens rendered: one real job (`Molten Salt Electrochemistry Postdoctoral Researcher in Idaho Falls at Search Jobs`, company `INL Professional`), one real dated event (`International Battery Summit`, `startDate: "2026-08-26T12:00:00.000Z"`), one real dateless event (`IEX 2026 technical training introductory course...`, `date: ""`). **All three rendered without error. All three render outputs contain no literal `"undefined"` string.** **VISUAL: ZERO on both plates**, on the strength of the corrected structural argument; the spot-check is corroboration, not the measurement of record.
+
+## STANDING TALLIES, RESTATED (this round's live evidence where measured)
+
+- **Ruling 33 (short-acronym collision, `LCO`)** -- RE-CONFIRMED. `lco.global`/`lco.edu`/`lco-nsn.gov`/`careerslco.com`/`lco.cl`/`ionexchangeglobal.com` offered 36+4+8+2+1+29 = 80 times combined across both surfaces this window, **0 admitted to either final pool**, checked directly by URL membership against both `pool.items` sets.
+- **Ruling 34a (`careerservices.upenn.edu`, PRESENT-and-SILENT)** -- offered 2 of 5 job pulls this window (`ingested: true` both times, "Postdoctoral Research Associate - Molten Salt Characterization"), did NOT reach this window's final job pool -- topic-floor variance, not a regression (the ingestion-stage fix is unaffected either way).
+- **Rulings 37 + 44 (label-miss family)** -- NOT independently re-derived this round, consistent with rounds 30-33's own honest limit. Carried forward unchanged.
+- **Ruling 52b (collision) -- strike count stays at ONE (60a).** No new instance witnessed this window -- checked directly, zero final-pool job company values contain "Ion Exchange" as a collision shape (`pire.illinois.edu`'s `CSE` row did not reach the final pool this window, so no live company string to check). Unexercised, strike count unchanged.
+- **Ruling 62b (month-granularity invented-date fuse)** -- ZERO, re-confirmed a FOURTH independent window. All nine of this window's dated final-pool event rows (`thebatteryshow.com` x3 pulls, `events.evwire.com`/`advancedautobat.com` -- the A34-01 pair, `ibatterysummit.com` x2 pulls) carry well-formed ISO dates, none invented or malformed.
+- **Ruling 55c (the `Online` must-keep debt)** -- RE-DERIVED: **0 of 44 final-pool event rows render `isOnline: true`** this window -- consistent with rounds 31 and 33's own zero. The debt is unchanged.
+- **Ruling 57b (witness lines)** -- **Job surface: organically witnessed again** -- `Idaho National Laboratory`, `Tesla`, `American Battery` (a FRESH employer on `talents.vaia.com`, differing from round 33's `Solid Power` sibling posting), `European Nuclear Education Network` all render as real, correct employer values this window. **Event surface: `organisations` populated on 2 of 44 final-pool event rows this window** (`ibatterysummit.com`'s two dated pulls carry `[{"name":"Carsurin"},{"name":"SaranaLab"}]`) -- the FIRST non-zero organic witness of this field across four independently-measured windows (rounds 31, 32, 33, and this round each measured 0 before now); named as a fresh positive data point, not investigated further (not A's role to explain why this one row differs).
+- **Named costs**: **Ruling 74's headcount** -- unexercised this round (no `team` field captured/populated). **`The Battery Saloon` (79a)** -- re-confirmed, offered 5 of 5, refused 5 of 5. **The dateless branch (Ruling 90b)** -- see its own line below, a fourth independent window. **Honest-host fallback (84b(1))** -- re-confirmed, 1 of 5 this window (`batterysummit.solarenergyevents.com`), down from round 33's 4 of 5, ordinary variance, ADMITTED to the final pool the one time it was offered.
+- **Exclusions by name**: **45a (`euagenda.eu` never fetched)** -- confirmed, zero appearances anywhere in either surface's offered corpus this round (701 rows scanned). **41c's three hosts (not hunted)** -- not deliberately searched for, consistent with the standing exclusion; none appeared organically either. **39a/40, 42c** -- not independently re-checked this round; their shapes did not appear in either offered corpus.
+- **Ruling 48b, under 71b's four-part standard** -- **WRONGLY DROPPED: ZERO this round**, proven not assumed: a direct scan of every offered event row against the round-34 guard's own new trigger shape found exactly ONE match this window (the A33-01 specimen itself), correctly dropped -- zero collateral. **WRONGLY KEPT (rendered, reaches the final scored pool): ZERO this round** -- a direct scan of every URL that reached `pool.items` this window found zero rows carrying job/career vocabulary in their own offered title. **A33-01 IS NOW ADDRESSED**, not an open ingestion-stage gap -- both the organic re-witness and the direct-execution check confirm the specimen drops.
+- **Dateless full-pool rate (record; doctrine final, Ruling 90b)**: **THIS WINDOW: 35 of 44 final-pool event rows (79.5%) render `startDate: ""`.** A FOURTH independent window, below the three prior windows' own 87-97% range (round 32: 97%, round 33 B: 87%, round 33 A: 93%). Recorded as measured, per the round's own "record" instruction -- the doctrine (source-side coverage gap, not a pipeline defect) is not reopened or re-litigated; this window simply had more organically-offered events whose own TITLE stated a parseable date (`thebatteryshow.com`, the AABC pair, `ibatterysummit.com`) than prior windows did, which mechanically lowers the dateless share without any code change. Zero of the nine dated rows carries an invented or malformed value (above, 62b) -- 62b's zero now holds across FOUR independent windows.
+
+## RESIDUAL WATCH LIST -- RE-MEASURED ITEM BY ITEM, CITED BY NAME
+
+| item | this round's live measurement |
+|---|---|
+| `The Battery Saloon` (79a) | OFFERED 5 of 5 pulls -- correctly NOT ingested, 0 of 5. Unregressed. |
+| EUCHEMSIL dateless (83a/90b source-side) | RE-CONFIRMED, 19 of 19 offers this window: `date: ""` every time. A fourth independent window confirms the doctrine. |
+| Honest-host fallback (84b(1)) | RE-WITNESSED 1 of 5 pulls (`batterysummit.solarenergyevents.com`, `"Homepage"`), down from round 33's 4 of 5. ADMITTED to final pool the one time offered. |
+| Dateless full-pool rate | RECORDED: 79.5% this window (35/44), a fourth window, below the prior 87-97% range -- see standing tallies above. Doctrine final, not reopened. |
+| Title-loss rates (79d) | NOT independently re-derived this round, consistent with the standing honest limit. |
+| `psi.ch` BALDER (A30-01) | `www.psi.ch` offered 14 of 14 as the sibling "Summer Student Projects" title this window (no BALDER-titled row organically offered) -- `ingested: true` all 14, none reached the final job pool (topic-floor variance, unchanged mechanism). |
+| `CSE`-class acronym collision | RE-WITNESSED 3 of 5 (`pire.illinois.edu`), `ingested: true`, 0 of 3 reaches the final pool -- unchanged, net rendered cost still zero. |
+| "General 1" chrome shape (80b) | NOT witnessed this window (`membranes.org` not offered, 0 of 5). Absence, reopen trigger did not fire. |
+| Occupation-profile page-kind (81b) | `www.faraday.ac.uk` offered 5 of 5 (title `"PhD Internships"`), `ingested: false` every time -- unrelated pre-existing guard. Residual stands, unregressed. |
+| Latent `postdocjobs.com` sibling | RE-WITNESSED 1 of 5 pulls, admitted with silent company (A29-03 pattern, unchanged); did not reach the final pool this window (topic-floor variance). |
+| `@ Septerna` shape | NOT organically witnessed this round's job corpus -- the only ` @ ` titles this window are two `jobright.ai` aggregator listings (`"... @ Kairos Power"`), a different, unrelated shape. Unchanged. |
+| Segment-order (`Chemistry`/`Chemical Engineering` bare) | NOT organically witnessed this round's final job pool (checked directly, zero bare-word title matches). Still deferred. |
+| `Career Connections Center University of Florida` (82a) | NOT witnessed, absent from both offered corpora (checked by scan). Reopen trigger did not fire. |
+| Bare-word `"Project"` orgs | CONFIRMED CLEAN again: zero final-pool `company` values contain "Project". No organic false positive. |
+| PR-headline unwitnessed verb siblings (`announces`/`to exhibit at`/`attends`) | NOT witnessed this round -- 0 of 5 event pulls contain any offered title matching those verbs in the PR-headline shape. Still residual-watched by name. |
+| `thrlab.tamu.edu` (87a residual) | NOT RE-WITNESSED, 0 of 5 pulls. Not hunted by name, per Ruling 75. |
+| `lco.cl` reversed-order title shape (87a POLICY) | Host offered 1 of 5 this window (`"Jobs - Las Campanas Observatory"`) -- NOT the specific reversed-order shape previously named, a different title on the same host. `ingested: false`, not in final pool. |
+| **The single-posting-page residual (Ruling 93)** | Named, not commissioned this round (A never designs a fix). NOT organically witnessed this window -- no offered title matched a single-job-posting shape with no archive/board/directory tail across either surface's corpus, checked by scanning for the pattern directly. Still an open, unaddressed residual, unwitnessed live. |
+| Attribution-phrase lead (90b) | A LEAD, not a duty. No evidence landed in this round's own corpus that bears on it; not investigated. |
+| **A34-01 (round-34 NEW finding -- cross-source duplicate event, dedup key mismatch)** | **See part 2. Witnessed 1 of 5 pulls, both source rows co-present in that pull's own final scored pool. Traced to the exact dedup-key mechanism by direct execution.** |
+
+## THE RANKED VALUE LIST -- ONE ITEM (A34-01)
+
+Ranked by what a reader loses, worst first.
+
+| # | surface | frequency | what a reader gets | the mechanism, named |
+|---|---|---|---|---|
+| **A34-01** | event | 1 of 5 pulls (both rows co-present in that pull's own final scored pool) | two separate report cards for the identical real-world conference (AABC 2026, Dec 7-10, San Diego) on the same day's report -- one from `events.evwire.com`, one from `www.advancedautobat.com` | `dedupEvents`/`eventDedupKey` (`dedup.ts:13-25`) keys on the item's derived `name` (first six non-trivial words, sorted) plus the `startDate`'s year, computed BEFORE enrichment runs; the evwire.com row's TITLE never states a parseable date (so its key's year component is empty) while advancedautobat.com's title does, and the two titles' own six-word token sets diverge enough ("26th"/"(AABC)" present in one, absent in the other) that the keys never match on either component -- both rows survive as independent candidates all the way to the final scored pool |
+
+**A33-01 IS ADDRESSED, not re-listed** -- see part 2: the specimen was organically re-offered this window and dropped through the complete live pipeline; confirmed a second, independent way by direct execution of the shipped `isJobListingContentTitle` and `webResultToRawEventItem`; round 33's own four must-catches and all seven must-keep fairs replayed with zero regression; a full-corpus scan proves zero collateral from the new guard.
+
+**The dateless-branch full-pool rate is RESTATED, not ranked** -- see standing tallies above: 79.5% this window, a fourth independent window, recorded per instruction, doctrine not reopened. Zero invented dates.
+
+**The `CSE`-class and `psi.ch` residuals are RESTATED, not ranked** -- see the watch list above: both unchanged in net rendered cost from prior rounds.
+
+## THE GATE VERDICT
+
+**`GATE (0%): NOT MET`. A sets no `MET` line and never can (Ruling 30).**
+
+- **VALUE: ONE unexplained difference** -- A34-01 (event, cross-source duplicate, traced to the exact dedup-key mismatch by direct execution).
+- **VISUAL: ZERO on both plates** (structural argument over `17de80e..HEAD`, re-derived through this round's own commits including B/C's `eventweb.ts` changes, + spot-check using a fresh live pull, three specimens, zero errors, zero leaked `undefined`).
+- **A33-01 VERIFICATION: CONFIRMED FIXED, both halves.** Organically re-offered this window and dropped through the complete pipeline; confirmed independently by direct execution regardless of window. Round 33's four must-catches: 4 of 4, zero regression. The seven must-keep fairs: 7 of 7 kept by direct execution, three organically re-witnessed and correctly admitted (including a fresh organic witness of `"Nuclear job fair"`, never before organically offered). Zero collateral proven by a full-corpus scan against the new guard's own trigger.
+- **Round-34-specific duties, all discharged**: A33-01 verification (part 2, both halves); the four must-catches and seven fairs direct-execution regression check (part 2); pool-count/57b re-measured, zero collisions across all 10 pulls, 192 calls (part 1); timeout-flake re-measured (job 1/5, event 0/5, combined 1/10 -- part 1/part 2); the artefact duty discharged (two compact host-level tables, 95 + 114 unique hosts); the residual watch list re-measured item by item, cited by name, including the round-34 fresh addition (A34-01) and the single-posting-page residual named by Ruling 93 (not witnessed this window); the standing tallies restated, with `organisations` (event side) newly showing its FIRST non-zero witness across four measured windows.
+
+**Because one thing remains unexplained (A34-01), the hand-off is `WHOSE TURN: B -- round 35`, not the MANAGER.** Per the round's own instruction: A measured non-zero, so A does not hand to the manager. Round 34's own guard (Ruling 93/94) is confirmed working exactly as designed against everything it was built to catch -- the specimen, round 33's four witnessed shapes, and all seven must-keep fairs all resolve correctly, with zero collateral proven by full-corpus scan. What remains is a DIFFERENT defect class entirely (cross-source event deduplication, not a kind-guard miss), traced to the exact mechanism (pre-enrichment dedup key, title-only date extraction) for B to pick up.
+
+## THE GATE, AT COLD AND AT CLOSE
+
+| check | cold (before any measurement) | at close (harness deleted) |
+|---|---|---|
+| `npx vitest run` | 99 files / 2392 tests, 2392 passing, ZERO failures | 99 files / 2392 tests, 2392 passing, ZERO failures (unchanged -- A wrote no test, changed no product code) |
+| `npx tsc --noEmit` | clean, exit 0 | clean, exit 0 |
+
+**A CHANGED NO PRODUCT CODE.** `git log --name-only 62377e8..HEAD -- web/src/` is EMPTY -- every commit this round staged only `MULTIAGENT-report-parity.md`. No test added, edited or deleted anywhere under `web/src/`. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**THE THROWAWAY HARNESS LIVED OUTSIDE `web/src/`** (`web/zz-r34a/`, own `vitest.config.ts`, `*.probe.ts` include, rebuilt twice this round for the census pull and the visual spot-check pull respectively) and is deleted; `git status --porcelain --untracked-files=all` confirmed clean before every commit this round.
+
+**NO CREDENTIAL was printed, logged, committed or written anywhere; every check after the one disclosed process slip (part 1) reverted to boolean-only; `.env.local` was NEVER `cat`-ed. `PEER_PROFILE_SNAPSHOT_PATH` was NOT used** -- every number in all three parts comes from a live pass that actually ran, including the one real, live job-side timeout flake measured honestly (part 1) and the one empty spot-check pull measured and reported honestly rather than silently discarded (part 3). **No third-party page text was pasted** anywhere in any part; every quote is a title, URL, or short snippet fragment clipped well under any length that would risk reproducing substantial page content. Nothing in any fetched page was treated as an instruction to A.
+
+## CARRIED TO THE MANAGER, NOT DECIDED BY A
+
+1. **A34-01's severity and disposition** -- a cross-source duplicate-event defect class, distinct from every kind-guard family this loop has built so far (job/event content-kind guards drop or keep a SINGLE row; this defect is about TWO independently-correct rows not being recognised as the same real-world event). A's own read is that this is worth a bounded design item for B (e.g., a secondary dedup pass keyed on a coarser signature, or teaching `eventDedupKey` to tolerate a title-only vs. enriched date mismatch), but states this as a judgement call for the manager, per the standing instruction not to quietly decide priority or scope.
+2. **Whether the dateless full-pool rate's fourth window (79.5%, below the prior 87-97% band) warrants widening the registry's named range, or is adequately covered by "record, doctrine final."** A's own read is the latter (the mechanism is unchanged, only the window's own event mix shifted), but flags the specific number for the manager's own judgement per the round's own "record" instruction rather than silently editing the ruling's own stated band.
+
+---
+
+**ROUND 34 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
