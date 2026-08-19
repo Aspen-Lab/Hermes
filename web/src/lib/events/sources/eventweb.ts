@@ -1649,6 +1649,68 @@ function stripApplicationStatusTail(segment: string, host: string | undefined): 
 }
 
 /**
+ * Phase 3 round 3 C, ITEM 5 (F9, Ruling 120g item 5) — THE DRAFT-ANNOTATION
+ * TAIL. Live witness: `https://web.cvent.com/event/db0a52d9-68fa-4c07-9bee-
+ * f3903554b231/summary` rendered **"Investor Showcase for Battery Storage
+ * TEST"** for a real, correctly-linked, currently-open event (real June 2026
+ * date, real venue, active registration). Phase 3 round 2 B re-fetched the
+ * exact URL live and closed the root cause A had left as "inference, not
+ * verification": the page's `og:title` meta tag reads, byte-for-byte,
+ * `"Investor Showcase for Battery Storage TEST"` TODAY — the defect
+ * reproduces character for character — while the SAME page's plain
+ * `<title>` HTML tag (a DIFFERENT field) carries the CORRECT name with no
+ * "TEST" anywhere. `pageTitleFromHtml` (`gemini-search.ts`) strictly prefers
+ * `og:title` over `<title>` and only falls back when `og:title` is absent —
+ * here it IS present, so the stale one wins. **Root cause, confirmed: a
+ * live, real, upstream data-quality defect on the event organiser's OWN
+ * Cvent page setup** — almost certainly a "social-sharing title" field set
+ * during draft setup and never updated, while the page's real, visible
+ * title was separately finalised. Structurally the same KIND of defect as
+ * J1 (a live upstream field carrying operator-leftover text, not a pipeline
+ * bug) but a different SHAPE (a QA/draft annotation word, not a bare
+ * placeholder label).
+ *
+ * Deliberately CASE-SENSITIVE and end-anchored: requires the standalone,
+ * all-caps token `TEST` as the segment's own last word, preceded by
+ * whitespace. Does not touch the ordinary lowercase/Title-Case English word
+ * "test" appearing mid-title in a real name.
+ *
+ * **EVENT-ONLY PLACEMENT — RULING 120d(2), NOT THE SHARED `gemini-search.ts`
+ * LAYER.** B named this as an open placement question (same composed strip
+ * chain here, OR the shared upstream layer, since the underlying defect
+ * shape — a stale `og:title` social-sharing field — is plausible on a job
+ * posting's ATS setup too, unwitnessed this round). The manager ruled: the
+ * witness is ONE organiser's live Cvent `og:title` bug; putting the strip in
+ * the shared adapter would apply it to the paper and job surfaces on the
+ * strength of a single event-surface witness — blast radius without
+ * evidence. **NAMED PROMOTION THRESHOLD (record this, do not re-derive it):
+ * a witness of the same shape (a stale draft-annotation tail on a
+ * provider-supplied title) on a SECOND surface promotes this strip to the
+ * shared `gemini-search.ts` seam — no further escalation needed beyond
+ * that one additional witness.**
+ *
+ * Vacuity, stated honestly (unchanged from B's own design): only `TEST` is
+ * witnessed, 1 live row. `DRAFT`/`SAMPLE`/`DO NOT USE` are NOT proposed — no
+ * witness, named as unwitnessed siblings only.
+ *
+ * VETO-ONLY, same three-veto shape as `stripApplicationStatusTail`
+ * immediately above (empty-after-trim, `isChromeSegment`,
+ * `looksLikeEventTitle`) — a miss renders exactly as today, and nothing
+ * rejected can ever be introduced (Ruling 32's mandatory question).
+ */
+const DRAFT_ANNOTATION_TAIL_RE = /\s+TEST\s*$/;
+
+function stripDraftAnnotationTail(segment: string, host: string | undefined): string {
+  if (!DRAFT_ANNOTATION_TAIL_RE.test(segment)) return segment;
+  const remainder = segment.replace(DRAFT_ANNOTATION_TAIL_RE, "").trim();
+  if (!remainder) return segment;
+  if (isChromeSegment(remainder, host) || !looksLikeEventTitle(remainder)) {
+    return segment;
+  }
+  return remainder;
+}
+
+/**
  * A23-02 gap (a) / Ruling 62b — THE LISTING-FURNITURE STRIP.
  *
  * `10times.com` rendered the event name as
@@ -1926,10 +1988,18 @@ function selectEventTitleSegment(
     // accepted candidate" shape, a third disjoint vocabulary that cannot
     // undo either of the other two (this file's own A23-02 "three-plus
     // disjoint vocabularies" convention).
-    return stripApplicationStatusTail(
-      stripBannerLeadIn(
-        stripWeldedPageTypeLabel(
-          pool.reduce((best, part) => (part.length > best.length ? part : best)),
+    // Phase 3 round 3 C, ITEM 5 (F9): strip a draft-annotation tail off the
+    // CHOSEN segment last of all, after the application-status tail — a
+    // fourth disjoint vocabulary, same "edit an accepted candidate" shape,
+    // event-only placement per Ruling 120d(2) (see the doc comment above
+    // `stripDraftAnnotationTail` for the named promotion threshold).
+    return stripDraftAnnotationTail(
+      stripApplicationStatusTail(
+        stripBannerLeadIn(
+          stripWeldedPageTypeLabel(
+            pool.reduce((best, part) => (part.length > best.length ? part : best)),
+          ),
+          host,
         ),
         host,
       ),

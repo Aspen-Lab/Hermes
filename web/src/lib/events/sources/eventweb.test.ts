@@ -1559,6 +1559,77 @@ describe("application-status tail strip (F8, Phase 3 round 3)", () => {
   });
 });
 
+// Phase 3 round 3 C, ITEM 5 (F9, Ruling 120g item 5): THE DRAFT-ANNOTATION
+// TAIL. Live witness: a real, correctly-linked, currently-open event whose
+// og:title carries a stale "TEST" annotation from the organiser's own Cvent
+// draft setup — see the doc comment above `stripDraftAnnotationTail` in
+// eventweb.ts for the full root-cause trace (why og:title wins over the
+// page's own correct <title>) and the named EVENT-ONLY placement ruling
+// (120d(2)) with its promotion threshold. Witness URL recorded in this
+// file's own Phase 3 round 1 A log (`MULTIAGENT-report-parity.md:91969`).
+describe("draft-annotation tail strip (F9, Phase 3 round 3)", () => {
+  it("repairs the live web.cvent.com witness", () => {
+    expect(
+      bestEventTitleSegment(
+        "Investor Showcase for Battery Storage TEST",
+        "https://web.cvent.com/event/db0a52d9-68fa-4c07-9bee-f3903554b231/summary",
+      ),
+    ).toBe("Investor Showcase for Battery Storage");
+  });
+
+  // CASE-SENSITIVITY IS LOAD-BEARING. The ordinary lowercase/Title-Case
+  // English word "test" appearing as a real name's own last word must not
+  // be stripped — only the standalone, all-caps annotation token is a QA
+  // leftover, never a real event's own chosen last word.
+  it("does not strip an ordinary lowercase or Title-Case 'test' as a real name's last word", () => {
+    expect(
+      bestEventTitleSegment("Battery Materials Stress Test", "https://example.org/event"),
+    ).toBe("Battery Materials Stress Test");
+    expect(
+      bestEventTitleSegment("Molten Salt Reactor Safety test", "https://example.org/event"),
+    ).toBe("Molten Salt Reactor Safety test");
+  });
+
+  // MUST-KEEP, PER B'S OWN CORPUS CHECK: no real admitted event title in A's
+  // sample ends in a bare uppercase "TEST" token, so this asserts the
+  // regex's own narrowness rather than re-deriving the check — a title that
+  // merely CONTAINS "TEST" mid-string, not as its own last word, is untouched.
+  it("leaves a title with TEST in the middle, not at the end, untouched", () => {
+    expect(
+      bestEventTitleSegment("TEST Battery Storage Investor Showcase", "https://example.org/event"),
+    ).toBe("TEST Battery Storage Investor Showcase");
+  });
+
+  it("reaches the reader through eventNameFrom, not only the segment helper", () => {
+    expect(
+      eventNameFrom(
+        "Investor Showcase for Battery Storage TEST",
+        "",
+        "https://web.cvent.com/event/db0a52d9-68fa-4c07-9bee-f3903554b231/summary",
+      ),
+    ).toBe("Investor Showcase for Battery Storage");
+  });
+
+  // Composes with its nearest neighbor in the chain, the application-status
+  // tail strip (F8, this round) — neither vocabulary can undo the other.
+  // NOTE ON ORDERING: `TEST` must sit BEFORE the application-status clause
+  // in the constructed input, not after. Both strips are end-anchored and
+  // run in a fixed order (application-status, then draft-annotation) — a
+  // "TEST" token trailing AFTER "Open Today!" would sit outside the
+  // application-status regex's own end anchor and block it from firing at
+  // all, leaving that clause unstripped. Verified by execution, not
+  // assumed: an earlier draft of this test placed TEST last and asserted
+  // the wrong value until this was run and corrected.
+  it("composes with the application-status tail strip", () => {
+    expect(
+      bestEventTitleSegment(
+        "Battery Investor Day TEST: Applications Open Today!",
+        "https://example.org/event",
+      ),
+    ).toBe("Battery Investor Day");
+  });
+});
+
 // B18-01 (round 18, Rulings 50b + 51a): A COMPANY'S EARNINGS CALL WAS IN THE
 // EVENT POOL. `specterfi.com/companies/1539/concalls/Feb2026` — a stock
 // research page for "Ion Exchange (India) Limited Q3 & 9M FY26 Earnings

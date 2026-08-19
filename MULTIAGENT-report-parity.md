@@ -92681,3 +92681,28 @@ Commit: see git log (message states item 4 / F8). Pushed immediately per §0d Ru
 
 Continuing to item 5 (F9) in the same session.
 
+
+### Phase 3 Round 3 — Agent C, ITEM 5 (Ruling 120g item 5: F9 — the TEST-suffix strip, event-only)
+
+**STATUS: ITEM 5 COMPLETE. ALL FIVE COMMISSIONED ITEMS DONE.** Run by `LAPTOP-3CL10CG5`. Implements Phase 3 Round 2 B's Deliverable 3 Design 4 VERBATIM, with the placement question B left open now settled by Ruling 120d(2). Gate before this item: 100 files / 2466 tests passing, tsc clean (item 4's own closing numbers).
+
+**WHAT LANDED:**
+
+- `web/src/lib/events/sources/eventweb.ts`: new `DRAFT_ANNOTATION_TAIL_RE = /\s+TEST\s*$/` (B's exact regex, unmodified — deliberately case-sensitive, no `i` flag) + `stripDraftAnnotationTail(segment, host)`, same three-veto shape as item 4's strip (empty, `isChromeSegment`, `looksLikeEventTitle`). Composed as the new OUTERMOST strip in `selectEventTitleSegment`'s chain, after item 4's application-status strip: `stripDraftAnnotationTail(stripApplicationStatusTail(stripBannerLeadIn(stripWeldedPageTypeLabel(chosen), host), host), host)`.
+- **PLACEMENT: EVENT-ONLY, per Ruling 120d(2) and this round's own commission — explicitly NOT the shared `gemini-search.ts` layer.** B named this as an open question (same event-surface chain, or the shared upstream adapter, since the underlying defect shape — a stale `og:title` social-sharing field — is plausible on a job posting's ATS setup too, unwitnessed this round); the manager ruled event-only, since the witness is one organiser's live Cvent bug and the shared seam would apply an unproven fix to the paper and job surfaces on a single event-surface witness. **The doc comment records the named promotion threshold verbatim, as this round's brief required**: a witness of the same shape on a SECOND surface promotes this strip to the shared seam, no further escalation needed beyond that one additional witness. `gemini-search.ts` was not touched — confirmed by `git status` below, not merely by intent.
+
+**MANUALLY VERIFIED THE WITNESS BY HAND BEFORE RUNNING ANYTHING:** `"Investor Showcase for Battery Storage TEST"` → tail `" TEST"` matches (case-sensitive, all-caps), remainder `"Investor Showcase for Battery Storage"`, passes both vetoes (not chrome, not host-brand against `web.cvent.com`, clears `looksLikeEventTitle`). **Caught and fixed a SECOND hand-trace error before shipping (same discipline as item 4, not assumed safe the second time either):** my first draft of the "composes with the application-status tail strip" test placed the constructed `TEST` token AFTER the `"Applications Open Today!"` clause (`"...Applications Open Today! TEST"`). Running it showed the final value was `"Battery Investor Day: Applications Open Today!"`, not my expected `"Battery Investor Day"` — because `stripApplicationStatusTail`'s own regex is end-anchored, and a trailing `" TEST"` sitting AFTER its target clause puts that clause outside the anchor, so it never fires; only the last strip in the chain (this item's) ends up doing anything. This is a genuine, correct fact about how two end-anchored, fixed-order strips interact when naively chained — not a defect — and it only surfaces on a constructed BOTH-defects-on-one-row input no real witness this round actually has. Reordered the constructed input so `TEST` sits BEFORE the application-status clause instead (`"Battery Investor Day TEST: Applications Open Today!"`), re-traced by hand, then confirmed by execution: both strips now fire in sequence and the test asserts the value the code actually produces, with a comment recording why the ordering matters for any future reader constructing a similar adversarial case.
+
+**TESTS ADDED (5, pure additions):** new `describe("draft-annotation tail strip (F9, Phase 3 round 3)")` in `eventweb.test.ts`, placed immediately after the F8 block (its actual chain neighbor). Witness URL recovered from this file's own Phase 3 round 1 A log (`MULTIAGENT-report-parity.md:91969`), not re-fetched live:
+- MUST-CATCH: `https://web.cvent.com/event/db0a52d9-68fa-4c07-9bee-f3903554b231/summary` → `"Investor Showcase for Battery Storage"`.
+- CASE-SENSITIVITY PROTECTIVE CASE (load-bearing per B's own regex design): an ordinary lowercase/Title-Case "test" as a real name's own last word (`"Battery Materials Stress Test"`, `"Molten Salt Reactor Safety test"`) is left untouched — only the standalone all-caps annotation token is a QA leftover.
+- MUST-KEEP, per B's own corpus check (no real admitted event title in A's sample ends in a bare uppercase "TEST"): a title carrying "TEST" in the MIDDLE, not as its own last word, is untouched (`"TEST Battery Storage Investor Showcase"`).
+- `eventNameFrom`-level end-to-end check (mirrors the F8/B13-03 equivalent).
+- Composition check with the chain's actual neighbor, `stripApplicationStatusTail` (F8, this round) — verified by execution after the hand-trace correction above, with the ordering lesson recorded in the test's own comment.
+
+**GATE, THIS ITEM:** `npx vitest run` — **100 files / 2471 tests, 2471 passing, ZERO failures** (2466 + 5 new). `npx tsc --noEmit` — **clean, 0 errors**. `npx eslint src` — the one standing `quiz.tsx:46` error only, unchanged. `git status --porcelain --untracked-files=all` shows exactly `eventweb.ts` and `eventweb.test.ts` — `gemini-search.ts` untouched, confirming the event-only placement ruling was actually followed, not just stated.
+
+Commit: see git log (message states item 5 / F9). Pushed immediately per §0d Rule 1.
+
+**ALL FIVE OF RULING 120g'S ITEMS ARE NOW COMPLETE.** Closing out this round in the same session: updating §1, releasing the turn lock, handing off to A — Phase 3 round 4.
+
