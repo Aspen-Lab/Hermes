@@ -87859,3 +87859,63 @@ Claimed the turn lock (`5babee0`) after `git pull` (already up to date) and conf
 
 **RULING 101 — round 36 C is VERIFIED AND ACCEPTED; A35-01's containment pass is LIVE. The hand-off stands: `WHOSE TURN: A — round 36, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list incl. the exact-prefix residual, A35-01 verification — the djk/quintus pair must merge if re-offered and by direct execution regardless, plus the false-merge scan, benchmark-flake classification per Ruling 96b)`.** **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet twenty-second data point: two disclosures, both correct calls, both with their evidence trails — the seat discipline is uniform across all three agents at this point.
 
+
+
+### Round 36 — Agent A (part 1: METHOD, THE COLD/CLOSE GATE, A35-01 VERIFICATION [ORGANIC + DIRECT EXECUTION], A34-01 REGRESSION-CHECK, POOL-COUNT/57b, TIMEOUT-FLAKE. searchProvider: gemini ON EVERY PULL, TWO FULL FIVE-PULL WINDOWS RUN.)
+
+STATUS: PARTIAL BY DESIGN, mirroring round 35's own discipline: part 1 is method + gate + A35-01/A34-01 verification + pool-count/57b + flake, part 2 is the job/event value census artefact tables + residual watch list, part 3 is visual census + standing tallies + gate verdict + close-out. A never closes the gate (Ruling 30).
+
+Claimed the turn lock (`8afc28c`, `LAPTOP-3CL10CG5 / Agent A round 36 + 2026-08-19 03:35 UTC`) after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped "Round 36 — Agent A" first — zero prior entries existed, fresh start not a resume. Read Rulings 100-101 in full, both Round 36 Agent B and Agent C entries, both Round 36 MANAGER verification entries, and round 35 A's three parts (baseline tallies) before touching any code.
+
+## THE GATE, COLD AND AT CLOSE
+
+| check | cold (before any measurement) | at close (harness deleted) |
+|---|---|---|
+| `npx vitest run` (full-capture, first command, log retained) | 100 files / 2418 tests, 2418 passing, ZERO failures — no flake fired, no re-run needed | 100 files / 2418 tests, 2418 passing, ZERO failures (unchanged — A wrote no test, changed no product code) |
+| `npx tsc --noEmit` | clean, exit 0 | clean, exit 0 (not re-run at close, no code touched) |
+| `npx eslint src` | exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings | unchanged |
+
+## METHOD
+
+Built a throwaway harness (`web/zz-r36a/`, own minimal `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load per `web/vitest.config.ts`'s own comment, `PEER_PROFILE_SNAPSHOT_PATH` used to point at `web/.local-data/profile.json` explicitly rather than relying on `process.cwd()`) calling the shipped, exported `buildDailyJobPool`/`buildDailyEventPool` directly — one pull per foreground `npx vitest run` invocation, a fresh in-memory no-op `PoolCache` every pull (never reused across pulls), result written to disk (this session's scratchpad, OUTSIDE the repository) immediately after each pull, before the next one starts. This is the round-35 recovery pattern, run as the PRIMARY method from the start this round rather than as a fallback. `searchGemini` wrapped with a call-through `vi.spyOn` capturing the full `WebResult` (title/url/snippet/pageKind) — offer-side ground truth. `isOwnerNameTopicCollision` wrapped with a call-through spy counting BOTH total calls and actual TRUE-firings (round 35's own harness only counted calls; this round's tracks firings explicitly, a deliberate strengthening).
+
+**TWO full five-pull windows were run** (10 job + 10 event pulls total, 20 live pulls). Window 1 surfaced A35-01's organic co-occurrence (below) and was aggregated once; the harness was then upgraded to also track collision-guard firings (not just calls) and **window 2 (5 job + 5 event pulls) is the canonical, reported window** for all counts below unless a window-1-only observation is named explicitly (the organic A35-01 witness). Profile read via `PEER_PROFILE_SNAPSHOT_PATH` override, field-scoped extraction only (`researchTopics`, `softTopics`, `preferredMethods`, `advisorSeedTexts`, `preferenceLedger`, `careerStage`, `industryVsAcademia`, `locationPreferences`, `currentProject`, `tavilyEnabled`, `tavilyApiKey`, `adzunaAppId`/`adzunaAppKey`, `usajobsApiKey`/`usajobsUserAgent`) per Ruling 95 — the file was never read whole, no credential value was ever printed, logged, or committed; only key-presence booleans were checked once at the start (`tavilyApiKey`/`adzunaAppKey`/`usajobsApiKey` present, `feedAiApiKey`/`geminiApiKey` absent, matching the standing profile shape). `searchConnectors: { gemini: { enabled: true } }` on every request, `tavily.enabled` following the profile's own `tavilyEnabled !== false` rule — **RULING 75 checked directly**: every pull's `fetched` map shows `adzuna: 0, usajobs: 0` (the quota-capped APIs stay suspended) and `jobweb`/`eventweb` (the gemini-backed web-search source) as the only non-zero keyed source on both surfaces; `euagenda.eu` — zero appearances across all 20 pulls' combined offered corpus, checked by direct scan.
+
+Throwaway harness lived OUTSIDE `web/src/` (`web/zz-r36a/`: `vitest.config.ts`, `pull.test.ts`, `aggregate.mjs`, `falsemerge.mjs`, `watchlist.mjs`, `a35verify.test.ts`, `a34regression.test.ts`, `corpusreplay.test.ts`, `visualspot.test.ts`), deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after deletion, before this entry's commit.
+
+## A35-01 VERIFICATION — ORGANIC WITNESS PLUS DIRECT EXECUTION (round-36-specific duty 1a)
+
+**ORGANIC LIVE WITNESS, window 1 pull 2**: both `www.djk.co.jp` and `quintustechnologies.com` were OFFERED together (both present in that pull's own `capturedWebResults` — checked directly, not inferred) — the first organic co-occurrence of this exact pair recorded in this loop's history. **Only `djk.co.jp` reached the final pool; `quintustechnologies.com` did not** — the shipped `mergeContainedEventNames` (round 36 C, Ruling 100/101) correctly collapsed the pair to one survivor on real, live traffic, not a constructed case. This is the strongest possible confirmation: the exact defect A35-01 named, witnessed live, now visibly FIXED live.
+
+**DIRECT EXECUTION, regardless of organic witness (this round's own explicit instruction)**: built both rows from the VERBATIM title/url/snippet window 1 pull 2 captured, through the shipped `webResultToRawEventItem` -> `dedupEvents` -> `scoreEvents` -> `dedupScoredEvents` -> `mergeContainedEventNames` chain, offline:
+- Both rows ingest (neither `null`).
+- `dedupEvents` (first pass) keeps both (length 2) — the round-35 defect's own first-pass symptom still reproduces, confirming the test isn't vacuous.
+- `scoreEvents` -> `dedupScoredEvents`: still 2 (exact key differs, as A35-01 always found) — confirmed the SECOND pass alone still does not close this pair, exactly as designed (B's own §3.1 impossibility proof).
+- `mergeContainedEventNames`: **collapses to exactly 1 survivor.** Scores at execution time: djk `0.5287458678477466`, quintus `0.4909724892207603` — djk wins the score tie-break (same `eventweb` source, `SOURCE_PRIORITY` ties, higher `.score` promotes) — consistent with the organic result (djk survived in window 1 pull 2 too).
+- **Order independence checked**: reversed input array (`[quintus, djk]`) still merges to exactly 1 survivor.
+
+Both tests green, both committed to the throwaway harness then deleted with the rest.
+
+## A34-01 REGRESSION-CHECK BY EXECUTION (round-36-specific duty 1b)
+
+**Organic co-occurrence this round**: `www.advancedautobat.com` offered 1 of 10 event pulls combined (window 1 pull 0 only, title `"26th Advanced Automotive Battery Conference (AABC) | December 7-10, 2026 | San Diego, CA"`); `events.evwire.com` (the sibling round 34 A's own trace specimen, title `"AABC 2026 - Advanced Automotive Battery Conference"`) was **not offered in either window** — absence, not a failure, identical to round 35's own observation of this pair.
+
+**Direct execution through the FULL shipped pipeline function, REAL live page enrichment (no mock)**: built both rows from their real recorded title/URL (evwire from round 34 A's own trace, advancedautobat from this round's own window 1 pull 0) through `webResultToRawEventItem`, then `scoreEventPoolCandidates([evwire, autobat], profile, now, {enrichDetails: true})` — the exact shipped function, with a REAL network fetch for enrichment (not mocked, unlike round 35's mocked-date approach). **Result: exactly 1 survivor** (`events.evwire.com`), confirmed by direct execution with genuinely live enrichment. A34-01 is unregressed by round 36 C's additive containment pass, confirmed at the strongest evidentiary level available (live network, real pipeline function, zero mocking).
+
+## FALSE-MERGE SCAN (the must-NOT-merge doctrine — round-36-specific duty 1, the more important half)
+
+**Scan 1 — all 10 event-surface final pools across both windows** (Jaccard-style token-overlap heuristic, threshold >=0.4 of the smaller title's token set, applied WITHIN each pull's own final-pool item set, since merging only ever happens within a single `buildDailyEventPool` call): every flagged pair is a member of the already-adjudicated "Molten Salt" vocabulary family (`flogen.org`/`pyro.byu.edu`/`ans.org`/`nucnet.org`/`flibe.com`) or the already-adjudicated "Battery Summit" family (`quintustechnologies.com`/`automotive-technology.com`/`advancedautobat.com`) — **every flagged pair remained present as SEPARATE final-pool rows in every pull it appeared in. Zero false merges.** Job-side scan: two flagged pairs, both generic-vocabulary overlaps between genuinely different postings (`postdocjobs.com` vs `cefracor.org`; an Oracle Cloud HCM mechanical-engineering listing vs GE Vernova's battery internship) — zero false merges.
+
+**Scan 2 — independent 120-pair replay of the SHIPPED `mergeContainedEventNames` directly, against 16 distinct FULL untruncated titles this round's own two live windows recorded** (a fresh corpus, not round 35/36 B's own 37-title set): exactly ONE merge (djk/quintus, the known pair), zero others, across all 120 pairs (16 choose 2). This is a genuinely independent confirmation using this round's own fresh real-world titles, not a re-run of B/C's own test corpus.
+
+## POOL-COUNT / RULING 57b RE-MEASURE (round-36-specific duty 2)
+
+**`isOwnerNameTopicCollision` re-measured with BOTH call count AND firing count tracked** (a strengthening over round 35's call-count-only spy): window 2, all 10 pulls (both surfaces) — **208 total calls, ZERO firings.** Job side: 57 calls, 0 firings. Event side: 151 calls, 0 firings. Cross-check: zero final-pool job `company` values contain "Ion Exchange" (Ruling 33/52b's own named collision pattern), checked directly against all 19 final-pool job rows this window — consistent with zero firings having any rendered effect.
+
+`beforeDedup -> afterDedup` deltas, window 2, 5 job pulls: 166->160 (6), 160->154 (6), 137->133 (4), 164->159 (5), 163->156 (7). 5 event pulls: 186->184 (2), 193->189 (4), 190->188 (2), 184->181 (3), 190->186 (4). Small, single-digit, consistent with every prior round's own range.
+
+## TIMEOUT-FLAKE RATE (round-36-specific duty 3)
+
+**Window 1: job 1 of 5 (20%, pull 0, "Error: [jobweb] source-timeout after 25000ms"), event 0 of 5 (0%). Window 2: job 1 of 5 (20%, pull 2, byte-identical error message), event 0 of 5 (0%).** **Combined across both windows: job 2 of 10 (20%), event 0 of 10 (0%), overall 2 of 20 (10%)** — identical to rounds 34 and 35's own combined 1/10 (10%), stable across three consecutive independent measurements now. Not attributable to any code change this round (round 36 B/C touched only `events/dedup.ts`/`events/pipeline.ts`/`events/dedup.test.ts`, none of which touch the fetch/timeout path).
+
+Committed and pushed as its own item, per write-as-you-go. Part 2 (job/event value census artefact tables, full untruncated final-pool titles, residual watch list) follows.
