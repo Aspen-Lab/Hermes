@@ -2326,6 +2326,51 @@ function isDateStructuredResearchPath(title: string, url: string): boolean {
   return !looksLikeEvent(title); // event-side mirror of the job side's own title safety net (jobweb.ts:107)
 }
 
+/**
+ * Phase 3 round 6 C, ITEM 5 (F12, Rulings 123f/123e(2)/123g item 5). A
+ * discussion-forum website admitted as an event via the bare "forum" word in
+ * `EVENT_SIGNAL_RE` — the same mechanism round 1's F3 named, a second live
+ * witness on a new host (`permies.com`). Disposition 6's own reopen
+ * threshold fired on a second, distinct forum-platform host (Phase 3 round 5
+ * B, IF-BUDGET-REMAINS ITEMS); investigated rather than reopened blind, and
+ * the new witness's URL (`/t/26737/composting/...`) carries a NUMERIC
+ * thread ID after `/t/` — a structurally different, narrower shape than
+ * F3's original non-numeric witness (`/t/lithium`), which stays
+ * dispositioned, UNCHANGED, and is NOT reopened or re-argued here.
+ *
+ * PORTED FROM THE JOB SURFACE'S OWN ALREADY-SAFE, ALREADY-SHIPPED
+ * `FORUM_THREAD_URL_RE` (`jobweb.ts:368-369`) — an event-surface-OWNED copy,
+ * not a cross-file import, mirroring `isDateStructuredResearchPath`'s own
+ * precedent immediately above (this file's parallel-but-separate-guards-
+ * per-surface convention). Byte-identical regex, tested against the same
+ * `pathname + search` shape the job surface's own `pathAndQuery` uses.
+ * Confirmed by direct execution: still correctly misses F3's own
+ * non-numeric witness (`/t/lithium`) while catching `permies.com`'s
+ * numeric-thread-ID witness — see eventweb.test.ts.
+ *
+ * OWN GUARD, NOT AN `isDeniedUrl` CLAUSE (Ruling 123e(2)) — kept traceable
+ * to the shape it was borrowed from, the same reasoning that keeps
+ * `NEWS_MEDIA_HOSTS` (ITEM 1) its own sibling list rather than folded into
+ * `DENY_HOSTS`. No title safety net, unlike `isDateStructuredResearchPath`
+ * above — the job surface's own `FORUM_THREAD_URL_RE` clause inside
+ * `isListingPage` is unconditional on the URL shape alone, and this port
+ * mirrors that exactly rather than inventing a rescue the precedent does
+ * not have.
+ */
+const FORUM_THREAD_URL_RE =
+  /(?:^|\/)t\/(?:[\w%.~-]+\/)?\d+(?:\/\d+)?(?:\/|$|\?)|(?:^|\/)(?:viewtopic|showthread|viewforum|forumdisplay)\.php(?:$|[?&])|(?:^|\/)threads\/[\w%.~-]*?\.\d+(?:\/|$|\?)/i;
+
+function isForumThreadUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  return FORUM_THREAD_URL_RE.test(`${parsed.pathname}${parsed.search}`);
+}
+
 export function webResultToRawEventItem(
   result: WebResult,
   now: number,
@@ -2363,6 +2408,10 @@ export function webResultToRawEventItem(
   // kind guards immediately above it; the job surface's own mirror sits in
   // the identical position, right before its own topicality gate.
   if (isDateStructuredResearchPath(title, url)) return null;
+  // Phase 3 round 6 C, ITEM 5 (F12, Ruling 123e(2)): a numeric-thread-ID
+  // discussion-forum URL is not an event -- see isForumThreadUrl above.
+  // Same layer as the other URL-shape kind guards immediately above it.
+  if (isForumThreadUrl(url)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   // ROUND 29 C, ITEM 1 — **ABSENCE IS NOT EVIDENCE (family (ii)), AND THE
   // PAGE'S OWN DECLARATION OUTRANKS A KEYWORD (channel L).**

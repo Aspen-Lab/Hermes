@@ -93701,3 +93701,19 @@ Continuing to ITEM 4 (F10, `product-category` token) in the same session.
 **GATE AFTER ITEM 4: 101 files / 2508 tests, 2508 passing (2503 + 5 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `eslint` on both changed files: clean. `git status --porcelain --untracked-files=all` showed only the two intended files changed before staging.
 
 Continuing to ITEM 5 (F12, the forum-thread port) in the same session.
+
+### Phase 3 Round 6 — Agent C, ITEM 5 (F12, Rulings 123f/123e(2)/123g item 5): the forum-thread URL port
+
+**STATUS: ITEM 5 COMPLETE.** Run by `LAPTOP-3CL10CG5`. Gate confirmed cold before starting: `npx vitest run` — 101 files / 2508 tests, 2508 passing (item 4's own new total); `npx tsc --noEmit` clean.
+
+**CODE.** `web/src/lib/events/sources/eventweb.ts`: new module-private `FORUM_THREAD_URL_RE` const — a byte-identical copy of the job surface's own already-safe, already-shipped `FORUM_THREAD_URL_RE` (`jobweb.ts:368-369`) — and `isForumThreadUrl(url)`, tested against `${parsed.pathname}${parsed.search}` (mirroring the job surface's own `pathAndQuery` shape exactly). Placed immediately after `isDateStructuredResearchPath` (F2's own port from the same source file, the named precedent for an event-surface-OWNED copy rather than a cross-file import), with a call-site clause in `webResultToRawEventItem` right after `isDateStructuredResearchPath`'s own clause — same layer as every other URL-shape kind guard, before the topicality gate. **Ships as its OWN guard, NOT an `isDeniedUrl` clause (Ruling 123e(2))** — kept traceable to the shape it was borrowed from. No title safety net, matching the job surface's own unconditional-on-URL-shape precedent inside `isListingPage` exactly (unlike `isDateStructuredResearchPath`, which does carry one) — B's design named no such rescue and the job side's own clause has none.
+
+**TESTS**, `web/src/lib/events/sources/eventweb.test.ts`, new `describe("forum-thread URL port (F12, Phase 3 round 6 C, ITEM 5)")`, 4 new tests, all via `webResultToRawEventItem` (the only route available — `isForumThreadUrl` is module-private, matching this file's own `isDateStructuredResearchPath` precedent and B's own note that the job surface's identical regex is "copied read-only for measurement, not exported"):
+- Must-catch: drops the `permies.com` numeric-thread-ID witness (`/t/26737/composting/...`) end to end.
+- Must-keep: F3's original non-numeric witness (`batteries-forum.com/t/lithium`) stays admitted — a representative reconstruction of the historical title (exact original not recovered in this session's own research, labelled as such), proving the port does not widen beyond the numeric-thread-ID shape and does not reopen the dispositioned non-numeric case.
+- Must-keep: the `battery-business-forum.com` forum-contrast control (F11's own corpus, reused) stays admitted — no `/t/NNN/`-shaped path at all.
+- Must-keep, adversarial: a genuine event URL with a numeric path segment OUTSIDE the `/t/` shape (`/events/2026/battery-innovation-summit`) stays admitted, proving the guard is anchored to the specific `/t/NNN/` (and `viewtopic`/`showthread`/`viewforum`/`forumdisplay.php`/`threads/*.NNN`) shapes, not "any numeric path segment."
+
+**GATE AFTER ITEM 5: 101 files / 2512 tests, 2512 passing (2508 + 4 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `eslint` on both changed files: clean. `git status --porcelain --untracked-files=all` showed only the two intended files changed before staging.
+
+Continuing to ITEM 6 (J7, the ZIP-ending location shape) in the same session.

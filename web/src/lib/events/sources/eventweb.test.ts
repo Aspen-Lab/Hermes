@@ -3640,3 +3640,68 @@ describe("COMMERCE_PATH_RE gains product-category (F10, Phase 3 round 6 C, ITEM 
     ).toBe(false);
   });
 });
+
+// Phase 3 round 6 C, ITEM 5 (F12, Rulings 123f/123e(2)/123g item 5): the
+// job surface's own already-safe `FORUM_THREAD_URL_RE` ported to the event
+// surface as its OWN guard (Ruling 123e(2) — not an isDeniedUrl clause).
+// `isForumThreadUrl` is module-private (not exported), matching this file's
+// own `isDateStructuredResearchPath` precedent — tested only through the
+// full, real `webResultToRawEventItem`, exactly as B's own blast-radius note
+// says the job surface's identical regex is ("copied read-only for
+// measurement, not exported").
+describe("forum-thread URL port (F12, Phase 3 round 6 C, ITEM 5)", () => {
+  const NOW = Date.parse("2026-01-01T00:00:00Z");
+
+  it("must-catch: drops the permies.com numeric-thread-ID witness", () => {
+    expect(
+      webResultToRawEventItem({
+        title: "Composting alkaline batteries (composting forum at permies)",
+        url: "https://permies.com/t/26737/composting/Composting-alkaline-batteries",
+        snippet:
+          "An ongoing discussion forum thread about composting alkaline batteries.",
+      }, NOW),
+    ).toBeNull();
+  });
+
+  it("must-keep: F3's original non-numeric witness (batteries-forum.com/t/lithium) stays UNCAUGHT by this guard — not reopened, not widened", () => {
+    // A representative reconstruction of F3's original round-1 witness (exact
+    // historical title not recorded in this session's own research) — what
+    // matters for this guard specifically is the non-numeric `/t/lithium`
+    // slug shape, which B confirmed by direct execution still does not match
+    // FORUM_THREAD_URL_RE. This row stays admitted (a real, still-open
+    // defect, per Disposition 6's own unchanged non-numeric-slug
+    // disposition), not because this item fixed it.
+    expect(
+      webResultToRawEventItem({
+        title: "Lithium battery chemistry (forum thread)",
+        url: "https://www.batteries-forum.com/t/lithium",
+        snippet:
+          "Discussion forum thread on lithium battery chemistry, ongoing through December 2026.",
+      }, NOW),
+    ).not.toBeNull();
+  });
+
+  it("must-keep: the battery-business-forum.com forum-contrast control (F11's own corpus) is unaffected — no /t/NNN/-shaped path at all", () => {
+    expect(
+      webResultToRawEventItem({
+        title: "Battery Business Forum 2026",
+        url: "https://battery-business-forum.com/",
+        snippet:
+          "The Battery Business Forum 2026 conference brings together industry leaders. Registration open for December 2026.",
+      }, NOW),
+    ).not.toBeNull();
+  });
+
+  it("must-keep: a genuine posting-id-shaped event URL with a numeric segment elsewhere in the path is unaffected", () => {
+    // Adversarial: proves the guard is anchored to the /t/NNN/ shape
+    // specifically, not "any numeric path segment".
+    expect(
+      webResultToRawEventItem({
+        title: "Battery Innovation Summit 2026",
+        url: "https://example-conference.test/events/2026/battery-innovation-summit",
+        snippet:
+          "The Battery Innovation Summit 2026 takes place in December 2026. Registration open.",
+      }, NOW),
+    ).not.toBeNull();
+  });
+});
