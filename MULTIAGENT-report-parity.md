@@ -275,6 +275,26 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~03:4x UTC — ROUND 33 C
+                  VERIFIED INDEPENDENTLY, RULING 91 APPENDED (§4).** Gate
+                  re-run cold by the manager (full-capture): **99 files /
+                  2386 tests, 2386 passing, ZERO failures.** Code read
+                  directly — byte-faithful, wired at `eventweb.ts:2015`
+                  exactly as designed; C's truncated-titles judgment call
+                  ACCEPTED (matches the suite's own precedent; the vocabulary
+                  triggers sit in the visible prefixes). **RULING 91: C
+                  accepted; hand-off STANDS — `WHOSE TURN: A — round 33,
+                  GATE CANDIDATE ROUND (value + visual, searchProvider:
+                  gemini, artefact duty, pool-count re-measure, watch list,
+                  flake-identity-first gate discipline)`.** A's targets:
+                  A32-01's four witnessed shapes must DROP at ingestion if
+                  offered; the seven job/career-FAIR must-keeps must still
+                  ADMIT; the standing duty list otherwise. **If A measures
+                  double-zero, hand off `WHOSE TURN: MANAGER — independent
+                  re-measurement before any close`. A never closes the
+                  gate.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 33 C IS COMPLETE @ 2026-08-18 ~23:5x UTC — THE ONE
                   COMMISSIONED ITEM SHIPPED, ONE COMMIT (`e89f338`), PUSHED ON
                   LANDING.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after
@@ -85322,3 +85342,12 @@ No credential anywhere; boolean presence only; `.env.local` never `cat`-ed; no `
 **No deviation from §1.2.** Nothing broke a recorded control or locked test — no `POLICY — manager decides` entry needed.
 
 **HAND-OFF: `WHOSE TURN: A — round 33, GATE CANDIDATE ROUND`** (value + visual, `searchProvider: gemini`, artefact duty, pool-count re-measure, the standing watch list, flake-identity-first gate discipline — per Ruling 90c). Turn lock RELEASED (`HELD BY: free`) in the close-out commit that follows.
+
+### Round 33 — MANAGER (independent verification of C; RULING 91; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture discipline, log retained): **99 files / 2386 tests, 2386 passing, ZERO failures, zero failure lines in the log.** Commit `e89f338` touches exactly the two surface files + this state file; tree clean; both commits pushed. Code read directly: `isJobListingContentTitle` (`eventweb.ts:1978-1983`) is byte-faithful to B's §1.2 — both triggers, the `looksLikeEvent` rescue, no new word list; wired at `:2015`, immediately after `isEarningsCallPage`, exactly as designed. (One note for the record: the Grep tool renders some `//` comment lines as `\ ` — a DISPLAY artifact, confirmed twice now by Read against the true file bytes, round 31 and this round. Future verifiers: confirm with Read before treating it as a defect.)
+
+**C's one flagged judgment call — ACCEPTED:** the 12 must-keep ADMITTED rows exist in the state file only as ≤55-char truncated strings, and C used them verbatim, matching the suite's own existing precedent (round-30-table tests do the same). The truncated forms exercise the guard's actual decision surface (the vocabulary triggers all sit in the visible prefixes), so the protection is real, not cosmetic.
+
+**RULING 91 — round 33 C is VERIFIED AND ACCEPTED; the hand-off stands: `WHOSE TURN: A — round 33, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list, flake-identity-first gate discipline)`.** A's round-33 verification targets: A32-01's four witnessed shapes must now DROP at ingestion if offered (`industrialguide.co.in`, `jobitus.com`, `shine.com`, `iimjobs.com`); the seven job/career-FAIR must-keeps must still ADMIT if offered; everything else per the standing duty list. **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet twelfth data point: a clean, small, verbatim implementation turn with one well-reasoned, well-flagged judgment call.
+
