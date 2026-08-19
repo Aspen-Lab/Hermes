@@ -270,11 +270,77 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 34 + 2026-08-19 00:34:17 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 34 B IS COMPLETE @ 2026-08-19 ~00:44x UTC — THE ONE
+                  COMMISSIONED ITEM (A33-01, RULING 92b) DESIGNED, ONE
+                  COMMIT, PUSHED ON LANDING.** Run by `LAPTOP-3CL10CG5`.
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`2278225`). Grepped `Round 34 — Agent B` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  round 33 A's three parts (part 2's clause-level A33-01
+                  trace in full), round 33 B's item 1 entry, and Rulings
+                  92a-92e in full before touching any code.
+
+                  **DESIGN: one additive alternative on the round-33 guard's
+                  own `JOB_LISTING_CONTENT_RE`** — `job postings`/`job
+                  listings` gated on an index-shaped tail word
+                  (archive/board/directory) — closing the specimen
+                  (`"Job Postings Archive - Ion Exchange"` @
+                  `ionexchangeglobal.com/job_posting/`) without reopening a
+                  fair false-positive. **TWO CANDIDATES MEASURED AND
+                  REJECTED**: (1) a BARE `job postings` trigger wrongly drops
+                  a constructed fair (`"Job Postings Fair 2026"`) that
+                  `looksLikeEvent` does not rescue (its `job fair`
+                  alternative requires the words adjacent); (2) extending
+                  `EVENT_HUB_PATH_SEGMENT_RE`'s closed path-segment list is
+                  INSUFFICIENT ALONE (`isEventHubResult` also requires the
+                  title head to match its own separate tail/head vocabulary,
+                  which the specimen's title does not) and its own
+                  coordinated two-part fix introduces NEW COLLATERAL on a
+                  real single-event "Event Archive" title, on a guard far
+                  older and more broadly shared than the round-33-only one.
+
+                  **CORPUS: 5/5 must-catch (specimen + round 33's four,
+                  regression check), 0/19 false positives on round 33 B's
+                  own must-keep rows (incl. the seven fairs), 0/15 false
+                  positives on round 33 A's own part-3 ADMITTED artefact
+                  rows, 30/30 on the shipped round-33 adversarial corpus
+                  replayed verbatim, 6/6 fresh adversarial constructions
+                  incl. the brief's required "Job Postings Fair 2026" must-
+                  survive case.** Blast radius: one line changed, single call
+                  site confirmed by grep, zero collision with the shipped
+                  2890-line `eventweb.test.ts`. The round-27/round-30 locked
+                  `isEventHubResult` suites were replayed against the
+                  REJECTED path-based candidate only (not touched by what
+                  ships). Named residual, explicitly not claimed as covered:
+                  a single job-posting page with no archive/board/directory
+                  tail word (e.g. `"Postdoc Job Posting: ..."`) is the same
+                  defect class, unaddressed and unwitnessed live so far.
+
+                  **GATE: 99 files / 2386 tests, 2386 passing, ZERO
+                  failures** (unchanged — B wrote no test, changed no
+                  product code), matching Ruling 92e's baseline exactly.
+
+                  **B CHANGED NO PRODUCT CODE.** One commit, pushed on
+                  landing. Throwaway harness (`web/zz-r34b/`) lived outside
+                  `web/src/`, deleted before the commit, `git status
+                  --porcelain --untracked-files=all` confirmed clean. No
+                  credential anywhere; no live network calls (pure
+                  regex/function-level design work — Ruling 75's optional
+                  live-probe was not spent). No branch/worktree/PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 34 verification
+                  and rulings before C spawns`.** Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~04:3x UTC — ROUND 33 A
                   VERIFIED INDEPENDENTLY, RULINGS 92a-92e APPENDED (§4),
                   ROUND 33 CLOSED.** THE GATE FLAKE HUNTED: five consecutive
@@ -85795,3 +85861,111 @@ Ranked by what a reader loses, worst first.
 
 **RULING 92e — ROUND 33 IS CLOSED. `WHOSE TURN: B — round 34`, ONE item: A33-01.** Sonnet thirteenth data point: A's turn was honest under its own instrumentation slip (owned in the log unprompted, exactly as the manager's own round-32 entry models), the A33-01 trace is complete down to the clause level with its own history dug out of the file, and the psi.ch-precedent distinction (ingested vs rendered) was applied precisely. The loop's finding rate is now: 3 → 2 → 1 → 1 per round, with this round's single finding never witnessed rendering.
 
+
+
+### Round 34 — Agent B — ITEM 1 (A33-01, Ruling 92b: a fifth job-content shape falls through all seven event-side guards): **DESIGNED, ONE ADDITIVE ALTERNATIVE ON THE ROUND-33 GUARD'S OWN `JOB_LISTING_CONTENT_RE`. THE OBVIOUS BARE "job postings" TRIGGER WAS MEASURED AND REJECTED — IT WRONGLY DROPS A CONSTRUCTED FAIR TITLE THE SAFETY NET DOES NOT RESCUE. THE PATH-BASED ALTERNATIVE WAS ALSO MEASURED AND REJECTED — INSUFFICIENT ALONE, AND ITS OWN COORDINATED FIX INTRODUCES NEW COLLATERAL ON A SHARED, OLDER GUARD.**
+
+**B changed no product code.** Claimed the turn lock (`2278225`) after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 34 — Agent B` first — zero prior entries existed, fresh start not a resume. Read round 33 A's three parts (part 2's clause-level A33-01 trace in full), round 33 B's item 1 entry, and Rulings 92a-92e in full before touching any code. Every candidate below was written and adversarially tested standalone in a throwaway harness (`web/zz-r34b/`, own minimal `vitest.config.ts`, no live network — pure regex/function-level design work) — deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean immediately after.
+
+## 2.0 THE STARTING TRACE, RE-CONFIRMED BY EXECUTION (not re-derived — A already did this work)
+
+A's part-2 trace (clause by clause, `MULTIAGENT-report-parity.md:85611`) is B's starting point, re-run directly against the shipped code rather than re-litigated: `isJobListingContentTitle("Job Postings Archive - Ion Exchange")` -> **false** (`eventweb.ts:1978-1983`); `isEventHubResult("Job Postings Archive - Ion Exchange", "https://ionexchangeglobal.com/job_posting/")` -> **false** (`eventweb.ts:746-765` — terminal path segment `job_posting` fails `EVENT_HUB_PATH_SEGMENT_RE`, `eventweb.ts:738-739`); `isEventIndexResult` -> **false** (round-25's old catch, `EVENT_INDEX_TITLE_RE`, `eventweb.ts:371-372`, requires an event-kind LEADING noun, "Job Postings Archive" leads with "Job"); `webResultToRawEventItem` on the exact specimen -> **not null** (admitted). All four confirmed by direct execution this round, byte-identical to A's own recorded numbers. **Also checked, per the brief's own instruction, before proposing any fix**: a SINGLE posting page ("Postdoc Job Posting: Battery Research Scientist") is likewise unaddressed by every guard today — `isJobListingContentTitle` false (one "Job" mention, no rescue-vocabulary phrase), `isEventHubResult` false even at a `/job_posting/12345` path. **This is the same defect class, unwitnessed live so far, and explicitly OUT OF SCOPE for this item** (A33-01 is the archive-shape specimen only) — named as a residual below, not silently absorbed into a claim the fix does not support.
+
+## 2.1 CANDIDATE 1a (REJECTED BY MEASUREMENT) — bare `job\s+postings?`
+
+The obvious first instinct: add `\bjob\s+postings?\b` to `JOB_LISTING_CONTENT_RE` (`eventweb.ts:1957-1958`) with no further qualifier, relying on the existing `looksLikeEvent` safety net (`eventweb.ts:189-191`, `EVENT_SIGNAL_RE` at `:186-187`) to protect fairs. **Measured directly and rejected**: the brief's own required adversarial construction, `"Job Postings Fair 2026"`, contains the bare phrase "job postings" and would trigger this alternative — but `looksLikeEvent("Job Postings Fair 2026")` returns **false**, executed directly. `EVENT_SIGNAL_RE`'s `job fair` alternative requires the two words LITERALLY ADJACENT (`job` immediately followed by `fair`), and in this title the word "Postings" sits between them, so the phrase never matches. **A bare trigger would wrongly DROP a real job fair the safety net does not reach.** Rejected outright — not shipped in any form.
+
+## 2.2 THE DESIGN (PROPOSED) — `job postings`/`job listings` gated on an index-shaped TAIL word
+
+```ts
+// ROUND 34 B (Ruling 92b, A33-01): a fifth job-content shape falls through
+// all seven guards -- a company's own job-postings ARCHIVE/INDEX page ("Job
+// Postings Archive - Ion Exchange" @ ionexchangeglobal.com/job_posting/,
+// witnessed 2 of 5 pulls, round 33 A). Round 33's own two triggers both miss
+// it: hasRepeatedJobsMention needs "job"/"jobs" stated TWICE, this title
+// states it once ("Job Postings"); JOB_LISTING_CONTENT_RE's closed phrase
+// list has no "job postings" phrase at all. isEventHubResult also misses it
+// -- its path word list has "jobs" but not the singular, underscored
+// "job_posting" terminal segment (measured and rejected as the fix site,
+// see the round log: extending the path list alone does not catch this
+// specimen, because isEventHubResult ALSO requires the title head to match
+// its own separate tail/head vocabulary, which "Job Postings Archive" does
+// not; the coordinated second change that WOULD catch it was measured and
+// found to introduce new collateral on a real single-event "Event Archive"
+// title, an older and far more broadly shared guard than this one).
+//
+// BARE "job postings" was measured and REJECTED: "Job Postings Fair 2026"
+// contains the phrase but is not rescued by looksLikeEvent (EVENT_SIGNAL_RE's
+// "job fair" alternative requires the words adjacent; "Postings" sits
+// between them here), so a bare trigger would wrongly drop a real fair.
+// Requiring an index/archive-shaped TAIL word alongside "job postings" or
+// "job listings" -- the same shape the specimen itself carries, and the same
+// shape round-25's own EVENT_INDEX_TITLE_RE already recognises for the EVENT
+// noun ("archive" is one of that regex's own tail words) -- closes exactly
+// the witnessed gap without re-opening the fair false-positive.
+const JOB_LISTING_CONTENT_RE =
+  /\bjob\s+openings?\b|\bjob\s+vacanc(?:y|ies)\b|\bvacanc(?:y|ies)\b|\bcompany\s+page\b|\bjob\s+(?:postings?|listings?)\s+(?:archive|board|directory)\b/i;
+```
+
+**One alternative appended to the existing regex** (`eventweb.ts:1957-1958`). `hasRepeatedJobsMention` (`:1966-1969`), `isJobListingContentTitle`'s own composition and safety net (`:1978-1983`), and the wiring call site (`:2015`) are all UNTOUCHED — no new function, no new call site, no change to the safety net.
+
+## 2.3 CANDIDATE 2 (MEASURED AND REJECTED) — extend `EVENT_HUB_PATH_SEGMENT_RE`'s closed list
+
+The brief's other obvious candidate: add a `job[_-]postings?`-shaped terminal-path alternative to `EVENT_HUB_PATH_SEGMENT_RE` (`eventweb.ts:738-739`). **Measured directly and found insufficient alone.** `isEventHubResult` (`:746-765`) is an AND of two independent signals — the terminal path segment against the (extended) word list, AND the title HEAD against `EVENT_HUB_TITLE_TAIL_RE`/`EVENT_HUB_TITLE_HEAD_RE` (`:741-744`). Extending only the path list makes `job_posting` match signal 1, but the specimen's title head, `"Job Postings Archive"` (via the shipped `titleSegments` splitter, `:1712-1717`, cut at " - "), matches NEITHER `EVENT_HUB_TITLE_TAIL_RE` (does not end in `events|conferences|seminars|workshops|symposia|meetings`) NOR `EVENT_HUB_TITLE_HEAD_RE` (does not start with `career(s)`) — confirmed by direct execution of a local re-implementation, literal-copied line-for-line from the shipped source and cross-checked against the REAL `isEventHubResult` on every A27-01 and round-30 (Ruling 81b) control row first, to prove the re-implementation is faithful before trusting it on the new case.
+
+**This route requires a SECOND, coordinated change** — the title head's LAST word here is "Archive", so the tail vocabulary would need an `archive` alternative added, not a `postings?` one (measured and corrected in the harness log: a first draft wrongly added `postings?` to the tail list, which does NOT catch the specimen, because the check matches the head's trailing word and the specimen's trailing word is "Archive"). **This coordinated fix was then built and tested, and it INTRODUCES NEW COLLATERAL**: `"Event Archive"` at an `/events` path — a plausible real single-event page whose title happens to end in "Archive" — is ADMITTED today (`isEventHubResult("Event Archive", "https://example.test/events")` -> `false`, confirmed directly) and would become DROPPED under the two-part fix, confirmed directly on the local re-implementation. **Rejected**: two coordinated regex edits, on a guard `isEventHubResult` that is far older (round 27) and far more broadly shared (every plain `"Careers"` hub drop across every round's corpus goes through it — `ionenviromgt.net`, `ionexchangeglobal.com`, `thorizon.com`, `naturaresources.com`, `iongroup.com` all cite it by name in round 33 A's own mirror-check table), against one bounded, additive alternative on a single-round-old, single-call-site guard.
+
+**The locked control suites were replayed against this rejected candidate anyway, per the brief's instruction** — both `describe("A27-01: isEventHubResult", ...)` (`eventweb.test.ts:2104-2233`, 9 `it` blocks) and `describe("Round 30, Ruling 81b — the event-hub V2 extension", ...)` (`eventweb.test.ts:2240-2285`, 4 `it` blocks) pass unchanged on the extended-path/extended-tail local re-implementation — the specific NEW collateral found (`"Event Archive"`) was not IN either locked suite, which is exactly why it had to be constructed and tested separately rather than trusted from the existing suites passing.
+
+## 2.4 MUST-CATCH — the specimen plus round 33's four (regression check)
+
+| title | proposed design |
+|---|---|
+| `"Job Postings Archive - Ion Exchange"` (A33-01, this item's specimen) | **true (drops)** |
+| `"Ion Exchange Mumbai Job Openings Check here"` (A32-01 original) | **true (drops)**, unaffected — original alternative still fires |
+| `"Ion Exchange Jobs,Jobs for Ion Exchange, -:JobItUs"` | **true (drops)**, unaffected — `hasRepeatedJobsMention` still fires |
+| `"Executive Jobs in All-India - 12,878 Executive Job Vacancies in All-India - Aug 2026"` | **true (drops)**, unaffected — `vacanc(?:y\|ies)` still fires |
+| `"Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page - iimjobs.com"` | **true (drops)**, unaffected — `company page` still fires |
+
+**5 of 5.** The new alternative is purely additive; none of round 33's four rows changes which clause catches it.
+
+## 2.5 MUST-KEEP — round 33's own 19 rows (incl. the seven fairs) + every ADMITTED row in round 33 A's own event artefact table
+
+**Round 33 B's 19-row corpus** (the four Ruling-89b fairs + the three live-witnessed fairs = the "seven fairs" the brief names, union'd with round 32 A's twelve ADMITTED artefact rows — this is the exact 19-title list `eventweb.test.ts:2898-2948`'s shipped `describe` block already asserts): **0 of 19 false positives**, executed directly.
+
+**Round 33 A's OWN part-3 event artefact table this round** (`MULTIAGENT-report-parity.md:85629-85675`), every row marked `ADMITTED (pool)`, 15 titles including the two must-keep fairs already counted above and the two new-this-round admits (`djk.co.jp`'s exhibition title, `foundry.lbl.gov`'s cross-appearing job-side row, `automotive-technology.com`, `advancedautobat.com`): **0 of 15 false positives**, executed directly.
+
+## 2.6 ADVERSARIAL, CONSTRUCTED
+
+| construction | expected | result |
+|---|---|---|
+| `"Job Postings Fair 2026"` (brief's own required case — a fair must survive) | keep | **false — kept**, correctly (fails the new alternative outright: no archive/board/directory tail word) |
+| `"Job Postings Archive - Careers at State University"` (a university's own archive, same class as the specimen) | drop | **true — dropped** |
+| `"Job Listings Board - Acme Corp"` (the sibling "job listings" shape) | drop | **true — dropped** |
+| `"Job Postings Fair and Career Expo 2026"` (both the new trigger AND real event vocabulary) | keep | **false — kept** (safety net fires regardless of which trigger clause matched) |
+| `"Company Job Board"` (no "postings"/"listings" word at all) | keep (out of scope, not claimed) | **false — kept**, correctly not claimed as covered |
+| `"Postdoc Job Posting: Battery Research Scientist"` (single posting, no archive/board/directory tail) | keep (out of scope — see §2.0's residual) | **false — kept**, correctly not claimed as covered |
+
+**The shipped round-33 30-case adversarial corpus** (`eventweb.test.ts:2899-2969`, all four must-catch + all nineteen must-keep + all seven existing adversarial constructions) was also re-run verbatim against the new design inside the harness: **30 of 30 pass, zero regressions.**
+
+## 2.7 FAILURE DIRECTION AND BLAST RADIUS
+
+**Same failure direction as every existing kind guard in this file (Ruling 32, restated by every prior item including round 33's own):** the new alternative can only ever cause `isJobListingContentTitle` to return `true` where it previously returned `false`, which can only ever cause `webResultToRawEventItem` to return `null` where it previously returned a value — it never edits a value, and a miss on the new alternative (or on `looksLikeEvent`'s rescue) always falls to ADMISSION.
+
+**Blast radius, measured not assumed:**
+- **One line changed** — `JOB_LISTING_CONTENT_RE` gains one alternative (`eventweb.ts:1957-1958`). `hasRepeatedJobsMention`, `isJobListingContentTitle`'s composition, `looksLikeEvent`/`EVENT_SIGNAL_RE`, and the single wiring call site (`:2015`) are byte-unchanged.
+- **Single call site**, confirmed by `grep -rn "isJobListingContentTitle"` across the whole `web/src` tree: only the definition, its own doc comment, and the one call at `:2015`.
+- **Zero collision with the shipped 2890-line `eventweb.test.ts`**: grepped directly for the new trigger shape (`job\s+postings?\s+(archive|board|directory)|job\s+listings?\s+(archive|board|directory)`, case-insensitive) — zero hits; a broader scan for any test-string substring containing "job posting" or "job listing" at all, anywhere in the file — zero hits.
+- **`EVENT_HUB_PATH_SEGMENT_RE` and its round-27/round-30 locked suites are UNTOUCHED by the shipped design** — they were only exercised in §2.3 to evaluate and reject the alternative route, not because this design touches them. No replay is required for what actually ships.
+
+## 2.8 VERDICT
+
+**SHIP the one-alternative addition to `JOB_LISTING_CONTENT_RE`** (§2.2), C's implementation item. **Recommended wiring**: no wiring change at all — `isJobListingContentTitle` is already the 7th guard in `webResultToRawEventItem` (`:2015`); this is a pure regex widening at its existing definition site (`:1957-1958`), plus one new `it` block (or an extra row in the existing must-catch list) in the existing `describe("isJobListingContentTitle (Ruling 89b/90a...)", ...)` block at `eventweb.test.ts:2898`, following the same pattern the round-33 C tests already use. **Named residual, explicitly not claimed as covered**: a single job-posting page ("Postdoc Job Posting: Battery Research Scientist"-shaped, no archive/board/directory tail word) is the SAME underlying defect class, unaddressed by this design and unwitnessed live so far — carried forward by name for a future A to look for, not silently absorbed into this item's own claim.
+
+## THE GATE, BEFORE AND AFTER (B changed no product code, so before = after)
+
+`npx vitest run` — **99 files / 2386 tests, 2386 passing, ZERO failures**, full capture (`gate-r34b-1.log`, deleted with the harness), matching Ruling 92e's expected baseline exactly. No `tsc`/`eslint` re-run needed (B touched zero files under `web/src/`).
+
+**B CHANGED NO PRODUCT CODE.** One item, this one commit (code + log entry together), pushed on landing. Throwaway harness (`web/zz-r34b/`) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere; boolean presence checks only (none needed — no live calls this item); `.env.local` never `cat`-ed; no `PEER_PROFILE_SNAPSHOT_PATH`. No live network calls (pure regex/function-level design work, Ruling 75's live-probe option for this item was not spent, per the brief's own "optional" framing). No large page text pasted anywhere. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**HAND-OFF: `WHOSE TURN: MANAGER — round 34 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
