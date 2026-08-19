@@ -92192,3 +92192,105 @@ This is why Deliverable 3's designs (next entry) can propose extending `pageKind
 **So today, live, through the real pipeline, on the exact recorded URL: no undecoded entity, no site-chrome tail. A's one-time observed string does not reproduce.** Two honest possibilities, neither confirmed: (a) the live page's markup was briefly different at A's exact pull moment (no evidence for this — the page is stable across 4 fetches spanning this session, and A's own pull was only ~10-15 minutes before this round started, not a plausible edit window, though not impossible); (b) Gemini's own grounding/redirect resolution supplied different content that specific call (its indexed snapshot could differ from a live fetch) — plausible but not verifiable without re-running the exact live grounding call, which this round did not do (would consume a live LLM search call for uncertain benefit). **This is treated as a DISPOSITION candidate (Deliverable 4), not a fix** — the mechanism A and the manager both endorsed does not hold up under the SAME "close it by execution" standard Ruling 119d demanded for J1, and manufacturing a fix for an unreproduced defect risks fixing the wrong thing. What IS real and confirmed by reading (Part A above): the Tavily/Brave provider path skips ALL title/snippet cleaning, a genuine, separate, currently-dormant gap.
 
 Continuing to Deliverable 3 (designs for families b/c/d) in the same session.
+
+
+---
+
+### Phase 3 Round 2 — Agent B, DELIVERABLE 3 (Ruling 119c/119f: designs for families b/c/d, structural before per-instance)
+
+**STATUS: DELIVERABLE 3 COMPLETE.** Four bounded designs (one structural cross-surface port, two precedented name-repair strips, one structural expiry-evidence widening), one formal escape-clause invocation with live executed proof, and one small precedented residual flagged. **None implemented — B changes no product code.** Gate re-confirmed before writing (`npx vitest run`: 100/2446 green this run; `npx tsc --noEmit`: clean). Harness deleted, `git status` clean.
+
+---
+
+## DESIGN 1 — Family (a)/F2: port the job surface's OWN date-structured-path guard to events (structural, cross-surface, not a new invention)
+
+**The asymmetry, confirmed by reading both files this round:** `jobweb.ts:100-108` already ships `DATE_STRUCTURED_PATH_RE` (`/^\/\d{4}\/\d{2}\/\d{2}\//`) + `isDateStructuredResearchPath(title, pathAndQuery)`, which rejects a lab/research-institute dated blog post UNLESS the title itself states real job vocabulary (`!JOB_TEXT_RE.test(title)` safety net). **`eventweb.ts` has no equivalent at all** — this is the exact gap A named and Ruling 118's own witness table already flagged ("the JOB surface already refuses this exact host class via `isDateStructuredResearchPath`... The event surface has no equivalent").
+
+**MEASURES:** the URL path matches `^/\d{4}/\d{2}/\d{2}/` (a literal `YYYY/MM/DD/` prefix — WordPress/blog-CMS's own dated-permalink convention, closed by construction, not English vocabulary) AND the title does NOT clear `looksLikeEvent(title)` (the event-side mirror of the job side's own `!JOB_TEXT_RE.test(title)` safety net).
+
+**Verified by execution this round:** both F2 witnesses' paths (`/2025/07/11/...`, `/2025/04/27/...`) match the date-path regex exactly; both titles independently confirmed `looksLikeEvent(title) === false` (Deliverable 2, Part C) — so a ported guard fires on BOTH witnesses. **Blast radius grepped:** `grep -nE "https?://[a-zA-Z0-9.-]+/[0-9]{4}/[0-9]{2}/[0-9]{2}/" src/lib/events/sources/eventweb.test.ts` — **zero existing fixtures** use this path shape, so no collision risk with today's suite. None of A's 6 sampled correct-event control URLs (Deliverable 2, Part D) carry a dated-blog path either.
+
+**ASSERTS:** nothing beyond the two conditions above — no new vocabulary, no new host list.
+
+**TOLERATES (failure direction):** a miss (a real event genuinely announced via a dated-blog-shaped URL, with a title that clearly states event vocabulary — e.g. `/2026/03/15/battery-symposium-2026-registration-open`) is RESCUED by the safety net exactly as the job side's own precedent already protects its equivalent must-keep case; the row survives unchanged. A guard that does not fire changes nothing.
+
+**Placement:** a NEW, event-surface-OWNED copy of the pattern (not a cross-file import) — `DATE_STRUCTURED_PATH_RE`/`isDateStructuredResearchPath` are module-private in `jobweb.ts` (confirmed: no `export` keyword), and this file's own convention is that each surface keeps parallel-but-separate guards (`NON_JOB_PATH_RE` vs `DENY_PATH_RE`/`COMMERCE_PATH_RE`, `PAPER_PAGE_HOSTS` event-only) rather than cross-importing between job and event source files. Exporting and sharing instead is a valid alternative; naming both options for C/the manager to pick rather than picking silently.
+
+**CORPUS:** must-catch = F2a, F2b (both, verified above). Must-keep = A's own 6-URL correct-event control sample (Deliverable 2, Part D) — zero of them carry a dated-blog path, so zero interaction; plus the existing `eventweb.test.ts` suite (zero fixture collision, grepped).
+
+---
+
+## DESIGN 2 — Family (b): bare `forum` — ESCAPE CLAUSE INVOKED, with the live contrast proof that makes it necessary
+
+**Ruling 119f's escape clause fires here, and this round supplies the executed evidence that makes it the right call rather than a shortcut.**
+
+Fetched BOTH F3 witnesses live (`/t/lithium`, bare root `/`) and the round's own must-keep contrast case, `battery-business-forum.com` (real conference, confirmed live by A). Real titles, verbatim from the fetched pages:
+
+- F3 thread: `<title>Lithium - Batteries Forum ⚡</title>` (no `og:title`)
+- F3 root: `<title>Batteries Forum ⚡</title>`
+- Contrast (real event): `<title>Battery Business & Development Forum</title>` (`og:title` present, identical)
+
+**Traced the ADMISSION mechanism precisely (not just cited A's summary):** `looksLikeEvent(title)` is true for all three via the bare word "forum" in `EVENT_SIGNAL_RE` — that is guard 10 in Deliverable 2's map, and it is genuinely indiscriminate between these three strings. **Traced the NAME-SELECTION mechanism too, one layer deeper than A went:** `isChromeSegment`'s own B12-04 host-brand EXEMPTION (`eventweb.ts:1123`, *"when [a segment] is itself the page's own host brand AND carries an event-kind noun, un-reject it"* — built to rescue a real event legitimately named after its own domain, e.g. `internationalbatteryseminar.com`) is what SELECTS "Batteries Forum ⚡" as the winning segment for F3, by the EXACT SAME mechanism that correctly selects "Battery Business & Development Forum" for the real conference. **The two strings are structurally identical by every signal this pipeline can read:** same word-class match, same host-brand-equals-own-domain shape, same event-kind-noun presence. `schemaTypeToken` measurement (Deliverable 2, Part D) does not help either — the real conference's own page carries NO schema.org markup (same "NONE FOUND" as the fake), so that channel cannot discriminate this family the way it can discriminate 2 of 7 events elsewhere.
+
+**Why a URL-structure fix (the ONE other idea considered) is directly precedented as unsafe, not merely untried:** the job surface's own `FORUM_THREAD_URL_RE` doc comment (`jobweb.ts:294-296`) states its own MEASURED result for exactly this shape: *"The naive token-only form (`/t/`, `/topic/`, `/thread/`, `/forum/` …) was measured at 46/58 with EIGHT FALSE FIRES."* F3's own thread URL (`/t/lithium`) would not even be caught by the job side's SAFE, shipped version of this check (which requires a numeric thread ID after `/t/`; `lithium` is not one), so the only URL-shaped rule that WOULD catch it is the exact shape this codebase already measured and rejected as unsafe.
+
+**DISPOSITION (per Ruling 119e's own machinery, applied here even though this is a Deliverable-3 design item, because the reasoning is identical):**
+- **Measurement that justifies not fixing:** the executed 3-way contrast above — title vocabulary, host-brand-exemption logic, and schema.org `@type` all fail to separate the real "Forum" conference from the fake one; the one URL-shape idea available is independently proven unsafe by this codebase's own prior measurement (46/58, 8 false fires) on the identical shape.
+- **Tally duty for future A rounds:** count how often bare "forum" is the SOLE reason a row clears the topicality gate (guard 10), separately from every other admitted "Forum"-named row, so a future round can tell whether this is a recurring, worsening cost or a rare one.
+- **Protective test:** none proposed here since no guard is shipped — the existing suite's own must-keep for `battery-business-forum.com`-shaped real conferences is the protection already in place, and it stays exactly as is.
+- **Reopen threshold:** if a future census finds a SECOND distinct discussion-forum-platform witness (a different host, not `batteries-forum.com` again), OR finds that the affected hosts cluster on a small, genuinely closed set of forum-hosting SaaS products with their OWN detectable boilerplate (a "powered by X" footer, a specific meta-generator tag) — that would be a NEW, closed, safe signal this round did not have, and is the trigger to re-open this item with a real design rather than a guess.
+
+---
+
+## DESIGN 3 — Family (c)/F8: strip a trailing "applications open" announcement clause from an otherwise-real name
+
+**Both witnesses, verbatim from A's report:** `"Battery Young Researcher Award: Applications Open Today!"` and `"2026 SPEC Battery Boot Camp APP is NOW OPEN"`. Neither is caught by the file's own existing, structurally identical sibling, `HEADLINE_PASSIVE_RE` (`deadline/registration/abstract/submission/date` + `extended/postponed/cancelled/delayed/announced/updated/moved/rescheduled/confirmed`) — "applications" is not in that subject list and adjectival "open" is not in that participle list. **This is a new, disjoint vocabulary sibling, following the identical established convention**, not a widening of the existing regex.
+
+**MEASURES (proposed, unexecuted — no product file touched):**
+```
+const APPLICATION_STATUS_TAIL_RE =
+  /[\s:]+(?:applications?|app)\s+(?:is\s+|are\s+)?(?:now\s+)?open(?:\s+today)?[!.]*$/i;
+```
+Manually verified against both live strings (traced by hand, not run — no product code was touched to test it): matches `": Applications Open Today!"` as a trailing clause on witness 1, and `" APP is NOW OPEN"` on witness 2 (case-insensitive covers the literal ALL-CAPS witness). End-anchored, mirroring `WELDED_LABEL_BACK_RE`'s own convention.
+
+**Placement:** a new strip function (`stripApplicationStatusTail`, mirroring `stripBannerLeadIn`'s exact shape) composed into `selectEventTitleSegment`'s existing chain: `stripApplicationStatusTail(stripBannerLeadIn(stripWeldedPageTypeLabel(chosen), host))` — same "three-plus disjoint vocabularies, none able to undo another" property this file's own A23-02 comment already documents for the existing three strips.
+
+**ASSERTS/TOLERATES (failure direction, same shape as every strip in this file):** veto-only — if the remainder is empty, still fails `isChromeSegment`, or fails `looksLikeEventTitle`, return the ORIGINAL segment unchanged. A miss (a real title that doesn't match this exact tail shape) renders exactly as today.
+
+**Vacuity, stated honestly:** only "applications/app + open" is witnessed (2 of 2 live rows share it). No sibling ("registration open," "enrollment open") has a live witness this round — named here as reasoned-by-analogy, NOT shipped, matching this file's own stated discipline throughout (`EARNINGS_CALL_PAGE_RE`'s own comment: *"Every candidate term was measured ALONE and seven were cut for earning nothing on real data"*).
+
+**CORPUS:** must-catch = both F8 witnesses (traced by hand above). Must-keep: no real admitted event in A's sample ends in this exact "applications/app open" shape (checked against A's correct-row list, Deliverable 2 Part D and A's own Part 1 report) — the closest-shaped real row, `smelab.org/spec-battery-bootcamp` ("SPEC Battery Bootcamp"), does NOT carry this tail at all and is untouched by construction (the regex only ever REMOVES a matching tail; a title without one is unaffected).
+
+---
+
+## DESIGN 4 — Family (c)/F9: strip a trailing bare "TEST" annotation — RE-VERIFIED LIVE, ROOT CAUSE NOW CONFIRMED (not inferred)
+
+**A's own account marked this incompletely traced — "inference, not verification."** This round closed it by the SAME live-execution standard Ruling 119d demanded for J1.
+
+**Fetched the exact recorded URL live.** The page's `og:title` meta tag reads, TODAY, byte-for-byte: `content="Investor Showcase for Battery Storage TEST"` — **A's exact defect reproduces, character for character, right now.** But the SAME page's plain `<title>` HTML tag — a DIFFERENT field — reads: `<title>Home - Investor Day: Energy Storage Startup Showcase. Online registration by Cvent</title>` — the CORRECT name, no "TEST" anywhere. **`pageTitleFromHtml` (`gemini-search.ts:489-498`) strictly prefers `og:title` over `<title>` and only falls back when `og:title` is absent — here it IS present, so the stale one wins.**
+
+**ROOT CAUSE, CONFIRMED: this is a live, real, upstream data-quality defect on the event organiser's OWN Cvent page setup** — almost certainly a "social-sharing title" field the organiser set during initial draft setup and never updated, while separately updating the page's real, visible title. **Structurally the same KIND of defect as J1** (a live upstream field carrying operator-leftover text, not a pipeline bug) but a different SHAPE (a QA/draft annotation word, not a bare placeholder label).
+
+**MEASURES (proposed, unexecuted):**
+```
+const DRAFT_ANNOTATION_TAIL_RE = /\s+TEST\s*$/;
+```
+Deliberately CASE-SENSITIVE and end-anchored: requires the standalone, all-caps token `TEST` as the segment's own last word, preceded by whitespace. This does not touch the ordinary lowercase/Title-Case English word "test" appearing mid-title in a real name.
+
+**Placement:** same composed strip chain as Design 3, OR — flagged as an open placement question rather than decided unilaterally — potentially better homed in the SHARED `gemini-search.ts` layer (`decodeTitleUntilStable`), since this is a "the page's own og:title metadata carries a leftover annotation" defect, not something specific to being an event — the identical bug shape is plausible on a job posting's ATS setup too, unwitnessed this round. Naming both options for C/the manager rather than picking.
+
+**ASSERTS/TOLERATES:** same veto-only shape as Design 3 — empty/failing remainder keeps the original.
+
+**Vacuity:** only `TEST` is witnessed (1 live row). `DRAFT`/`SAMPLE`/`DO NOT USE` are NOT proposed — no witness, named as unwitnessed siblings only.
+
+**CORPUS:** must-catch = F9 (re-verified live, above). Must-keep: no real admitted event title in A's sample ends in a bare uppercase "TEST" token (checked by inspection of A's own correct-row list).
+
+---
+
+## RESIDUAL, NAMED NOT SHIPPED — the Tavily/Brave `cleanDisplayText` gap (Deliverable 2, Part A)
+
+A small, cheap, precedented fix exists (route `searchTavily`/`searchBrave`'s raw `r.title`/`r.content`/`r.description` through `cleanDisplayText` before building `WebResult`, on both surfaces, mirroring exactly what the gemini branch's `pageTitleFromHtml`/`pageSnippetFromHtml` already do) — **not designed in full here because it has ZERO current reader-facing cost** (Tavily is disabled this phase, Ruling 118c) and is better prioritised the moment Tavily/Brave actually resume, when a live census can supply real witnesses rather than a hypothetical one. Named as a pre-flight item for whichever future round re-enables either provider.
+
+---
+
+Continuing to Deliverable 4 (dispositions with Ruling 119e's full machinery) and the Ruling 119b check-me clause in the same session.
