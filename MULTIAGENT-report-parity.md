@@ -88674,3 +88674,17 @@ Sonnet twenty-third data point: the ordinal-arm discovery is exactly why "just a
 
 **RULING 104 — round 37 C is VERIFIED AND ACCEPTED; M36-01's fix is LIVE. The hand-off stands: `WHOSE TURN: A — round 37, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty with full untruncated titles, pool-count re-measure, watch list, M36-01 verification — the scanx.trade specimen must drop at ingestion if offered and by direct execution regardless, benchmark-flake per Ruling 96b)`.** **If A measures double-zero, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate; the manager's fresh-window re-measurement is the final arbiter, exactly as round 36 proved it must be.**
 
+
+### RULING 105 (USER, 2026-08-19) — THE CONVERGENCE CLOSURE CRITERION REPLACES THE LITERAL 0% GATE; AND THE POST-CLOSE MERGE INSTRUCTION
+
+**The user chose option 1** of the manager's three-option briefing ("选择1"), after the manager disclosed the structural fact that a literal 0%-of-all-differences gate against a live, hourly-changing pool may have no finite closure (each census window carries a small probability of drawing a never-before-seen rare shape; the estimate misses across rounds 30-37 all trace to treating the known list as the whole list).
+
+**105a — THE CRITERION, PRECISELY:** Phase 1 CLOSES when **TWO consecutive full rounds** — each full round = A's gate-candidate census (its own live windows) PLUS the manager's independent fresh-window re-measurement, i.e. four independent windows total across the two rounds — show **ZERO NEW DEFECT CLASSES**. Definitions:
+- A **NEW DEFECT CLASS** = a defect whose mechanism/shape is NOT already recorded in this file as a named residual, a named cost, or a previously-filed finding class. It RESETS the convergence clock.
+- A **REOPENED NAMED RESIDUAL** (e.g. an unwitnessed verb sibling appearing organically, exactly M36-01's shape) = MAINTENANCE: it is fixed via the normal B→C cycle but does **NOT** reset the convergence clock — its class was already on the books.
+- Named costs, explained differences, and the recorded observation classes (102c's job-posting-age question etc.) continue not to count, exactly as before.
+- **Round 37 is convergence-candidate round 1.** If round 37 (A's census + the manager's re-measurement) shows zero new classes, round 38 runs as candidate round 2 (a verification round: A census + manager re-measurement; B/C only if maintenance arises). Two clean candidates → PHASE 1 CLOSES.
+- **After Phase 1 closes:** future rare shapes go to a MAINTENANCE LIST handled without blocking Phase 2 (the Tier 1/2 deep-report campaign per Ruling 69).
+
+**105b — THE POST-CLOSE MERGE INSTRUCTION (user, verbatim intent):** when Phase 1 completes, the branch `feature/summary-report-revamp` is to be merged into `main` DIRECTLY (no PR — "不需要PR直接push and merge main"), with a **PR-quality, exhaustive description**: (1) every piece of functionality this branch added, in concrete detail; (2) the full story of this working session — how the ABC subagent loop (A measures / B designs / C implements / manager verifies and rules) ran through 30-40+ rounds to reach the final result, including the process's own evolution (the strict gate, the independent re-measurement, the named-cost/residual doctrine, the provider migration, the convergence criterion). The description lives in the merge commit message and, given its length, also as a durable document committed to the repo. The manager executes this at close, then reports.
+
