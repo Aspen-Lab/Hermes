@@ -92940,3 +92940,49 @@ Per the brief: a value produced by hand-feeding a function is evidence about the
 ---
 
 **PART 1 (Duty 1 fix verification + Duty 2 event census) is COMPLETE.** Harness `web/zz-p3a4/` deleted before this commit (`git status --porcelain --untracked-files=all` confirmed clean). Continuing to PART 2 (Duty 2, job census) in the same session.
+
+### Phase 3 Round 4 — Agent A, PART 2 (Duty 2: the job re-census)
+
+**STATUS: PART 2 COMPLETE. MEASURES ONLY.** Same profile snapshot, same `NODE_ENV=development` stub, same fresh-no-op-`PoolCache`-per-pull discipline as Part 1. 4 of 5 job pulls succeeded (0, 1, 2, 4); pull 3 timed out on `jobweb` (`Error: [jobweb] source-timeout after 25000ms`, pool collapsed to the Tier-0-only rows, all scored out — 0 final-pool rows that pull), matching Part 1's own disclosed 1-of-5 job flake rate. Not backfilled, matching round 1 A's own precedent of accepting a single job flake as data rather than re-rolling it. `apiKeys` deliberately OMITTED from every request — zero adzuna/usajobs calls, confirmed by their total absence from every pull's `fetched` map.
+
+**22 unique job URLs across the 4 successful pulls.** `CORRECT JOB POSTINGS — 17 of 22 unique rows**, not itemised individually (matching round 1 A's own convention); representative confirmed-real witnesses: `careers.gevernova.com` GE Vernova internship (company `undefined` by design, Ruling 26/B8-03), `efzu.fa.em2.oraclecloud.com` DTU Energy PhD scholarship, `talents.vaia.com` ORAU PhD posting, `americanlithiumenergy.com` Battery Scientist, `geosi.com` Battery Materials Scientist, `cadenzainnovation.com` PhD Battery Chemist/Engineer (round 1's own witness, recurred), `lanl.jobs` Los Alamos postdoc, `jobs.ac.uk` University of Warwick PhD studentship, `postdocjobs.com`, `careers.tudelft.nl`. **One incidental, non-defect observation:** the real Battelle Energy Alliance / Idaho National Laboratory molten-salt-electrochemistry postdoc appeared mirrored across THREE separate aggregator sites this round (`diversityjobs.com`, and twice on `bebee.com` under slightly different titles) — the same real posting, not a duplicate-detection defect (each is a distinct URL/listing), noted for completeness only.
+
+**Ruling 33 (short-acronym collision):** 0 of 22 rows — the one "Ion Exchange" mention (`shine.com`, "Membrane Development Scientist R&D Job in Ion Exchange at Hyderabad", company "Ion Exchange") is a genuine Indian chemical company by that literal name, not an LCO-adjacent collision. **Ruling 45a (`euagenda.eu`) / Ruling 41c (three named hosts):** 0 appearances, checked by direct scan across the combined 108-row corpus (both surfaces, all pulls incl. the two supplementary event pulls).
+
+---
+
+## DUTY 2 FINDINGS, JOB SURFACE, RANKED BY WHAT A READER LOSES, WORST FIRST
+
+**EXPLAINED (already-ruled, not new):**
+- **J5a (Faraday Institution listing page) RECURRED, 1 of 4 pulls**: `https://www.faraday.ac.uk/opportunities/recruiting-phd-engd-studentships-in-battery-science-engineering/`, "Recruiting 36 PhD/EngD Studentships in Battery Science/Engineering" — pull 4. The exact URL and vocabulary-gap round 1 A recorded (`LISTING_TITLE_RE` misses "Studentships"). Disposition 4 (round 2 B) already covers this by name — not fixed by design, pending the ~100-title sweep its own reopen threshold requires. Reported for the record, not filed as new.
+
+---
+
+### J7. A job-board aggregator's title-splitting heuristic accepts a trailing segment as the company without checking whether it reads like one — 2 of 4 pulls, two different witnesses, a WRONG VALUE (same severity doctrine as J1)
+
+- `https://faam.com/en/research-scientist-cell/`, rendered title "Research Scientist", **company "Cell"** — pulls 2, 4.
+- `https://diedremoire.com/Battery-Materials-Research-Scientist-Lansing-MI-1044-1-11021.html`, rendered title "Battery Materials Research Scientist", **company "Lansing, MI, Michigan, 11021"** — pull 4.
+
+**Both verified live and both are genuine defects, not real company names.** faam.com: **"FAAM is the company hiring... The word 'Cell' is not used as a company name; it appears only in the job title 'Research Scientist – Cell' and in category labels like 'R&D - BATTERY CELL'... the position is within the R&D Team at FAAM's facility in Teverola, Italy."** The real employer (FAAM) never reaches the company slot at all; "Cell" — a fragment of the job title's own department qualifier — does. diedremoire.com: **"The text 'Lansing, MI, Michigan, 11021' appears only in the page header/title and is not used as a company name anywhere... the actual employer's identity is deliberately obscured" (a recruiter-intermediary posting).** Here there IS no real company to lose — but a location-plus-ZIP string is still being asserted AS a company name, which is its own false claim.
+
+**Traced to mechanism, reproduced by direct execution against the real `webResultToRawJobItem`** (not the live page's exact raw title, since that was not captured — a labelled reconstruction from the recorded rendered output and the page's own confirmed content): a dash-separated title (`"Research Scientist – Cell"`, `"Research Scientist - Cell"`, or `"Battery Materials Research Scientist - Lansing, MI, Michigan, 11021"`) reproduces BOTH renders exactly (`title` becomes the pre-dash segment, `company` becomes the post-dash segment) — confirming this file's own documented title-split company-extraction convention (`jobweb.ts:894-925`) is the mechanism. **This convention already has TWO existing vetoes for specific non-company shapes** — `SEASON_COHORT_LABEL_RE` (a bare season/cohort label, e.g. "Summer 2027") and `looksLikeBareLocation`/`TRAILING_STATE_CODE_RE` (a candidate ending in a bare two-letter US state code, e.g. "Cambridge, MA") — **and BOTH witnesses here are near-misses on the EXISTING veto machinery, not evidence of no veto at all:**
+- "Cell" is a bare single generic word — neither season/cohort-shaped nor location-shaped, so neither existing veto's vocabulary reaches it.
+- "Lansing, MI, Michigan, 11021" IS location-shaped, but `TRAILING_STATE_CODE_RE` requires the candidate to END in a bare two-letter state code (`,\s*(STATE_CODES)$`) — this string ends in a ZIP code (`, 11021`), with the state code "MI" sitting in the MIDDLE, so the anchored regex misses it even though a human reads this as obviously a location.
+
+**Classification: an INSTANCE of the already-recorded "title-split company candidate needs vetting" mechanism (the same family `SEASON_COHORT_LABEL_RE`/`looksLikeBareLocation` already exist to police, per this file's own R7/B5-03/A23-01(c) history) — not a brand-new mechanism. Two new witnesses represent two new UNCOVERED shapes within that family: a bare generic dictionary word, and a location string ending in ZIP rather than bare state code.** Flagged as a genuine wrong-VALUE defect (Ruling 119d's doctrine: "a wrong field is a lie the reader will trust") for a future B/C round; the "Cell" shape in particular risks being a much more open-ended problem than a simple vocabulary-list addition (any generic word could sit after a dash) and may need its own bounded design rather than a third narrow veto bolted onto the first two — named as a caution, not a recommendation, since A does not design fixes.
+
+### J8. The job-board PLATFORM'S bare brand name, rendered as the job TITLE — 1 of 4 pulls — RECURRENCE of round 1's J4 class, new host
+
+- `https://www.neumaterials.com/job/electrochemical-engineer-electrolyzers`, rendered title **"NEU Battery Materials"**, company `undefined` — pull 1.
+
+**Verified live: "Company Name: NEU Battery Materials. Job Title: 'Electrochemical Engineer - Electrolyzers'... a Singapore-based climatetech firm specializing in lithium battery recycling."** The real role title is completely lost from the rendered card — replaced by the company's own name, structurally identical to round 1 A's own J4 witness (Zintellect) and its named echo of the event side's F5. **Classification: an INSTANCE of the recorded J4 class (Disposition 5/2's own "bare site identity, no guard on either surface covers a title that is pure brand with nothing trailing it" mechanism) — not new.** Not independently re-traced against `isHostBrandProgrammePage` this round (J4's own trace already fully explains the shape: the outer regex requires brand-plus-programme-noun, and a bare brand alone matches none of its clauses).
+
+### J9. A recruiting-aggregator's company slot, UNVERIFIED this round — 1 of 4 pulls — flagged, not confirmed
+
+- `https://www.jobleads.com/us/job/r-d-pilot-plant-technician-alkaline-battery-materials--...`, rendered "R&D Pilot Plant Technician", company **"Alkaline Battery Materials"** — pull 2.
+
+**Live verification attempted and BLOCKED (HTTP 403).** "Alkaline Battery Materials" reads plausibly either as a real specialty-chemicals company name or as a product-category label mistaken for one (structurally adjacent to J7's own shape) — genuinely unresolved this round. Stated as an open flag per the standing "total silence is worse than a bare won't-fix" discipline (Disposition 5's own framing), not counted toward the ranked list's classification totals below since it is unconfirmed either way.
+
+---
+
+**PART 2 (Duty 2, job census) is COMPLETE.** Continuing to PART 3 (Duty 3: papers web-row count + standing tallies; the full combined ranked list; the gate; close-out) in the same session.
