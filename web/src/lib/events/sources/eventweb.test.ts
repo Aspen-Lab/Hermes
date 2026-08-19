@@ -2968,4 +2968,92 @@ describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84
       expect(isJobListingContentTitle("A Job Well Done: Conference Recap")).toBe(false);
     });
   });
+
+  // ROUND 34 C (Ruling 92b/93, A33-01): a fifth job-content shape falls
+  // through all seven guards -- a company's own job-postings ARCHIVE/INDEX
+  // page ("Job Postings Archive - Ion Exchange" @
+  // ionexchangeglobal.com/job_posting/, witnessed 2 of 5 pulls, round 33 A).
+  // One additive alternative on JOB_LISTING_CONTENT_RE, gated on an
+  // index/archive-shaped tail word (archive/board/directory) so the bare
+  // "job postings"/"job listings" phrase alone cannot fire -- a bare trigger
+  // was measured and rejected in round 34 B's design turn because it would
+  // wrongly drop a constructed fair title ("Job Postings Fair 2026") that
+  // looksLikeEvent's own "job fair" alternative cannot rescue (it requires
+  // the two words literally adjacent). Corpus below is round 34 B's §2.4-2.5
+  // table, transcribed verbatim.
+  describe("isJobListingContentTitle (Ruling 92b/93 — job postings/listings ARCHIVE pages)", () => {
+    it("catches the A33-01 specimen and drops it at webResultToRawEventItem", () => {
+      expect(isJobListingContentTitle("Job Postings Archive - Ion Exchange")).toBe(true);
+      expect(
+        webResultToRawEventItem(
+          {
+            title: "Job Postings Archive - Ion Exchange",
+            url: "https://ionexchangeglobal.com/job_posting/",
+          },
+          Date.now(),
+        ),
+      ).toBeNull();
+    });
+
+    it("still catches round 33's four must-catch rows (regression)", () => {
+      for (const title of [
+        "Ion Exchange Mumbai Job Openings Check here",
+        "Ion Exchange Jobs,Jobs for Ion Exchange, -:JobItUs",
+        "Executive Jobs in All-India - 12,878 Executive Job Vacancies in All-India - Aug 2026",
+        "Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page - iimjobs.com",
+      ]) {
+        expect(isJobListingContentTitle(title)).toBe(true);
+      }
+    });
+
+    it("keeps the candidate-1a adversarial construction (gated alternative must not trigger on a bare phrase)", () => {
+      // No archive/board/directory tail word -- the new alternative must not
+      // fire, and looksLikeEvent cannot rescue it anyway (EVENT_SIGNAL_RE's
+      // "job fair" alternative requires the words adjacent; "Postings" sits
+      // between them here).
+      expect(isJobListingContentTitle("Job Postings Fair 2026")).toBe(false);
+    });
+
+    it("keeps Ruling 89b's four and this item's own three live-witnessed fairs (the seven fairs)", () => {
+      for (const title of [
+        "Nuclear Career Fair - S&T Women in Nuclear",
+        "2026 Job Fair & Hiring Event Calendar - JobFairX",
+        "Career Expo & Job Fair",
+        "Nittany Lion Careers",
+        "2026 MSE-NE Career Fair",
+        "Clean Energy Job Fairs - RE+ Events",
+        "Nuclear job fair",
+      ]) {
+        expect(isJobListingContentTitle(title)).toBe(false);
+      }
+    });
+
+    it("still admits 'Event Archive' at an /events path through isEventHubResult (candidate 2's collateral case)", () => {
+      // Locks today's behaviour -- the rejected path-based candidate would
+      // have dropped this real single-event page; the shipped design does
+      // not touch isEventHubResult at all.
+      expect(isEventHubResult("Event Archive", "https://example.test/events")).toBe(false);
+    });
+
+    it("resolves round 34 B's §2.6 adversarial constructions", () => {
+      // A university's own archive, same class as the specimen -- must drop.
+      expect(
+        isJobListingContentTitle("Job Postings Archive - Careers at State University"),
+      ).toBe(true);
+      // The sibling "job listings" shape -- must drop.
+      expect(isJobListingContentTitle("Job Listings Board - Acme Corp")).toBe(true);
+      // Both the new trigger and real event vocabulary -- safety net fires
+      // regardless of which clause matched -- must keep.
+      expect(
+        isJobListingContentTitle("Job Postings Fair and Career Expo 2026"),
+      ).toBe(false);
+      // No "postings"/"listings" word at all -- out of scope, must keep.
+      expect(isJobListingContentTitle("Company Job Board")).toBe(false);
+      // Single posting, no archive/board/directory tail -- named residual,
+      // out of scope, must keep.
+      expect(
+        isJobListingContentTitle("Postdoc Job Posting: Battery Research Scientist"),
+      ).toBe(false);
+    });
+  });
 });

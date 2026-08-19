@@ -1954,8 +1954,35 @@ export function eventNameFrom(
 // THE SIGNAL IS TITLE VOCABULARY, NOT PATH SHAPE -- measured and
 // rejected, see the round log: two of the three fresh witnesses carry no
 // date-structured path at all, so a path clause would miss them.
+//
+// ROUND 34 C (Ruling 92b/93, A33-01): a fifth job-content shape falls through
+// all seven guards -- a company's own job-postings ARCHIVE/INDEX page ("Job
+// Postings Archive - Ion Exchange" @ ionexchangeglobal.com/job_posting/,
+// witnessed 2 of 5 pulls, round 33 A). Round 33's own two triggers both miss
+// it: hasRepeatedJobsMention needs "job"/"jobs" stated TWICE, this title
+// states it once ("Job Postings"); the phrase list above has no "job
+// postings" phrase at all. isEventHubResult also misses it -- its path word
+// list has "jobs" but not the singular, underscored "job_posting" terminal
+// segment (measured and rejected as the fix site, see the round log:
+// extending the path list alone does not catch this specimen, because
+// isEventHubResult ALSO requires the title head to match its own separate
+// tail/head vocabulary, which "Job Postings Archive" does not; the
+// coordinated second change that WOULD catch it was measured and found to
+// introduce new collateral on a real single-event "Event Archive" title, an
+// older and far more broadly shared guard than this one).
+//
+// BARE "job postings" was measured and REJECTED: "Job Postings Fair 2026"
+// contains the phrase but is not rescued by looksLikeEvent (EVENT_SIGNAL_RE's
+// "job fair" alternative requires the words adjacent; "Postings" sits
+// between them here), so a bare trigger would wrongly drop a real fair --
+// the fair title the safety net cannot structurally rescue. Requiring an
+// index/archive-shaped TAIL word alongside "job postings" or "job listings"
+// -- the same shape the specimen itself carries, and the same shape
+// round-25's own EVENT_INDEX_TITLE_RE already recognises for the EVENT noun
+// ("archive" is one of that regex's own tail words) -- closes exactly the
+// witnessed gap without re-opening the fair false-positive.
 const JOB_LISTING_CONTENT_RE =
-  /\bjob\s+openings?\b|\bjob\s+vacanc(?:y|ies)\b|\bvacanc(?:y|ies)\b|\bcompany\s+page\b/i;
+  /\bjob\s+openings?\b|\bjob\s+vacanc(?:y|ies)\b|\bvacanc(?:y|ies)\b|\bcompany\s+page\b|\bjob\s+(?:postings?|listings?)\s+(?:archive|board|directory)\b/i;
 
 // A second, independent trigger: the word "job"/"jobs" stated twice or
 // more in one title is the SEO-keyword-stuffed shape a job-board's own

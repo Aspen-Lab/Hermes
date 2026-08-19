@@ -270,11 +270,73 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 34 + 2026-08-19 00:47:56Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 34 C IS COMPLETE @ 2026-08-19 ~00:5x UTC — THE ONE
+                  COMMISSIONED ITEM (RULING 93, B's §2.2 VERBATIM) SHIPPED,
+                  ONE COMMIT, PUSHED ON LANDING.** Run by `LAPTOP-3CL10CG5`.
+                  Claimed the lock after `git pull` and after confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`311c58e`). Grepped `Round 34 — Agent C` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  the Round 34 — Agent B entry (§2.0-2.8) and Ruling 93 in
+                  full before touching any code.
+
+                  **IMPLEMENTED VERBATIM PER §2.2**: `JOB_LISTING_CONTENT_RE`
+                  (`eventweb.ts`) gained the one appended alternative,
+                  `job\s+(?:postings?|listings?)\s+(?:archive|board|directory)`,
+                  byte-for-byte from B's printed regex. Doc comment extended
+                  with B's reasoning (the specimen; why bare "job postings"
+                  was rejected — the fair title the safety net structurally
+                  cannot rescue; why the path-based candidate was rejected —
+                  insufficient alone, collateral on the older, more broadly
+                  shared `isEventHubResult` guard). `hasRepeatedJobsMention`,
+                  `isJobListingContentTitle`'s composition, the
+                  `looksLikeEvent` safety net, and the wiring call site (now
+                  `:2042`, shifted only by the added comment lines) all
+                  confirmed BYTE-UNCHANGED, read directly before and after.
+
+                  **TESTS: B's §2.4-2.6 corpus, `eventweb.test.ts`, one new
+                  sibling `describe` block, 6 `it`s** (the A33-01 specimen
+                  caught both directly and via `webResultToRawEventItem` on
+                  its exact URL; round 33's four must-catch rows replayed as
+                  a regression check; the candidate-1a adversarial `"Job
+                  Postings Fair 2026"` KEPT; the seven fairs KEPT; `"Event
+                  Archive"` at an `/events` path still ADMITTED through
+                  `isEventHubResult` — locks candidate 2's collateral case as
+                  today's unchanged behaviour; B's remaining §2.6 adversarial
+                  constructions).
+
+                  **GATE, AFTER THE ITEM: 99 files / 2392 tests, 2392
+                  passing, ZERO failures** (2386 baseline + 6 new `it`
+                  blocks, exact; full-capture log, zero `FAIL` lines, no
+                  identity-first re-run needed). `npx tsc --noEmit` clean.
+                  `npx eslint src` — exactly the one standing `quiz.tsx:46`
+                  error, unchanged.
+
+                  **C CHANGED CODE, AS COMMISSIONED.** One commit (code +
+                  tests + this log entry together), pushed on landing.
+                  `git status --porcelain --untracked-files=all` showed only
+                  the two intended source files modified — no throwaway
+                  scaffold created or needed. No credential anywhere; no live
+                  network calls (Ruling 75). No branch/worktree/PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No
+                  deviation from §2.2 or Ruling 93** — nothing broke a
+                  recorded control or locked test, no `POLICY — manager
+                  decides` entry needed.
+
+                  **HAND-OFF: `WHOSE TURN: A — round 34, GATE CANDIDATE
+                  ROUND`** (value + visual, `searchProvider: gemini`,
+                  artefact duty, pool-count re-measure, watch list incl. the
+                  single-posting-page residual, flake-identity-first gate
+                  discipline). Turn lock RELEASED (`HELD BY: free`) in this
+                  commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~05:0x UTC — ROUND 34 B
                   VERIFIED INDEPENDENTLY, RULING 93 APPENDED (§4).** Gate
                   re-run (full-capture): **2386/2386, zero failures.**
@@ -85998,3 +86060,31 @@ The brief's other obvious candidate: add a `job[_-]postings?`-shaped terminal-pa
 - **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.**
 - Sonnet fourteenth data point: a tight single-item turn — two obvious-looking candidates killed by measurement before the right one shipped; the faithful-re-implementation cross-check (proving the local copy against every locked control row before trusting it on the new case) is a method worth naming for future harness work.
 
+
+### Round 34 — Agent C (ONE item: implement B's §2.2 verbatim, Ruling 93 — the gated `job postings/listings + archive|board|directory` alternative)
+
+**SHIPPED, ONE COMMIT (code + tests + this log entry together).** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and after confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED (`311c58e`). Grepped `Round 34 — Agent C` first — zero prior entries existed, fresh start not a resume. Read the Round 34 — Agent B entry (§2.0–2.8) and Ruling 93 in full before touching any code.
+
+**IMPLEMENTED VERBATIM PER §2.2**: replaced `JOB_LISTING_CONTENT_RE` (`eventweb.ts`, was `:1957-1958`) with B's printed regex, transcribed byte-for-byte — the only change is the one appended alternative, `\bjob\s+(?:postings?|listings?)\s+(?:archive|board|directory)\b`. Doc comment above the regex extended with B's reasoning in substance: the specimen (`"Job Postings Archive - Ion Exchange"` @ `ionexchangeglobal.com/job_posting/`, A33-01); why bare "job postings" was rejected (the constructed fair title `"Job Postings Fair 2026"` is not rescued by `looksLikeEvent` because `EVENT_SIGNAL_RE`'s `job fair` alternative requires the two words literally adjacent, and "Postings" sits between them — the fair title the safety net structurally cannot rescue); why the path-based candidate (extending `EVENT_HUB_PATH_SEGMENT_RE`) was rejected (insufficient alone — `isEventHubResult` also requires the title head to match its own separate tail/head vocabulary, which the specimen's title does not — and its own coordinated two-part fix would drop a real single-event `"Event Archive"` title, collateral on the older, far more broadly shared `isEventHubResult` guard). `hasRepeatedJobsMention`, `isJobListingContentTitle`'s own composition and safety net, the `looksLikeEvent` front door, and the wiring call site (now `:2042`, was `:2015` before the added comment lines shifted it) are all confirmed BYTE-UNCHANGED — read directly before and after the edit.
+
+**WIRING: untouched, confirmed by grep** — `isJobListingContentTitle` still appears exactly twice in `eventweb.ts` outside its own definition/doc-comment block: its `export function` line and the one call site in `webResultToRawEventItem`, immediately after `isEarningsCallPage(title, url)` and before `const text = ...`. No new call site, no new function.
+
+**TESTS — B's §2.4-2.6 corpus, `eventweb.test.ts`, pure additions, one new sibling `describe` block immediately after the round-33 guard's own block (6 new `it`s):**
+- Must-catch: the A33-01 specimen (`"Job Postings Archive - Ion Exchange"`) both via `isJobListingContentTitle` directly (true) and via `webResultToRawEventItem` on the exact specimen URL (`https://ionexchangeglobal.com/job_posting/`, drops to `null`); round 33's four must-catch rows replayed as a regression check (all still true, unaffected — each still fires its own original clause).
+- Must-keep: the candidate-1a adversarial (`"Job Postings Fair 2026"`) KEPT — the gated alternative does not fire (no archive/board/directory tail word); the seven fairs (Ruling 89b's four + round 33 B's own three live-witnessed) all still KEPT; `isEventHubResult("Event Archive", "https://example.test/events")` still returns `false` — locks candidate 2's collateral case as today's (unchanged) behaviour, since the shipped design never touches `isEventHubResult`.
+- B's §2.6 adversarial constructions, verbatim: the university archive (drop), the "job listings board" sibling shape (drop), both-triggers-and-event-vocabulary (keep), no postings/listings word at all (keep, out of scope), the single-posting residual (keep, out of scope, named).
+
+Pre-verified every new case by hand-tracing the shipped regex before writing assertions (same discipline round 33 C used), then confirmed by execution — zero mismatches, no red at any point.
+
+**GATE, AFTER THE ITEM (full-capture, first command, log retained):**
+- `npx vitest run` — **99 files / 2392 tests, 2392 passing, ZERO failures** (2386 baseline + 6 new `it` blocks, exact; zero `FAIL` lines in the full-capture log, no identity-first re-run needed).
+- `npx tsc --noEmit` — clean, exit 0.
+- `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, unchanged.
+
+`git status --porcelain --untracked-files=all` showed only the two intended source files modified before commit — no throwaway scaffold was created or needed this item (hand-traced against the shipped regex directly, no separate harness).
+
+No credential anywhere; no boolean checks needed (no live calls this item). `.env.local` never touched. No live network calls (pure implementation turn, Ruling 75). No branch/worktree/PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**No deviation from §2.2 or Ruling 93.** Nothing broke a recorded control or locked test — no `POLICY — manager decides` entry needed.
+
+**HAND-OFF: `WHOSE TURN: A — round 34, GATE CANDIDATE ROUND`** (value + visual, `searchProvider: gemini`, artefact duty, pool-count re-measure, watch list incl. the single-posting-page residual, flake-identity-first gate discipline). Turn lock RELEASED (`HELD BY: free`) in this same commit.
