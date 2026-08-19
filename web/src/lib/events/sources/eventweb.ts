@@ -1595,6 +1595,60 @@ function stripBannerLeadIn(segment: string, host: string | undefined): string {
 }
 
 /**
+ * Phase 3 round 3 C, ITEM 4 (F8, Ruling 120g item 4) — THE APPLICATION-STATUS
+ * TAIL. Two live witnesses: `"Battery Young Researcher Award: Applications
+ * Open Today!"` and `"2026 SPEC Battery Boot Camp APP is NOW OPEN"` — an
+ * otherwise-real event name with a trailing "applications open" announcement
+ * clause welded on.
+ *
+ * NOT CAUGHT BY THIS FILE'S OWN EXISTING, STRUCTURALLY IDENTICAL SIBLING,
+ * `HEADLINE_PASSIVE_RE` (deadline/registration/abstract/submission/date +
+ * extended/postponed/cancelled/delayed/announced/updated/moved/rescheduled/
+ * confirmed): "applications" is not in that subject list and adjectival
+ * "open" is not in that participle list. A new, DISJOINT vocabulary sibling,
+ * following the identical established convention — not a widening of
+ * `HEADLINE_PASSIVE_RE` itself.
+ *
+ * Manually verified against both live strings (per Phase 3 round 2 B's own
+ * design, traced by hand before this item, not run): matches
+ * `": Applications Open Today!"` as a trailing clause on witness 1, and
+ * `" APP is NOW OPEN"` on witness 2 (case-insensitive covers the literal
+ * ALL-CAPS witness). End-anchored, mirroring `WELDED_LABEL_BACK_RE`'s own
+ * convention.
+ *
+ * Vacuity, stated honestly (unchanged from B's own design): only
+ * "applications/app + open" is witnessed, 2 of 2 live rows. No sibling
+ * ("registration open," "enrollment open") has a live witness this round —
+ * named as reasoned-by-analogy, NOT shipped, matching this file's own stated
+ * discipline throughout (`EARNINGS_CALL_PAGE_RE`'s own comment: "Every
+ * candidate term was measured ALONE and seven were cut for earning nothing
+ * on real data").
+ *
+ * VETO-ONLY, three vetoes, no fourth. B's own design deliberately does not
+ * carry `stripBannerLeadIn`'s extra YEAR_RE-or-`looksLikeEvent` corroboration
+ * veto (sibling above) or `stripWeldedPageTypeLabel`'s `EVENT_KIND_NOUN_RE`
+ * veto: B judged the TRIGGER regex itself narrow enough (a whole closed
+ * trailing-clause shape, not a generic short prefix like "welcome to") that
+ * the remainder only needs to still pass the shipped guard pair. If the
+ * remainder is empty, still fails `isChromeSegment`, or fails
+ * `looksLikeEventTitle`, the ORIGINAL segment is returned unchanged — a miss
+ * renders exactly as today, and nothing rejected can ever be introduced
+ * (Ruling 32's mandatory question).
+ */
+const APPLICATION_STATUS_TAIL_RE =
+  /[\s:]+(?:applications?|app)\s+(?:is\s+|are\s+)?(?:now\s+)?open(?:\s+today)?[!.]*$/i;
+
+function stripApplicationStatusTail(segment: string, host: string | undefined): string {
+  if (!APPLICATION_STATUS_TAIL_RE.test(segment)) return segment;
+  const remainder = segment.replace(APPLICATION_STATUS_TAIL_RE, "").trim();
+  if (!remainder) return segment;
+  if (isChromeSegment(remainder, host) || !looksLikeEventTitle(remainder)) {
+    return segment;
+  }
+  return remainder;
+}
+
+/**
  * A23-02 gap (a) / Ruling 62b — THE LISTING-FURNITURE STRIP.
  *
  * `10times.com` rendered the event name as
@@ -1867,9 +1921,17 @@ function selectEventTitleSegment(
     // them is strictly better than either alone and neither can undo the
     // other. This one attachment point also covers the enrichment route,
     // which runs its own `og:title` back through this function.
-    return stripBannerLeadIn(
-      stripWeldedPageTypeLabel(
-        pool.reduce((best, part) => (part.length > best.length ? part : best)),
+    // Phase 3 round 3 C, ITEM 4 (F8): strip an application-status tail off
+    // the CHOSEN segment last, after the banner lead-in — same "edit an
+    // accepted candidate" shape, a third disjoint vocabulary that cannot
+    // undo either of the other two (this file's own A23-02 "three-plus
+    // disjoint vocabularies" convention).
+    return stripApplicationStatusTail(
+      stripBannerLeadIn(
+        stripWeldedPageTypeLabel(
+          pool.reduce((best, part) => (part.length > best.length ? part : best)),
+        ),
+        host,
       ),
       host,
     );

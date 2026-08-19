@@ -1493,6 +1493,72 @@ describe("banner lead-in strip (B13-03)", () => {
   });
 });
 
+// Phase 3 round 3 C, ITEM 4 (F8, Ruling 120g item 4): THE APPLICATION-STATUS
+// TAIL. Two live witnesses, both real events with an "applications open"
+// announcement clause welded onto an otherwise-real name — see the doc
+// comment above `stripApplicationStatusTail` in eventweb.ts for the full
+// design trace (why `HEADLINE_PASSIVE_RE` doesn't already catch this, and
+// why this strip deliberately carries only three vetoes, not
+// `stripBannerLeadIn`'s extra corroboration one). Witness URLs recorded in
+// this file's own Phase 3 round 1 A log (`MULTIAGENT-report-parity.md:91962-
+// 91963`).
+describe("application-status tail strip (F8, Phase 3 round 3)", () => {
+  it("repairs the live bepassociation.eu witness", () => {
+    expect(
+      bestEventTitleSegment(
+        "Battery Young Researcher Award: Applications Open Today!",
+        "https://bepassociation.eu/battery-young-researcher-award-applications-open-today/",
+      ),
+    ).toBe("Battery Young Researcher Award");
+  });
+
+  it("repairs the live spec.ucsd.edu witness (all-caps 'APP is NOW OPEN')", () => {
+    expect(
+      bestEventTitleSegment(
+        "2026 SPEC Battery Boot Camp APP is NOW OPEN",
+        "https://spec.ucsd.edu/node/147",
+      ),
+    ).toBe("2026 SPEC Battery Boot Camp");
+  });
+
+  // MUST-KEEP CONTROL, AND NOT A VACUOUS ONE: A's own report records that the
+  // identical real bootcamp ALSO has a clean row via this exact URL in the
+  // same pull, so this is not a constructed hypothetical — it is the paired
+  // control for the witness immediately above, the same real event with the
+  // announcement clause already absent.
+  it("must-keep: leaves the same bootcamp's already-clean name untouched (smelab.org)", () => {
+    expect(
+      bestEventTitleSegment(
+        "SPEC Battery Bootcamp",
+        "https://smelab.org/spec-battery-bootcamp",
+      ),
+    ).toBe("SPEC Battery Bootcamp");
+  });
+
+  it("reaches the reader through eventNameFrom, not only the segment helper", () => {
+    expect(
+      eventNameFrom(
+        "Battery Young Researcher Award: Applications Open Today!",
+        "",
+        "https://bepassociation.eu/battery-young-researcher-award-applications-open-today/",
+      ),
+    ).toBe("Battery Young Researcher Award");
+  });
+
+  // Composes with its nearest neighbor in the chain, the banner lead-in
+  // strip (this file's own B13-03 block asserts the same shape one strip
+  // over, for the welded-label/banner-lead-in pair) — neither vocabulary can
+  // undo the other.
+  it("composes with the banner lead-in strip", () => {
+    expect(
+      bestEventTitleSegment(
+        "Welcome to the Battery Symposium 2026: Applications Open Today!",
+        "https://example.org/event",
+      ),
+    ).toBe("Battery Symposium 2026");
+  });
+});
+
 // B18-01 (round 18, Rulings 50b + 51a): A COMPANY'S EARNINGS CALL WAS IN THE
 // EVENT POOL. `specterfi.com/companies/1539/concalls/Feb2026` — a stock
 // research page for "Ion Exchange (India) Limited Q3 & 9M FY26 Earnings

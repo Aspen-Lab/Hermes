@@ -92656,3 +92656,28 @@ Commit: see git log (message states item 3 / J2). Pushed immediately per §0d Ru
 
 Continuing to item 4 (F8) in the same session.
 
+
+### Phase 3 Round 3 — Agent C, ITEM 4 (Ruling 120g item 4: F8 — the "applications open" name-repair strip)
+
+**STATUS: ITEM 4 COMPLETE.** Run by `LAPTOP-3CL10CG5`. Implements Phase 3 Round 2 B's Deliverable 3 Design 3 VERBATIM. Gate before this item: 100 files / 2461 tests passing, tsc clean (item 3's own closing numbers).
+
+**WHAT LANDED:**
+
+- `web/src/lib/events/sources/eventweb.ts`: new `APPLICATION_STATUS_TAIL_RE` (B's exact regex, unmodified: `/[\s:]+(?:applications?|app)\s+(?:is\s+|are\s+)?(?:now\s+)?open(?:\s+today)?[!.]*$/i`) + `stripApplicationStatusTail(segment, host)`, placed immediately after `stripBannerLeadIn`. Composed into `selectEventTitleSegment`'s existing chain exactly as B specified: `stripApplicationStatusTail(stripBannerLeadIn(stripWeldedPageTypeLabel(chosen), host), host)` — outermost in the chain, after the welded-label and banner-lead-in strips, both of which already run at this exact attachment point.
+  - **Veto count, a deliberate departure from its neighbor `stripBannerLeadIn` that this entry states explicitly rather than leaving implicit:** three vetoes only (empty-after-trim, `isChromeSegment`, `looksLikeEventTitle`) — B's own ASSERTS/TOLERATES section names exactly these three, NOT `stripBannerLeadIn`'s additional YEAR_RE-or-`looksLikeEvent` corroboration veto and NOT `stripWeldedPageTypeLabel`'s `EVENT_KIND_NOUN_RE` veto. B's own design reasoning (recorded in the doc comment): the trigger regex here is already a narrow, closed whole-clause shape (unlike `stripBannerLeadIn`'s dangerously generic two-word prefix "welcome to", which needs the extra check to avoid destroying "Welcome to Our Site"-shaped junk), so B judged the shipped guard pair sufficient without a fourth check. Implemented as B specified, not as the nearest sibling happens to be shaped.
+
+**MANUALLY VERIFIED BOTH WITNESSES BY HAND BEFORE RUNNING ANYTHING (matching B's own "traced by hand" discipline, then confirmed by execution):** `"Battery Young Researcher Award: Applications Open Today!"` → tail `": Applications Open Today!"` matches, remainder `"Battery Young Researcher Award"`. `"2026 SPEC Battery Boot Camp APP is NOW OPEN"` → tail `" APP is NOW OPEN"` matches (case-insensitive covers the all-caps witness), remainder `"2026 SPEC Battery Boot Camp"`. Also hand-checked the must-keep control (`"SPEC Battery Bootcamp"`, no tail present, regex `.test()` false, function returns unchanged immediately) and a host-brand edge case (witness 2's host `spec.ucsd.edu` shares the token "SPEC" with its own remainder — traced through `looksLikeHostBrand`'s one-directional length rule: the whole-candidate normalized form is far longer than any host label run, so it cannot match — confirmed correct by the passing test, not merely by the trace). **Caught and fixed my own hand-trace error before shipping:** a first draft of the "composes" test used a three-strip constructed input where a middle-positioned "Registration" clause was NOT the true tail at the moment `stripWeldedPageTypeLabel` ran (it runs before the application-status tail is stripped, so it never saw "Registration" at the string's end) — running the actual code produced `"Battery Symposium 2026 Registration"`, not my first-guess `"Battery Symposium 2026"`. Rewrote the test to a clean, verified 2-way composition (this strip + its actual chain neighbor, `stripBannerLeadIn`) rather than ship an assertion whose expected value I had not confirmed by execution.
+
+**TESTS ADDED (5, pure additions):** new `describe("application-status tail strip (F8, Phase 3 round 3)")` in `eventweb.test.ts`, placed immediately after the existing `"banner lead-in strip (B13-03)"` block (its nearest chain neighbor, same style: `bestEventTitleSegment`/`eventNameFrom` calls, real recorded URLs). Witness URLs recovered from this file's own Phase 3 round 1 A log (`MULTIAGENT-report-parity.md:91962-91963`), not re-fetched live:
+- MUST-CATCH: `https://bepassociation.eu/battery-young-researcher-award-applications-open-today/` → `"Battery Young Researcher Award"`.
+- MUST-CATCH: `https://spec.ucsd.edu/node/147` → `"2026 SPEC Battery Boot Camp"` (the all-caps witness).
+- MUST-KEEP CONTROL, NOT VACUOUS: `https://smelab.org/spec-battery-bootcamp` (`"SPEC Battery Bootcamp"`) — A's own report notes this is the SAME real bootcamp as the second must-catch witness, already carrying a clean name in the same pull, so this is a genuine paired control rather than a constructed hypothetical.
+- `eventNameFrom`-level end-to-end check (mirrors B13-03's own equivalent test) confirming the repair reaches the reader, not only the segment helper.
+- Composition check with the chain's actual neighbor, `stripBannerLeadIn` (verified by execution after the hand-trace correction above).
+
+**GATE, THIS ITEM:** `npx vitest run` — **100 files / 2466 tests, 2466 passing, ZERO failures** (2461 + 5 new). `npx tsc --noEmit` — **clean, 0 errors**. `npx eslint src` — the one standing `quiz.tsx:46` error only, unchanged. `git status --porcelain --untracked-files=all` shows exactly the two files named above, nothing else.
+
+Commit: see git log (message states item 4 / F8). Pushed immediately per §0d Rule 1.
+
+Continuing to item 5 (F9) in the same session.
+
