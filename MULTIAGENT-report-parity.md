@@ -275,6 +275,24 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~06:5x UTC — ROUND 35 C
+                  RESUME VERIFIED INDEPENDENTLY, RULING 98 APPENDED (§4).**
+                  Gate re-run (full-capture): **100 files / 2406 tests, 2406
+                  passing, zero failures.** Wiring at `pipeline.ts:126` and
+                  the zero-padding-only fixture repair both read directly —
+                  exactly as Ruling 97 specified; the 42→33→42 survivor arc
+                  is the complete evidence trail. **RULING 98: C accepted in
+                  full; A34-01's two-part fix is LIVE. Hand-off STANDS —
+                  `WHOSE TURN: A — round 35, GATE CANDIDATE ROUND (value +
+                  visual, searchProvider: gemini, artefact duty, pool-count
+                  re-measure, watch list, A34-01 verification — the AABC
+                  pair must merge if re-offered and by direct execution
+                  regardless, benchmark-flake classification per Ruling
+                  96b)`. If A measures double-zero: `WHOSE TURN: MANAGER —
+                  independent re-measurement before any close`. A never
+                  closes the gate.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 35 C IS FULLY COMPLETE @ 2026-08-19 ~02:1x UTC —
                   A34-01 SHIPPED IN FULL, BOTH PARTS LIVE.** Resumed after
                   RULING 97 (manager: repair the fixture, wire the pass).
@@ -87027,3 +87045,10 @@ Resumed the same turn after Ruling 97. Pulled, re-confirmed `git branch --show-c
 **A34-01's production fix is now fully live**: both the key normalization and the post-stage-2 dedup pass are wired, tested (14 `it` blocks in `dedup.test.ts`, including the AABC must-merge pair and the manager's pool-ordering invariance check), and the once-colliding `enrich.test.ts` fixture no longer encodes a state production cannot reach.
 
 **HAND-OFF: `WHOSE TURN: A — round 35, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list, A34-01 verification — the AABC pair must merge if re-offered, and by direct execution regardless; benchmark-flake classification per Ruling 96b)`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Round 35 — MANAGER (independent verification of C's resume; RULING 98; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture, log retained): **100 files / 2406 tests, 2406 passing, ZERO failures, zero failure lines** (the benchmark flake did not fire). Commit `0234459` touches exactly `pipeline.ts` + `enrich.test.ts` + this state file; tree clean; pushed. Code read directly: `dedupScoredEvents` wired at the commissioned site (`pipeline.ts:126`, immediately after stage 2, before `return scored;`) with the full positioning rationale in the comment; the fixture repair is zero-padding only (`Battery Event 00`…), ids/urls untouched, one mechanical comment rename, no assertion loosened — exactly as Ruling 97 specified. The 42→33→42 survivor arc is the complete evidence trail: the STOP trigger, the root cause, and the repair each carry their own number.
+
+**RULING 98 — round 35 C is VERIFIED AND ACCEPTED IN FULL; A34-01's two-part fix is LIVE. The hand-off stands: `WHOSE TURN: A — round 35, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list, A34-01 verification — the AABC pair must merge if re-offered and by direct execution regardless, benchmark-flake classification per Ruling 96b)`.** **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet nineteenth data point: a model STOP-and-resume arc — the collision caught at implementation, filed instead of improvised, and the ruled repair executed with zero scope drift.
+
