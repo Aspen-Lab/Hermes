@@ -421,8 +421,13 @@ STOPPED BECAUSE:  **PHASE 2 ROUND 3 B IS COMPLETE @ 2026-08-19 ~02:3x UTC.
                   No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
                   untouched.
 
-                  **HAND-OFF: `WHOSE TURN: MANAGER — Phase 2 round 3
-                  verification and rulings before C spawns`.** All three
+                  **HAND-OFF (SUPERSEDED BY THE MANAGER, Rulings 111a-111d @
+                  2026-08-19 ~15:5x UTC — gate 2425/2425 re-run; scope zero;
+                  apply-revert instrumentation accepted; plural fix ships;
+                  off-host relaxation DECLINED with named cost; serif
+                  doctrine completed with 110c corrected; general cn.ts fix
+                  chosen): `WHOSE TURN: C — Phase 2 round 4 (three items per
+                  Ruling 111d)`.** Original hand-off follows. All three
                   items carry designs ready for C, but item 1's witness 2 is
                   a DECLINE recommendation (nothing for C there) and item 3
                   carries a POLICY choice (minimal vs. general fix) the
