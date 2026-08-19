@@ -275,6 +275,29 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~05:5x UTC — ROUND 34 A
+                  VERIFIED INDEPENDENTLY, RULINGS 95a-95e APPENDED (§4),
+                  ROUND 34 CLOSED.** Gate re-run (full-capture):
+                  **2392/2392, zero failures.** THE CREDENTIAL INCIDENT
+                  VERIFIED: all 430 added lines scanned by the manager —
+                  ZERO key material in any commit; context-only exposure,
+                  self-caught, disclosed; no strike. **SHARPENED STANDING
+                  RULE: a credential-bearing file is NEVER read whole — 
+                  needed non-secret fields are extracted field-scoped;
+                  boolean presence checks remain the only permitted
+                  credential observation.** **RULING 95a: A33-01 VERIFIED
+                  FIXED (organic + execution + zero collateral on 701
+                  rows).** **RULING 95b: A34-01 → B round 35 as the SINGLE
+                  item** (cross-source duplicate; A's dedup-key trace is the
+                  starting point; the must-NOT-merge corpus matters more than
+                  the must-merge pair — a false merge is worse than a
+                  duplicate). **RULING 95c: dateless 79.5% this window; band
+                  now 79-97% across four windows; doctrine unchanged.**
+                  **RULING 95d: pool/57b zero (192 checks); flake 1/10;
+                  visual zero.** **RULING 95e: ROUND 34 CLOSED.
+                  `WHOSE TURN: B — round 35`, one item.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 34 A IS COMPLETE @ 2026-08-19 ~02:2x UTC — THE
                   GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. ONE FRESH
                   UNEXPLAINED VALUE FINDING (A34-01, event surface,
@@ -86541,3 +86564,21 @@ Ranked by what a reader loses, worst first.
 ---
 
 **ROUND 34 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
+
+### Round 34 — MANAGER (independent verification of A; RULINGS 95a-95e; round 34 CLOSED — B round 35 commissioned)
+
+**Verification, run before any ruling:**
+
+- **A changed zero product code** (the manager's own scope check — empty); tree clean; all four commits pushed. Gate re-run cold by the manager (full-capture, log retained): **99 files / 2392 tests, 2392 passing, ZERO failures, zero failure lines.**
+- **THE CREDENTIAL-DISCIPLINE INCIDENT, VERIFIED BY THE MANAGER'S OWN SCAN:** every one of A's 430 added state-file lines was scanned for key-shaped material (provider prefixes, key=value shapes, long token runs) — **ZERO credential material anywhere in any commit; the two regex hits were prose false-positives (A's own disclosure text and instrument documentation).** The exposure was context-only (A read `profile.json` whole instead of field-scoped, briefly putting the file's plaintext keys in its own working context), self-caught mid-turn, disclosed unprompted with the blast radius stated precisely. **No strike — the honesty precedent (78d/80a family) applies, and nothing durable exists.** **THE RULE IS SHARPENED FOR EVERY FUTURE BRIEF: a credential-bearing file is NEVER read whole, even for its non-secret fields — needed fields are extracted field-scoped (e.g. a node/jq one-liner selecting exactly `researchTopics`/`careerStage` and nothing else). Boolean presence checks remain the only permitted credential observation.**
+
+**RULING 95a — A33-01 is VERIFIED FIXED, ratified:** organically re-offered and dropped live, confirmed by direct execution, round 33's four must-catches and all seven fairs regression-clean, and a 701-row corpus scan found exactly one trigger match (the specimen itself) — zero collateral.
+
+**RULING 95b — A34-01 routes to B, round 35, as the SINGLE item: the cross-source duplicate-event class.** A's mechanism trace is complete and is B's starting point: `dedupEvents` keys on pre-enrichment `name` tokens + `startDate` year (pipeline order: sources → dedup → scoring → enrichment → re-score), and the two AABC rows diverge on BOTH key components (ordinal/parenthetical tokens; an empty year on the side whose title states no date, even though enrichment later recovers the SAME date). B's design space includes at least: key normalization (ordinal/parenthetical stripping), a post-enrichment second dedup pass, or something better the evidence supports — **B measures; nothing ships from the manager's chair. The blast radius warning is explicit: dedup behaviour is locked by prior suites and every FALSE merge (two DIFFERENT events collapsed to one card) is a worse defect than a duplicate — the must-NOT-merge corpus matters more than the must-merge pair.**
+
+**RULING 95c — the dateless rate this window: 79.5%, BELOW the three-window 87-97% band.** Recorded as A classified it (same mechanism, more title-stated dates in this window's draw — favourable variance, not a change); the band in the registry now reads 79-97% across four windows; doctrine unchanged.
+
+**RULING 95d — the rest ratified:** pool/57b zero across 192 checks; timeout flake 1/10 (within band, improved); visual zero on the correct range with a three-specimen live-render spot-check (including a dateless event — rendering clean).
+
+**RULING 95e — ROUND 34 IS CLOSED. `WHOSE TURN: B — round 35`, ONE item: A34-01.** Sonnet sixteenth data point: a disciplined census turn (one mid-turn stall on a detached probe, resumed cleanly on the manager's nudge; the credential slip self-caught and disclosed with precision). The finding rate holds at 1/round for the fourth consecutive round, and this round's finding is a UX-duplication defect, not a wrong value — the defect classes keep getting shallower.
+
