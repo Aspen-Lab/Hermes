@@ -270,11 +270,72 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent A baseline + 2026-08-19T06:14Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+PHASE 2 MEASUREMENT PROFILE:
+                  (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
+                  baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
+                  field-scoped per Ruling 95 (`researchTopics`, `softTopics`,
+                  `preferredMethods`, `careerStage`, `industryVsAcademia`,
+                  `locationPreferences`, `currentProject` — never read whole).
+                  `aiTier` engaged via the LOCAL VERTEX PATH
+                  (`resolveProvider`'s local-dev branch, `web/src/lib/llm/
+                  providers/registry.ts`, Ruling 66a) — `NODE_ENV=development`
+                  (Vitest itself sets `test`; stub required to reach the
+                  branch, mirroring `registry.test.ts`'s own pattern),
+                  `GOOGLE_VERTEX_PROJECT` present, no BYOK override.
+                  `searchProvider: gemini` only — Ruling 75 stands in Phase 2,
+                  `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
+                  ever. Every future Phase 2 census states this profile or an
+                  explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 1 A (BASELINE) IS COMPLETE @ 2026-08-19
+                  ~01:3x UTC. SMOKE CHECK LIVE; 11-FIELD LLM-PATH INVENTORY
+                  CITED FILE:LINE; SMALL LIVE CENSUS RUN (6 REAL DEEP-REPORT
+                  RENDERS, 3 JOB + 3 EVENT, LLM PATH ENGAGED). A MEASURED
+                  ONLY — NOTHING FIXED, PER THIS ROUND'S OWN CHARTER.**
+                  **SMOKE CHECK VERDICT: LIVE** — `GOOGLE_VERTEX_PROJECT`/
+                  `GOOGLE_VERTEX_LOCATION`/`GOOGLE_APPLICATION_CREDENTIALS`
+                  all present (boolean only); `resolveProvider(null)` under a
+                  `NODE_ENV=development` stub returns the gemini provider; one
+                  bounded `generateJsonText` call answered in 602ms with the
+                  exact requested JSON. **11-FIELD INVENTORY**: 7 Class-A
+                  (LLM-only sections) + 4 Class-B (provenance changes to
+                  Tier-0 text) = 11 rows / 10 unique JSON fields, every one
+                  cited file:line against the CURRENT tree (round-25's own
+                  citations had drifted across 13 subsequent Tier-0 rounds).
+                  **BASELINE FINDING COUNT, BY CLASS**: 3 field-missing
+                  structural gaps (BF1 job specificRequirements/specificDuties,
+                  MECHANICAL, n=3/3, page-ownership-gate-shaped; BF2 event
+                  talkSummaries/plan, likely specimen-shape, n=3/3,
+                  unconfirmed; BF3 event judgedAttendees.why, likely
+                  Tier-0-inherited precondition, n=3/3, unconfirmed) + 1
+                  measurement-method note (BF4: the design spec never mocks up
+                  Class-A fields' UNLOCKED content, only a locked-teaser
+                  one-liner — Class-A "parity" needs a structure/quality
+                  rubric, not a literal text match) + 1 positive finding (BF5:
+                  0/6 LLM calls errored, every structurally-eligible field
+                  populated, zero hallucination signals, `roleSummary`'s
+                  3-sentence bound mechanically enforced). **CAMPAIGN-SIZE
+                  ESTIMATE**: ~4-6 distinct items to start, mostly MECHANICAL/
+                  precondition-shaped rather than prose-quality; ZERO new
+                  layout defects found (Class A/B sections reuse the same
+                  `ReportSection` shell Phase 1 already visually validated,
+                  zero rendering-layer files touched since `17de80e`); a full
+                  Ruling-66b visual census of LLM-content sections was
+                  explicitly NOT run this round (out of scope for a baseline
+                  sizing pass) and is the natural first campaign item. **GATE
+                  UNCHANGED (A changed no product code): 100 files / 2425
+                  tests, 2425 passing, ZERO failures; tsc clean; eslint the
+                  one standing `quiz.tsx:46` error.** Full detail, tables, and
+                  file:line citations in §4 `### Phase 2 Round 1 — Agent A
+                  (baseline)`.
+                  `WHOSE TURN: MANAGER — Phase 2 baseline verification and
+                  campaign plan.`
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 1 IS CLOSED — RULING 108 @ 2026-08-19 ~13:5x UTC.
                   CONVERGENCE CANDIDATE ROUND 2 PASSED** (the manager's final
                   fresh window: 66 rows, zero new defect classes; both
@@ -89789,4 +89850,107 @@ Committed and pushed as its own item. Part 3 (visual census, standing tallies, g
 2. A malformed-date flag on the same `iisd.org` row (`"Tue, 06/16/2026 - 09:30"`) — **a recorded class's instance** (A31-02/87b/90b family): the near-ISO normalizer is a deliberate no-op on unrecognised shapes, round 32's own corpus explicitly held the NO-OFFSET value class as "genuinely ambiguous — untouched", and the spec-verified render behaviour (tile hidden, nothing invented) is what renders. EXPLAINED. One MAINTENANCE LEAD recorded: a US-format date whose day exceeds 12 (`06/16/2026`) is provably month-unambiguous — a future bounded date-only extraction could recover the day losslessly; unwitnessed twice, not designed now.
 
 **RULING 108 — CONVERGENCE CANDIDATE ROUND 2 PASSES. Under the user's Ruling 105a (two consecutive full rounds, four independent windows each pair, zero new defect classes): PHASE 1 IS CLOSED.** The closing state: gate 100 files / 2425 tests all green; value differences: zero unexplained new classes across rounds 37-38's eight independent measurement windows; visual: zero for ten consecutive rounds (no rendering-layer change since `17de80e`, 120+ commits); 62b's no-invented-dates zero held at every census ever taken. **THE MAINTENANCE LIST at close (per 105a, handled without blocking Phase 2):** (1) A38-01 — the conjoined-section-label grammar's noun list vs staff-roster pages (`bnl.gov` witness on file); (2) the R13-class cosmetic name prefix (`Meeting Summary-` on tirt7.com, Phase 2's LLM naming is the natural fix); (3) the unambiguous-US-date extraction lead (iisd.org witness); (4) the Ruling-33 job-surface design bar (a second witness reopens); (5) the standing named residuals as recorded (PR verb siblings, exact-prefix, single-posting-page, thrlab/lco.cl, attribution-phrase lead, job-posting-age question — the user's product-scope call). **Next: the Ruling-105b merge to `main`, then Phase 2 per Ruling 69.**
+
+---
+
+### Phase 2 Round 1 — Agent A (baseline). SMOKE CHECK LIVE, 11-FIELD INVENTORY CITED, SMALL LIVE CENSUS RUN (6 REAL DEEP-REPORT RENDERS, LLM PATH ENGAGED). MEASURES ONLY — NOTHING FIXED.
+
+**STATUS: COMPLETE.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`46dca64`). Grepped `Phase 2` first — zero prior `### Phase 2 Round` entries existed (only the Ruling-69/108 pointer text), fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~950 lines; read Rulings 66a-b, 69, 105(a-b), 108 in full by targeted grep+read (not by scanning the whole 89.8k-line file).
+
+## ITEM 1 — THE GEMINI SMOKE CHECK (Ruling 69's kickoff item 1)
+
+**VERDICT: LIVE.** Boolean presence (never a value; `.env.local` never `cat`-ed):
+
+```
+GOOGLE_VERTEX_PROJECT: true
+GOOGLE_VERTEX_LOCATION: true
+GOOGLE_APPLICATION_CREDENTIALS: true
+```
+
+names taken from `web/vitest.config.ts:5-20`'s own documented `GOOGLE_`-prefix env load (the root config's comment: loading every local variable would hand all 97 suites `PEER_DIGEST_PROVIDER` and any other operator credential; the narrow prefix carries exactly what a Vertex grounding call needs).
+
+**One bounded call through the shipped registry**, `web/src/lib/llm/providers/registry.ts` — read `resolveProvider`'s local-dev branch first (`:74-89` `resolveLocalServerProvider`, `:34-40` `canUseLocalServerProvider` gates on `NODE_ENV === "development" && !VERCEL && !VERCEL_ENV`). Vitest itself sets `NODE_ENV=test`, so reaching the branch needs `vi.stubEnv("NODE_ENV", "development")` — the exact pattern the shipped `registry.test.ts:50-56` already uses (keeps the existing local Vertex development path), reused rather than invented. With that stub: `resolveProvider(null)` returns `{ id: "gemini" }` (non-null, `generateJsonText` present) — called with a trivial bounded prompt (`maxTokens: 64`, `tier: "small"`) — **answered in 602ms**: `[llm] gemini/gemini-2.5-flash-lite path=json in=31 out=11 602ms ok`, response `{"ok": true, "word": "peer"}` (28 chars). **The local Vertex Gemini path is PROVEN LIVE.** Harness: `web/zz-p2a/smoke.test.ts` + its own minimal `vitest.config.ts` (mirrors the root's `GOOGLE_`-prefix load), outside `web/src/`, deleted before this commit.
+
+## ITEM 2 — PHASE 2 MEASUREMENT PROFILE (Ruling 69's kickoff item 2)
+
+Written into §1 as its own standing line (exact-match edit), placed beside `HELD BY:` so every future Phase 2 turn sees it first. Text: same `web/.local-data/profile.json`, field-scoped (`researchTopics`, `softTopics`, `preferredMethods`, `careerStage`, `industryVsAcademia`, `locationPreferences`, `currentProject` — Ruling 95, never read whole); `aiTier` engaged via the LOCAL VERTEX PATH (`resolveProvider`'s local-dev branch, Ruling 66a) — `NODE_ENV=development` stub, `GOOGLE_VERTEX_PROJECT` present, no BYOK override; `searchProvider: gemini` only (Ruling 75 stands in Phase 2 — `adzuna`/`usajobs` stay suspended, zero quota-capped calls this round, confirmed by the `fetched` maps below carrying no `adzuna`/`usajobs` keys at all since neither request set `apiKeys`).
+
+## ITEM 3 — THE 11-FIELD LLM-PATH INVENTORY (re-verified against the CURRENT tree — round-25's own line numbers have drifted across 13 subsequent rounds of Tier-0 work; every citation below was read from disk this round)
+
+Type definitions: `web/src/lib/opportunities/enrichment.ts:9-22` (`JobEnrichment`), `:24-59` (`EventEnrichment`).
+
+**CLASS A — 7 sections that exist ONLY on the LLM path (no Tier-0 baseline):**
+
+| # | surface | field | section title | render site |
+|---|---|---|---|---|
+| A1 | job | specificRequirements | "What this employer actually asks for" | app/jobs/[id]/page.tsx:1391 (block :1389-1405) |
+| A2 | job | specificDuties | "What the person would actually do" | :1409 (block :1407-1423) |
+| A3 | job | sponsorshipRead | "Sponsorship read" | :1453 (block :1452-1479) — dual-listed, see B2 |
+| A4 | job | emphasise | "What to emphasise in your application" | :1482 (block :1481-1494) |
+| A5 | event | talkSummaries | "What each talk is actually about" | app/events/[id]/page.tsx:2166 (block :2165-2187); teaser copy :111 |
+| A6 | event | plan | "A day-by-day plan for you" | :2195 (block :2194-2222); teaser copy :117 |
+| A7 | event | posterFit | "Is your work a fit for the poster call" | :2252; teaser copy :121 |
+
+**CLASS B — 4 provenance changes to Tier-0-scored text:**
+
+| # | field | Tier-0 section it changes | mechanism | cite |
+|---|---|---|---|---|
+| B1 | roleSummary | job "What the role is" | REPLACES `splitIntoBullets(cleanJobDescription(job.summary))` wholesale with 3 model-written sentences | title page.tsx:1320; read at :1000-1002 |
+| B2 | sponsorshipRead | job's standalone visa-evidence blockquote | SUPPRESSES the Tier-0 quote (drops the "— from the job description" attribution) | page.tsx:1153 `{visaEvidence && !enrichment?.sponsorshipRead && (` |
+| B3 | condensedDescription | event "What actually happens there" | REPLACES the extractive summary, first branch ahead of fallback | events/[id]/page.tsx:2078 |
+| B4 | judgedAttendees[].why | event roster "Organisations"/"People" | MERGES (Tier-0 reason wins per card), also promotes rows into cards | merge logic :1399-1439; headings :1549/:1637; display filter :1928-1939 |
+
+**11 rows total (7+4), 10 unique underlying JSON fields** — `sponsorshipRead` is the one field with two effects (A3 + B2), matching Ruling 69's own "eleven fields" count exactly.
+
+**THE PLATE NEVER MOCKS UP THE UNLOCKED CONTENT.** Read `Peer-design-spec-original.pdf` pages 2 (job, plate 02) and 7-8 (event, plate 03) directly via PyMuPDF text extraction (`pdftoppm` unavailable in this environment, matching round 38 A's own note; Python 3.14 + PyMuPDF 1.27.2 at the local Python install, confirmed working). Both plates show these 7 Class-A sections ONLY as a locked-teaser list under "ALSO IN THIS REPORT WITH AN AI KEY" — one line of title + one line of description each, verbatim matching the code's own section titles and (for events) the `buildEventTierUpgradeItems` teaser copy at page.tsx:110-124. **The spec never shows what UNLOCKED, populated content should look like for any Class-A field.** Consequence for the campaign's method: Class-A "value parity" cannot be a literal ground-truth text match (Phase 1's method) — it has to be judged on structure/presence/quality heuristics. Class-B fields keep a real ground-truth anchor (the Tier-0 text they replace/suppress already had one).
+
+## THE BASELINE CENSUS — SMALL LIVE WINDOW (3 pulls/surface, 6 real deep-report renders, LLM path engaged)
+
+Harness `web/zz-p2a/baseline.test.ts` (+ shared `vitest.config.ts`), outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean after. Method: `buildDailyJobPool`/`buildDailyEventPool` called 3x per surface (fresh no-op `PoolCache` each pull, `{ get: async () => null, set: async () => {} }`), `scoredJobToJob`/`scoredEventToEvent` to map the first 3 pooled rows per surface to `Job`/`Event`, then the REAL production enrichment path reproduced verbatim from the two report routes (`app/api/jobs/report/route.ts:33-47` and `app/api/events/report/route.ts:39-99` — both non-exported local functions, duplicated into the harness since they cannot be imported, behaviour unaltered): `fetchPageHtml` -> `resolveJobPostingScope`/event page-text extraction -> `buildJobEnrichmentPrompt`/`buildEventEnrichmentPrompt` -> `provider.generateJsonText` (`tier: "large"`, `maxTokens: 1600` job / `2000` event, matching the shipped routes exactly) -> `parseJobEnrichment`/`parseEventEnrichment` -> `renderToStaticMarkup(createElement(JobReport/EventReport, {...}))`, the same rendering mechanism every A round has used since round 1. Full run log retained at this session's scratchpad (outside the repo); console output only (no HTML committed anywhere — per the no-large-fetched/rendered-text-pasted discipline, only field-population booleans and byte lengths are recorded below).
+
+**Pool fetch tally, both surfaces, all live, zero quota-capped calls**: job `{remotive:51, arbeitnow:180, himalayas:180, jobweb:64}` combined across 3 pulls (5/6/4 pooled rows respectively); event `{ccfddl:240, confstech:84, researchseminars:120, eventweb:87}` combined across 3 pulls (9/6/8 pooled rows). **Zero `adzuna`/`usajobs` keys in either tally — Ruling 75 held by construction** (neither request set `apiKeys`).
+
+**0 of 6 LLM calls errored.** All 6 rows rendered without a caught exception.
+
+### JOB rows (3 real postdoc/internship postings, all from this session's live pool)
+
+| row | page read? | enrichment keys returned | A1 reqs | A2 duties | A3/B2 sponsorship | B1 roleSummary | A4 emphasise |
+|---|---|---|---|---|---|---|---|
+| Idaho National Lab, Molten Salt Electrochemistry Postdoc (career.csbsju.edu) | NO | competitiveness, sponsorshipRead, roleSummary, emphasise | empty | empty | populated | populated | populated |
+| Savannah River Natl Lab, Actinide/Ion-Exchange Postdoc (talents.vaia.com) | NO | competitiveness, roleSummary, emphasise | empty | empty | empty | populated | populated |
+| GE Vernova Battery Eng. Intern (career.eoss.asu.edu) | NO | competitiveness, sponsorshipRead, roleSummary, emphasise | empty | empty | populated | populated | populated |
+
+### EVENT rows (3 real conference/symposium/training pages)
+
+| row | page read? | enrichment keys returned | A5 talks | A6 plan | A7 posterFit | B3 condensed | B4 attendee-why |
+|---|---|---|---|---|---|---|---|
+| RSC IEX 2026 ion-exchange training course | NO | condensedDescription, posterFit | empty | empty | populated | populated | empty |
+| ANS "Molten Salt Fuel Chemistry" session (ans.org) | YES | condensedDescription, posterFit | empty | empty | populated | populated | empty |
+| BYU Molten Salt Electrochemistry Symposium (MoSES) | YES | condensedDescription, posterFit | empty | empty | populated | populated | empty |
+
+## THE BASELINE FINDING LIST — RANKED, EACH CLASSIFIED
+
+**BF1 (rank 1, field-missing, MECHANICAL, n=3/3).** Job-surface `specificRequirements`/`specificDuties` (A1/A2) were empty on ALL 3 sampled rows — the LLM's own prompt correctly told it to omit them (`buildJobEnrichmentPrompt`'s `rules.specificRequirements`/`specificDuties`, `enrichment.ts:412-417`: "Omit this field because no fetched source-page text is available"), because `fetchOwnedJobPostingText` (reproducing `app/api/jobs/report/route.ts:33-47`) returned `null` for all 3 — none of the 3 URLs (career.csbsju.edu, talents.vaia.com, career.eoss.asu.edu) is the employer's own domain; all three are third-party university-career-portal or ATS aggregator pages, and `resolveJobPostingScope` correctly refused to certify any of them as "owned". **This is not obviously a bug** — the ownership gate exists on purpose (`route.ts:41-44`'s own comment: a nav fragment or a headline is not evidence). But it means 2 of the 7 Class-A fields are structurally unreachable whenever the job source is an aggregator rather than the employer's own site — and this small sample's rate is 3/3. First-ever measurement of this field in this loop's history (Phase 1 never scored the LLM path). **Needs a larger census to know the real rate**; if confirmed high, this is either an accepted-cost class (Ruling-33 shape) or a genuine design question (should reputable career-portal domains count as "owned enough" for this purpose).
+
+**BF2 (rank 2, field-missing, LIKELY SPECIMEN-SHAPE not a broken mechanism, n=3/3, unconfirmed).** Event-surface `talkSummaries`/`plan` (A5/A6) were empty on all 3 rows, including the 2 where the page WAS read successfully (ans.org, pyro.byu.edu). Working hypothesis: all 3 specimens are single-session or single-symposium pages without a multi-talk programme grid to summarize — `plan` is additionally structurally dependent on `talkSummaries`/`judgedAttendees` existing first (`enrichment.ts:49-54`'s own doc comment: every plan entry must be an exact talk title or attendee name already verified elsewhere), so its emptiness may be entirely downstream of A5/B4 rather than an independent gap. **Not confirmed** — the campaign's first real round should deliberately sample at least one genuine multi-day, multi-session conference (the plate's own worked example, International Battery Materials Summit, is exactly this shape) to exercise this field at all.
+
+**BF3 (rank 3, LIKELY TIER-0-INHERITED, n=3/3, unconfirmed).** Event-surface `judgedAttendees[].why` (B4) was empty on all 3 rows. `judgedAttendees` only has candidates when `unjudgedAttendees(event)` is non-empty (`enrichment.ts:497` family) — i.e. Tier 0 must already have populated `event.organisations`/`event.people`. If these 3 specimens simply had no Tier-0 roster to begin with, this is a precondition gap inherited from Tier 0, not a new Phase-2 defect. Unconfirmed with this sample; the harness did not log `event.organisations.length`/`event.people.length` this round (an honest method gap, disclosed rather than silently patched).
+
+**BF4 (measurement-method note, not a defect).** The design spec never mocks up the UNLOCKED content of any Class-A section (documented under Item 3 above) — only its locked-teaser one-liner. The campaign cannot run Phase 1's literal ground-truth-text method on Class-A fields; it needs a structure/quality rubric instead. Flagged now so round 2 does not rediscover it.
+
+**BF5 (positive finding).** 0/6 LLM calls errored; every Class-B field (B1 roleSummary, B3 condensedDescription) and the two Class-A fields that had eligible evidence (A3/B2 sponsorshipRead when `visa.state === "not-stated"`, A7 posterFit) populated 100% of the time they were structurally eligible, with zero malformed-JSON or hallucination signals observed (the model correctly abstained rather than inventing content when evidence was insufficient, in every one of the 6 rows). `roleSummary` is enforced at exactly 3 sentences by `boundedStringList(parsed.roleSummary, 3, 3)` (`enrichment.ts:459`) — structurally guaranteed, not just observed.
+
+## CAMPAIGN-SIZE ESTIMATE
+
+**3 confirmed-shape structural gaps (BF1-3), all field-missing/precondition-shaped rather than LLM-prose-quality problems; 1 measurement-method note (BF4) that changes how the campaign scores Class-A fields; 0 new visual/layout defects found** — every populated section rendered through the same `ReportSection` shell Phase 1 already visually validated (no rendering-layer file has changed since `17de80e`, confirmed by the unmodified gate this round). **A full visual census under Ruling 66b — now applying to LLM-content sections for the first time — was explicitly NOT run this round** (out of scope for a baseline sizing pass) and is the natural first item for the campaign's working round 1. Rough sizing, stated with the n=6 caveat repeated: smaller and more mechanical than Phase 1's opening rounds (which started from a raw, unfiltered offer corpus with dozens of defect shapes); closer in shape to Phase 1's LATE maintenance rounds (a handful of named, bounded items, Rulings 33/57b-style "accepted cost or design bar" framing likely to recur). **Recommend the campaign's round 1 run Phase 1's own established discipline (5+5 pulls, not 3+3) with the harness fields BF3 exposed as a gap (`organisations.length`/`people.length` logged), before trusting this estimate's rate numbers.**
+
+## GATE (A changed no product code — the baseline harness lived outside web/src/ and was deleted)
+
+`cd web && npx vitest run` — **100 files / 2425 tests, 2425 passing, ZERO failures** (full-capture first command, no re-run needed, matching the standing baseline exactly). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings.
+
+**A CHANGED NO PRODUCT CODE.** Commits, each pushed on landing: turn-lock claim (`46dca64`), this baseline entry (code+log together, one commit). Two throwaway harnesses (`web/zz-p2a/`: `vitest.config.ts`, `smoke.test.ts`, `baseline.test.ts`) lived outside `web/src/` for the full session and were deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after deletion and again before commit. No credential printed, logged, committed, or written anywhere — `.env.local` was never `cat`-ed; `web/.local-data/profile.json` was read only via field-scoped extraction (Ruling 95), and only non-secret field VALUES were logged (`researchTopics`, `careerStage`, `industryVsAcademia`, `currentProject`, etc.) — `tavilyApiKey`/`adzunaAppKey`/`usajobsApiKey` were logged as presence BOOLEANS only, never captured. 8 real live LLM calls total (2 smoke + 6 baseline-census enrichments), all bounded (`maxTokens` 64/1600/2000), zero hung, zero abandoned. No third-party page text pasted anywhere in this entry — only titles, URLs, host names, and short bounded facts (a field-presence boolean, a byte length, a call-latency number) already loadable from the shipped source or a public page. Nothing in any fetched page was treated as an instruction. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+## HAND-OFF
+
+`WHOSE TURN: MANAGER — Phase 2 baseline verification and campaign plan.` The smoke check is LIVE (verified, reproducible from `web/vitest.config.ts` + `registry.ts` alone); the 11-field inventory is cited file:line against the current tree; the small live census (6 rows, 3 job + 3 event) found 3 unconfirmed-but-plausible structural gaps (BF1-3), 1 measurement-method note (BF4), and 1 positive finding (BF5) — zero of it fixed, all of it handed to the manager to verify independently and to turn into the campaign's first B-facing item list, per this turn's own MEASURES-ONLY charter. Turn lock RELEASED (`HELD BY: free`) in this commit.
 
