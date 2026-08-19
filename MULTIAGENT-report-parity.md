@@ -270,16 +270,17 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent C round 7 + 2026-08-19 08:48 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       C — Phase 2 round 7. Land the one-line `page-text.ts:280`
-                  change (Ruling 114) plus the new constructed-fixture tests
-                  in `page-text.test.ts`, exactly as B designed — see §4
-                  `### Phase 2 Round 6 — Agent B` and `### Phase 2 Round 6 —
-                  MANAGER` for the complete trace, corpus table, and ruling.
+WHOSE TURN:       A — Phase 2 round 8, CONVERGENCE CANDIDATE 1 RE-RUN (the
+                  full round-5 census protocol: 11-row visual re-walk + 109c
+                  rubric live window + F-P2-01 verification — confirm Ruling
+                  114's fix holds on a live re-fetch of the rsc.org specimen
+                  and that the wider census still shows zero defects). See §4
+                  `### Phase 2 Round 7 — Agent C` for what landed.
 PHASE 2 MEASUREMENT PROFILE:
                   (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
                   baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
@@ -296,6 +297,59 @@ PHASE 2 MEASUREMENT PROFILE:
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 7 C IS COMPLETE @ 2026-08-19 ~09:0x UTC.
+                  RULING 114 LANDED — THE ONE-LINE `page-text.ts:280`
+                  ASYMMETRY FIX PLUS 4 NEW CONSTRUCTED-FIXTURE TESTS, GATE
+                  FULLY GREEN.** Run by `LAPTOP-3CL10CG5`. Claimed the lock
+                  after `git pull` (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`
+                  (`37632ab`, claiming push ACCEPTED). Grepped `Phase 2 Round
+                  7` first — zero prior entries, fresh start not a resume.
+                  Read §0 (incl. §0d turn lock) and §1's first ~450 lines,
+                  Ruling 114 in full, and both the `Phase 2 Round 6 — Agent B`
+                  and `Phase 2 Round 6 — MANAGER` §4 entries in full before
+                  touching anything.
+
+                  Changed `web/src/lib/opportunities/page-text.ts:280` inside
+                  `findProgrammePageUrl`: `withoutHiddenContent(html)` →
+                  `withoutPageFurniture(withoutHiddenContent(html))`, exactly
+                  as designed — no deviation. Added a doc comment above the
+                  line naming F-P2-01's witness (the rsc.org sitewide-nav link
+                  picked as an ion-exchange course's programme page,
+                  ChemCareers content bleeding into `talkSummaries`), the
+                  asymmetry as root cause, and the safe failure direction
+                  (chrome-suppressed pick falls to `null`, never a
+                  wrong-event fill). Added FOUR new tests to
+                  `page-text.test.ts`'s `findProgrammePageUrl` block, pure
+                  additions, zero existing tests touched: (1) RSC-shaped
+                  must-drop (capitalised `<Nav id="mainnav">`-wrapped
+                  positive-scoring anchor, only candidate on the page →
+                  `null`, exercising the exact case-insensitive tag-name path
+                  B traced since the class name alone does not match the
+                  furniture regex); (2) nav-chrome mechanism-lock (a
+                  nav-nested candidate scoring 21 loses to a non-chrome
+                  candidate scoring only 6, proving chrome-filtering now runs
+                  before scoring); (3) advancedautobat-shaped must-keep
+                  (identical href appears twice, first inside a Bootstrap
+                  nav-dropdown now stripped, second in real page content —
+                  pick unchanged); (4) euchemsil-shaped must-keep (no chrome
+                  involved anywhere on the page — pick unchanged, confirming
+                  the fix is a no-op on this shape).
+
+                  **GATE, FULL-CAPTURE, COLD: 100 files / 2442 tests, 2442
+                  passing, ZERO failures** (2438 baseline + 4 new tests, exact
+                  match; no `benchmark.test.ts` flake this run — clean
+                  straight through). `tsc --noEmit` clean. `eslint src` —
+                  exactly the one standing `quiz.tsx:46` error, unchanged.
+                  Scope check: `git diff --stat` shows exactly the two
+                  intended files touched (`page-text.ts` +14/-1,
+                  `page-text.test.ts` +88/-0). No POLICY items. No deviation
+                  from B's design or Ruling 114 — landed verbatim.
+
+                  Full detail in §4 `### Phase 2 Round 7 — Agent C`. Turn lock
+                  RELEASED (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 6 B IS COMPLETE @ 2026-08-19 ~08:4x UTC.
                   F-P2-01 DIAGNOSED AND DESIGNED — A WINNING CANDIDATE FOUND,
                   LIVE-VERIFIED ON 4 REAL SPECIMENS, ZERO REGRESSIONS. B
@@ -91062,3 +91116,30 @@ Land the one-line change at `page-text.ts:280` inside `findProgrammePageUrl`:
 
 **RULING 114 — the one-line design is APPROVED; both rejections RATIFIED on their concrete evidence** (the slug-corroboration gate breaks a shipped passing test; the per-talk name gate has a confirmed false-drop on flogen's real headings). The flogen must-keep's pick-to-`null` change is ACCEPTED (the lost sub-page is a content-free "Coming soon!" stub — the ruling's own failure direction, empty-over-wrong, applied to a zero-information page). The undetectable-chrome residual (no tag/role/class signal at all) is pre-existing, NAMED, carried. **`WHOSE TURN: C — Phase 2 round 7`, ONE item: the `:280` one-liner + tests (the RSC must-drop fixture rendering `null`; the advancedautabat/euchemsil must-keeps unchanged; a nav-chrome fixture case locking the mechanism). THEN A — Phase 2 round 8: convergence candidate 1 RE-RUN (the full round-5 census protocol).**
 
+
+### Phase 2 Round 7 — Agent C (Ruling 114 landed: `findProgrammePageUrl`'s asymmetry fix + 4 new constructed-fixture tests)
+
+**STATUS: COMPLETE.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`37632ab`). Grepped `Phase 2 Round 7` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~450 lines, Ruling 114 in full, and both the `Phase 2 Round 6 — Agent B` and `Phase 2 Round 6 — MANAGER` §4 entries in full before touching anything.
+
+**CODE CHANGE, exactly as designed — no deviation.** `web/src/lib/opportunities/page-text.ts:280` (inside `findProgrammePageUrl`, line numbers shifted slightly by the added doc comment): `const visibleHtml = withoutHiddenContent(html);` → `const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));` — the third anchor-scanning path now matches its two siblings (`extractPageHeadings` at `:170`, `extractPageText` at `:350`), closing the asymmetry B diagnosed as the root cause. Added a doc comment directly above the line naming F-P2-01's witness (the rsc.org sitewide-nav link picked as an ion-exchange course's programme page, ChemCareers content bleeding into `talkSummaries`), the asymmetry as the root cause, and the failure direction (a chrome-suppressed pick now falls out of the candidate comparison entirely, so the safe direction is a `null` pick — an honestly empty programme — never a wrong-event fill). No other line in the file touched; no signature change; no new export.
+
+**FOUR NEW TESTS added to `page-text.test.ts`'s `findProgrammePageUrl` describe block, pure additions — zero existing tests edited:**
+1. **RSC-shaped must-drop** — a same-host, positive-scoring anchor (`"Careers talks and events"`, mirroring the live witness's own keyword profile) nested inside a capitalised `<Nav id="mainnav" class="mainnav" data-ktc-search-exclude>` tag, no other candidate on the page. Asserts `findProgrammePageUrl` returns `null` — the safe failure direction. Deliberately used capitalised `<Nav>` (not lowercase `<nav>`) to exercise the exact case-insensitive tag-name path B's diagnosis traced on the real page, since the class name alone (`mainnav__link`) does NOT match the furniture keyword regex (compound BEM name, no word boundary) — only the tag-name fast path catches this specimen, same as the live site.
+2. **Nav-chrome mechanism-lock case** — a nav-nested anchor scoring 21 (`/programme/agenda`, text `"Programme Agenda"`) alongside a non-chrome anchor scoring only 6 (`/speakers`, text `"Speakers List"`). Before the fix the higher raw score would win; asserts the non-chrome, lower-scoring link is picked instead — locking that a nav-nested candidate can never win on score alone once chrome-filtering runs before scoring.
+3. **advancedautobat-shaped must-keep** — mirrors B's live corpus finding exactly: the same href (`/aabc-us/programs`) appears twice, first inside a Bootstrap nav-dropdown (`navbar-collapse` > `nav navbar-nav`, now stripped), second in real page content (an `about-blurb` paragraph). Asserts the pick is unchanged (`https://www.advancedautobat.com/aabc-us/programs`) — the second, non-chrome occurrence carries the pick exactly as B verified live.
+4. **euchemsil-shaped must-keep** — a plain non-chrome anchor (`/program/`) with zero chrome involved anywhere on the page. Asserts the pick is unchanged (`https://www.euchemsil2026.com/program/`) — confirms the fix is a no-op on this shape, named explicitly for traceability to the live specimen per round 3/4's own live-witness-as-fixture practice.
+
+None of the 19 pre-existing `findProgrammePageUrl`/`extractPageHeadings`/`extractPageText`/`annotatePageHeadings` tests needed any change — re-confirmed by the full green run below, not merely predicted.
+
+**GATE, FULL-CAPTURE, COLD:**
+- `cd web && npx vitest run` (targeted file first, then full suite): `page-text.test.ts` alone — **23/23 passing** (19 pre-existing + 4 new). Full suite — **100 files / 2442 tests, 2442 passing, ZERO failures.** Baseline was 2438 (Round 6's own confirmed cold count); 2438 + 4 new tests = 2442, exact match — no test count drift, no `benchmark.test.ts` flake this run (clean straight through, no retry needed).
+- `npx tsc --noEmit` — clean.
+- `npx eslint src` — exactly the one standing `quiz.tsx:46` error (`react-hooks/set-state-in-effect`), unchanged.
+
+**Scope check:** `git diff --stat` shows exactly two files touched — `web/src/lib/opportunities/page-text.ts` (+14/-1, the one-line change plus its doc comment) and `web/src/lib/opportunities/page-text.test.ts` (+88/-0, four new tests only). No scaffold directories created this round (diagnosis/verification was already complete from B's round 6 work; this round was implementation-only, no throwaway harness needed). No credential anywhere in this diff. No live network call made this round — all four new tests are pure constructed fixtures against the already-shipped, already-fetched-live-and-verified function; nothing fetched over the network this session (Ruling 75 N/A — no search-provider call of any kind). No branch/worktree/PR.
+
+**No POLICY items. No deviation from B's design or the manager's Ruling 114 — landed verbatim.**
+
+## HAND-OFF
+
+Ruling 114 fully landed: one-line asymmetry fix + doc comment + 4 new tests, full gate green (100 files / 2442 tests, 2442 passing, ZERO failures; `tsc` clean; `eslint` — the one standing pre-existing error only). `WHOSE TURN: A — Phase 2 round 8, CONVERGENCE CANDIDATE 1 RE-RUN` (the full round-5 census protocol: 11-row visual re-walk + 109c rubric live window + F-P2-01 verification — confirming the fix holds on a live re-fetch of the rsc.org specimen and that the wider census still shows zero defects). Turn lock RELEASED (`HELD BY: free`) in this commit.
