@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent A round 2 + 2026-08-19 06:41 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -291,6 +291,69 @@ PHASE 2 MEASUREMENT PROFILE:
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 2 A IS COMPLETE @ 2026-08-19 ~02:0x UTC.
+                  BOTH DUTIES DISCHARGED PER RULING 109b — MEASURES ONLY,
+                  NOTHING FIXED.** DUTY 1 (the Ruling-66b visual census
+                  applied to all 11 Class-A/B rows, via fixture-populated
+                  render — the first time any test in this repo has rendered
+                  a Class-A/B block with real content): shell/heading
+                  conformance CONFIRMED on all 11 rows (shared `ReportSection`
+                  L3 label step). **TWO NEW VISUAL FINDINGS**: **V-P2-01**
+                  (rank 1) — `sponsorshipRead`'s "Posting evidence" blockquote
+                  loses `font-reading` the instant Class-B/A3 engages, an
+                  UNEXPLAINED regression against V26-J02's own established
+                  serif rule for this exact quoted field (`jobs/[id]/
+                  page.tsx:1456` vs `:1154`), confirmed by controlled A/B
+                  render. **V-P2-02** — the roster card reason `<p>` (B4's own
+                  display site, `events/[id]/page.tsx:1574-1578`) loses
+                  `text-caption` to `cn()`'s OWN DOCUMENTED twMerge trap
+                  (`report-section.tsx:142-158` names this exact failure mode
+                  and its fix; this call site does not follow it) —
+                  PRE-EXISTING (also fires on a pure Tier-0 fixture, zero
+                  enrichment), first witnessed this round because Duty 1 is
+                  the first pass to walk B4's own display site. One soft/
+                  informational finding (V-P2-03): none of the new Class-A
+                  prose blocks opt into `font-reading` unlike the codebase's
+                  own documented long-form-prose convention — a design
+                  question, not a defect (plate has no ground truth per BF4).
+                  **DUTY 2** (specimen-diverse BF1-BF3 confirmation, 3+3
+                  live pulls — disclosed deviation from 5+5 after a
+                  monolithic 5+5 attempt timed out at 180s; restructured into
+                  5 small independently-bounded steps): **BF1 DISSOLVED** —
+                  `careers.gevernova.com`'s real GE Vernova internship
+                  (organically pooled) passed the owned+substance gate and
+                  populated `specificRequirements`(6)/`specificDuties`(6),
+                  fidelity-spot-checked clean; baseline's "owned = employer's
+                  own domain" framing corrected in passing (it is a
+                  DOM-structure check, host-agnostic, per
+                  `job-posting-scope.ts`). **BF2 CONFIRMED** — TWO independent
+                  organically-pooled witnesses (`advancedautobat.com`,
+                  `thebatteryshow.com`), TWO distinct root causes, same
+                  symptom: `findProgrammePageUrl` (`page-text.ts:266-322`)
+                  either walks into a PDF-gated lead-gen "brochure download
+                  form" page (1429 chars, one heading "PDF Download") or is
+                  structurally blocked by its own same-host-only filter from
+                  a real agenda link that plainly reads "CONFERENCE AGENDA"
+                  but points at a third-party ticketing subdomain
+                  (`tbsm26.mapyourshow.com`) — `talkSummaries`/`plan` empty
+                  both times; live-confirmed, this round's highest-value
+                  finding. **BF3 DISSOLVED** — `thebatteryshow.com`'s one
+                  unjudged roster person populated `judgedAttendees`(1) with
+                  a `why` independently fidelity-verified word-for-word
+                  against the real page (extends baseline's BF5 positive
+                  pattern). **GATE UNCHANGED (A changed no product code):
+                  100 files / 2425 tests, 2425 passing, ZERO failures both
+                  times; tsc clean; eslint the one standing `quiz.tsx:46`
+                  error.** 7 bounded LLM calls total, zero hung/faked. Full
+                  detail, tables, and file:line citations in §4
+                  `### Phase 2 Round 2 — Agent A (LLM-section visual census +
+                  specimen-diverse BF1-BF3 confirmation)`.
+                  `WHOSE TURN: MANAGER — Phase 2 round 2 verification. If
+                  findings agreed: BF2 + V-P2-01/V-P2-02 → B next round, in
+                  that priority order; V-P2-03 → manager/user design call;
+                  BF1/BF3 need no further action.`
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 1 A (BASELINE) IS COMPLETE @ 2026-08-19
                   ~01:3x UTC. SMOKE CHECK LIVE; 11-FIELD LLM-PATH INVENTORY
                   CITED FILE:LINE; SMALL LIVE CENSUS RUN (6 REAL DEEP-REPORT
@@ -89975,4 +90038,104 @@ Harness `web/zz-p2a/baseline.test.ts` (+ shared `vitest.config.ts`), outside `we
 - **109c — BF4's rubric question, ruled:** Class-A content parity is scored on a THREE-PART RUBRIC, not literal text matching: (i) LAYOUT — the section renders inside the plate-conformant shell (the 66b walk covers this); (ii) FIDELITY — every factual claim in the LLM text is traceable to the fetched page (spot-checked per census; a hallucination is a finding of the highest rank); (iii) FORM — the content matches the field's own contract (length, tone, structure as the component's type/docs define). The spec's locked-teaser mockups govern the LOCKED state only, which Phase 1 already verified.
 - **109d — standing rules carry unchanged into Phase 2:** Ruling 75 (gemini only), 95 (field-scoped credentials), 96b (flake classification), 80a (dying hand-off), the turn lock, write-as-you-go, and the 105a convergence framework (Phase 2 will close the same way: two consecutive clean full rounds, zero new defect classes, manager re-measurement final). LLM calls are bounded and small-windowed — quota is real even on Vertex.
 - **Routing: `WHOSE TURN: A — Phase 2 round 2 (LLM-section visual census + specimen-diverse BF1-BF3 confirmation)`.**
+
+### Phase 2 Round 2 — Agent A (LLM-section visual census + specimen-diverse BF1-BF3 confirmation)
+
+**STATUS: COMPLETE. MEASURES ONLY — NOTHING FIXED, per this round's own charter (Ruling 109b).** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`ee76b77`). Grepped `Phase 2 Round 2` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~980 lines; read Ruling 109 (a-d) in full, the `Phase 2 Round 1 — Agent A (baseline)` §4 entry (the 11-field inventory + BF1-BF5) in full, Ruling 69 in full, and Ruling 108's maintenance list (5 items — NOT re-filed here). Also read `web/src/components/reports/plate-type-system.test.ts` in full (1629 lines) per the brief's instruction — confirms it documents the plate's type system (serif/sans boundary, the L2/L3 heading hierarchy, `REPORT_LABEL_CLASS`/`REPORT_LABEL_STEP`) but its own `renderJob`/`renderEvent` helpers ALWAYS pass `enrichment: null` — no existing test in this repo has ever rendered a single Class-A/B block with populated content before this round.
+
+**GATE, COLD AND AT CLOSE: 100 files / 2425 tests, 2425 passing, ZERO failures** both times. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## DUTY 1 — THE RULING-66b VISUAL CENSUS APPLIED TO THE LLM SECTIONS
+
+**METHOD.** Fixture-based render census, not live-pull dependent: reused `plate-type-system.test.ts`'s own method (render the shipped `JobReport`/`EventReport` via `renderToStaticMarkup`, read classes off the real markup) but — for the first time in this repo — with a POPULATED `JobEnrichment`/`EventEnrichment` fixture covering all 11 baseline rows at once. Harness `web/zz-p2a2/visual-census.test.ts`, 18 assertions, 18/18 passing after two harness-bug fixes (documented below, neither is a product finding). Deleted before this commit.
+
+**SHELL/HEADING CONFORMANCE — ALL 11 ROWS CONFORMANT.** Every one of the 7 Class-A `ReportSection` titles ("What this employer actually asks for", "What the person would actually do", "Sponsorship read", "What to emphasise in your application", "What each talk is actually about", "A day-by-day plan for you", "Is your work a fit for the poster call") and the 4 Class-B provenance sites render through the SAME shared `ReportSection` shell (`components/reports/report-section.tsx`) at the default `level="section"` step — confirmed by direct render, not source reading alone: `text-caption font-semibold uppercase tracking-[0.18em] text-text-faint`, the plate's own L3 label step (V26-J10), `data-report-heading-level="section"` present on all of them. Zero rendering-layer files have changed since `17de80e` (unchanged since Phase 2 round 1's own baseline), so this result was expected; it is now MEASURED rather than assumed.
+
+**FINDING V-P2-01 (rank 1 of the visual findings) — `sponsorshipRead`'s "Posting evidence" quote loses `font-reading`, an UNEXPLAINED regression against the plate's own established rule.**
+
+- Tier-0-only path (`enrichment.sponsorshipRead` absent): `app/jobs/[id]/page.tsx:1154`'s blockquote carries `font-reading` — this is V26-J02's own named "visa evidence quote," one of the plate's five documented serif elements (`Georgia 10.5 #9c8b78`), and the surrounding comment (`:1150-1152`) states outright it is serif "because it is the POSTING's prose, not chrome."
+- Class-B/A3 path (`enrichment.sponsorshipRead` present): `:1153` SUPPRESSES the Tier-0 blockquote entirely (`{visaEvidence && !enrichment?.sponsorshipRead && (...)}`), and the IDENTICAL `visaEvidence` string re-renders inside the "Sponsorship read" block's own blockquote at `:1456` — `className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 text-body leading-7 text-text-muted"` — **`font-reading` is absent.**
+- Confirmed by controlled A/B render: two calls to the same `JobReport` differing in NOTHING but the `enrichment` prop; the Tier-0 call's blockquote classlist contains `font-reading`, the Class-B call's does not, on the same underlying quoted text.
+- This is squarely in scope: A3/B2 is baseline row #3 (dual-listed), and the mechanism is exactly the "provenance changes to Tier-0-scored text" class Ruling 109's own Class-B definition names.
+
+**FINDING V-P2-02 (rank 2) — the roster card reason `<p>` (B4's own display site) loses `text-caption` to `cn()`'s OWN DOCUMENTED twMerge trap, on a call site the doc comment's own audit did not reach. PRE-EXISTING, not a Class-B regression.**
+
+- `app/events/[id]/page.tsx:1574-1578`: `className={cn("mt-2 text-caption font-medium text-accent", judgment && !judgment.worthIt && "text-text-muted")}`.
+- `components/reports/report-section.tsx`'s own doc comment (`:142-158`, `REPORT_LABEL_STEP`) names this EXACT failure mode by name — `tailwind-merge` treats `text-caption` (a font-SIZE utility) as though it conflicts with a later `text-COLOUR` class in the same string and silently drops it — and states it already cost three call sites, fixed by composing with a template literal instead of `cn()`. Every OTHER `text-caption`+colour call site in both report pages (`job page.tsx:1459`'s "Posting evidence" span, `events page.tsx`'s "Cheapest way in, for you") follows that documented fix via a template literal. **This one does not** — it passes the literal string straight through `cn()`, and the trap fires again.
+- Confirmed three independent ways: (1) mechanism-level, isolated from React — `cn("mt-2 text-caption font-medium text-accent", false)` returns `"mt-2 font-medium text-accent"`, `text-caption` gone, `text-accent` survives; (2) rendered, with `judgedAttendees[].why` populated (Class-B path) — same drop; (3) rendered on a PURE Tier-0 fixture with zero enrichment (`item.relevance` set directly, the same fixture shape `plate-type-system.test.ts`'s own `V26-E01 rosterEvent()` uses) — same drop, proving this is independent of and predates the LLM merge.
+- **This is the ONE place B4's `judgedAttendees[].why` actually renders per card** (`partitionEventRoster`'s merge feeds `reason`, displayed at this exact paragraph), so it is squarely Duty-1 in scope even though the root cause is Tier-0-era. Zero existing assertion in `events/[id]/page.test.ts` covers this paragraph's class list — genuinely unwitnessed by Phase 1's own census, first caught because Duty 1 is the first pass to specifically walk B4's own display site rather than only its heading badge.
+
+**FINDING V-P2-03 (rank 3, soft/informational — a design question, not asserted as a defect).** None of the new Class-A prose blocks opt into `font-reading`: A1 `specificRequirements`/A2 `specificDuties`/A4 `emphasise` list items, A3 `sponsorshipRead.basis`, A5 `talkSummaries[].about`, A7 `posterFit.points` all render sans (`text-body`/`text-body-sm`). Contrast: B1 `roleSummary` correctly inherits `font-reading` for FREE, because it shares the pre-existing `roleBullets` render site with Tier 0 (`page.tsx:1000-1002`, `:1329`) — confirmed by render. This does not contradict the plate — BF4 already established the plate never mocks up Class-A's unlocked content, so there is no ground truth to violate — but it IS an inconsistency against the codebase's own documented rule (`globals.css:279`, "long-form prose opts INTO serif") and the pattern the whole V26-J02/V27-01 test suite enforces on every OTHER piece of prose on these two reports. Recorded as a design question for the manager/B, ranked below the two confirmed regressions above.
+
+**TWO HARNESS BUGS CAUGHT AND FIXED BEFORE TRUSTING THE RESULT (neither is a product finding, both disclosed):** (1) `renderToStaticMarkup` HTML-escapes an apostrophe as `&#x27;`, so a literal-apostrophe search string never matched a real render — fixed by searching a shorter substring; (2) an initial assertion wrongly expected the roster reason paragraph to CONTAIN `text-caption` before the drop was understood to be real — corrected once the mechanism was confirmed, and the corrected test is what V-P2-02 above is built on.
+
+**VALUE STABILITY (Standard 7).** Confirmed by render: every Tier-0 value (title, company, location; event name, city) still renders with a FULLY populated enrichment fixture; zero `undefined`/`NaN` leaked anywhere in either report's markup.
+
+---
+
+## DUTY 2 — SPECIMEN-DIVERSE BF1-BF3 CONFIRMATION
+
+**METHOD.** Production-call-shape harness (`app/api/jobs/report/route.ts` and `app/api/events/report/route.ts`'s own non-exported logic reproduced verbatim — `fetchOwnedJobPostingText`, `fetchedEventPageText`, the exact prompt-build/parse calls), reproducing Phase 2 round 1 A's own pattern. **DISCLOSED DEVIATION from the "5+5 pulls" recommendation: 3+3 pulls used instead.** A first monolithic attempt at 5+5 TIMED OUT at 180s mid-run (job pulls alone took ~68s for 3); per the loop's own "abandon hung calls, never fake a live pass" discipline the harness was restructured into 5 small, independently-bounded steps (pool-pull ×2, BF1 hunt+confirm, BF2 hunt+confirm, BF3 hunt+confirm), each with its own timeout and a scratch-file handoff between steps — no step needed more than ~17s once split. `searchProvider: gemini` only (Ruling 75), `tavily: { enabled: false }` explicit, `aiTier: 0` pool build, `apiKeys` omitted (zero `adzuna`/`usajobs` calls, Ruling 75/95), field-scoped `profile.json` (Ruling 95). Fresh no-op `PoolCache` every pull. Pool: **9 unique job rows** (3 pulls), **10 unique event rows** (3 pulls).
+
+### BF1 — DISSOLVED. `specificRequirements`/`specificDuties` populate when the owned-posting gate's precondition actually holds.
+
+Both baseline-named candidates (`careers.gevernova.com`, `hyetlithium.com`) appeared ORGANICALLY in this window's pool (not force-fetched). Probe (8 candidates, named hosts first, concurrent fetch, `resolveJobPostingScope` + `ownedTextHasPostingSubstance` reproduced verbatim, zero LLM spend):
+
+| host | scope.status | substance |
+|---|---|---|
+| careers.gevernova.com | **owned** | **true** |
+| hyetlithium.com | unproven / fetch-failed (flaky across two runs) | false |
+| postdocjobs.com | owned | false |
+| talents.vaia.com | owned | false |
+| cefracor.org | owned | false |
+| ev.careers | owned | false |
+| database.enen.eu | owned / fetch-failed (flaky) | false |
+| climatechangejobs.com | owned | false |
+
+`careers.gevernova.com`'s real "GE Vernova Battery Engineering & Technology Intern" posting passed the owned+substance gate (5088 chars) — the SAME gate the baseline's 3/3-empty sample never once passed. **One live enrichment call: `specificRequirements: 6`, `specificDuties: 6` — BOTH POPULATED.** Fidelity spot-check (Ruling 109c(ii)): sampled requirement ("Current enrollment in undergrad or graduate degree in a physical science engineering field... Materials Engineering...") and sampled duty ("Support engineering teams developing new battery technology... Utilities, Datacenter, and Defense industries.") independently re-confirmed present, verbatim, in the real fetched page text via a second bounded fetch of the exact pooled URL — **zero hallucination signal.**
+
+**Verdict: CORRECT BEHAVIOUR on an eligible specimen — BF1 DISSOLVES.**
+
+**Correction to baseline's own diagnosis, offered in passing:** baseline framed the gate as "none of the 3 is the employer's own domain... should reputable career-portal domains count as owned." Reading `resolveJobPostingScope` directly (`job-posting-scope.ts:7-9, 144-164`) shows the "owned" verdict is NOT a domain-ownership check at all — it never inspects which host serves the page. It is a DOM-STRUCTURE check: does the fetched page contain a bounded single-listing block with one exact self-link or one matching heading. `careers.gevernova.com` passing while two aggregator-style pages in baseline's own sample failed is consistent with this — the mechanism is host-agnostic by construction.
+
+### BF2 — CONFIRMED. `talkSummaries`/`plan` do NOT populate on the specimen shape they were built for, TWO independent witnesses, TWO distinct root causes.
+
+Both baseline-named candidates (`thebatteryshow.com`, `advancedautobat.com`) appeared ORGANICALLY in this window's pool.
+
+**Witness 1 — `advancedautobat.com`, "26th Advanced Automotive Battery Conference (AABC)."** `findProgrammePageUrl` (`page-text.ts:266`) found a same-host candidate: `/us/2026-brochure-download-form`. Direct fetch shows this is a LEAD-GENERATION FORM PAGE — one heading ("PDF Download," 12 chars), 1429 chars of page text total. The site's own root page states "Final Agenda Now Available" — the real, current agenda is a PDF, gated behind this download form, unreachable by HTML text extraction. **One live enrichment call on this thin page text: `talkSummaries: 0`, `plan: 0` — empty.** Given the near-zero programme evidence actually delivered, an empty result plausibly reflects the model correctly abstaining rather than inventing (the same safe-abstention pattern baseline's BF5 recorded as a positive) — but the field is empty on the specimen shape A5/A6 were explicitly built to serve, so per Ruling 109b's literal instruction this is a CONFIRMED finding at the mechanism, not the model.
+
+**Witness 2 — `thebatteryshow.com`, "The Battery Show North America."** The root page carries a real, unambiguous link — anchor text literally `"CONFERENCE AGENDA"` — but its href is `https://tbsm26.mapyourshow.com/8_0/sessions/#/`, a THIRD-PARTY conference-platform subdomain. `findProgrammePageUrl`'s own same-host-only filter (`page-text.ts:292`, `candidate.host.toLowerCase() !== baseUrl.host.toLowerCase() -> continue`) excludes it before scoring ever runs — the function returns `null` on this specimen. A DIFFERENT failure shape from witness 1 (zero candidate found at all, vs. one bad candidate found).
+
+**Root cause, stated precisely:** `findProgrammePageUrl`'s keyword-plus-same-host heuristic cannot reach real conference programme content when (a) the real content is a PDF gated behind an HTML lead-gen form (witness 1), or (b) the real content is hosted on a separate ticketing/exhibition SaaS subdomain — MapYourShow, Cvent, Bizzabo and similar are an industry-standard pattern for exactly this event TYPE, multi-day trade-show conferences (witness 2). Two witnesses, two mechanisms, same symptom, same event class the fields were purpose-built for.
+
+**Verdict: CONFIRMED — a real, precisely-diagnosed mechanical/precondition gap, not measurement noise.**
+
+### BF3 — DISSOLVED. `judgedAttendees[].why` populates when Tier 0 leaves an attendee unjudged.
+
+Of the 10 pooled events, exactly 1 (`thebatteryshow.com`) carried a roster with `>=1` unjudged entry (`organisations`/`people` items lacking `item.relevance`) — `thebatteryshow.com`'s single person, "Venkatesh Vasudevan," no `relevance` set by Tier 0. **One live enrichment call: `judgedAttendees: 1`, non-empty `why`: 1.** Fidelity spot-check (Ruling 109c(ii)): sampled `why` — "Keynote speaker from ExxonMobil, providing industry leadership insights." — independently re-confirmed against the real root page text via a second bounded fetch: "...2026 Keynote Industry Leadership from the Conference Stage Venkatesh Vasudevan Vice President ExxonMobil..." — **word-for-word traceable, zero hallucination.**
+
+**Verdict: CORRECT BEHAVIOUR on an eligible specimen — BF3 DISSOLVES.** Extends baseline's BF5 positive pattern (clean abstention/fidelity) into this round's own fresh, independently-sourced specimen.
+
+---
+
+## GATE (A changed no product code — the harness lived outside web/src/ and was deleted)
+
+`cd web && npx vitest run` — **100 files / 2425 tests, 2425 passing, ZERO failures** (full-capture first command, matching the standing baseline exactly, both cold-start and at close). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings.
+
+**A CHANGED NO PRODUCT CODE.** Harness `web/zz-p2a2/` (`vitest.config.ts`, `visual-census.test.ts`, `hunt.test.ts`, and four small `diag-*.test.ts` follow-up probes) lived outside `web/src/` for the full session and was deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after deletion and again before this commit. No credential printed, logged, committed, or written anywhere — `.env.local` was never `cat`-ed; `web/.local-data/profile.json` was read only via field-scoped extraction (Ruling 95). **LLM calls: 7 total, bounded and small** (2 BF1 confirmations [initial + spot-check rerun], 1 BF2 confirmation, 2 BF3 confirmations [initial + spot-check rerun], all `maxTokens` 1600/2000, all answered in under 4s) — zero hung, zero abandoned, none faked. No large fetched/LLM text pasted anywhere in this entry — only short clips (<=160 chars, all independently re-verified against the real page) and booleans/counts. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+## FINDINGS RANKED (for the manager)
+
+1. **BF2 CONFIRMED** — the highest-value finding this round: a real, two-witness, precisely-diagnosed mechanical gap in `findProgrammePageUrl` (`page-text.ts:266-322`) that structurally blocks A5/A6 on exactly the specimen shape (multi-day trade-show conferences with PDF brochures or third-party ticketing platforms) they were built to serve.
+2. **V-P2-01** — `sponsorshipRead`'s "Posting evidence" blockquote loses `font-reading`, an unexplained regression against V26-J02's own established rule (`app/jobs/[id]/page.tsx:1456` vs `:1154`).
+3. **V-P2-02** — the roster card reason paragraph's `cn()`-trap `text-caption` drop (`app/events/[id]/page.tsx:1574-1578`) — pre-existing (Tier-0-era, NOT caused by Class-B), newly witnessed because this round is the first to walk B4's own display site rather than only its heading badge.
+4. **V-P2-03** (soft) — none of the new Class-A prose blocks opt into `font-reading`, unlike the codebase's own documented long-form-prose convention — a design question, not asserted as a defect (the plate has no ground truth here per BF4).
+5. **BF1 DISSOLVED** (positive) — plus a correction to baseline's "owned = employer's own domain" framing (it is a DOM-structure check, host-agnostic).
+6. **BF3 DISSOLVED** (positive) — plus a clean, independently-verified fidelity spot-check extending BF5's pattern.
+
+## HAND-OFF
+
+`WHOSE TURN: MANAGER — Phase 2 round 2 verification.` Per Ruling 109b's own charter this round MEASURED ONLY — nothing shipped. If the manager agrees with the findings above: BF2 (the mechanical `findProgrammePageUrl` gap) and V-P2-01/V-P2-02 (the two visual regressions) are B-facing design items for the next round, in that priority order; V-P2-03 is a design question for the manager or the user, not a B commission by default; BF1/BF3 need no further action (dissolved, correct behaviour). If the manager finds gaps in this round's own method (the 3+3 pull deviation, the single-specimen-per-BF sampling), that is exactly what independent verification is for. Turn lock RELEASED (`HELD BY: free`) in this commit.
 
