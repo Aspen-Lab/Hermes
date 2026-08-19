@@ -91694,3 +91694,68 @@ Confirmed mechanically: `mdash` **is** in `web/src/lib/text/clean.ts`'s `HTML_EN
 ---
 
 **PART 1 (DUTY 1, the event census) is COMPLETE.** Per the standing "deleted before every commit" rule (not just the round's final one), harness `web/zz-p3a1/pull-events.test.ts` and `web/zz-p3a1/trace-events.test.ts` (+ their shared `vitest.config.ts`) are deleted before THIS commit; PART 2 rebuilds its own job-surface harness from scratch in the same directory rather than reusing anything left standing. `git status --porcelain --untracked-files=all` confirmed clean before this commit. Continuing to PART 2 (DUTY 2, the job census) in the same session.
+
+
+---
+
+### Phase 3 Round 1 — Agent A, PART 2 (DUTY 2: the first Tier-2 JOB census, same protocol)
+
+**STATUS: PART 2 COMPLETE. MEASURES ONLY.** Harness rebuilt from scratch in `web/zz-p3a1/` after part 1's own copy was deleted (same `vitest.config.ts` content, new `pull-jobs.test.ts`) — the standing "deleted before every commit" rule honoured between parts, not only at the round's end. Same profile snapshot, same `NODE_ENV=development` stub, same fresh-no-op-`PoolCache`-per-pull discipline, same one-bounded-FOREGROUND-invocation-per-pull method, `topics: profile.jobRequiredTopics` / `softTopics: profile.jobExploreTopics` (both equal to `researchTopics`/`softTopics` on this profile snapshot, same disclosed fallback as part 1). **`apiKeys` deliberately OMITTED from every request — zero adzuna/usajobs calls, confirmed by their total absence from every pull's `fetched` map** (not even a `0`-valued key — `source.enabled()` never even added them to the active set).
+
+**POOL COMPOSITION, ALL 5 PULLS.** `fetched` map: `remotive: 17, arbeitnow: 60, himalayas: 60` constant every pull (Tier-0 keyless sources, unaffected by `aiTier`); `jobweb` (gemini-backed): **13, 21, 25, 26, 0**. Pool sizes: 4, 9, 8, 15, 2. **Pull 4 lost the jobweb source entirely to a timeout** (`Error: [jobweb] source-timeout after 25000ms`) — the ONE flake this duty measured; see Duty 4's tally below. 41 rows total, 22 unique URLs after cross-pull dedup.
+
+---
+
+## DUTY 2 FINDINGS, RANKED BY WHAT A READER LOSES, WORST FIRST
+
+**CORRECT JOB POSTINGS — 14 of 22 unique rows**, not itemised individually; representative confirmed-real witnesses: `careers.gevernova.com` GE Vernova internship (3/5, the file's own long-standing BF1 witness), `cadenzainnovation.com` PhD Battery Chemist/Engineer (3/5), `talents.vaia.com` postings for LBNL/ORAU/Enersys/EnPower (real aggregator-mirrored postings, on-topic and correctly titled), `geosi.com`, `americanlithiumenergy.com`, `earnbetter.com`, `jobs.nzz.ch`, `jobright.ai`, DTU Energy's Oracle Cloud HCM posting. **Several rows carry no `company` value at all** (GE Vernova, `ionstoragesystems.applicantpro.com`, `jobs.nzz.ch`, `yulys.com`) — this is the CODE'S OWN designed behaviour, not a defect: `himalayas.ts`'s own comment states "`company` is already optional; absence is honest, a made-up string is not" (B8-03, Ruling 26's precedent). Not ranked as a finding; noted for completeness, matching Phase 2 round 8's own "blank `companyOrLab`" observation.
+
+**Ruling 33 (short-acronym collision):** zero instances this round — every LCO-adjacent hit is a genuine chemistry match (e.g. "Lithium Cobalt Oxide Powder" literally is LCO). **Ruling 45a (`euagenda.eu`):** zero appearances across all 5 pulls' combined corpus, checked by direct scan. **Ruling 41c's three named hosts:** not independently hunted by name this round (out of this duty's scope; the standing exclusion-visibility record is not disturbed).
+
+---
+
+### J1. `company: "name"` — a literal placeholder-shaped value on real postings — 5 of 5 pulls, the round's highest-frequency finding on either surface
+
+- `https://himalayas.app/companies/esvolta/jobs/junior-development-engineer`, "Junior Development Engineer" — pulls 0, 1, 2, 3, 4 (5 of 5).
+- `https://himalayas.app/companies/renergo/jobs/epc-manager-owner-s-engineer-m-w-d-utility-scale-solar-bess-wind`, "EPC Manager..." — pulls 0, 1, 2, 3, 4 (5 of 5).
+
+Both are real postings from real companies (esVolta, a grid-battery startup; Renergo, a solar/BESS EPC firm) rendering the literal 4-character string **"name"** in the company slot — the single most reader-visible defect this round on either surface, since it appears on every possible pull.
+
+**Traced to code level, precisely bounded, not over-claimed.** `himalayas.ts`'s `himalayasJobToRawItem` sets `company: employer.status === "ambiguous" ? undefined : employer.status === "none" ? job.companyName?.trim() || undefined : employer.company` — and this call site never passes `structuredOrganizations`, so `employer.status` can only be `"declared"` or `"none"` here, never `"structured"`. For the literal string "name" to render, either (a) Himalayas' own API `companyName` field literally equals "name" for BOTH real, unrelated companies (`status: "none"` branch), or (b) `resolveEmployerIdentity`'s `directDeclarations` (`employer-identity.ts:45-59`) extracted "name" as a captured group from one of its two closed regex alternatives (`at X, our people/employees/team` / `when you join X,`) applied to the posting's own description text (`status: "declared"` branch). **Two live-fetch attempts this round (the rendered `himalayas.app` page, and the raw Himalayas API response) did not reproduce the literal triggering text for either candidate mechanism**, so which of the two paths is the exact source is NOT established — disclosed honestly rather than guessed. What IS certain from direct reading: no other code path at this call site can produce this value, and neither path carries any plausibility check that would reject a suspiciously generic single word like "name" (itself a common field-label word) as an implausible company name.
+
+### J2. A chemical company's PRODUCT CATALOGUE page, admitted as a job posting — 1 of 5 pulls
+
+- `https://neicorporation.com/products/batteries/cathode-anode-powders/lithium-cobalt-oxide/`, rendered "Lithium Cobalt Oxide Powder" — pull 3.
+
+**The shipped code's own doc comment predicts this exact gap in advance.** `NON_JOB_PATH_RE` (`jobweb.ts:69-70`) is `/\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts|collections)(?:\/|$)/i` — no `/products/` clause. The comment directly above it reads: **"`products`, `product`, `shop`, `cart` and `category` are LEFT OUT for the same vacuity reason as the ATS family above: no live case in this pull."** This census supplies that missing live case: a battery-materials manufacturer's product page, admitted and rendered as if it were a role a reader could apply to.
+
+### J3. A SCHOOL-STUDENTS' educational career-exploration resource, admitted as a job posting — 1 of 5 pulls
+
+- `https://www.developingexperts.com/career-builder/1537`, rendered "Battery Scientist," company "AI Career Search V2" — pull 3.
+
+**Verified live (WebFetch): "an educational resource and career profile, not a job posting... helps students explore the Battery Scientist career path... Developing Experts is an educational platform that offers lessons, resources and assessments tailored for educators... career exploration tools... AI-powered career discovery features."** Not even adult-oriented — a schools/educator platform's own career-guidance content, with no application process of any kind, rendered indistinguishably from a real posting. No guard in the chain has any concept of an informational/educational page as a distinct kind from a real listing.
+
+### J4. The job-board PLATFORM'S bare brand name, rendered as the job TITLE — 1 of 5 pulls
+
+- `https://www.zintellect.com/Opportunity/Details/ARL-R-ES-400044-F1`, rendered title **"Zintellect"**, company "DEVCOM Army Research Laboratory" — pull 3.
+
+Zintellect is the DOE/ORISE opportunity-hosting platform; the real employer (DEVCOM Army Research Laboratory, correctly captured in the company slot) is a legitimate, on-topic, currently-open opportunity — only the ROLE TITLE is wrong. **Guard trace:** `isHostBrandProgrammePage` (`jobweb.ts:734-742`) is the shipped check for a host's own brand appearing where a role name should — but its own regex, `BRAND_PROGRAMME_TITLE_RE`, requires the brand to be immediately followed by a programme/section noun (`internship program`, `careers`, `vacancies`, `opportunities`, `openings`, etc.): `/^\s*([\w&.'’-]+)\s+(?:...)\s*$/i`. A title that is the BARE brand alone, with nothing trailing it at all, matches none of its clauses — `looksLikeHostBrand("Zintellect", "zintellect.com")` would itself return true if ever reached, but `isHostBrandProgrammePage` never calls it because the outer regex never matches first. **This is a structural echo of the event side's F5** (`moltensalt.org`, "Welcome to the Molten Salt Energy Technologies Web Site") — on both surfaces, a title that is PURE site identity with no accompanying role/event vocabulary at all is a shape none of the existing guards was built to recognise, because every one of them expects the brand to be paired with SOME further word.
+
+### J5. Faraday Institution listing/index pages — 2 of 5 pulls, two different specific vocabulary/shape gaps in the same regex
+
+- `https://www.faraday.ac.uk/opportunities/recruiting-phd-engd-studentships-in-battery-science-engineering/`, "Recruiting 36 PhD/EngD Studentships in Battery Science/Engineering" — pull 1.
+- `https://www.faraday.ac.uk/opportunities/battery-related-phd/`, "Battery Related PhD and Masters Opportunities in the UK" — pull 2.
+
+Both are index pages listing MANY studentship/PhD opportunities, not one posting — the same class as the job surface's own `isListingPage` was built to catch, on the SAME `LISTING_TITLE_RE` (`jobweb.ts:232-233`), by two different, precisely-traceable near-misses:
+- **Row 1 fails on VOCABULARY.** The title has the EXACT `<count> <words> <noun>` shape the regex's first alternative targets ("36 PhD/EngD Studentships"), but "Studentships" is not in the closed noun list (`jobs?|vacancies|openings?|positions?|opportunities`).
+- **Row 2 fails on SHAPE.** "Opportunities" IS in the noun list, but every alternative that reaches it requires a LEADING COUNT (a digit run before the noun); "Battery Related PhD and Masters Opportunities in the UK" states no count at all, so it clears the regex on structure even though its vocabulary would otherwise qualify.
+
+### J6. `company: "Energy Storage (Summer 2027)"` — a cohort/team label in the company slot — 1 of 5 pulls, not independently traced to a raw upstream title this round
+
+- `https://egup.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/pt-BR/sites/CX/job/20279295/...`, "Mechanical Engineering Intern," company "Energy Storage (Summer 2027)" — pull 1.
+
+"Energy Storage" reads as a team/department name and "(Summer 2027)" as the internship cohort — neither is a company name. Flagged as observed, not fetched/confirmed against the raw provider title this round; recorded rather than silently dropped, per the standing "not observed is not does not occur, and an observed value is not a fabricated one" discipline.
+
+---
+
+**PART 2 (DUTY 2, the job census) is COMPLETE.** Harness deleted before this commit (`git status --porcelain --untracked-files=all` confirmed clean). Continuing to PART 3 (DUTY 3: gemini-carries-Tavily across all three surfaces; DUTY 4: standing tallies; close-out) in the same session.
