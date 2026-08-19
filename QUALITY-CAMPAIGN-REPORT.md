@@ -390,3 +390,66 @@ The finish line was not "we ran out of bugs to find." It was: two full rounds of
 measurements, by two independent checks in different data windows, finding no new *kind* of
 problem. That happened twice — once for the basic reports, once for the AI-enhanced ones — and
 then the work shipped.
+
+---
+
+## Addendum — Phase 3: the Tier-2 pool campaign (closed)
+
+Phases 1 and 2 both measured with the AI tier **off**. Phase 2 measured the LLM-written
+*report fields* — but nobody had ever measured the **pool the AI tier produces**. With Tier 2
+on, the model writes the search queries, so a different population of pages comes back, and
+the guards built over 38 rounds had never been tested against it.
+
+Phase 3 (7 rounds, Rulings 118–125) censused that population for the first time and closed it
+under the same convergence criterion: two consecutive rounds, four independent measurement
+windows, zero new defect classes.
+
+**What the first Tier-2 census found — 15 defects the earlier phases could not have seen:**
+
+- **`company: "name"` printed literally on real job cards, in 5 of 5 pulls.** Traced by
+  executing against the source's own API: the platform returns the literal string `"name"` as
+  the company for ~10% of sampled records — 18 real firms including Salesforce, ServiceNow and
+  Lockheed Martin. A platform-side data bug, not ours. But ours too: the validator that should
+  have caught it accepted a `catalogLabel` argument it **never read**, and both callers
+  re-implemented their own unvalidated fallback around it. Fixed by routing that field through
+  the same validation everything else gets, gated on an exact closed list containing the one
+  measured token. The control that makes it safe — a real company named `mercor` in the same
+  data — ships as a test, so no future "short lowercase word looks like a placeholder"
+  heuristic can delete it.
+- **Pages *about* things, rendered as the things**: an encyclopedia article, national-lab blog
+  posts, bibliographic records, organisation homepages, tag/archive pages, a product catalogue,
+  a school careers-education page, and press-wire coverage of real conferences (4 of 5 pulls,
+  six hosts). Nine of the fifteen findings were this one family.
+- **A discussion-forum website admitted as a conference**, because the positive event-signal
+  list contains the bare word "forum".
+- **An undecoded `&laquo;` in a rendered event name** — the entity table simply lacked the token.
+
+**What we deliberately did not do, again:**
+
+- **No fifteen patches.** After the first per-instance fix shipped, the loop's own doctrine
+  fired: when the same slot keeps producing differently-shaped wrong values, stop patching and
+  **enumerate the whole producing path first**. That enumeration — every branch by which a
+  fetched page becomes an admitted card, on both surfaces — is what turned nine scattered
+  findings into one family with one question.
+- **The `schema.org` idea was measured, not assumed.** A page's own declaration looked like the
+  structural answer. Measured against real pages: on the job surface 3/3 correct pages declare
+  `JobPosting` and 0/4 wrong ones do — promising, but three samples is not a gate, so it ships
+  as a rescue signal only. On the event surface **5 of 6 real conferences declare no `Event`
+  schema at all** — a require-`Event` gate would have deleted real events. Refused.
+- **A forum guard was designed and then abandoned** when live fetches showed the wrong site and
+  a legitimate one were structurally indistinguishable to everything the pipeline can read.
+- **A "gemini takes over Tavily" fix shipped dormant on purpose.** Wiring its outer gate would
+  have spent a live model call on every request to fill a field the pipeline discards. The
+  branch is banked, tested, and inert, with the condition for switching it on written down.
+
+**Corrections that ran upward.** Five times this phase an agent corrected the manager: a patch
+that passed tests but broke the typecheck (and sat on `main` for a day, which is why the gate is
+now *both* checks); a directory-scoped search whose result was generalised too far; a
+re-measurement harness that read a field the file does not have, which silently disabled the
+topic filter and made a whole run void; a ruling that conflated two different mechanisms; and a
+claim of user impact that measurement showed to be zero. Each is recorded with the correction
+attached — the log's value is that it audits its own author.
+
+**Closing numbers:** eleven fixes shipped; the suite went **2,446 → 2,524 tests**, all green,
+with the typecheck clean; four independent live measurement windows across the two closing
+rounds found zero new defect classes.
