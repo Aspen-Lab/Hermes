@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent C round 4 + 2026-08-19 07:37 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -291,6 +291,113 @@ PHASE 2 MEASUREMENT PROFILE:
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 4 C IS COMPLETE @ 2026-08-19 ~07:5x UTC. ALL
+                  THREE COMMISSIONED ITEMS SHIPPED, VERBATIM PER RULINGS
+                  111a/111b/111c/111d — CODE + TESTS, ONE COMMIT EACH.** Run
+                  by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`
+                  (`29c8313`). Grepped `Phase 2 Round 4` first — zero prior
+                  entries existed, fresh start not a resume. Read §0/§1 in
+                  full, Rulings 111a-111d in full, and the three `Phase 2
+                  Round 3 — Agent B — ITEM 1/2/3` entries in full (B's exact
+                  designs, file:line, printed diffs) before touching anything.
+
+                  **ITEM 1 (BF2 plural-keyword fix), commit `9a6b3c8`:**
+                  `page-text.ts`'s `PROGRAMME_LINK_KEYWORDS` first pattern
+                  widened `/\bprogram(?:me)?\b/i` → `/\bprogram(?:me)?s?\b/i`,
+                  the one-character `s?` B's entry printed exactly. New test
+                  in `page-text.test.ts` reproduces the advancedautobat.com
+                  witness's two real link shapes as a constructed fixture (no
+                  live fetch, per Ruling 75 pure-implementation-turn) —
+                  verified the scoring arithmetic (21 vs. 10) matches B's
+                  diagnosis before asserting. Witness 2's off-host relaxation:
+                  NOTHING implemented, per Ruling 111a's decline — the named
+                  cost is already recorded in the ruling itself.
+
+                  **ITEM 2 (V-P2-01 + full sweep), commit `82a1b28`:** four
+                  class-level edits in `jobs/[id]/page.tsx` per Ruling 111b —
+                  A3/B2 (the commissioned blockquote, matching B's printed
+                  diff), A1 `specificRequirements`, A2 `specificDuties` all
+                  TAKE `font-reading`; B1 `roleSummary` is STRIPPED to sans.
+                  **DEVIATION DISCLOSED (not POLICY):** B's entry did not
+                  design exact code for B1 — it was flagged as an open
+                  question, not a fix, because B1 shares a single render slot
+                  with Tier-0's own genuine posting-prose `roleBullets`
+                  (stripping the slot's className outright would have also
+                  stripped Tier-0's real serif). Implemented as a minimal
+                  conditional (`roleBulletsAreLlmVoice` boolean, plain
+                  template-literal className, no `cn()`) that strips serif
+                  only when Class-B's LLM voice occupies the slot, keeping it
+                  for Tier-0's own prose in the same slot. Four new tests in
+                  `plate-type-system.test.ts` lock all four sites, including
+                  BOTH directions of the B1 split in one test (LLM voice sans,
+                  Tier-0 prose still serif in the identical slot).
+
+                  **ITEM 3 (V-P2-02 general fix), commit `a71ea38`:** Ruling
+                  111c's own text ships the GENERAL fix and names no
+                  site-level edit ("C implements the general fix + tests
+                  locking all five victim sites... at their intended
+                  classes") — confirmed directly that zero `cn(` call sites
+                  needed touching once `cn.ts` itself was fixed. `cn.ts`
+                  rewritten exactly per B's printed design:
+                  `extendTailwindMerge` registering the app's 9 custom
+                  `--text-*` tokens into `tailwind-merge`'s `font-size` class
+                  group (`tailwind-merge` confirmed still `^3.6.0` before
+                  shipping). Six call sites locked across two new test
+                  describe blocks (`events/[id]/page.test.ts`,
+                  `jobs/[id]/page.test.ts`): the Organisations roster reason
+                  paragraph (both branches), the People-card byte-identical
+                  twin (both branches), `HeaderChip` on both surfaces,
+                  the activity chip (both branches), `StarButton`.
+                  **DEVIATION DISCLOSED (not POLICY):** `StarButton`'s
+                  `active=true` branch is UNREACHABLE through the real page —
+                  traced by direct execution: a starred tail row is always
+                  promoted into a roster card instead (V26-E06's own "cards
+                  carry no star" doctrine), the same admitted-control shape
+                  this file already documents for the skills-bar's
+                  divide-by-zero guard; `StarButton` is also not exported.
+                  Resolved with two tests — the reachable INACTIVE branch
+                  through the real page, and the unreachable ACTIVE branch by
+                  calling the real, imported `cn()` directly against the
+                  component's own literal class arguments, matching B's own
+                  diagnostic method. **NON-VACUOUSNESS VERIFIED:** all 8 new
+                  assertions across both files were checked to FAIL against a
+                  temporarily-reverted pre-fix `cn.ts` (8/8 failed as
+                  expected), then the fix was restored and `git status`
+                  confirmed only the 3 intended files carried changes before
+                  committing.
+
+                  **GATE, FINAL AND CLEAN: 100 files / 2438 tests, 2438
+                  passing, ZERO failures** (baseline 2425 + 13 new: item 1
+                  +1, item 2 +4, item 3 +8). One `benchmark.test.ts` Ruling
+                  96b flake fired once mid-session (immediate re-run clean,
+                  not attributable to any item's changes — pure
+                  render/className/regex/test work, zero fetch/LLM code
+                  touched). `npx tsc --noEmit` clean throughout. `npx eslint
+                  src` — exactly the one standing `quiz.tsx:46` error,
+                  unchanged. **NO POLICY ITEMS FILED** — both disclosed
+                  deviations (item 2's B1 conditional, item 3's StarButton
+                  test method) implement the manager's own rulings without
+                  contradicting any recorded control or locked test; flagged
+                  transparently in the §4 entries rather than escalated,
+                  per the loop's "write as you go" norm. No credential
+                  anywhere; no live network call (pure regex/render/test
+                  work throughout, matching the pure-implementation-turn
+                  restriction). No branch/worktree/PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Four
+                  commits total, each pushed on landing (turn-lock claim,
+                  item 1, item 2, item 3) plus this close-out.
+
+                  **HAND-OFF: `WHOSE TURN: A — Phase 2 round 5,
+                  GATE-CANDIDATE-STYLE census (visual re-walk of the 11 LLM
+                  rows + eligible-specimen re-verification + the 109c
+                  rubric; convergence per Ruling 105a)`.** Full detail,
+                  diffs, and file:line citations in §4 `### Phase 2 Round 4 —
+                  Agent C — ITEM 1/2/3`. Turn lock RELEASED (`HELD BY: free`)
+                  in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 3 B IS COMPLETE @ 2026-08-19 ~02:3x UTC.
                   ALL THREE COMMISSIONED ITEMS DIAGNOSED AND DESIGNED —
                   MEASURES ONLY, B SHIPPED NO PRODUCT CODE.** Run by
