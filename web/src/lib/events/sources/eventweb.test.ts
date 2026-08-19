@@ -29,6 +29,10 @@ import {
   resolveSearchProvider,
   webResultToRawEventItem,
 } from "./eventweb";
+// Phase 3 round 6 C, ITEM 2. `pageTitleFromHtml` is NOT stubbed above (only
+// `searchGemini` is — see the RULING 75 comment) — this is the real, shipped
+// title-extraction-plus-decode entry point gemini-sourced rows go through.
+import { pageTitleFromHtml } from "@/lib/sources/gemini-search";
 
 // No test file existed for this source adapter before B4-01 (round 4) — see
 // MULTIAGENT-report-parity.md, B4-01's own risk note. These are foundational
@@ -3532,5 +3536,48 @@ describe("F11 — press-wire hosts + event-report(s) path (Phase 3 round 6 C, IT
         }, NOW),
       ).not.toBeNull();
     });
+  });
+});
+
+// Phase 3 round 6 C, ITEM 2 (Disposition 1's fired reopen threshold, Rulings
+// 123c/123g item 2): `laquo` added to `HTML_ENTITIES` (`lib/text/clean.ts`).
+// End-to-end recovery per Phase 3 round 5 B, Deliverable 3 — the live F13
+// witness (`msrworkshop2023.ornl.gov/msr2022/index.html`, byte-confirmed
+// undecoded `&laquo;`) run through the REAL, unmodified `pageTitleFromHtml`
+// (title-only HTML, no og:title, matching this witness's confirmed-live
+// shape) and then the REAL, unmodified `eventNameFrom` — no local parallel
+// copy of the decode fix, unlike B's own throwaway harness, because the
+// product code itself now carries the fix.
+describe("laquo entity recovery, end to end (Phase 3 round 6 C, ITEM 2)", () => {
+  it("decodes the live &laquo; witness through pageTitleFromHtml and recovers the event name through eventNameFrom", () => {
+    const html =
+      "<html><head><title>MSR2022 &laquo; Molten Salt Reactor Workshop</title></head><body></body></html>";
+    const url = "https://msrworkshop2023.ornl.gov/msr2022/index.html";
+
+    const decodedTitle = pageTitleFromHtml(html);
+    // The entity must be GONE, decoded to the table's own dash-family
+    // convention — not merely "no longer the literal 7-character sequence"
+    // but a specific, asserted value.
+    expect(decodedTitle).toBe("MSR2022 - Molten Salt Reactor Workshop");
+
+    expect(eventNameFrom(decodedTitle!, "", url)).toBe(
+      "Molten Salt Reactor Workshop",
+    );
+  });
+
+  it("regression: mdash/ndash/minus still decode to a plain hyphen, unchanged", () => {
+    // The table's existing dash-family contract must survive byte-unchanged
+    // — this is an additive table entry, not a rewrite of the others.
+    const html =
+      "<html><head><title>INL 2026 &mdash; Battery Innovation Summit</title></head><body></body></html>";
+    expect(pageTitleFromHtml(html)).toBe("INL 2026 - Battery Innovation Summit");
+  });
+
+  it("raquo is deliberately NOT decoded — unwitnessed this round, not added blind", () => {
+    const html =
+      "<html><head><title>MSR2022 &raquo; Molten Salt Reactor Workshop</title></head><body></body></html>";
+    expect(pageTitleFromHtml(html)).toBe(
+      "MSR2022 &raquo; Molten Salt Reactor Workshop",
+    );
   });
 });

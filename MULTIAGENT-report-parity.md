@@ -93645,3 +93645,20 @@ Phase 3 Round 5 B is COMPLETE — all four commissioned deliverables plus three 
 **GATE AFTER ITEM 1: 100 files / 2491 tests, 2491 passing (2471 + 20 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `eslint` on both changed files: clean, zero new warnings or errors (the one standing `quiz.tsx:46` error is in an unrelated file, untouched). `git status --porcelain --untracked-files=all` showed only the two intended files changed before staging.
 
 Continuing to ITEM 2 (`laquo` in `HTML_ENTITIES`) in the same session.
+
+### Phase 3 Round 6 — Agent C, ITEM 2 (Disposition 1's fired reopen threshold, Rulings 123c/123g item 2): `laquo` in `HTML_ENTITIES`
+
+**STATUS: ITEM 2 COMPLETE.** Run by `LAPTOP-3CL10CG5`. Gate confirmed cold before starting: `npx vitest run` — 100 files / 2491 tests, 2491 passing, ZERO failures (item 1's own new total); `npx tsc --noEmit` clean.
+
+**CODE.** `web/src/lib/text/clean.ts`: one new entry, `laquo: "-"`, added to `HTML_ENTITIES` immediately after `minus: "-"` — grouped with the table's existing `ndash`/`mdash`/`minus` dash-family convention, exactly as B's Deliverable 3 specified. `raquo` deliberately NOT added (Ruling 123c: unwitnessed this round). No other line in `clean.ts` touched; every other table entry's mapping is unchanged (regression-tested below).
+
+**TESTS**, `web/src/lib/events/sources/eventweb.test.ts`, new `describe("laquo entity recovery, end to end (Phase 3 round 6 C, ITEM 2)")`, 3 new tests, all additive:
+- The end-to-end recovery B verified, but now through the REAL shipped fix rather than B's own local parallel copy: constructed HTML matching the live F13 witness's confirmed shape (title-only, no `og:title`) run through the real, unmodified `pageTitleFromHtml` — asserts the decoded title is exactly `"MSR2022 - Molten Salt Reactor Workshop"` (not merely "entity gone") — then that decoded title run through the real, unmodified `eventNameFrom`, asserting the recovered name is exactly `"Molten Salt Reactor Workshop"`.
+- Regression: `mdash` still decodes to a plain hyphen through the same `pageTitleFromHtml` path, unchanged — proves the addition is additive, not a rewrite of the table's existing dash-family contract.
+- `raquo` deliberately NOT decoded — asserts the literal `&raquo;` entity survives byte-for-byte through `pageTitleFromHtml`, matching today's status-quo behaviour for every entity this table doesn't yet name (Ruling 123c's "land what is confirmed" discipline, tested rather than merely stated).
+
+No existing test file for `clean.ts` exists (confirmed absent, matching B's own blast-radius finding) — no test was rewritten or deleted; this item is purely additive.
+
+**GATE AFTER ITEM 2: 100 files / 2494 tests, 2494 passing (2491 + 3 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `eslint` on both changed files: clean. `git status --porcelain --untracked-files=all` showed only the two intended files changed before staging.
+
+Continuing to ITEM 3 (the gemini branch in `tavily-discovery.ts`) in the same session.

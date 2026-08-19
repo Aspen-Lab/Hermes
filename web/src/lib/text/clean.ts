@@ -8,6 +8,20 @@ const HTML_ENTITIES: Record<string, string> = {
   ndash: "-",
   mdash: "-",
   minus: "-",
+  // Phase 3 round 6 C, ITEM 2 (Disposition 1's fired reopen threshold,
+  // Rulings 123c/123g item 2). A live gemini-sourced title
+  // ("MSR2022 &laquo; Molten Salt Reactor Workshop") carried this entity
+  // undecoded all the way to the rendered event name — root cause: this
+  // table is closed and simply lacked the key, not a missing cleaning call
+  // (Phase 3 round 5 B, Deliverable 3). Maps to a plain hyphen, matching the
+  // table's own ndash/mdash/minus convention above: the live witness is the
+  // classic WordPress wp_title() "{page title} {sep} {site name}" separator
+  // shape, not real quoted speech, so a hyphen reads correctly where an
+  // actual guillemet/quote mark would insert a confusing stray character
+  // mid-title. `raquo` (the right guillemet) is DELIBERATELY NOT added —
+  // zero live witnesses this round, unwitnessed siblings are not added
+  // blind per this campaign's standing "land what is confirmed" practice.
+  laquo: "-",
   hellip: "...",
   rsquo: "'",
   lsquo: "'",
