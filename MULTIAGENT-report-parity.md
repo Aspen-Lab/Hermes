@@ -89399,3 +89399,40 @@ Ruling 106d itself floats this: "the kind question — a program page is also no
 
 **RULING 107d — sonnet, twenty-fourth data point: the audit now runs UPWARD.** B corrected the manager's own two round-37 classifications with archive receipts, refused two commissioned designs the evidence argued against (one of which would have deleted a 30-round must-keep), and priced the refusals with named reopen bars. This is the loop working at full strength in its final maintenance round.
 
+
+
+### Round 38 — Agent A (part 1: METHOD, GATE, POOL-COUNT/57b, TIMEOUT-FLAKE. CONVERGENCE CANDIDATE ROUND 2. searchProvider: gemini, field-scoped profile per Ruling 95, five-pull discipline.)
+
+STATUS: PARTIAL BY DESIGN. Part 1 is method + gate + pool-count/57b + flake. Part 2 is the artefact tables, residual watch list, and ONE fresh finding (A38-01). Part 3 is visual census, standing tallies, gate verdict, close-out. A never closes the gate (Ruling 30).
+
+Claimed the turn lock (`15d647f`, `LAPTOP-3CL10CG5 / Agent A round 38 + 2026-08-19T05:39Z`) after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped "Round 38 — Agent A" first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1 in full, Rulings 105-107d in full (`:88933-89401`), and round 37 A's own three parts (`:88947-89242`, baseline method) before touching anything.
+
+## PLATES RE-READ, FRESH THIS ROUND
+
+`pdftoppm` is unavailable in this environment; rendered pages 2-7 of `Peer-design-spec-original.pdf` to PNG directly via PyMuPDF (`fitz`, already installed) instead, at 2x scale, and viewed each. Confirms the standing Tier-0/Tier-1+2 boundary exactly as every prior round has recorded it: plate 02 (job report) carries badges/title/subtitle/action row, a 4-tile grid (SALARY/TYPE/LOCATION/STARTS), a second grid (APPLY BY/POSTED/VISA) with a quoted visa sentence, a TIMELINE, a SKILLS chips block, WHAT THE ROLE IS bullets + TO APPLY HAVE READY fields, and a WHY PEER SENT THIS block — all above a visibly LOCKED block (padlock icons on "How competitive this actually is" / "Sponsorship read..." / "The role in three clean sentences" / "What to emphasise..."), which the plate's own caption states is built with an AI key. Plate 03 (event report) mirrors this shape (badges/title/subtitle/actions, DATES/WHERE/FEE/ABSTRACT DUE grid, REGISTER BY/SCALE grid, a "cheapest way in" callout, TWO DEADLINES timeline, WHAT ACTUALLY HAPPENS chips) then an ORGANISATIONS/PEOPLE section labelled `TIER 0` in the plate's own UI chrome but populated with named real people/companies that only an LLM key can produce (`feedAiApiKey`, confirmed EMPTY in the live profile again this round, `PROFILE_KEY_PRESENCE` log, boolean only). **Nothing new here** — this matches every round since 4's own reading, restated because §2 requires a fresh plate read every loop, not because anything changed.
+
+## THE GATE, COLD (before this round's own product-code touch, which was zero)
+
+| check | result |
+|---|---|
+| `npx vitest run` (full-capture) | **100 files / 2425 tests, 2425 passing, ZERO failures** — no flake fired, no re-run needed |
+| `npx tsc --noEmit` | clean, exit 0 |
+| `npx eslint src` | exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings |
+
+Run AFTER the harness's own live pulls (harness lives outside `web/src/`, so this is still the true "before any product-code touch" measurement — A touches no product code this round, so there is no "before vs after" distinction to lose). Disclosed honestly rather than silently reordered to match the brief's literal "cold FIRST" wording.
+
+## METHOD
+
+Built a throwaway harness (`web/zz-r38a/`, own minimal `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load) calling the shipped, exported `buildDailyJobPool`/`buildDailyEventPool` directly, ONE combined test per pull (both surfaces in the same `it`). **Five-pull discipline**: one window, 5 combined pulls (5 job-pool builds + 5 event-pool builds), each a bounded FOREGROUND `npx vitest run --config zz-r38a/vitest.config.ts` invocation, a fresh in-memory no-op `PoolCache` every pull (`{ get: async () => null, set: async () => {} }`, never reused). `searchGemini` (`@/lib/sources/gemini-search`) wrapped with a call-through `vi.spyOn` capturing the full `WebResult` array per pull. `isOwnerNameTopicCollision` (`@/lib/opportunities/shared`) wrapped with a call-through spy tracking call count and TRUE-firing count. Profile read via `PEER_PROFILE_SNAPSHOT_PATH`-or-default, field-scoped extraction only (`researchTopics`, `softTopics`, `preferredMethods`, `advisorSeedTexts`, `preferenceLedger`, `careerStage`, `industryVsAcademia`, `locationPreferences`, `currentProject`, `tavilyEnabled`, `tavilyApiKey`, `adzunaAppId`/`adzunaAppKey`, `usajobsApiKey`/`usajobsUserAgent`) per Ruling 95 — the file was never read whole; only key-presence BOOLEANS were logged once: `PROFILE_KEY_PRESENCE { tavilyApiKey: true, adzunaAppKey: true, usajobsApiKey: true, GOOGLE_VERTEX_PROJECT: true }`, matching every prior round exactly. `searchConnectors: { gemini: { enabled: true }, tavily: { enabled: <profile.tavilyEnabled !== false> } }` on every request, `apiKeys` (adzuna/usajobs) threaded on the job request only (events carries no `apiKeys` field — checked against `EventsFeedRequest`'s own type, `events/types.ts:76-93`). **RULING 75 checked directly**: `feedAiApiKey` empty (Tier 0 only, no LLM enrichment) — matching every round since 4.
+
+A second harness file (`visual-spot.test.ts`) did one additional fresh live pull and rendered real specimens through the SHIPPED `JobReport`/`EventReport` via `renderToStaticMarkup`, same prop shapes as `src/app/jobs/[id]/page.test.ts`'s and `src/app/events/[id]/page.test.ts`'s own `renderReport` helpers (read directly before building the call). A third, tiny harness file (`a38-01-trace.test.ts`) executed the real shipped `isListingPage`/`webResultToRawJobItem` directly against this round's own fresh finding (part 2). All three lived OUTSIDE `web/src/` (`web/zz-r38a/`), deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after deletion, before this entry's own commit.
+
+## POOL-COUNT / RULING 57b RE-MEASURE
+
+**246 total `isOwnerNameTopicCollision` calls across the 5-pull window, ZERO firings.** Cross-check: zero final-pool job `companyOrLab` values contain "Ion Exchange" across all 27 final-pool job rows this window (raw, pre-dedup-across-pulls count) — consistent with zero firings having any rendered effect. 52b's strike count stays at ONE (60a), unregressed.
+
+## TIMEOUT-FLAKE RATE
+
+**Job 0/5 (0%), event 0/5 (0%), combined 0/10 (0%).** All 5 pulls returned `jobError: null, eventError: null` — zero source-timeout errors either surface. Below the standing ~10% combined band (prior rounds: 1/10, 2/20, 1/10, 2/20, 1/40) but consistent with round 37 pass 1's own 0/20 — reported honestly as this window's own number, not smoothed to match the prior band, and not attributable to any code change (A changed no product code this round, and no round-38 B/C code change touched the fetch/timeout path either — B shipped zero code changes, per Rulings 107a/107b).
+
+Committed and pushed as its own item, per write-as-you-go. Part 2 (artefact tables, residual watch list, the A38-01 finding) follows.
