@@ -275,6 +275,26 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~07:3x UTC — ROUND 35 A
+                  VERIFIED INDEPENDENTLY, RULINGS 99a-99d APPENDED (§4),
+                  ROUND 35 CLOSED.** Gate re-run (full-capture): **100 files
+                  / 2406 tests, 2406 passing, zero failures.** **RULING 99a:
+                  A34-01 VERIFIED FIXED LIVE at three levels** (pipeline
+                  execution, false-merge scan 7-of-8, and an ORGANIC
+                  three-source merge on real traffic; 46-row scan zero false
+                  merges). **RULING 99b: A35-01 → B round 36 as the SINGLE
+                  item** — the "genuinely different wording" duplicate class
+                  (long filler-heavy title displaces identifying tokens from
+                  the six-token slice), previously disclaimed for lack of
+                  corpus, now witnessed live; the must-NOT-merge doctrine
+                  reigns and round 35's seven-row corpus is the floor.
+                  **RULING 99c: pool/57b zero (195 calls); flake 1/10;
+                  visual zero; watch list unregressed.** **RULING 99d:
+                  ROUND 35 CLOSED. `WHOSE TURN: B — round 36`, one item.
+                  Three consecutive censuses with every value field clean —
+                  what remains is card-level identity.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 35 A IS COMPLETE @ 2026-08-19 ~22:0x UTC (LOCAL
                   CLOCK) — THE GATE-CANDIDATE CENSUS DOES NOT REACH
                   DOUBLE-ZERO. ONE FRESH UNEXPLAINED VALUE FINDING (A35-01,
@@ -87464,3 +87484,19 @@ Ranked by what a reader loses, worst first.
 ---
 
 **ROUND 35 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
+
+### Round 35 — MANAGER (independent verification of A; RULINGS 99a-99d; round 35 CLOSED — B round 36 commissioned)
+
+**Verification, run before any ruling:**
+
+- **A changed zero product code** (the manager's own scope check — empty); tree clean; all five commits pushed. Gate re-run cold by the manager (full-capture, log retained): **100 files / 2406 tests, 2406 passing, ZERO failures, zero failure lines** (the benchmark flake did not fire).
+- **A's method held, including two harness defects disclosed and repaired mid-turn** (an argument-order bug that lost a batch AFTER the network succeeded — recovered via bounded per-pull foreground calls with incremental disk writes, which is exactly the resilient shape the manager's resume nudges have been pushing toward; and a dropped `pageKind` field traced to its exact mechanism before any figure was banked). The disclosure standard holds at every seat.
+
+**RULING 99a — A34-01 is VERIFIED FIXED LIVE, ratified at three levels:** direct pipeline execution of the recorded pair (one survivor, the higher-score row); a false-merge scan through the REAL pipeline call (AABC + six constructed distinct events → exactly one merge, 7 of 8 survive); and — the strongest possible corroboration — a live ORGANIC three-source merge (`rsc.org`/`euchemsil2026.com`) observed on real traffic, plus a 46-row near-duplicate scan of all final pools finding ZERO false merges. The second pass's remove-only property was measured, not assumed.
+
+**RULING 99b — A35-01 routes to B, round 36, as the SINGLE item: the "genuinely different wording" duplicate class, now witnessed live.** `www.djk.co.jp`'s long press-release title (`Exhibition "Solid-State Battery Summit 2026" in Chicago ~Showcasing...~`) fills `eventDedupKey`'s six-token slice with filler that displaces the identifying tokens the short sibling (`quintustechnologies.com`, `Solid-State Battery Summit 2026`) keeps — keys never match, traced by direct execution. This is exactly the residual round 35 B's design DISCLAIMED for lack of corpus; the corpus now exists (this live pair, the AABC family, round 13's cambridgeenertech ground truth). B's design space is open (token prioritization over filler, generic-event-noun handling in the slice, containment/subset checks — B measures); **the must-NOT-merge doctrine still reigns: a false merge is worse than a duplicate, and the seven-row corpus from round 35 carries forward as the floor.**
+
+**RULING 99c — the rest ratified:** pool/57b zero across 195 calls; timeout flake 1/10 (stable); dateless rate within band; visual zero on the corrected range with a fresh three-specimen live-render spot-check; the watch list unregressed by name.
+
+**RULING 99d — ROUND 35 IS CLOSED. `WHOSE TURN: B — round 36`, ONE item: A35-01.** Sonnet twentieth data point: A went beyond its brief in exactly the right direction (the pipeline-level false-merge scan and the 46-row organic scan were A's own instrument choices), disclosed two of its own harness bugs with mechanisms traced, and the finding stream is now duplicates-only — every value field on every card has been clean for three consecutive censuses; what remains is card-level identity, the shallowest defect class yet.
+
