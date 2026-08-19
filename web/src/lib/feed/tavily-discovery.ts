@@ -1,4 +1,5 @@
 import { webSearch } from "@/lib/sources";
+import { isGeminiSearchAvailable } from "@/lib/sources/gemini-search";
 import type { RawItem } from "@/lib/sources/types";
 import type { SearchBrief } from "./profile-compiler";
 import type { FeedRequest } from "./types";
@@ -43,14 +44,46 @@ export function canRunTavilyDiscovery(req: FeedRequest): boolean {
   return Boolean(connector.apiKey?.trim() || process.env.TAVILY_API_KEY);
 }
 
+/**
+ * Phase 3 round 6 C, ITEM 3 (Ruling 120e/122e item 3/123d/123g item 3). The
+ * query-boost discovery side-channel's gemini fallback — mirrors
+ * `geminiWebSearchOptions`'s own opt-out shape byte-for-byte
+ * (`sources/gemini-search.ts:230-235`): an explicit `gemini.enabled: false`
+ * is honoured even when Vertex is available, otherwise availability alone
+ * decides. Phase 3 round 5 B, Deliverable 4 verified this flips TRUE under
+ * the exact Phase 3 profile (gemini available, Tavily disabled) and FALSE
+ * when Vertex is genuinely absent — a real capability check, not a rubber
+ * stamp.
+ *
+ * SCOPE, STATED SO IT IS NOT MISREAD (Ruling 123d): this fixes ONLY this
+ * side-channel's own dispatch below. It does not touch `defaultSources()` or
+ * the paper surface's `"web"` SOURCE (`feed/pipeline.ts`'s own
+ * `paperWebSearch`, already gemini-branched, dark only by deliberate product
+ * choice) — that is a separate, unreached product question reserved to the
+ * owner, not this item's commission.
+ */
+export function canRunGeminiDiscovery(req: FeedRequest): boolean {
+  if (req.searchConnectors?.gemini?.enabled === false) return false;
+  return isGeminiSearchAvailable();
+}
+
 export async function runTavilyDiscovery(
   req: FeedRequest,
   brief: SearchBrief,
 ): Promise<TavilyDiscoveryResult> {
-  if (!canRunTavilyDiscovery(req)) {
+  const useTavily = canRunTavilyDiscovery(req);
+  // Phase 3 round 6 C, ITEM 3. Tavily stays preferred when both are
+  // available — mirrors `feed/pipeline.ts:118-123`'s own `paperWebSearch`
+  // ternary order exactly (ITEM 3's other named precedent), gemini only the
+  // fallback.
+  const useGemini = !useTavily && canRunGeminiDiscovery(req);
+  if (!useTavily && !useGemini) {
     return { queryBoosts: [], resultCount: 0 };
   }
-  const connector = req.searchConnectors!.tavily!;
+  // Read only inside the branch that needs it — `req.searchConnectors.tavily`
+  // is genuinely absent whenever the gemini branch is the one running, and a
+  // non-null assertion outside this branch would crash rather than degrade.
+  const connector = useTavily ? req.searchConnectors!.tavily! : undefined;
 
   const limit = brief.controls.sourceMix === "web" ? 12 : 8;
   const rawResults = await webSearch.fetch({
@@ -58,11 +91,13 @@ export async function runTavilyDiscovery(
     queries: brief.generatedQueries,
     limit,
     timeWindow: brief.timeWindow,
-    webSearch: {
-      provider: "tavily",
-      tavilyApiKey: connector.apiKey,
-      includeDomains: ACADEMIC_INCLUDE_DOMAINS,
-    },
+    webSearch: useTavily
+      ? {
+          provider: "tavily",
+          tavilyApiKey: connector!.apiKey,
+          includeDomains: ACADEMIC_INCLUDE_DOMAINS,
+        }
+      : { provider: "gemini" },
   });
 
   const academicResults = rawResults.filter(isAcademicLead);
