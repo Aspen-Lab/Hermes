@@ -13,6 +13,7 @@ import {
   bestEventTitleSegment,
   bestEventTitleSegmentDetailed,
   clusterEventDays,
+  COMMERCE_PATH_RE,
   DENY_HOSTS,
   eventNameFrom,
   eventweb,
@@ -3579,5 +3580,63 @@ describe("laquo entity recovery, end to end (Phase 3 round 6 C, ITEM 2)", () => 
     expect(pageTitleFromHtml(html)).toBe(
       "MSR2022 &raquo; Molten Salt Reactor Workshop",
     );
+  });
+});
+
+// Phase 3 round 6 C, ITEM 4 (F10, Rulings 123f/123g item 4): `product-category`
+// added to `COMMERCE_PATH_RE` — one measured token, same discipline as J2's
+// identical fix to the job surface's sibling regex one round ago.
+describe("COMMERCE_PATH_RE gains product-category (F10, Phase 3 round 6 C, ITEM 4)", () => {
+  const NOW = Date.parse("2026-01-01T00:00:00Z");
+
+  it("must-catch: matches the exact dynalene.com witness path", () => {
+    expect(
+      COMMERCE_PATH_RE.test(
+        "/product-category/heat-transfer-fluids/dynalene-molten-salts/",
+      ),
+    ).toBe(true);
+  });
+
+  it("must-catch, end to end: drops the dynalene.com witness via webResultToRawEventItem", () => {
+    expect(
+      webResultToRawEventItem({
+        title: "Dynalene Molten Salts",
+        url: "https://www.dynalene.com/product-category/heat-transfer-fluids/dynalene-molten-salts/",
+        snippet:
+          "Browse Dynalene's molten salt heat transfer fluid product lines, with downloadable technical data sheets.",
+      }, NOW),
+    ).toBeNull();
+  });
+
+  it("regression: the existing `product`/`products` alternatives are unchanged", () => {
+    expect(COMMERCE_PATH_RE.test("/product/battery-charger")).toBe(true);
+    expect(COMMERCE_PATH_RE.test("/products/battery-charger")).toBe(true);
+    expect(COMMERCE_PATH_RE.test("/shop/battery-charger")).toBe(true);
+  });
+
+  it("must-keep: does not reach any of F11's own 13-URL must-keep corpus", () => {
+    // Reuses F11's exact corpus (same describe block earlier in this file) —
+    // none of these paths carries a commerce segment at all, so this is a
+    // straightforward zero-collision check on the widened regex.
+    const MUST_KEEP_PATHS = [
+      "/moses",
+      "/en/co-located-workshops.html",
+      "/event/db0a52d9-68fa-4c07-9bee-f3903554b231/summary",
+      "/event",
+      "/",
+      "/spec-battery-bootcamp",
+      "/battery-young-researcher-award-applications-open-today/",
+      "/us",
+      "/events/find-an-event/iex-2026-technical-training-introductory-course-introduction-to-ion-exchange-design-and-operation",
+    ];
+    for (const path of MUST_KEEP_PATHS) {
+      expect(COMMERCE_PATH_RE.test(path)).toBe(false);
+    }
+  });
+
+  it("must-keep, adversarial cross-check: F12's permies.com forum thread path is unaffected", () => {
+    expect(
+      COMMERCE_PATH_RE.test("/t/26737/composting/Composting-alkaline-batteries"),
+    ).toBe(false);
   });
 });

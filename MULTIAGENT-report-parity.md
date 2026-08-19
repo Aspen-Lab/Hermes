@@ -93685,3 +93685,19 @@ Continuing to ITEM 3 (the gemini branch in `tavily-discovery.ts`) in the same se
 **GATE AFTER ITEM 3: 101 files / 2503 tests, 2503 passing (2494 + 9 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `eslint` on all three touched/new files: clean (one transient unused-import warning caught and fixed before this commit, not shipped). `git status --porcelain --untracked-files=all` showed only the intended files (one modified, one new) before staging.
 
 Continuing to ITEM 4 (F10, `product-category` token) in the same session.
+
+### Phase 3 Round 6 — Agent C, ITEM 4 (F10, Rulings 123f/123g item 4): `product-category` token on `COMMERCE_PATH_RE`
+
+**STATUS: ITEM 4 COMPLETE.** Run by `LAPTOP-3CL10CG5`. Gate confirmed cold before starting: `npx vitest run` — 101 files / 2503 tests, 2503 passing (item 3's own new total); `npx tsc --noEmit` clean.
+
+**CODE.** `web/src/lib/events/sources/eventweb.ts`: `COMMERCE_PATH_RE` gains one new alternative, `product-category`, inserted after the existing `product|products` pair. One measured token, exactly B's design — no generic compound-hyphen regex, no sibling tokens (`collections-category` etc.) added blind. `product`/`products` themselves are untouched (regression-tested below).
+
+**TESTS**, `web/src/lib/events/sources/eventweb.test.ts`, new `describe("COMMERCE_PATH_RE gains product-category (F10, Phase 3 round 6 C, ITEM 4)")`, 5 new tests:
+- Must-catch: `COMMERCE_PATH_RE` matches the exact `dynalene.com` witness path directly, and `webResultToRawEventItem` drops the full witness row end to end.
+- Regression: `product`/`products`/`shop` still match, unchanged.
+- Must-keep: a loop over 9 of F11's own 13-URL must-keep corpus paths (the ones with a verified real path recorded earlier in this session — `pyro.byu.edu/moses`, `thebatteryshow.com`'s co-located-workshops page, `web.cvent.com`'s STEER event page, `volta.foundation/event`, root `/` (shared by `events.ornl.gov`/`battery-business-forum.com`), `smelab.org`'s bootcamp page, `bepassociation.eu`'s award post, `advancedautobat.com/us`, `www.rsc.org`'s IEX event page) — none carries a commerce-shaped segment, zero collisions. The remaining 3 corpus hosts (`globalevents.fastmarkets.com`, `recyclinginternational.com`, `engr.ncsu.edu`) were not independently re-verified with a specific path this item (none was recovered from this session's own research) and are named here rather than silently assumed.
+- Adversarial cross-check: F12's `permies.com` forum-thread path (`/t/26737/...`), B's own named adversarial control, does not collide.
+
+**GATE AFTER ITEM 4: 101 files / 2508 tests, 2508 passing (2503 + 5 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `eslint` on both changed files: clean. `git status --porcelain --untracked-files=all` showed only the two intended files changed before staging.
+
+Continuing to ITEM 5 (F12, the forum-thread port) in the same session.

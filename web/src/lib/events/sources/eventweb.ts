@@ -233,9 +233,28 @@ export const DENY_PATH_RE = /\/(?:article|doi|abs|reel|posts|p)(?:\/|$)/i;
  * Storefront paths. A battery retailer's catalogue mentions "batteries" and
  * "charger" constantly and can clear the relevance gate, but it is a shop, not
  * an event — "Batteries, Charger & More" reached a live top 10 this way.
+ *
+ * Phase 3 round 6 C, ITEM 4 (F10, Ruling 123f/123g item 4). `product-category`
+ * added: `dynalene.com/product-category/heat-transfer-fluids/dynalene-
+ * molten-salts/` (rendered "Dynalene Molten Salts") admitted as an event, 1
+ * of 5 pulls — the event surface's own sibling of J2's identical gap on the
+ * job surface one round ago, same regex family, same anchoring cause: the
+ * `product` alternative is anchored `(?:\/|$)` immediately after the word,
+ * so it matches `/product/` but not the compound hyphenated segment
+ * `/product-category/`. ONE measured token, the identical vacuity
+ * discipline J2/F8/F9 already ship on (n=1 witness; siblings like
+ * `collections-category` are unwitnessed and NOT added blind).
+ *
+ * FAILURE DIRECTION: this is a DROP guard, held to the higher bar Ruling 55c
+ * sets for a guard that drops rather than admits — checked against the full
+ * 13-URL must-keep corpus (F11's own corpus, `eventweb.test.ts`) plus
+ * `permies.com`'s `/t/.../` path as an adversarial cross-check: zero real
+ * event URL plausibly carries a `/product-category/` segment, retail/
+ * e-commerce vocabulary disjoint from event-hosting URL conventions by the
+ * same closed-by-construction argument this regex already relies on.
  */
 export const COMMERCE_PATH_RE =
-  /\/(?:shop|store|product|products|collections?|cart|checkout|catalog(?:ue)?|pricing|buy)(?:\/|$)/i;
+  /\/(?:shop|store|product|products|product-category|collections?|cart|checkout|catalog(?:ue)?|pricing|buy)(?:\/|$)/i;
 
 /**
  * Editorial coverage *about* events rather than an event page. "The Year Ahead:
