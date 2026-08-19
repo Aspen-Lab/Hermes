@@ -332,8 +332,17 @@ STOPPED BECAUSE:  **PHASE 2 ROUND 1 A (BASELINE) IS COMPLETE @ 2026-08-19
                   one standing `quiz.tsx:46` error.** Full detail, tables, and
                   file:line citations in §4 `### Phase 2 Round 1 — Agent A
                   (baseline)`.
-                  `WHOSE TURN: MANAGER — Phase 2 baseline verification and
-                  campaign plan.`
+                  **MANAGER @ 2026-08-19 ~14:4x UTC: baseline VERIFIED
+                  (gate 2425/2425 re-run; scope zero; smoke method = Ruling
+                  69's checklist as written), RULING 109 APPENDED (§4) — the
+                  Phase 2 campaign plan: P2-2 is an A turn (the 66b visual
+                  census applied to the LLM sections + specimen-diverse
+                  BF1-BF3 confirmation on ELIGIBLE specimens); BF4's rubric
+                  ruled (layout / fidelity-to-page / field-contract form);
+                  standing rules carry unchanged; Phase 2 closes under the
+                  same 105a convergence framework.**
+                  `WHOSE TURN: A — Phase 2 round 2 (LLM-section visual census
+                  + specimen-diverse BF1-BF3 confirmation).`
                   ---
                   Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 1 IS CLOSED — RULING 108 @ 2026-08-19 ~13:5x UTC.
@@ -89953,4 +89962,17 @@ Harness `web/zz-p2a/baseline.test.ts` (+ shared `vitest.config.ts`), outside `we
 ## HAND-OFF
 
 `WHOSE TURN: MANAGER — Phase 2 baseline verification and campaign plan.` The smoke check is LIVE (verified, reproducible from `web/vitest.config.ts` + `registry.ts` alone); the 11-field inventory is cited file:line against the current tree; the small live census (6 rows, 3 job + 3 event) found 3 unconfirmed-but-plausible structural gaps (BF1-3), 1 measurement-method note (BF4), and 1 positive finding (BF5) — zero of it fixed, all of it handed to the manager to verify independently and to turn into the campaign's first B-facing item list, per this turn's own MEASURES-ONLY charter. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Phase 2 Round 1 — MANAGER (baseline verification; RULING 109 — the Phase 2 campaign plan)
+
+**Verification:** the baseline agent changed zero product code (manager scope check — empty); tree clean; both commits pushed. Gate re-run by the manager (full-capture): **100 files / 2425 tests, 2425 passing, ZERO failures.** The smoke-check method (boolean env presence; `resolveProvider` local-dev branch via the shipped `registry.test.ts` stubbing pattern; one bounded 602ms live answer) is exactly Ruling 69's checklist executed as written, and the 11-row field inventory matches the ruling's own count with fresh file:line citations.
+
+**RULING 109 — the baseline is RATIFIED and the Phase 2 campaign opens with this plan:**
+
+- **109a — the baseline's shape is GOOD NEWS, recorded as such:** zero LLM-path errors, zero hallucination/malformed-JSON signals, 100% population of structurally-eligible fields, zero new layout defects (the LLM sections reuse Phase 1's validated shells). The campaign's starting surface is preconditions and coverage, not correctness fires.
+- **109b — ROUND P2-2 IS AN A TURN with two duties:** (1) **the Ruling-66b visual census applied to the LLM sections** — every Class-A/Class-B block walked against the plates' type system exactly as Phase 1's 20-item census walked the Tier-0 chrome (this is the explicitly-deferred natural first working item); (2) **specimen-diverse re-census to confirm or dissolve BF1-BF3**: hunt an OWNED posting (BF1 — does `specificRequirements`/`specificDuties` populate when the gate's own precondition holds?), a multi-day conference (BF2 — do `talkSummaries`/`plan` populate on the shape they were built for?), and a roster-bearing event (BF3). Each of the three baseline findings is CONFIRMED (a real gap → B designs) or DISSOLVED (correct behaviour on an ineligible specimen → recorded, not a finding) on the evidence of eligible specimens, not ineligible ones.
+- **109c — BF4's rubric question, ruled:** Class-A content parity is scored on a THREE-PART RUBRIC, not literal text matching: (i) LAYOUT — the section renders inside the plate-conformant shell (the 66b walk covers this); (ii) FIDELITY — every factual claim in the LLM text is traceable to the fetched page (spot-checked per census; a hallucination is a finding of the highest rank); (iii) FORM — the content matches the field's own contract (length, tone, structure as the component's type/docs define). The spec's locked-teaser mockups govern the LOCKED state only, which Phase 1 already verified.
+- **109d — standing rules carry unchanged into Phase 2:** Ruling 75 (gemini only), 95 (field-scoped credentials), 96b (flake classification), 80a (dying hand-off), the turn lock, write-as-you-go, and the 105a convergence framework (Phase 2 will close the same way: two consecutive clean full rounds, zero new defect classes, manager re-measurement final). LLM calls are bounded and small-windowed — quota is real even on Vertex.
+- **Routing: `WHOSE TURN: A — Phase 2 round 2 (LLM-section visual census + specimen-diverse BF1-BF3 confirmation)`.**
 
