@@ -275,6 +275,29 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~06:2x UTC — ROUND 35 B
+                  VERIFIED INDEPENDENTLY, RULINGS 96a-96d APPENDED (§4).**
+                  Gate re-run (full-capture): **2392/2392, zero failures.**
+                  **RULING 96a: the two-part design APPROVED, BOTH PARTS
+                  TOGETHER as one C item** (normalization inside
+                  `eventDedupKey` + `dedupScoredEvents` after stage 2 with
+                  the score-aware tie-break), tests in a NEW
+                  `events/dedup.test.ts` incl. the manager's added
+                  pool-ordering invariance check for non-merged rows.
+                  **RULING 96b: THE GATE FLAKE IS IDENTIFIED —
+                  `benchmark.test.ts`'s live search assertion** (B caught it
+                  red by name under full capture, green on re-run; the
+                  round-32/33 unidentified reds retroactively attributed as
+                  PROBABLY the same, not proven). Standing classification: a
+                  single-run benchmark-only red with green immediate re-run =
+                  named flake, non-blocking; anything else = stop. **RULING
+                  96c: `WHOSE TURN: C — round 35` (one item, both parts +
+                  the new suite), THEN A — round 35 GATE CANDIDATE. If A
+                  measures double-zero: `WHOSE TURN: MANAGER — independent
+                  re-measurement before any close`.** **RULING 96d: sonnet
+                  eighteenth data point — textbook design turn.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 35 B IS COMPLETE @ 2026-08-19 ~01:4x UTC — THE ONE
                   COMMISSIONED ITEM (A34-01, Ruling 95b: the cross-source
                   duplicate-event class) DESIGNED, TWO PARTS, ONE COMMIT.**
@@ -86803,3 +86826,23 @@ All executed directly against the candidate key (`zz-r35b/candidate-key.probe.ts
 **B CHANGED NO PRODUCT CODE.** One commit (this log entry, plus the turn-lock claim commit before it — two commits total, both pushed on landing). Throwaway harness (`web/zz-r35b/`, 3 probe files, 21 `it` blocks, own minimal `vitest.config.ts`) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere; no live network calls (pure offline execution against shipped functions plus constructed/recorded-title test data — Ruling 75's live-probe option was not spent, per the brief's own "optional" framing). No large page text pasted anywhere — every quote above is a title, URL, or short mechanism fragment. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 
 **HAND-OFF: `WHOSE TURN: MANAGER — round 35 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Round 35 — MANAGER (independent verification of B; RULINGS 96a-96d; C commissioned — and THE GATE FLAKE IS IDENTIFIED)
+
+**Verification, run before any ruling:**
+
+- **B changed zero product code** (the manager's own scope check — empty); tree clean; both commits pushed. Manager gate re-run result recorded at the end of this entry.
+- **Design read in full, spot-checks passed:** the §2.0 replay matches A's trace; the §2.1 normalization is inside `eventDedupKey` itself (one shared definition, both passes); the §2.2 positioning proof ran the REAL `scoreEvents` on a constructed expired/live pair; the §2.3 tie-break mirrors the jobs side's own A22-05 precedent (score-aware on a priority tie) instead of inventing a richness heuristic; the `MoSES` mixed-case parenthetical is untouched by the acronym regex, checked by B by inspection and consistent with the regex as printed.
+
+**RULING 96a — the design is APPROVED, BOTH PARTS TOGETHER, as ONE C item (B's own recommendation, ratified).** Normalization alone is measured insufficient (the year half still diverges pre-enrichment) — the two parts are two halves of one mechanism, the same "one contract change" doctrine round 29 C item 1 established. C implements: (1) the normalization inside `eventDedupKey` exactly as §2.1 prints it; (2) `dedupScoredEvents` inserted after stage 2, before `return scored`, exactly as §2.2/§2.3 print it. **The manager adds ONE test requirement beyond B's corpus:** a pool-ordering invariance check for NON-merged rows — the second pass must not reorder unrelated survivors (first-seen-index semantics of the Map plus the passthrough append are subtle enough to lock with an assertion, not trust). Tests live in a NEW `web/src/lib/events/dedup.test.ts` mirroring the jobs side's structure (B's recommendation, ratified), carrying: the AABC must-merge pair (higher-score survivor asserted), B's seven-row must-NOT-merge corpus, the existing locked collide-control, the ordering invariance check, and the expired-sibling structural case (documenting that it never reaches the pass).
+
+**RULING 96b — THE GATE FLAKE IS IDENTIFIED: it is `benchmark.test.ts`'s live search assertion.** B's first gate run surfaced it RED BY NAME (the first full-capture red since the discipline landed), green on immediate re-run. The manager verified `vitest.config.ts` deliberately includes the live benchmark (its own RULING 75/76d comment — env loading exists precisely so the benchmark can run live in the gate; that inclusion was the deliberate outcome of 76d/77's live-acceptance doctrine and is NOT re-litigated here). The round-32 and round-33 unidentified single-run reds are retroactively attributed as PROBABLY this same flake — probable, not proven; their identities were lost and stay lost. **Expected-outcome classification, standing from this entry: a single-run red confined to `benchmark.test.ts`, green on immediate re-run, is the NAMED, IDENTIFIED live flake — recorded and non-blocking. ANY other red, or a benchmark red persisting across two consecutive runs, remains a stop-everything signal.** The three-round mystery closes.
+
+**RULING 96c — ROUTING: `WHOSE TURN: C — round 35` (ONE item, both parts + the new dedup suite), THEN A — round 35, GATE CANDIDATE ROUND** (standing duty list; A34-01 verification — the AABC pair must merge if re-offered, and by direct execution regardless; pool-count re-measure; the watch list). **If A measures double-zero, hand off `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.**
+
+**RULING 96d — sonnet, eighteenth data point: another textbook design turn.** B rejected its own first candidate for a drift risk the manager had only gestured at (hand-rolled expiry logic), proved the safer positioning with the shipped scorer instead of arguing it, and correctly filed the ship-together question as POLICY instead of deciding it.
+
+**Manager gate result (appended after the run):**
+
+**99 files / 2392 tests, 2392 passing, ZERO failures, zero failure lines in the retained log** (the benchmark flake did not fire this run).
+
