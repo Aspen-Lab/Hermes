@@ -21,6 +21,7 @@ import {
   isEarningsCallPage,
   isEventArtefactTitle,
   isEventHubResult,
+  isJobListingContentTitle,
   isNewsArticleTitle,
   looksLikeEventTitle,
   ownedTitleSpan,
@@ -2885,6 +2886,86 @@ describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84
       expect(
         isNewsArticleTitle("Registration is open for the 2026 Battery Summit, announcing new speakers"),
       ).toBe(false);
+    });
+  });
+
+  // ROUND 33 C, ITEM 1 (Ruling 89b/90a, mirror of A31-01 / Round 32 C's
+  // job-side trio, Ruling 87a): the EVENT pipeline had no guard for
+  // JOB-CONTENT vocabulary. Round 33 B's own live trace widened the
+  // must-catch corpus from one witness (A32-01) to four, and the full
+  // 30-case adversarial corpus below is B's §1.3 table, transcribed
+  // verbatim.
+  describe("isJobListingContentTitle (Ruling 89b/90a — job-content pages are not events)", () => {
+    it("catches all four must-catch rows (the original A32-01 witness plus three fresh live witnesses)", () => {
+      for (const title of [
+        "Ion Exchange Mumbai Job Openings Check here",
+        "Ion Exchange Jobs,Jobs for Ion Exchange, -:JobItUs",
+        "Executive Jobs in All-India - 12,878 Executive Job Vacancies in All-India - Aug 2026",
+        "Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page - iimjobs.com",
+      ]) {
+        expect(isJobListingContentTitle(title)).toBe(true);
+      }
+    });
+
+    it("keeps Ruling 89b's four must-keep job/career-FAIR rows", () => {
+      for (const title of [
+        "Nuclear Career Fair - S&T Women in Nuclear",
+        "2026 Job Fair & Hiring Event Calendar - JobFairX",
+        "Career Expo & Job Fair",
+        "Nittany Lion Careers",
+      ]) {
+        expect(isJobListingContentTitle(title)).toBe(false);
+      }
+    });
+
+    it("keeps this item's own three live-witnessed job/career-fair rows", () => {
+      for (const title of [
+        "2026 MSE-NE Career Fair",
+        "Clean Energy Job Fairs - RE+ Events",
+        "Nuclear job fair",
+      ]) {
+        expect(isJobListingContentTitle(title)).toBe(false);
+      }
+    });
+
+    it("keeps every ADMITTED row in round 32 A's full event artefact table (12 rows, incl. the two honest-host-fallback titles)", () => {
+      for (const title of [
+        "IEX 2026 technical training introductory course: Intro...", // rsc.org
+        "Molten Salt Electrochemistry Symposium (MoSES)", // pyro.byu.edu
+        "EUCHEMSIL 2026: 30th EUCHEMS Meeting", // euchemsil2026.com
+        "Thorium and Molten Salt Recognition: EUROMOST 2026 and...", // flibe.com
+        "Molten International Symposium - Topics - SIPS 2026 by...", // flogen.org
+        "Molten Salt Fuel Chemistry -- ANS / Conferences / 2026 ...", // ans.org
+        "Home", // events.ornl.gov, honest-host fallback
+        "Homepage", // batterysummit.solarenergyevents.com, honest-host fallback
+        "European Conference Calls For Coordinated Action On Mo...", // nucnet.org
+        "The Battery Show North America | Advanced Battery & EV...", // thebatteryshow.com
+        "Solid-State Battery Summit 2026 | Quintus Technologies", // quintustechnologies.com
+        "Meeting Summary-2026 International Round Table on Tita...", // tirt7.com
+      ]) {
+        expect(isJobListingContentTitle(title)).toBe(false);
+      }
+    });
+
+    it("resolves all seven adversarial constructions in their stated direction", () => {
+      // Fair vocabulary must rescue a title that also carries "job openings".
+      expect(isJobListingContentTitle("IT Job Fair 2026 - 500+ Job Openings Available")).toBe(
+        false,
+      );
+      // Bare "vacancies", no rescue — must drop.
+      expect(isJobListingContentTitle("Vacancies List for Engineers")).toBe(true);
+      // "careers fair" — must keep (never triggers either clause at all).
+      expect(isJobListingContentTitle("Company Careers Fair 2026")).toBe(false);
+      // A single posting's own vacancy notice — must drop.
+      expect(isJobListingContentTitle("Job Vacancy: Battery Research Scientist")).toBe(true);
+      // Repeated-jobs trigger, no rescue vocabulary — must drop.
+      expect(isJobListingContentTitle("Jobs Jobs Jobs: How to Land Your Dream Role")).toBe(true);
+      // Both "job fair" and "career expo" — must keep.
+      expect(
+        isJobListingContentTitle("International Job Fair and Career Expo 2026"),
+      ).toBe(false);
+      // "job" used as an idiom, no trigger phrase at all — must keep.
+      expect(isJobListingContentTitle("A Job Well Done: Conference Recap")).toBe(false);
     });
   });
 });

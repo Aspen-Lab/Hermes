@@ -85230,3 +85230,27 @@ Committed and pushed as its own item. §1 close-out follows as a separate commit
 
 **RULING 90d — sonnet, eleventh data point: the strongest diagnostic turn of the loop.** B widened its own commission's corpus by live trace, disproved its own candidate designs by execution instead of shipping them, refused two separate traps (the `<time>` reader, the single-match heuristic) with direct evidence, and closed a commission with zero code where zero code was the correct answer.
 
+
+
+### Round 33 — Agent C (ONE item: implement `isJobListingContentTitle`, Ruling 90a, §1.2 verbatim)
+
+**SHIPPED, ONE COMMIT (code + tests + this log entry together).** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and after confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED (`98e627c`). Grepped `Round 33 — Agent C` first — zero prior entries existed, fresh start not a resume. Read Round 33 B's ITEM 1 entry and Rulings 90a-90d in full before writing any code.
+
+**IMPLEMENTED VERBATIM PER §1.2**: `JOB_LISTING_CONTENT_RE`, `hasRepeatedJobsMention`, and `export function isJobListingContentTitle` transcribed byte-for-byte from B's printed code block, placed immediately before `webResultToRawEventItem` in `eventweb.ts` (the same "near the call site" placement pattern `isBrandOnlySearchResultsPage` uses on the job side). Doc comments preserve B's reasoning in substance: the six existing kind guards carry no job vocabulary (named individually); the live trace widened the must-catch class from one witness to four; the path-shape signal was measured and rejected (two of three fresh witnesses carry no date-structured path); the safety net mirrors Ruling 87a Components B/C's precedent, reusing the file's own `looksLikeEvent`/`EVENT_SIGNAL_RE` front door rather than a new word list. Relabelled the header comment "ROUND 33 C, ITEM 1" per this file's own precedent (Round 32 C did the same when shipping Round 32 B's design) — substance unchanged from B's text.
+
+**WIRING**: 7th additive kind guard in `webResultToRawEventItem` (`eventweb.ts`), one new line `if (isJobListingContentTitle(title)) return null;` immediately after the existing `isEarningsCallPage(title, url)` call and before `const text = ...` — exactly the cited insertion point, confirmed by direct read before editing (both surrounding lines matched §1.2's citation exactly, no drift from B's read).
+
+**TESTS — B's §1.3 30-case corpus, verbatim, `eventweb.test.ts` (pure additions, one new `describe` block, 5 `it`s):** 4 must-catch rows (all true); Ruling 89b's 4 must-keep job/career-FAIR rows + this item's own 3 live-witnessed fair rows (all false, 7 total); all 12 ADMITTED rows from round 32 A's full event artefact table including the two honest-host-fallback titles `"Home"`/`"Homepage"` (all false) — the other 10 titles used round 32 A's own table strings verbatim, including the literal `...` truncation the table itself carries (`<=55 chars`, the true full titles are not recoverable from the log and this file already has precedent for testing on truncated real titles — see the pre-existing "round 30 A's own nine ADMITTED" test a few hundred lines above); all 7 adversarial constructions resolved in their stated direction. Pre-verified the full 30-case corpus against the shipped regex by hand before writing the test file (documented in this entry's own reasoning trace), then confirmed by execution — zero mismatches.
+
+**GATE, AFTER THE ITEM:**
+- `npx vitest run` — **99 files / 2386 tests, 2386 passing, ZERO failures** (2381 baseline + 5 new `it` blocks, exact; full output retained, no red at any point so no identity-first re-run was needed).
+- `npx tsc --noEmit` — clean.
+- `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, unchanged.
+
+`git status --porcelain --untracked-files=all` showed only the two intended source files modified before commit — no throwaway scaffold was created (the corpus was verified by hand-tracing the shipped regex against every case before writing assertions, so no separate probe harness was needed this item).
+
+No credential anywhere; boolean presence only; `.env.local` never `cat`-ed; no `PEER_PROFILE_SNAPSHOT_PATH`. No live network calls (pure implementation turn, Ruling 75). No branch/worktree/PR.
+
+**No deviation from §1.2.** Nothing broke a recorded control or locked test — no `POLICY — manager decides` entry needed.
+
+**HAND-OFF: `WHOSE TURN: A — round 33, GATE CANDIDATE ROUND`** (value + visual, `searchProvider: gemini`, artefact duty, pool-count re-measure, the standing watch list, flake-identity-first gate discipline — per Ruling 90c). Turn lock RELEASED (`HELD BY: free`) in the close-out commit that follows.

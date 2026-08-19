@@ -1935,6 +1935,53 @@ export function eventNameFrom(
   return "Untitled event";
 }
 
+// ROUND 33 C, ITEM 1 (Ruling 89b/90a, mirror of A31-01 / Round 32 C's
+// job-side trio, Ruling 87a): the EVENT pipeline had no guard for
+// JOB-CONTENT vocabulary at all. Witnessed live, round 32 A:
+// industrialguide.co.in's "Ion Exchange Mumbai Job Openings Check here" --
+// a job-listings roundup blog post, not an event -- admitted and rendered
+// as an event card. NONE of the six existing title/URL kind guards
+// (isEventIndexResult, isEventHubResult, isNewsArticleTitle,
+// isPaperPageTitle, isEventArtefactTitle, isEarningsCallPage) carry any
+// job/vacancy vocabulary, so a kind miss here fell to ADMISSION -- this
+// file's own documented doctrine (Ruling 32).
+//
+// ROUND 33 B's OWN LIVE TRACE (5 fresh pulls) found the class is not a
+// single specimen -- three more live rows that window carried the exact
+// same defect (jobitus.com, shine.com, iimjobs.com), widening the
+// must-catch corpus from one witness to four -- see the round log.
+//
+// THE SIGNAL IS TITLE VOCABULARY, NOT PATH SHAPE -- measured and
+// rejected, see the round log: two of the three fresh witnesses carry no
+// date-structured path at all, so a path clause would miss them.
+const JOB_LISTING_CONTENT_RE =
+  /\bjob\s+openings?\b|\bjob\s+vacanc(?:y|ies)\b|\bvacanc(?:y|ies)\b|\bcompany\s+page\b/i;
+
+// A second, independent trigger: the word "job"/"jobs" stated twice or
+// more in one title is the SEO-keyword-stuffed shape a job-board's own
+// listing title commonly takes ("X Jobs, Jobs for X - SiteName"). Zero
+// collisions with any must-keep title tested (none mentions "job" more
+// than once, most mention it zero times) -- see the round log's corpus
+// table.
+function hasRepeatedJobsMention(title: string): boolean {
+  const matches = title.match(/\bjobs?\b/gi) ?? [];
+  return matches.length >= 2;
+}
+
+// The safety net: a suspicious title cannot drop a row that ALSO states
+// the event kind's own vocabulary -- the same shape Round 32 C's
+// Components B/C already established as this loop's precedent
+// (jobweb.ts:107,1576). Reuses the file's OWN existing front-door check
+// (looksLikeEvent, EVENT_SIGNAL_RE, :189-191) rather than a new word
+// list, so every "Career Fair"/"Job Fair"/"Career Expo" must-keep is
+// protected for free.
+export function isJobListingContentTitle(title: string): boolean {
+  if (!JOB_LISTING_CONTENT_RE.test(title) && !hasRepeatedJobsMention(title)) {
+    return false;
+  }
+  return !looksLikeEvent(title);
+}
+
 export function webResultToRawEventItem(
   result: WebResult,
   now: number,
@@ -1963,6 +2010,9 @@ export function webResultToRawEventItem(
   if (isEventArtefactTitle(title)) return null;
   // B18-01: a company's earnings call is not a scholarly event.
   if (isEarningsCallPage(title, url)) return null;
+  // ROUND 33 C, ITEM 1 (Ruling 89b/90a): a job-listings/vacancy content
+  // page is not a scholarly event -- see isJobListingContentTitle above.
+  if (isJobListingContentTitle(title)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   // ROUND 29 C, ITEM 1 — **ABSENCE IS NOT EVIDENCE (family (ii)), AND THE
   // PAGE'S OWN DECLARATION OUTRANKS A KEYWORD (channel L).**
