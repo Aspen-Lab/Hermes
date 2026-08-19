@@ -90507,3 +90507,30 @@ B's own read: design 2 is the better engineering call — it is exactly the "one
 
 **GATE:** full-capture first run — `src/lib/events/benchmark.test.ts`'s live-search source-timeout fired (1 failed / 2430) — the standing Ruling 96b named flake, not attributable to this item's changes (pure render/className/test work, zero fetch/LLM code touched). Immediate re-run: **100 files / 2430 tests, 2430 passing, ZERO failures** (baseline 2426 + 4 new). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. No credential anywhere; no live network call initiated by this item (the one flake was the gate's own pre-existing benchmark test, not a call C made). No branch/worktree/PR.
 
+
+---
+
+### Phase 2 Round 4 — Agent C — ITEM 3 (V-P2-02 general cn.ts fix, per Ruling 111c/111d, implementing B's item-3 design verbatim; no site-level edits per the ruling's own text)
+
+**STATUS: COMPLETE. SHIPPED.** Run by `LAPTOP-3CL10CG5`. Ruling 111c ships the GENERAL fix, not the minimal per-site template-literal fix — its own text says "C implements the general fix + tests locking all five victim sites (and the twin) at their intended classes," naming no site-level edit. The general fix makes every site-level change unnecessary (all 6 literal `cn(` call sites across the two report pages keep their existing `cn()` calls, untouched) — confirmed directly: reading both `jobs/[id]/page.tsx` and `events/[id]/page.tsx`, zero `cn(` call sites needed editing once `web/src/lib/cn.ts` itself was fixed.
+
+**Code change:** `web/src/lib/cn.ts` — rewritten exactly per B's item-3 entry's printed design: `twMerge` swapped for `extendTailwindMerge({ extend: { classGroups: { "font-size": [...9 tokens...] } } })`, registering the app's 9 custom `--text-*` size tokens (`globals.css:78-94`) — `text-micro`, `text-caption`, `text-meta`, `text-body-sm`, `text-body`, `text-body-lg`, `text-lead`, `text-title`, `text-title-lg` — into tailwind-merge's own `font-size` class group, so a bare `text-XXX` custom token is no longer misread as a text-colour conflict-group member. `tailwind-merge` confirmed still at `^3.6.0` (matches B's verified version) before shipping.
+
+**The six literal call sites this fix closes** (B's "5 confirmed victims + 1 byte-identical twin"), each confirmed unaffected in source (no edit needed) and locked by a new test:
+1. Organisations roster card reason paragraph — `events/[id]/page.tsx:1574-1578` (the originally commissioned V-P2-02 site).
+2. People roster card reason paragraph — `events/[id]/page.tsx:1670-1674` (the undocumented byte-identical twin B's sweep found).
+3. `HeaderChip`, job surface — `jobs/[id]/page.tsx:825-838` (`data-header-chip="kind"`/`"accent"`/etc.).
+4. `HeaderChip`, event surface — `events/[id]/page.tsx:905-918` (same component shape, separate file).
+5. Activity chip — `events/[id]/page.tsx:2100-2109` (`data-activity-chip="matched"`/`"plain"`).
+6. `StarButton` — `events/[id]/page.tsx:1264-1280` (not exported from the module).
+
+**Tests added:**
+- `web/src/app/events/[id]/page.test.ts`, new describe block "Ruling 111c — the cn() tailwind-merge trap, general fix locks (event surface)": organisation reason paragraph (both branches — Tier-0 positive/`text-accent` and negative-judgment/`text-text-muted`, 2 assertions), the People-card twin (same 2 branches), `HeaderChip` (kind tone + accent match tone, 2 assertions), activity chip (highlighted + plain branches, 2 assertions), `StarButton` (2 tests — see deviation below).
+- `web/src/app/jobs/[id]/page.test.ts`, new describe block "Ruling 111c — the cn() tailwind-merge trap, general fix locks (job surface)": `HeaderChip` kind tone + accent match tone (2 assertions).
+
+**DEVIATION, DISCLOSED:** `StarButton`'s `active={true}` branch is UNREACHABLE through the full integrated page render — traced by direct execution: `partitionEventRoster`'s own `concerns` gate (`Boolean(reason) || starred`) means any starred tail row is immediately promoted into a roster CARD instead of staying in the tail, and cards render with no `StarButton` at all (V26-E06's own doctrine, "highlighted cards carry no star" — verified by writing the naive full-render test first, which failed with an empty capture, then tracing why). This is the same admitted-control shape this same test file already documents for the skills-progress-bar's divide-by-zero guard (V26-J07, "UNREACHABLE BY CONSTRUCTION"). `StarButton` is also not exported from `events/[id]/page.tsx`, so it cannot be rendered in isolation either. Resolved by testing the reachable INACTIVE branch through the real page (one test), and the unreachable ACTIVE branch by calling the real, imported `cn()` directly against the component's own literal class arguments copied verbatim from `events/[id]/page.tsx:1271-1276` (a second test) — the same direct-execution method B's own item-3 entry used throughout ("executed the REAL shipped cn() against each site's actual class arguments"). Not filed as POLICY — this does not conflict with any recorded control or locked test, it is a testing-method adaptation to a pre-existing, already-documented reachability gap in the app itself.
+
+**NON-VACUOUSNESS CHECK, RUN AND DISCLOSED:** all 8 new assertions across both files were verified to FAIL when `web/src/lib/cn.ts` was temporarily reverted to its pre-fix `twMerge` form (`git show HEAD:web/src/lib/cn.ts`, applied, gate-checked, then restored) — 8/8 failed as expected, confirming none is vacuous. Restored via `git diff --stat` confirming only the intended 3 files carry changes; no scratch files left behind (`git status --short` clean of anything but the 3 intended files before commit).
+
+**GATE:** `npx vitest run` — **100 files / 2438 tests, 2438 passing, ZERO failures** (baseline 2430 + 8 new). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. No deviation from B's design on the `cn.ts` fix itself (verbatim). No credential anywhere; no live network call. No branch/worktree/PR.
+

@@ -798,3 +798,25 @@ describe("JobReport", () => {
     expect(html).not.toContain("Seen on");
   });
 });
+
+/**
+ * **RULING 111c (Phase 2 round 4, C item 3) — THE cn() TAILWIND-MERGE TRAP,
+ * GENERAL FIX, JOB SURFACE.** `HeaderChip` (`app/jobs/[id]/page.tsx:827`) was
+ * one of round 3 B's sweep-found victims: `text-meta` dropped in every tone
+ * branch. Fixed by the same general `web/src/lib/cn.ts` change as the event
+ * surface (see `events/[id]/page.test.ts`'s matching describe block) — no
+ * site-level edit here. Locks both tone branches this file's fixtures reach.
+ */
+describe("Ruling 111c — the cn() tailwind-merge trap, general fix locks (job surface)", () => {
+  it("keeps text-meta on the HeaderChip kind badge", () => {
+    const html = renderReport(baseJob({ roleKind: "staff" }));
+    const chip = /<span[^>]*data-header-chip="kind"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(chip).toContain("text-meta");
+  });
+
+  it("keeps text-meta on the HeaderChip accent match badge", () => {
+    const html = renderReport(baseJob({ relevanceScore: 0.91 }));
+    const chip = /<span[^>]*data-header-chip="accent"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(chip).toContain("text-meta");
+  });
+});
