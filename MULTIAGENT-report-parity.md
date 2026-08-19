@@ -91518,3 +91518,31 @@ Job pool (2 pulls): **15 unique rows** across two runs — hosts include `career
 
 **Post-close actions (the user's standing pattern):** the Phase 2 addendum is appended to `docs/handoff/PHASE1-REPORT-PARITY.md`'s narrative; the branch merges to `main` (second merge, carrying Phase 2's fixes); the resume clocks (session cron + cloud routine) are DISARMED — the campaign they exist to resume is complete; re-arm if a new campaign opens. `WHOSE TURN: NONE — campaign complete; maintenance mode per Rulings 108/117.`
 
+
+---
+
+## PHASE 3 — THE TIER-2 POOL COMPOSITION CAMPAIGN (opened by the USER, 2026-08-19)
+
+### RULING 118 (MANAGER) — Phase 3 opens: the Tier-2 event pool has never been censused, and it admits non-events
+
+**Why this is a new campaign and not maintenance.** Phases 1 and 2 both measured with `aiTier: 0` (Ruling 69 fixed that profile for Phase 1; Phase 2's scope, Ruling 109, was the ELEVEN LLM REPORT FIELDS — not pool composition). **Nobody ever censused the pool that Tier 2 produces.** Tier 2 changes query generation (`query-gen.ts` writes the search queries with the model instead of templates), so it draws a DIFFERENT population of pages. That population is unmeasured, and a manager spot-check today found it admits non-events.
+
+**The manager's own witnesses (a real `POST /api/events/feed` pull through the shipped route, `aiTier: 2`, 12 rendered rows — reader-level evidence, not hand-fed functions):**
+
+| rendered event name (clipped) | what it actually is |
+|---|---|
+| `Topochemical polymerization` | a WIKIPEDIA ARTICLE — **already fixed and merged** (`2fde9f4`, DENY_HOSTS mirror of Ruling 87a Component A) |
+| `Slowing Down to Speed Up: Unveiling the Secrets of Topoche…` | a national-lab BLOG POST (`foundry.lbl.gov`, the same host the JOB side refuses via `isDateStructuredResearchPath`) |
+| `Unlocking topochemical polymerization in single crystals, …` | a PAPER TITLE |
+| `LANXESS to Showcase Comprehensive Portfolio for Battery Pr…` | a corporate PRESS RELEASE |
+| `Battery Science & Innovation Forum &mdash; EVENTS INL` | a real event whose name carries an UNDECODED HTML ENTITY (`&mdash;`) — note `mdash` IS in `clean.ts`'s table, so this row did not pass through `cleanDisplayText`; a seam question, not a vocabulary gap |
+| `events.ornl.gov` | the honest-host fallback — a RECORDED NAMED COST (84b(1)), not a finding |
+
+**RULING 118a — THE ROUND OPENS WITH A, NOT B, AND A's JOB IS A CENSUS OF A NEVER-MEASURED POPULATION.** The manager's six rows above are a taste, not a work list: they carry names but not URLs, one pull not five, and no frequency. A runs the standard census protocol against **`aiTier: 2`** (the Phase 3 measurement profile — see 118c) and produces the ranked list with URLs, per-pull frequency, and the guard-clause trace for each admit.
+
+**RULING 118b — "GUARD THE PATH, NOT THE INSTANCE" IS BINDING ON THIS ROUND'S B, IN ADVANCE.** The wikipedia fix already shipped was a per-instance guard; three more differently-shaped wrong values sit in the SAME slot. That is the whack-a-mole signal, and the standing doctrine fires: **B enumerates the ENTIRE producing path first** — every branch by which a row becomes an admitted event, and what reaches a reader from each — BEFORE writing any per-instance fix entry. A structural answer is preferred to a fourth, fifth and sixth vocabulary list. Ruling 32's failure direction still governs: a guard plus an honest "nothing" is a fix; a guard alone is not.
+
+**RULING 118c — THE PHASE 3 MEASUREMENT PROFILE: `aiTier: 2` (this is the whole point of the phase), the same `web/.local-data/profile.json` fields read field-scoped (Ruling 95), and `searchProvider: gemini` — now for a NEW reason, recorded here as fact rather than policy.** The user asked (2026-08-19) that Tavily resume its role. The manager probed the user's own Tavily key through Tavily's API: **HTTP 433, `"This request exceeds the pay-as-you-go limit."`** With `tavilyEnabled: true` the shipped `benchmark.test.ts` went RED TWICE with an EMPTY live pool; reverting to `false` returned it to green in one run. **So the Gemini grounding adapter is not a test substitute — it is the only working web-search provider on this machine, and it now formally carries the role Tavily used to.** The provider order already prefers Tavily automatically the moment its key works again (`resolveWebSearchProvider`: gemini only wins when Tavily is not enabled) — no code change is needed for that hand-back, and none is authorised. **A's duty: confirm by measurement that gemini serves ALL THREE surfaces (papers, jobs, events) where Tavily used to, and record each surface's row counts.**
+
+**RULING 118d — A/B/C RUN ON SONNET** (the user's standing cost decision, Ruling 80c, unchanged). The manager stays on the reasoning tier. **`WHOSE TURN: A — Phase 3 round 1 (the first Tier-2 census).`**
+
