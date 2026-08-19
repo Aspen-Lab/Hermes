@@ -216,6 +216,15 @@ export const DENY_HOSTS = [
   "alliedacademies.org",
   "iaras.org",
   "scitechseries.com",
+  // Encyclopedias. An article ABOUT a topic is never an event you attend.
+  // Witnessed live 2026-08-19 on the Tier-2 (LLM-generated query) event pool:
+  // `en.wikipedia.org/wiki/Topochemical_polymerization` rendered as an event
+  // card. The JOB surface already refuses this exact host class
+  // (`isNonJobHost`, `jobweb.ts`, Ruling 87a Component A); this is that same
+  // ruling mirrored to the event surface, the same way A32-01 mirrored the
+  // job-content guard in the other direction. `isDeniedUrl` suffix-matches, so
+  // every language subdomain (`en.`, `de.`, …) is covered by the one entry.
+  "wikipedia.org",
 ] as const;
 
 export const DENY_PATH_RE = /\/(?:article|doi|abs|reel|posts|p)(?:\/|$)/i;

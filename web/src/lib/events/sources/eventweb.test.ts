@@ -3143,3 +3143,47 @@ describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84
     });
   });
 });
+
+// Live witness, 2026-08-19, Tier-2 event pool (LLM-generated queries — a
+// population the Tier-0 censuses never drew): `en.wikipedia.org`'s
+// "Topochemical polymerization" article rendered as an event card. The JOB
+// surface already refuses this host class (`isNonJobHost`, Ruling 87a
+// Component A); these lock the same refusal on the event surface.
+describe("encyclopedia hosts are not events", () => {
+  it("lists wikipedia.org in DENY_HOSTS", () => {
+    expect(DENY_HOSTS).toContain("wikipedia.org");
+  });
+
+  it("drops the witnessed en.wikipedia.org article at ingestion", () => {
+    expect(
+      webResultToRawEventItem({
+        title: "Topochemical polymerization",
+        url: "https://en.wikipedia.org/wiki/Topochemical_polymerization",
+        snippet:
+          "Topochemical polymerization is a solid-state reaction in which monomer molecules...",
+      }),
+    ).toBeNull();
+  });
+
+  it("drops other language subdomains through the same suffix match", () => {
+    expect(
+      webResultToRawEventItem({
+        title: "Festkörperchemie Symposium",
+        url: "https://de.wikipedia.org/wiki/Topochemische_Polymerisation",
+        snippet: "Ein Symposium über Festkörperchemie.",
+      }),
+    ).toBeNull();
+  });
+
+  it("keeps a real conference whose host merely contains the word wiki", () => {
+    // Suffix match, not substring: `wikiconferences.org` is not `wikipedia.org`.
+    expect(
+      webResultToRawEventItem({
+        title: "Molten Salt Chemistry Conference 2026",
+        url: "https://wikiconferences.org/events/molten-salt-2026",
+        snippet:
+          "The Molten Salt Chemistry Conference 2026 will be held in Chicago on March 3-5, 2026. Registration is open.",
+      }),
+    ).not.toBeNull();
+  });
+});
