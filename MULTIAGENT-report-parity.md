@@ -87106,3 +87106,137 @@ Instrument (final, corrected form): a throwaway harness (`web/zz-r35a/`, own min
 **RULING 75 obeyed by construction and CHECKED DIRECTLY**: `fetched` never carries a tavily key on either surface across all 10 pulls — job fetched keys exactly `{remotive, arbeitnow, himalayas, jobweb}` every pull; event fetched keys exactly `{ccfddl, confstech, researchseminars, eventweb}` every pull. `euagenda.eu`: zero appearances anywhere in either surface's 713-row offered corpus (279 job + 434 event), checked by direct scan.
 
 Committed and pushed as its own item, per write-as-you-go. Part 2 (job/event value census, artefact tables begin, and the one fresh finding) follows.
+
+
+### Round 35 — Agent A (part 2: THE JOB AND EVENT SURFACE VALUE CENSUS. ONE FRESH FINDING — A35-01, A CROSS-SOURCE DUPLICATE EVENT OF A DIFFERENT SHAPE FROM A34-01, NOT COVERED BY THE SHIPPED FIX BY ITS OWN DISCLOSED SCOPE.)
+
+STATUS: PARTIAL BY DESIGN, continuing part 1's method (same profile, same fuse, same no-op cache, same corrected full-`WebResult` spy). Same single window (the 10 bounded pulls from part 1). No gate verdict is set here.
+
+## JOB SURFACE ARTEFACT TABLE (Ruling 79e) — COMPACT, HOST-LEVEL, ONE WINDOW, 5 PULLS
+
+89 unique hosts across 5 pulls (279 offered rows). Format: host | first-seen title (<=55 chars) | offer-count | ingested-true/offer-count | final-pool status. Threshold: hosts offered >=2 times, plus every named watch-list host regardless of count. Decision is ground truth (ingestion result by direct execution of the shipped `webResultToRawJobItem`, presence in `buildDailyJobPool`'s own scored items, any pull this window, pre-topN).
+
+```
+lco.global | Summer Intership 2022 | x30 | ingested 0/30 | not in final pool
+www.psi.ch | Summer Student Projects PSI Center for Nuclear Engineer | x13 | ingested 13/13 | not in final pool
+acu.edu | NEXT Lab Internships | Abilene Christian University | x12 | ingested 0/12 | not in final pool
+ionexchangeglobal.com | Careers - Ion Exchange | x11 | ingested 2/11 | not in final pool
+grad.wisc.edu | PhD Student Internship Opportunities at Thermo Fisher S | x10 | ingested 10/10 | not in final pool
+researchersjob.com | Fully Funded Doctoral Position in Functional Oxide Thin | x9 | ingested 0/9 | not in final pool
+www.ertel-ionstream.com | Jobs | Ertel IonStream GmbH | x9 | ingested 0/9 | not in final pool
+www.energy.gov | Internships & Fellowships | x9 | ingested 1/9 | not in final pool
+jobs.ethz.ch | Stellenangebote der ETH Zuerich | x8 | ingested 8/8 | not in final pool
+energy.sandia.gov | Energy Internship Programs | x8 | ingested 0/8 | not in final pool
+sites.utexas.edu | Opportunities | x8 | ingested 0/8 | not in final pool
+careers.gevernova.com | GE Vernova Battery Engineering & Technology Intern - Su | x6 | ingested 6/6 | IN final pool (silent company)
+job-boards.greenhouse.io | Nuclear Engineering Internship - Summer 2027 | x5 | ingested 5/5 | not in final pool
+stemgateway.nasa.gov | STEM Gateway | x5 | ingested 5/5 | not in final pool (named, not counted, unchanged)
+www.lco.edu | Internship Opportunities - Education for college studen | x5 | ingested 0/5 | not in final pool
+www.moltensaltsolutions.com | Careers | Molten Salt Solution | x4 | ingested 0/4 | not in final pool
+career.eoss.asu.edu | GE Vernova Battery Engineering & Technology Intern - Su | x4 | ingested 4/4 | not in final pool
+interninsider.me | Summer 2027 Internships: When Applications Actually Ope | x4 | ingested 2/4 | not in final pool
+dnn-consortium.ornl.gov | Graduate Research Summer Internships - DNN R&D Universi | x4 | ingested 4/4 | not in final pool
+engineering.wisc.edu | Cutting edge: How an internship led one student from th | x4 | ingested 0/4 | not in final pool
+ionenviromgt.net | CAREER | Ion Exchange | x4 | ingested 0/4 | not in final pool
+www.lco.cl | Jobs - Las Campanas Observatory | x4 | ingested 3/4 | not in final pool (87a residual: 3 of 4 offers this window are OTHER pages on the same host, not the previously-named reversed-order shape; none reach the final pool, topic-floor variance)
+jobs.thermofisher.com | Interns | Thermo Fisher Scientific | x3 | ingested 0/3 | not in final pool
+www.collegerecruiter.com | 2027 Spring Co-Op Chemistry & Protein Characterization, | x3 | ingested 3/3 | not in final pool
+jobs.sanofi.com | 2027 Spring Co-op Opportunities, Cambridge, MA at Sanof | x3 | ingested 3/3 | not in final pool
+www.faraday.ac.uk | PhD Internships | x3 | ingested 0/3 | not in final pool (81b residual, re-confirmed unchanged)
+careers.abbvie.com | 2026 Electrochemical Reaction Engineering Intern (PhD) | x3 | ingested 3/3 | not in final pool
+imr.osu.edu | BATTERI Internships | Ohio State | x3 | ingested 0/3 | not in final pool
+pls.llnl.gov | Computational Chemistry and Materials Science (CCMS) Su | x3 | ingested 3/3 | not in final pool
+netl.doe.gov | Internship & Fellowship Programs | x3 | ingested 3/3 | not in final pool
+pire.illinois.edu | xFU(s)ION Internship Applicant Call | PIRE at CSE - Uni | x3 | ingested 3/3 | not in final pool (CSE-class residual, re-confirmed)
+hyetlithium.com | Careers Open application - Internship battery R&D - HyE | x3 | ingested 3/3 | IN final pool (silent company — A29-03, re-confirmed)
+www.reddit.com | Reddit | x2 | ingested 2/2 | not in final pool
+www.cefracor.org | AN OPEN POSTDOCTORAL RESEARCHER POSITION | x2 | ingested 2/2 | IN final pool
+careers.dupont.com | Join Dupont for Internships & Co-ops | x2 | ingested 2/2 | not in final pool
+www.quantumjobs.us | PhD Intern - Trapped-Ion Quantum Theory | Quantum Jobs | x2 | ingested 2/2 | not in final pool
+climatechangejobs.com | Electrical Engineering Intern - Energy Storage (Summer | x2 | ingested 2/2 | IN final pool
+ev.careers | Internship, Battery Engineering (Summer 2026) at Tesla | x2 | ingested 2/2 | IN final pool (company: Tesla — 57b witness line re-confirmed)
+database.enen.eu | PhD Opportunity in Molten Salt Reactor - European Nucle | x1 | ingested 1/1 | IN final pool (company: European Nuclear Education Network — 57b witness re-confirmed)
+www.postdocjobs.com | Postdoctoral Appointee - Molten Salt Chemical and Elect | x1 | ingested 1/1 | IN final pool (silent company — A29-03/latent-sibling residual, re-confirmed; this window's on-topic title cleared the topic floor)
+careerservices.upenn.edu | Postdoctoral Research Associate - Molten Salt Character | x1 | ingested 1/1 | not in final pool (Ruling 34a, present-and-silent, re-confirmed — topic-floor variance, not a regression)
+165w4n(idaho) — Molten Salt Electrochemistry Postdoctoral Researcher at Idaho National Laboratory | company: Idaho National Laboratory | x1 | ingested 1/1 | IN final pool (57b witness re-confirmed)
+1gqr7us — Doctoral Position in topochemical tuning of layered oxides, Zurich | company: Laboratory of Inorganic Chemistry (LAC), D-CHAB | ingested 1/1 | IN final pool (fresh 57b witness line, real employer/lab value)
+(remaining ~65 hosts offered 1-2 times each, all "not in final pool" except where named above; every remaining single/low-offer host is a genuine drop, not individually clause-traced this round)
+```
+
+**Named-row sanity checks against this table**: `hyetlithium.com` re-confirmed ADMITTED with silent company (A29-03 stays ADDRESSED, unregressed). `www.postdocjobs.com`'s latent sibling reached the final pool THIS window (unlike round 34, where topic-floor variance kept it out) — its own ingestion-stage behaviour (silent company, admits regardless) is unchanged either way; only the topic-floor outcome varies window to window, as documented since round 32. **52b collision check: ZERO** — no final-pool `company` value contains "Ion Exchange" this window; strike count stays at ONE (60a), unregressed.
+
+## EVENT SURFACE ARTEFACT TABLE (Ruling 79e) — COMPACT, HOST-LEVEL, ONE WINDOW, 5 PULLS
+
+126 unique hosts across 5 pulls (434 offered rows). Threshold: hosts offered >=4 times, plus every named watch-list host regardless of count.
+
+```
+www.rsc.org | EUCHEMSIL 2026 | x28 | ingested 28/28 | IN final pool (merges with euchemsil2026.com below — see note)
+www.euchemsil2026.com | Organisation of EUCHEMSIL 2026 | x18 | ingested 18/18 | IN final pool (dateless — Ruling 90b named cost, re-confirmed 18/18)
+pyro.byu.edu | Molten Salt Electrochemistry Symposium (MoSES) | x17 | ingested 17/17 | IN final pool
+www.cambridgeenertech.com | Solid-State Battery Summit | August 11-12, 2026 | Chica | x15 | ingested 0/15 | not in final pool (excluded upstream, index-page guard)
+onlinelearningconsortium.org | Present - Online Learning Consortium | x15 | ingested 5/15 | not in final pool
+joint-research-centre.ec.europa.eu | Molten salt reactor technology (EUROMOST) | x15 | ingested 15/15 | not in final pool
+www.soci.org | IEX 2026 technical training introductory course: Introd | x15 | ingested 0/15 | not in final pool
+event.fourwaves.com | Twenty-Seventh Congress and General Assembly of the Int | x13 | ingested 0/13 | not in final pool
+snetp.eu | EUROMOST 2026 - SNETP | x13 | ingested 13/13 | not in final pool
+lco.global | Call for Proposals 2026A | x11 | ingested 0/11 | not in final pool
+lco-nsn.gov | Events for August 2026 | x11 | ingested 9/11 | not in final pool
+sophion.com | ICMS Cambridge UK 2026 - Sophion | x10 | ingested 1/10 | not in final pool
+www.programmaster.org | Materials and Chemistry for Molten Salt Systems | x10 | ingested 0/10 | not in final pool
+www.ans.org | Molten Salt Fuel Chemistry -- ANS Conferences | x10 | ingested 8/10 | IN final pool
+ionexchangeglobal.com | Careers - Ion Exchange | x7 | ingested 2/7 | not in final pool
+www.flogen.org | Molten International Symposium - SIPS 2026 | x7 | ingested 7/7 | IN final pool
+www.orcities.org | League of Oregon Cities:: Conferences | x6 | ingested 6/6 | not in final pool
+flibe.com | Thorium and Molten Salt Recognition: EUROMOST 2026 | x6 | ingested 6/6 | IN final pool
+www.tradeindia.com | Solid-State Battery Summit 2026 in Chicago | x5 | ingested 0/5 | not in final pool
+ionenviromgt.net | CAREER | Ion Exchange | x5 | ingested 0/5 | not in final pool
+librarypublishing.org | 2026 Library Publishing Forum Call for Proposals | x5 | ingested 5/5 | not in final pool
+www.lawconferenceofchampions.com | Law Conference of Champions | x5 | ingested 5/5 | not in final pool
+conferences.iaea.org | Workshop on the Current Status of Structural Material D | x5 | ingested 5/5 | not in final pool
+www.stocktitan.net | Birchtech plans 4 water conference stops as PFAS remova | x5 | ingested 0/5 | not in final pool
+semiconductorx.com | Semiconductor Conferences 2026 - Industry Events Calend | x5 | ingested 5/5 | not in final pool
+quintustechnologies.com | Solid-State Battery Summit 2026 | Quintus Technologies | x4 | ingested 4/4 | IN final pool -- see A35-01 below
+aquabattery.com | Become Our Next ION Exchange Membrane Expert | x4 | ingested 0/4 | not in final pool
+jobs.ethz.ch | Stellenangebote der ETH Zuerich | x4 | ingested 4/4 | not in final pool
+www.sae.org | SAE International | x4 | ingested 4/4 | not in final pool
+callforabstracts.acs.org | ACS Fall 2026 | x4 | ingested 4/4 | not in final pool
+semiengineering.com | Chip Industry: Events | x4 | ingested 0/4 | not in final pool
+semiconductorengine.org | Florida Semiconductor Summit 2026 | x4 | ingested 4/4 | not in final pool
+www.thebatteryshow.com | The Battery Show North America | Advanced Battery & EV | x4 | ingested 4/4 | IN final pool, dated (2026-10-12)
+innovatrix.eu | 5th Battery Gigafactory Summit USA | x3 | ingested 0/3 | not in final pool
+www.batteryinnovationsummit.com | The Battery Saloon | x3 | ingested 0/3 | not in final pool (79a named cost, re-confirmed 3/3 refused)
+win.mst.edu | Nuclear Career Fair - S&T Women in Nuclear | x2 | ingested 2/2 | not in final pool -- must-keep fair, topic-floor variance
+pennstate-csm.symplicity.com | Nittany Lion Careers | x2 | ingested 2/2 | not in final pool -- must-keep fair, topic-floor variance
+batterysummit.solarenergyevents.com | Homepage | x2 | ingested 2/2 | IN final pool, honest-host fallback -- 84b(1) named cost, re-confirmed 2/2
+www.automotive-technology.com | Automotive Battery Tech Summit 2026 | x2 | ingested 2/2 | IN final pool, dated -- confirmed genuinely DISTINCT from AABC (Munich Mar 26-27 vs San Diego Dec 7-10)
+www.djk.co.jp | Exhibition "Solid-State Battery Summit 2026" in Chicago | x1 | ingested 1/1 | IN final pool -- see A35-01 below
+www.advancedautobat.com | 26th Advanced Automotive Battery Conference (AABC) | x1 | ingested 1/1 | IN final pool, dated -- A34-01 pair, sibling NOT organically offered this window (see part 1)
+ibatterysummit.com | Home - International Battery Summit | x1 | ingested 1/1 | IN final pool, dated, Jakarta -- organisations populated (Carsurin, SaranaLab), 57b re-witness
+(remaining ~80 hosts offered 1-3 times each, all "not in final pool" except where named above)
+```
+
+**`rsc.org`/`euchemsil2026.com` merge, confirmed as a POSITIVE live corroboration of the dedup mechanism**: three distinct raw URLs this window (`rsc.org/events/find-an-event/euchemsil-2026`, `euchemsil2026.com/about/`, `euchemsil2026.com/`) all individually ingest true, and all three correctly collapse to ONE final-pool card (`eventweb:674c94`, surviving url `euchemsil2026.com/`) — a genuine, organic, three-source duplicate correctly merged by the shipped dedup this window, beyond the constructed AABC case.
+
+## ONE FRESH FINDING THIS ROUND — A35-01 (event surface, cross-source duplicate NOT merged, a DIFFERENT shape from A34-01)
+
+**Witnessed 1 of 5 pulls (pull index 0), BOTH rows present TOGETHER in that pull's own final scored pool:**
+
+> `Exhibition "Solid-State Battery Summit 2026" in Chicago ~Showcasing Products and Technologies for Next-Generation Battery Development and Mass Production~` @ `https://www.djk.co.jp/en/news/detail.html?itemid=662&dispmid=3918`
+> `Solid-State Battery Summit 2026` @ `https://quintustechnologies.com/events/solid-state-batteries-summit-2026/`
+
+**Both describe the identical real-world event** (Solid-State Battery Summit 2026, Chicago — the same event round 13's ground truth and round 34's own artefact table already associate with `cambridgeenertech.com`, which is excluded upstream this window by the unrelated index-page guard and so is not part of this specific collision) — a reader opening that pull's report would see two separate cards for one event.
+
+**Traced to the exact mechanism by direct execution, offline**: `eventDedupKey` on both names —
+
+| row | derived `.name` | `eventDedupKey` |
+|---|---|---|
+| `djk.co.jp` | `Exhibition "Solid-State Battery Summit 2026" in Chicago ~Showcasing...~` | `battery exhibition in solid state summit::` |
+| `quintustechnologies.com` | `Solid-State Battery Summit 2026` | `battery solid state summit::` |
+
+**The keys differ on the name-token half only** (both are dateless, so both years are empty and would match) — confirmed by direct execution, not assumed. The `djk.co.jp` title is a long press-release-style headline ("Exhibition ... in Chicago ~Showcasing Products and Technologies for Next-Generation Battery Development and Mass Production~"); `eventDedupKey`'s existing six-token slice (unrelated to and unchanged by this round's A34-01 fix) picks up `exhibition` and `in` among its first six tokens, DISPLACING the identifying tokens (`chicago`, `2026`-adjacent context) that would otherwise let the two keys align — `quintustechnologies.com`'s short, clean title keeps all four of its meaningful tokens intact. **This is squarely the residual shape round 35 B's own design explicitly disclaimed as out of scope**: "any same-event pair whose divergence is NOT shaped like 'ordinal/acronym-paren token mismatch + pre/post-enrichment date gap' — e.g., two sources using genuinely different wording for the same event's name — remains uncaught by this design" (round 35 B §2.8, ratified by Ruling 96a's "approved as designed"). **A does not diagnose a fix or judge severity beyond what was measured** — the finding is: this is the FIRST organically-witnessed, live instance of that disclosed residual class actually firing on real data (previously only a design-doc anticipation), a DIFFERENT concrete mechanism from A34-01's ordinal/acronym/date-gap shape (checked directly: neither an ordinal number nor a short all-caps acronym parenthetical appears in either title, so A34-01's own normalization could not and does not touch this pair either way).
+
+**A LIVE, POSITIVE CORROBORATION IN THE SAME WINDOW, NAMED FOR CONTRAST**: the `rsc.org`/`euchemsil2026.com` three-way merge (above) and the constructed AABC-pipeline merge (part 1) both confirm the SHIPPED fix works exactly as designed on the shapes it targets; A35-01 shows the boundary of that design, not a defect in what it claims to cover.
+
+Ranked below, part 3.
+
+Committed and pushed as its own item. Part 3 (visual census, standing tallies, residual watch list, ranked list, and the gate verdict) follows.
