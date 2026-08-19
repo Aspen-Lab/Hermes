@@ -270,33 +270,38 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent A round 4 + 2026-08-19T20:41Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       A — Phase 3 round 4. C's round 3 is COMPLETE — all five
-                  of Ruling 120g's items shipped, one commit each: (1) J1
-                  — `catalogLabel` now a validated tier inside
-                  `resolveEmployerIdentity`, gated by a closed
-                  placeholder-token predicate (measured member: `name`
-                  only); (2) F2 — the job surface's
-                  `isDateStructuredResearchPath` ported to the event
-                  surface; (3) J2 — `products` added to `NON_JOB_PATH_RE`;
-                  (4) F8 — the "applications open" name-repair strip; (5)
-                  F9 — the TEST-suffix strip, EVENT-ONLY per Ruling
-                  120d(2). A's job: a fresh Tier-2 census (same PHASE 3
-                  MEASUREMENT PROFILE below) that VERIFIES all five fixes
-                  live — J1 on a fresh Himalayas pull (does "name" still
-                  render, does a real company still render), F2/F8/F9 on
-                  fresh event pulls (do the foundry.lbl.gov/Cvent-shaped
-                  classes still misrender, do real controls still render
-                  correctly), J2 on a fresh job pull — plus the standing
-                  duties (pool composition tallies, the ranked finding
-                  list, the gate). See §4 `### Phase 3 Round 2 — Agent B`
-                  (4 parts), `### Phase 3 Round 2 — MANAGER` (Rulings
-                  120a-120g) and `### Phase 3 Round 3 — Agent C` (5 items)
-                  for full detail.
+WHOSE TURN:       MANAGER — Phase 3 convergence candidate 1 re-measurement.
+                  A's round 4 re-census is COMPLETE — all five of Ruling
+                  120g's fixes VERIFIED LIVE (J1 by a real absence-signal,
+                  0/5 job pulls after a prior 5/5, plus direct execution
+                  incl. the must-keep "mercor" control; F2/J2/F8/F9 by
+                  direct execution alone, none drawn live this window, every
+                  paired must-keep control confirmed intact). Seven ranked
+                  findings this round (F10-F13, J7-J9), **all seven
+                  classified as instances of already-recorded defect
+                  classes — ZERO NEW CLASSES measured.** One disposition
+                  (Disposition 1, the mdash/entity seam) meets its own
+                  stated reopen threshold on fresh evidence (a second live
+                  undecoded entity, `&laquo;`, byte-confirmed) and is
+                  flagged for a ruling, not reopened by A. Paper surface web
+                  rows: 0 under the real request shape (Ruling 120e, still
+                  dark, still counted). Timeout-flake rate this round: 30%
+                  of the original 10-pull window (same named mechanism,
+                  notably above the prior ~10% band) — flagged as a
+                  possible data-quality caveat on this round's own sample,
+                  not a new class. Manager's job: independently re-measure
+                  (per Ruling 105a's framework, extended to Phase 3 by
+                  Ruling 121's own closing line) — if the manager's own
+                  fresh window is ALSO clean of new classes, this stands as
+                  convergence candidate 1 and round 5 runs as candidate 2
+                  (A census + manager re-measurement). See §4 `### Phase 3
+                  Round 4 — Agent A` (3 parts) for full detail, every URL,
+                  every guard trace.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
@@ -336,6 +341,135 @@ reference):
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 3 ROUND 4 A IS COMPLETE @ 2026-08-19 ~20:4x-21:2x
+                  UTC. THE FIRST RE-CENSUS AFTER C'S FIVE FIXES — ALL FIVE
+                  VERIFIED LIVE, SEVEN NEW-WITNESS FINDINGS, ZERO NEW
+                  DEFECT CLASSES.** Run by `LAPTOP-3CL10CG5`. Claimed the
+                  lock after `git pull` (already up to date) and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp` (claiming push ACCEPTED
+                  at `71c582b`). Grepped `Phase 3 Round 4` first — zero
+                  prior entries, fresh start not a resume. Checked §1's top
+                  block against Ruling 121's own routing text before
+                  touching anything: it was ALREADY in sync (round 3 C's
+                  own close-out had already written the correct hand-off)
+                  — no staleness found this time, unlike the four prior
+                  agents who each found and fixed one.
+
+                  **GATE, COLD FIRST: 100 files / 2471 tests, 2471 passing,
+                  ZERO failures**, `tsc --noEmit` clean, matching the
+                  brief's stated baseline exactly.
+
+                  **DUTY 1, ALL FIVE ROUND-3 FIXES VERIFIED LIVE.** Method:
+                  every fix checked BOTH against this round's live pulls
+                  AND independently by direct execution against the real
+                  shipped functions (a fresh harness, not C's own test
+                  file; 7/7 assertions passed). **J1** (`company: "name"`):
+                  0 of 5 job pulls, after a prior 5/5 — **a real signal the
+                  fix works, not sampling variance**, per the brief's own
+                  framing; must-keep `"mercor"` control not drawn live,
+                  confirmed instead by direct execution at both the
+                  call-site and predicate layers. **F2** (`foundry.lbl.gov`
+                  blog rows): not drawn live this window; confirmed dropped
+                  by direct execution on both exact witnesses, MoSES
+                  control unaffected. **J2** (product-catalogue page): not
+                  drawn live; confirmed dropped by direct execution on the
+                  exact witness. **F8/F9** (name-repair strips): neither
+                  witness drawn live; both confirmed repaired by direct
+                  execution, every paired must-keep control (incl. the
+                  case-sensitivity protective case) confirmed untouched.
+                  **Zero regressions on any control, live or constructed.**
+
+                  **DUTY 2, RE-CENSUS.** Event surface: 5 successful pulls
+                  used (2 of the original 5 timed out on `eventweb`, 40%
+                  vs. round 1's 0% — disclosed and kept as data, not
+                  hidden; 2 supplementary pulls added to firm up the
+                  sample, both clean). Job surface: 4 of 5 succeeded (1
+                  timeout, same mechanism). **Seven ranked findings**,
+                  worst first: F11 professional news/press coverage of a
+                  real event admitted as the event, 4/5 pulls, 5 distinct
+                  hosts (incl. a live specimen of Ruling 118's own
+                  previously-unwitnessed LANXESS-shaped press-release
+                  class, `prnewswire.com`); J7 a title-split
+                  company-extraction near-miss renders a false company
+                  value on two real postings, 2/4 pulls (`"Cell"`,
+                  `"Lansing, MI, Michigan, 11021"`); J8 a new host
+                  recurrence of J4's bare-brand-as-title class
+                  (`neumaterials.com`), 1/4; F13 two new staleness
+                  witnesses of F7's class, 2/5, one carrying a live
+                  undecoded `&laquo;` entity that **meets Disposition 1's
+                  own stated reopen threshold** (a second live entity
+                  reproduction); F10 a `COMMERCE_PATH_RE` near-miss on the
+                  event surface (`product-category` vs `product`),
+                  structurally identical to J2's own gap one round ago,
+                  1/5; F12 a second host of the F3/Disposition-6 forum
+                  false-positive (`permies.com`), 1/5; J9 flagged but
+                  UNCONFIRMED (`jobleads.com`, live verification blocked by
+                  HTTP 403), not counted toward the classification total.
+                  **Events F1 (osti.gov bibliography) recurred 3/5,
+                  unfixed by design (out of this round's five-item
+                  commission), not filed as new. Jobs J5a (faraday.ac.uk
+                  listing) recurred 1/4, Disposition 4, not filed as new.**
+
+                  **CLASSIFICATION VERDICT (Ruling 105a): all seven ranked
+                  findings are INSTANCES OF RECORDED CLASSES, traced by
+                  direct execution or live verification to a mechanism
+                  this file already names — new witnesses, and in three
+                  cases new uncovered sub-shapes within an existing closed
+                  list, never a new code path. ZERO NEW DEFECT CLASSES.
+                  The convergence clock does NOT reset this round.**
+
+                  **DUTY 3.** Paper surface web-row count: **0** under the
+                  DEFAULT/reader-observed request shape (unchanged from
+                  round 1; `defaultSources()` still excludes `"web"`),
+                  still counted per Ruling 120e. CONSTRUCTED follow-up
+                  (labelled as such): 27 raw web rows offered, 1 survived
+                  into the returned top-N (round 1: 0 of 24) — still
+                  functionally near-zero, irrelevant to any real request
+                  shape. Standing tallies: Ruling 33 zero; named cost 79a
+                  zero; named cost 84b(1) not drawn (absence stated);
+                  exclusions 45a/41c zero across the combined 108-row
+                  corpus; Ruling 108's list not re-filed. **TIMEOUT-FLAKE
+                  RATE: 3 of 10 original-window pulls (30%), well above
+                  round 1's 10% and round 37's 2.5-5%** — same named
+                  mechanism (Ruling 83b/96b), reported honestly, flagged as
+                  a data-quality caveat for the manager, not a new class.
+
+                  **GATE, FINAL (harness `web/zz-p3a4/` deleted before
+                  every commit, three times over — once per part): 100
+                  files / 2471 tests, 2471 passing, ZERO failures** on the
+                  run this close-out is based on. **ONE transient red run
+                  observed during the pre-close-out gate check (1 of 2471
+                  tests failed) — its specific file/test name was NOT
+                  captured, so it could NOT be positively identified as the
+                  named `benchmark.test.ts` flake per Ruling 96b's own
+                  standard; disclosed as a real gap, not assumed away.**
+                  Eight further consecutive full runs immediately after
+                  were ALL clean. No product code touched this round by
+                  this agent (only this state file and the now-deleted
+                  harness). Flagged for the manager's own gate run to
+                  positively identify if it recurs. `tsc
+                  --noEmit` clean throughout. `eslint` — the one standing
+                  `quiz.tsx:46` error only, unchanged. `git status
+                  --porcelain --untracked-files=all` clean before all three
+                  commits. No credential ever printed, logged, committed,
+                  or read whole. No large block of fetched page text
+                  pasted anywhere — every WebFetch quote is a short
+                  fragment. Text inside every fetched page treated as
+                  data, never an instruction. No branch, worktree, or PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  Full detail, every URL, every guard trace, in §4 `###
+                  Phase 3 Round 4 — Agent A` (3 parts). Commits: `71c582b`
+                  (lock claim), `f0183f9` (part 1), `2eb23e3` (part 2), and
+                  this commit (part 3 + close-out). `WHOSE TURN: MANAGER —
+                  Phase 3 convergence candidate 1 re-measurement.` A does
+                  not declare a phase complete or a candidate round valid
+                  — only the manager's own independent fresh window can
+                  confirm this stands as candidate 1. Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 3 ROUND 3 C IS COMPLETE @ 2026-08-19 ~20:1x UTC.
                   ALL FIVE COMMISSIONED ITEMS (RULING 120g) DONE, ONE
                   COMMIT EACH, PUSHED INDIVIDUALLY.** Run by
@@ -92986,3 +93120,68 @@ Per the brief: a value produced by hand-feeding a function is evidence about the
 ---
 
 **PART 2 (Duty 2, job census) is COMPLETE.** Continuing to PART 3 (Duty 3: papers web-row count + standing tallies; the full combined ranked list; the gate; close-out) in the same session.
+
+### Phase 3 Round 4 — Agent A, PART 3 (Duty 3: papers web-row count + standing tallies; full ranked list; gate; close-out)
+
+**STATUS: PART 3 COMPLETE. ROUND 4 A IS COMPLETE.** Harness rebuilt a final time in `web/zz-p3a4/` (`pull-papers.test.ts`, same `vitest.config.ts`) for the papers-surface measurement, deleted before this commit.
+
+---
+
+## DUTY 3 — THE PAPER SURFACE'S WEB-ROW COUNT (Ruling 120e, reported by name every census until this closes)
+
+**Method:** two calls to `runFeedPipeline`, same profile snapshot, `aiTier: 2`, `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }`, mirroring round 1 A's own two-call method exactly.
+
+1. **DEFAULT sources (reader-observed — the shape every real call site actually uses):** `fetched: { openalex: 48, semantic_scholar: 0, arxiv: 49, dblp: 23, pubmed: 14 }` — **no `web` key at all.** `defaultSources()` (`feed/pipeline.ts:40-42`) still returns only the five academic sources. **PAPER SURFACE WEB-ROW COUNT THIS CENSUS: 0.**
+2. **CONSTRUCTED (labelled as such, `sources` explicitly forcing `"web"` in — not what a reader sees):** `fetched: { ...same five..., web: 27 }` — gemini's adapter returned 27 raw web-sourced candidates when actually invoked (round 1 A measured 24; both confirm the underlying mechanism works). **1 of those 27 survived into the returned top-N this time** (round 1 A measured 0 of 24 survived) — a small, non-zero change, but still functionally near-total loss against the five structured academic sources' own combined corpus, and irrelevant to what a reader sees today regardless, since no real request shape forces `"web"` in.
+
+**STATED PLAINLY, PER RULING 120e: the paper surface's web-row count is 0 under the real request shape, unchanged from round 1. This gap remains counted, open, and Tavily-exclusive** (`canRunTavilyDiscovery`/`runTavilyDiscovery` still hardcode `provider: "tavily"` with no gemini branch, per round 2 B's own direct-execution confirmation — not re-verified by execution this round since no code on that path has changed since round 2 B measured it, and re-stating an unchanged static fact adds nothing a live re-check would reveal). Still commissioned to a future B round per Ruling 120e, not to A.
+
+---
+
+## STANDING TALLIES
+
+- **Ruling 33 (short-acronym collision):** 0 of 22 unique job rows (Part 2). Zero LCO-adjacent hits.
+- **Named cost 79a (`The Battery Saloon` @ `batteryinnovationsummit.com`):** 0 of 7 event-pull attempts, checked by direct scan of the combined corpus.
+- **Named cost 83a (dateless-branch doctrine):** the GENERAL phenomenon remains pervasive (most event rows this round carry `startDate: ""`), consistent with the accepted doctrine. The SPECIFIC `euchemsil2026.com` witness this doctrine names WAS redrawn this round (pull 6), consistent with — not a re-test of — the standing disposition.
+- **Named cost 84b(1) (`events.ornl.gov` honest-host fallback):** 0 of 5 successful event pulls this round — NOT drawn. Stated as absence, the doctrine stands regardless (Ruling 84b(1) does not require re-drawing every round to remain true).
+- **Exclusion 45a (`euagenda.eu`):** 0 across the combined 108-row corpus (both surfaces, all 12 pull attempts including the 2 supplementary and the 3 timeouts' partial data), checked by direct scan.
+- **Exclusion 41c (`battery2030.eu`, `isea.rwth-aachen.de`, `adt.media`):** 0 across the same combined corpus, checked by direct scan (hunted by name, not left to pool luck).
+- **Ruling 108's Phase 1 maintenance list:** NOT re-filed, per instruction.
+- **Disposition tallies owed this census, stated even where the specific witness was absent (per the standing "not observed is not does not occur" discipline):**
+  - Disposition 1 (`&mdash;` seam): **REOPEN THRESHOLD MET** — see F13 in Part 1 (a second live undecoded-entity reproduction, `&laquo;` on `msrworkshop2023.ornl.gov`, byte-confirmed). Flagged explicitly for the manager; A does not reopen dispositions, only reports the trigger.
+  - Disposition 2 (F1b/F4/F5, no-schema-signal homepages): specific witnesses (`itmsf.org`, `moltensalt.org`) NOT redrawn this round — absence stated, not evidence of closure. J8 (Part 2) folds into this tally per Disposition 5's own stated routing ("J4 folds into Disposition 2's tally").
+  - Disposition 3 (J3, `developingexperts.com`): NOT redrawn this round — absence stated.
+  - Disposition 4 (J5a/J5b, `faraday.ac.uk`): J5a redrawn, 1 of 4 job pulls (Part 2) — tallied there.
+  - Disposition 5 (J4/J6): J4's class redrawn as J8, new host (Part 2). J6's own exact witness (`egup.fa.us2.oraclecloud.com`, "Energy Storage (Summer 2027)") NOT redrawn this round — absence stated; J7's two new witnesses (Part 2) are STRUCTURALLY ADJACENT (same broad "non-company value survives to the company slot" symptom) but NOT confirmed to share J6's specific mechanism, stated as an open question, not claimed as the same finding.
+  - Disposition 6 (F3/forum): F3's class redrawn as F12, new host, second live witness of the forum-false-positive shape (Part 1) — tallied there, per the disposition's own terms.
+- **TIMEOUT-FLAKE RATE: original 5-pull-per-surface window, 3 of 10 (30%)** — 2 of 5 event (pulls 0, 2) + 1 of 5 job (pull 3) — **well above round 1 A's own 1 of 10 (10%) and round 37's 1 of 40 (2.5%)/1 of 20 (5%)**, though the SAME named mechanism throughout (Ruling 83b/96b's 25000ms `withSourceTimeout` budget on `eventweb`/`jobweb`). **Including the 2 supplementary event pulls (both clean): 3 of 12 total attempts (25%).** Reported honestly as this round's own number, not smoothed to the prior band — flagged for the manager as a possible data-quality caveat on this round's own sample thinness, though not itself a new defect class (same mechanism, a higher-variance hour).
+
+---
+
+## THE FULL RANKED FINDING LIST, BOTH SURFACES, WORST FIRST
+
+**EXPLAINED / recorded-and-unfixed, not ranked as findings (reported above and in Parts 1-2 for the record):** Events F1 (osti.gov bibliography, 3/5, unfixed by design — not in this round's five-item commission), Jobs J5a (faraday.ac.uk listing, 1/4, Disposition 4).
+
+1. **Events F11** — professional news/press coverage of a real event admitted as the event itself, **4 of 5 pulls, 5 distinct URLs/hosts** — the round's highest-frequency finding either surface produced. INSTANCE of recorded family (a)'s news-article sub-shape (Ruling 118 witness #4, round 37 M36-01).
+2. **Jobs J7** — a title-split company-extraction near-miss renders a false company value on a real, applyable posting, **2 of 4 pulls, 2 witnesses** ("Cell", "Lansing, MI, Michigan, 11021") — a wrong VALUE, Ruling 119d's "lie the reader will trust" doctrine. INSTANCE of the recorded title-split-needs-vetting mechanism (`SEASON_COHORT_LABEL_RE`/`looksLikeBareLocation`'s own family), two new uncovered shapes.
+3. **Jobs J8** — the job-board platform's bare brand name rendered as the job TITLE, the real role lost entirely, **1 of 4 pulls** (`neumaterials.com`). INSTANCE of recorded class J4/Disposition 5, new host.
+4. **Events F13** — two stale (years-past) events admitted without date-based exclusion, **2 of 5 pulls**; one witness also carries a live undecoded `&laquo;` entity that **meets Disposition 1's own stated reopen threshold**. INSTANCE of recorded class F7 (staleness) plus a disposition-reopening entity witness.
+5. **Events F10** — a commerce/product-catalogue page admitted on the event surface, **1 of 5 pulls** (`dynalene.com`), a near-miss on `COMMERCE_PATH_RE` structurally identical to J2's own gap one round ago. INSTANCE of the recorded closed-path-vocabulary-gap mechanism.
+6. **Events F12** — a discussion-forum website admitted via the bare "forum" signal, **1 of 5 pulls** (`permies.com`), second live witness of the class. INSTANCE of recorded class F3/Disposition 6.
+7. **Jobs J9** — an aggregator's company value, plausible either way, **1 of 4 pulls** (`jobleads.com`) — **UNCONFIRMED** (live verification blocked, HTTP 403). Flagged, not counted toward the classification verdict below.
+
+**CLASSIFICATION VERDICT (Ruling 105a): all seven ranked items (F10, F11, F12, F13, J7, J8, J9) are INSTANCES OF RECORDED CLASSES. ZERO NEW DEFECT CLASSES this round.** Every one traces, by direct execution or live verification, to a mechanism this file already has a name, a doc comment, and (in five of seven cases) an existing partial guard for — new witnesses and in three cases new uncovered sub-shapes within an existing closed list, never a previously-unseen code path or failure mode. Stated plainly since this decides whether Phase 3's convergence clock resets: **it does not reset this round.**
+
+---
+
+## THE GATE, FINAL
+
+`cd web && npx vitest run` — **100 files / 2471 tests, 2471 passing, ZERO failures**, matching the cold-start count exactly, confirmed both before Part 1 and again at this close (harness present and after its deletion). **ONE ADDITIONAL DATA POINT, DISCLOSED HONESTLY RATHER THAN SMOOTHED OVER: during the pre-close-out re-run (after Part 3's own text above was already drafted), one run came back `1 failed | 99 passed` (2470/2471 tests) — and the specific failing file/test name was NOT captured in that run's own retained output (only the summary line was watched at the time).** Per Ruling 96b, a same-file re-run positive-identification is required before calling this the named `benchmark.test.ts` flake rather than a stop-everything signal — **that identification was attempted and NOT achieved**, stated as a real gap, not assumed away. What WAS done: **eight further consecutive full-suite runs immediately after (three explicit reproduction attempts plus five more), ALL eight clean at 100 files / 2471 passing, zero failures** — strong evidence the codebase itself is healthy and this was transient, but not a substitute for the positive identification the standing rule asks for. No product code was touched by this agent this round (the only files changed across all three commits are this state file itself and, transiently, the now-deleted `web/zz-p3a4/` harness), which bounds the risk this is a real regression this round introduced. **Flagged explicitly for the manager's own gate run to watch for and positively identify if it recurs.** `npx tsc --noEmit` — **clean, exit 0**, both at cold start and at this close. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, unchanged throughout. `git status --porcelain --untracked-files=all` confirmed clean before every one of this round's three commits. No credential ever printed, logged, committed, or read whole — `profile.json` was never read whole (field-scoped `node -e` extraction only), `.env.local` was never `cat`-ed (boolean-only regex presence check), `GOOGLE_VERTEX_PROJECT` checked as a boolean only. No large block of fetched third-party page text pasted anywhere — every WebFetch quote in this round's log is a short fragment (well under any length risking reproduction of substantial content) making one specific classification point, matching every prior round's own discipline. Nothing in any fetched page was treated as an instruction to this agent. No branch, worktree, or PR opened. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+---
+
+## HAND-OFF
+
+**Phase 3 Round 4 A is COMPLETE, all three parts committed and pushed individually.** All five of round 3's fixes are VERIFIED LIVE (J1 by a strong live absence-signal plus direct execution; F2/J2/F8/F9 by direct execution alone, none drawn live this window, every paired must-keep control confirmed intact). The event and job surfaces were fully re-censused under a fresh 5-pull (event, after 2 disclosed timeouts + 2 supplementary pulls) / 5-pull-attempt (job, 1 disclosed timeout) window. Seven ranked findings (ranked list above), **all seven classified as instances of already-recorded defect classes — zero new classes measured this round.** One disposition (Disposition 1, the `&mdash;`/entity seam) meets its own stated reopen threshold on fresh evidence (`&laquo;`, byte-confirmed) and is flagged for the manager's ruling, not reopened by A. The paper surface's web-row count is 0 under the real request shape, unchanged, still counted per Ruling 120e. Timeout-flake rate this round (30% of the original 10-pull window, same named mechanism) is notably above the prior band and flagged as a data-quality caveat, not a new class.
+
+**Per Ruling 121's own routing: zero new defect classes measured ⇒ `WHOSE TURN: MANAGER — Phase 3 convergence candidate 1 re-measurement`.** The manager's own independent re-measurement window decides whether this stands as convergence candidate 1 under Ruling 105a's framework (extended to Phase 3 per Ruling 121's own closing line) — A does not declare a phase complete or a candidate round valid. Turn lock RELEASED (`HELD BY: free`) in this commit.
