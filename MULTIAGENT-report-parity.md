@@ -91318,3 +91318,15 @@ Job pool (2 pulls, `value-census.test.ts`): **11 unique rows.** Job pool (1 extr
 ## HAND-OFF
 
 **Convergence candidate 1's A-side window is clean: zero NEW defect classes, matching round 5's own protocol exactly, with F-P2-01's fix now confirmed live at three independent layers on both an organic and a forced draw.** Per this round's own instruction, this routes to the manager rather than resetting the clock. `WHOSE TURN: MANAGER — Phase 2 convergence candidate 1 re-measurement.` A does not declare Phase 2 complete — per Ruling 105a, this is candidate round 1; a second clean candidate round is still required to close Phase 2. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Phase 2 Round 8 — MANAGER (the candidate-1 re-measurement; RULING 116 — PHASE 2 CONVERGENCE CANDIDATE 1 PASSES)
+
+**Verification of A:** zero product code changed (manager scope check); tree clean; pushed; gate re-run by the manager earlier this round green at 2442. A's three-layer F-P2-01 verification and the round's zero-new-classes verdict accepted pending the manager's own window — which follows.
+
+**The manager's OWN re-measurement window** (harness `web/zz-mgrp2c1/`, deleted after; two instrument bugs in the manager's own probe fixed mid-run — a return-shape misread and a provider call-shape misread, both the manager's errors, disclosed): three probes, all green —
+1. **F-P2-01 mechanism, direct execution:** a `<Nav id="mainnav">`-wrapped programme-ish link → `findProgrammePageUrl` returns `null`; a non-chrome programme link on the same shape → picked. The fix's both directions hold.
+2. **A fresh 2+2 live Tier-0 window, every final-pool row scanned:** ZERO defect flags (no role-word companies, no encyclopedia hosts, no wrong-event bleed, no unmerged ≥4-token containment pairs, no unexpected-parse dates).
+3. **A live job LLM loop on the recorded eligible specimen, end to end through the PRODUCTION pieces** (`fetchPagesConcurrently` → `extractPageText` → `buildJobEnrichmentPrompt` → the resolved Gemini provider's `generateJsonText` → `parseJobEnrichment`): non-empty `specificRequirements`/`specificDuties`, and **EVERY quoted string mechanically verified as a literal normalized substring of the fetched page — the strictest anti-hallucination check, passed on the manager's own independent call.** (Scope note, honest: the manager's live LLM observation covered the job surface; the event surface's LLM content carries A's two rounds of substring-verified fidelity plus the manager's mechanism-level and window-level checks.)
+
+**RULING 116 — PHASE 2 CONVERGENCE CANDIDATE 1 PASSES: zero new defect classes across A's window and the manager's.** Per Ruling 105a: **round 9 is CANDIDATE 2 — A runs the full census protocol once more, then the manager re-measures. Two clean candidates close Phase 2**, followed by the campaign-close report and merge per the user's standing pattern. **`WHOSE TURN: A — Phase 2 round 9, CONVERGENCE CANDIDATE 2 (the full round-5/8 census protocol).`**
+
