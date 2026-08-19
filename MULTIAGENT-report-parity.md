@@ -270,21 +270,16 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent C round 7 + 2026-08-19 08:48 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       MANAGER — Phase 2 round 6 verification and rulings before
-                  C spawns. B's winning candidate (the one-line
-                  `page-text.ts:280` reuse of the shipped `withoutPageFurniture`)
-                  is corpus-verified on 4 live specimens with zero
-                  regressions and the full gate green — see §4 `### Phase 2
-                  Round 6 — Agent B` for the complete trace, corpus table,
-                  and the two rejected alternatives' evidence. If the manager
-                  agrees, route to `WHOSE TURN: C — Phase 2 round 7` to land
-                  the one-line change plus the one new constructed-fixture
-                  test.
+WHOSE TURN:       C — Phase 2 round 7. Land the one-line `page-text.ts:280`
+                  change (Ruling 114) plus the new constructed-fixture tests
+                  in `page-text.test.ts`, exactly as B designed — see §4
+                  `### Phase 2 Round 6 — Agent B` and `### Phase 2 Round 6 —
+                  MANAGER` for the complete trace, corpus table, and ruling.
 PHASE 2 MEASUREMENT PROFILE:
                   (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
                   baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
