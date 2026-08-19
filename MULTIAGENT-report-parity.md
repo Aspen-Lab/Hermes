@@ -270,11 +270,91 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 35 @ 2026-08-19 01:46 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 35 C IS COMPLETE @ 2026-08-19 ~02:0x UTC — PART 1
+                  (KEY NORMALIZATION) SHIPPED AND WIRED; PART 2
+                  (`dedupScoredEvents`) IMPLEMENTED AND FULLY UNIT-TESTED
+                  STANDALONE BUT ITS ONE PIPELINE CALL SITE IS WITHHELD — IT
+                  BREAKS THE LOCKED `opportunities/enrich.test.ts`, TRACED TO
+                  THE EXACT MECHANISM BY EXECUTION, NOT ASSUMED.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`4036ffd`). Grepped `Round 35 — Agent C` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  the Round 35 — Agent B entry (§2.0-§2.7) and Rulings
+                  96a-96d in full before touching any code.
+
+                  **PART 1 shipped verbatim**
+                  (`web/src/lib/events/dedup.ts:13-28,30-45`) — the ordinal +
+                  short-all-caps-acronym-paren strip inside `eventDedupKey`,
+                  name half only, year computation untouched; already live
+                  via the existing `dedupEvents` call at `pipeline.ts:184`.
+                  **PART 2 written, exported, and fully tested standalone**
+                  (`dedupScoredEvents`, `dedup.ts:66-90`, B's §2.3 verbatim)
+                  but its ONE call site inside `scoreEventPoolCandidates`
+                  is WITHHELD: wiring it exactly as commissioned collapses
+                  `opportunities/enrich.test.ts`'s locked "fetches only gate
+                  survivors..." test from 42 to 33 survivors, because that
+                  test's own synthetic fixture (`"Battery Event 0"`..`"41"`,
+                  no `startDate`) collapses indices 0-9 onto one key via a
+                  PRE-EXISTING token-length filter unrelated to this item —
+                  confirmed by `git stash` isolation (clean revert = pass,
+                  wiring restored = fail), and invisible to B's own
+                  blast-radius check because that test calls
+                  `scoreEventPoolCandidates` directly, bypassing
+                  `buildEventPool`/the first `dedupEvents` pass entirely.
+                  **Per the round's own STOP protocol, withheld rather than
+                  improvised — mirrors round 30 C item 1's identical
+                  precedent.** `POLICY — manager decides` filed in §4: fix
+                  `enrich.test.ts`'s fixture (lower risk, but a test-scope
+                  judgment call C will not make unilaterally) vs. hold Part 2
+                  for a future round's redesign. **A34-01's actual fix does
+                  NOT land in production until this is ruled on and wired.**
+
+                  **TESTS: NEW `events/dedup.test.ts`, 14 `it` blocks, all
+                  green** — the AABC must-merge pair (key equality +
+                  `dedupScoredEvents` picking the higher-`.score` row on the
+                  source-priority tie, both arrival orders); B's full §2.5
+                  must-NOT-merge corpus; the locked collide-control
+                  (`scoring.test.ts:352-364`) replayed via `dedupEvents` and
+                  still merging; the manager's added pool-ordering invariance
+                  check (also documents the `Map`'s first-seen-slot
+                  semantics for a tie-break winner); the `::`-empty-key
+                  passthrough case; and the expired-sibling structural case
+                  run against the REAL `scoreEvents`, confirming the expired
+                  row never reaches `dedupScoredEvents` at all.
+
+                  **GATE: 100 files / 2406 tests, 2406 passing, ZERO
+                  failures** (first full-capture run after withholding the
+                  wiring hit the NAMED `benchmark.test.ts` flake per Ruling
+                  96b, green on immediate full-capture re-run). `npx tsc
+                  --noEmit` clean. `npx eslint src` — removed the
+                  now-unused `dedupScoredEvents` import from `pipeline.ts`
+                  to avoid a fresh warning; final lint is exactly the one
+                  standing `quiz.tsx:46` error, matching baseline.
+
+                  **C CHANGED CODE, PART 1 LIVE / PART 2 WITHHELD PER STOP.**
+                  One commit (code + tests + §4 entry + this §1 update),
+                  pushed on landing. `git status --porcelain
+                  --untracked-files=all` showed exactly the three intended
+                  files — no throwaway scaffold. No credential anywhere; no
+                  live network calls (Ruling 75). No branch/worktree/PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+                  test deleted or weakened — `enrich.test.ts` is
+                  byte-unchanged.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 35 C
+                  verification and the Part-2 wiring `POLICY — manager
+                  decides` ruling, before A's round 35 GATE CANDIDATE
+                  turn`.** Turn lock RELEASED (`HELD BY: free`) in this
+                  commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~06:2x UTC — ROUND 35 B
                   VERIFIED INDEPENDENTLY, RULINGS 96a-96d APPENDED (§4).**
                   Gate re-run (full-capture): **2392/2392, zero failures.**
@@ -86846,3 +86926,27 @@ All executed directly against the candidate key (`zz-r35b/candidate-key.probe.ts
 
 **99 files / 2392 tests, 2392 passing, ZERO failures, zero failure lines in the retained log** (the benchmark flake did not fire this run).
 
+
+### Round 35 — Agent C — ITEM 1 (Ruling 96a, B's §2.1-§2.3 verbatim): **PART 1 (KEY NORMALIZATION) SHIPPED AND WIRED. PART 2 (`dedupScoredEvents`) IMPLEMENTED AND FULLY UNIT-TESTED STANDALONE, BUT ITS ONE PIPELINE CALL SITE IS WITHHELD — WIRING IT EXACTLY AS COMMISSIONED BREAKS A LOCKED TEST (`opportunities/enrich.test.ts`), TRACED TO THE EXACT MECHANISM BY EXECUTION. `POLICY — manager decides`, filed below, mirroring round 30 C item 1's own precedent for this exact STOP protocol.**
+
+Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED (`4036ffd`). Grepped `Round 35 — Agent C` first — zero prior entries existed, fresh start not a resume. Read the Round 35 — Agent B entry (§2.0-§2.7, `MULTIAGENT-report-parity.md:86682-86828`) and Rulings 96a-96d (`:86830-86847`) in full before touching any code.
+
+**PART 1 — SHIPPED, WIRED, VERBATIM.** `web/src/lib/events/dedup.ts:13-28` — `ORDINAL_RE`/`SHORT_ACRONYM_PAREN_RE` added byte-for-byte from B's §2.1, applied to the name text only inside `eventDedupKey` (`:30-45`) before the existing six-token slice/sort/join pipeline; the year computation (`item.startDate` -> `getUTCFullYear()`) is untouched, on its own line, never touched by either new regex. Doc comment carries B's own reasoning in substance: why narrow (the `(MoSES)` mixed-case exclusion, checked by a dedicated test, not just asserted) and why ordinals only ever touch the name half (a dedicated test proves a multi-edition series still discriminates on year even after the name halves collide). This part is fully live — it feeds the EXISTING, unchanged `dedupEvents` call at `pipeline.ts:184` inside `buildEventPool`, so it already improves the first dedup pass in production this round.
+
+**PART 2 — IMPLEMENTED, EXPORTED, FULLY TESTED, BUT NOT WIRED.** `dedupScoredEvents` (`dedup.ts:66-90`) is B's §2.3 printed function verbatim — `SOURCE_PRIORITY` first, then `.score` on a priority tie, `::`-empty-key passthrough, `[...byKey.values(), ...passthrough]` return shape, byte-identical control flow. Doc comment carries B's own reasoning for the AFTER-stage-2 positioning (every candidate already survived `scoreEvents`' own expiry + required-topic gate, so an expired sibling cannot structurally reach the merge — no hand-rolled expiry predicate written anywhere) and for the tie-break (mirrors `jobs/dedup.ts:108-122`'s shipped `beatsIncumbent`, round 22, Ruling A22-05).
+
+**THE COLLISION, FOUND BY RUNNING THE GATE EXACTLY AS INSTRUCTED, NOT BY GUESSING.** With the call `scored = dedupScoredEvents(scored);` wired into `scoreEventPoolCandidates` immediately after stage 2 (B's exact §2.2 insertion point), the full-capture gate turned up ONE failure outside `benchmark.test.ts`: `opportunities/enrich.test.ts` > "fetches only gate survivors, retains candidate 41, and re-scores enrichment" — `expect(enriched).toHaveLength(relevant.length)` expected 42, got 33. Isolated the cause by direct execution, not assumption: `git stash` with the wiring removed reproduces the original PASS (confirmed: 1 passed, not a pre-existing flake); restoring only the wiring line reproduces the FAIL, 42 -> 33, exactly nine rows short. Traced to the exact mechanism: that test's fixture (`enrich.test.ts:17-30`, `event(index)`) generates titles `"Battery Event 0"` through `"Battery Event 41"`, every one with `startDate: ""`. `eventDedupKey`'s own PRE-EXISTING token filter (`.filter((t) => t.length > 1)`, `dedup.ts`, unrelated to and unchanged by this item) drops any single-character token — so indices `0`-`9` (ten rows) all lose their index token and collapse onto the IDENTICAL key `"battery event::"` (empty year, since `startDate` is `""`). Nine of the ten are then merged away by the newly-wired second pass, leaving 33 where the test expects 42. This test calls `scoreEventPoolCandidates` directly (`enrich.test.ts:10,348-357`), bypassing `buildEventPool`/the outer `dedupEvents` first pass entirely — which is exactly why this collision was invisible to B's own blast-radius check: B's §2.6 states this file "tests `enrichEventCandidates` in isolation, never touches dedup" — TRUE of `enrichEventCandidates` itself, but this specific test also calls the higher-level `scoreEventPoolCandidates` wrapper, which is the exact function this item modifies. A real, executed gap in B's own search, not a hypothetical one.
+
+**Per this round's own STOP protocol (the C brief, verbatim: "If the design breaks any recorded control or locked test: STOP, file `POLICY — manager decides` in §4. Do not improvise.") — withheld the one wiring line rather than touching the test or the fixture, mirroring round 30 C item 1's identical precedent** (`CAREERS_OFFICE_HEAD_RE` implemented and gate-caught, withheld rather than redesigned, `MULTIAGENT-report-parity.md` round 30 C entry). The withheld call site is left in place as a comment (`pipeline.ts:118-134`) naming the exact restoration line, so wiring it back is a one-line, zero-ambiguity action once ruled on.
+
+**`POLICY — manager decides`, filed here:** A34-01's actual production fix does NOT land this round — Part 1 alone is B's own measured-insufficient half (§2.1's own admission: the year component still diverges pre-enrichment). Two paths, neither taken by C:
+1. **Fix `enrich.test.ts`'s fixture** so its 42 synthetic titles carry genuinely distinct keys (e.g. two-or-more-digit indices, or a non-empty differentiating `startDate` per row) — the collision is a synthetic-fixture artifact of a token-filter rule that PRE-DATES this item and was simply never exercised by this specific test before (it skips the first dedup pass entirely), not a sign the design itself is wrong. This looks like the lower-risk path but is a test-authoring judgment call about a file this item did not otherwise touch, which is why C is not making it unilaterally.
+2. **Hold Part 2 for a future round** to redesign around the collision (a narrower key-collision guard, or scoping the fixture concern differently) — mirrors round 30 C's own second listed option.
+
+**TESTS: NEW `web/src/lib/events/dedup.test.ts`, 100 files / 2406 tests total, 14 new `it` blocks, all passing** — mirrors `jobs/dedup.test.ts`'s structure (round 35 B §2.6's own asymmetry note). Carries, exactly as commissioned: the AABC must-merge pair (`eventDedupKey` equality under simulated post-enrichment, plus `dedupScoredEvents` merging it to ONE survivor with the higher-`.score` row winning the `SOURCE_PRIORITY` tie, both arrival orders); B's §2.5 must-NOT-merge corpus (multi-edition SolarPACES year-discrimination; Battery Show North America vs South; the IEX 2026 training course vs a constructed IEX 2026 conference; the EuChemS Congress vs EUCHEMSIL Meeting ordinal-sharing pair; two constructed titles sharing five of six tokens differing only in the trailing word; the EUCHEMSIL-vs-rsc.org twin documented in a comment as moot-by-construction per B's own finding, not re-tested here since it is an ingestion-stage question outside this file's dedup-key scope); the existing locked collide-control (`scoring.test.ts:352-364`'s "Machine Learning Conf 2026" pair) replayed directly against `dedupEvents` and confirmed still merging correctly; the manager's added pool-ordering invariance check (`dedupScoredEvents` keeps non-merged rows in their original relative order — constructed with a real merge in the middle of the list to also document, by assertion rather than trust, that the survivor lands in its key's FIRST-SEEN `Map` slot, not its own arrival index); the `::`-empty-key passthrough case (two blank-keyed rows never collide with each other); and the expired-sibling structural case, run against the REAL unmodified `scoreEvents` on a constructed same-key expired/live pair, confirming the expired row never reaches `dedupScoredEvents` at all (mirrors B's own §2.2 positioning proof, executed fresh rather than re-quoted).
+
+**THE GATE, FULL-CAPTURE, FIRST COMMAND EACH TIME:** cold run with the wiring still live surfaced the `enrich.test.ts` failure described above (99 passed / 1 failed, non-benchmark — the STOP trigger). After withholding the wiring: first full-capture run — **1 failed / 2405 passed, `benchmark.test.ts`'s live-search assertion by name** (`namedRowsExercised` `toBeGreaterThan(0)` read 0 on that pull) — the Ruling 96b NAMED flake, confirmed by immediate full-capture re-run: **100 files / 2406 tests, 2406 passing, ZERO failures.** `npx tsc --noEmit` clean. `npx eslint src` — removing the now-unused `dedupScoredEvents` import from `pipeline.ts` (left uncalled by the withhold) cleared a fresh `no-unused-vars` warning it would otherwise have introduced; final lint is exactly the one standing `quiz.tsx:46` error, zero warnings, matching baseline.
+
+**C CHANGED CODE, AS COMMISSIONED, PART 1 LIVE / PART 2 WITHHELD PER STOP.** One commit (code + tests + this log entry + §1 update, together), pushed on landing. `git status --porcelain --untracked-files=all` showed exactly the three intended files (`dedup.ts`, `pipeline.ts` modified; `dedup.test.ts` new) — no throwaway scaffold created or needed, this was pure `web/src/` edit-and-test work. No credential anywhere; no live network calls (Ruling 75 — every assertion above is offline execution against shipped functions plus constructed/recorded-title fixtures). No branch/worktree/PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. **No test was deleted or weakened** — `enrich.test.ts` is byte-unchanged; the protection came from withholding the colliding wiring, exactly as round 30 C item 1 did.
+
+**HAND-OFF: `WHOSE TURN: MANAGER — round 35 C verification and the Part-2 wiring POLICY ruling, before A's round 35 GATE CANDIDATE turn`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
