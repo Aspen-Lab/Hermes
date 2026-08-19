@@ -90641,3 +90641,10 @@ B's own read: design 2 is the better engineering call — it is exactly the "one
 
 **GATE:** `npx vitest run` — **100 files / 2438 tests, 2438 passing, ZERO failures** (baseline 2430 + 8 new). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. No deviation from B's design on the `cn.ts` fix itself (verbatim). No credential anywhere; no live network call. No branch/worktree/PR.
 
+
+### Phase 2 Round 4 — MANAGER (verification of C; RULING 112; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture): **100 files / 2438 tests, 2438 passing, ZERO failures** (2425 + 13 exact). All three commits scope-clean (each touches exactly its item's files + this state file); tree clean; pushed. C's mid-session benchmark red was the 96b named flake, classified correctly.
+
+**RULING 112 — Phase 2 round 4 C is VERIFIED AND ACCEPTED; both disclosed deviations are RATIFIED:** (1) the B1 conditional (`roleBulletsAreLlmVoice` — serif strips only when the LLM voice occupies the shared slot) is the CORRECT reading of Ruling 111b applied to a shared render slot B's entry had not fully specified: the Tier-0 posting-prose path keeps its V26-J02 serif, the Class-B Peer-voice path goes sans, and the test locks BOTH directions; (2) the StarButton unreachable-branch technique (full render for the reachable branch, direct `cn()` execution for the unreachable one, plus the 8-assertion negative verification against a temporarily-reverted pre-fix `cn.ts`) is sound instrumentation, disclosed and restored. **The hand-off stands: `WHOSE TURN: A — Phase 2 round 5, GATE-CANDIDATE-STYLE census (visual re-walk of the 11 LLM rows + eligible-specimen re-verification + the 109c rubric; convergence per Ruling 105a — zero new defect classes across A's window + the manager's re-measurement counts as Phase 2 convergence candidate round 1).**
+
