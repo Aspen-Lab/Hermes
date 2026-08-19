@@ -91580,3 +91580,117 @@ Job pool (2 pulls): **15 unique rows** across two runs — hosts include `career
 
 **RULING 118d — A/B/C RUN ON SONNET** (the user's standing cost decision, Ruling 80c, unchanged). The manager stays on the reasoning tier. **`WHOSE TURN: A — Phase 3 round 1 (the first Tier-2 census).`**
 
+
+
+---
+
+### Phase 3 Round 1 — Agent A, PART 1 (DUTY 1: the first Tier-2 EVENT census)
+
+**STATUS: PART 1 COMPLETE. MEASURES ONLY — NOTHING FIXED, NOTHING DIAGNOSED BEYOND THE GUARD-CLAUSE TRACE.** Run by `LAPTOP-3CL10CG5`. Lock claimed this round's own commit (`dfd9a4e`), §1 top block synced (was still pointing at round 9's manager hand-off; Ruling 118 at the end of §4 had already opened Phase 3 — same class of staleness round 9 A itself found and fixed, corrected the same way, in the same commit). Read §0 (incl. §0d), §1's first ~450 lines, and Ruling 118 (118a-118d) in full before touching anything. Grepped `Phase 3 Round 1` first — zero prior entries, fresh start not a resume.
+
+**GATE, COLD FIRST:** `cd web && npx vitest run` (full-capture, teed to log) — **100 files / 2446 tests, 2446 passing, ZERO failures**, matching the brief's own stated baseline exactly. `git status --porcelain --untracked-files=all` clean before starting.
+
+**METHOD.** Harness `web/zz-p3a1/` (own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix env load byte-for-byte, only the `@/` alias path adjusted for the nested directory), outside `web/src/`, will be deleted before this commit. `NODE_ENV=development` via `vi.stubEnv` (registry.test.ts's own pattern) so `canUseLocalServerProvider()` reaches the local-dev branch; `GOOGLE_VERTEX_PROJECT` checked as **boolean presence only** inside the test process (`Boolean(process.env.GOOGLE_VERTEX_PROJECT)` = `true` every pull) — `.env.local` was never `cat`-ed or read by this agent directly. Profile read via a **PRE-SCOPED snapshot file**, not the real `profile.json`: a field-scoped `node -e` one-liner (run once, before any harness code existed) extracted exactly `eventRequiredTopics`/`eventExploreTopics`/`jobRequiredTopics`/`jobExploreTopics`/`researchTopics`/`softTopics`/`careerStage`/`industryVsAcademia`/`locationPreferences`/`currentProject` plus **boolean-only** presence checks on every credential field (`tavilyApiKey`/`adzunaAppKey`/`usajobsApiKey`/`feedAiApiKey`/`geminiApiKey`) — no credential value was ever printed, logged, or written to any file. **Real `web/.local-data/profile.json` was never read whole by this agent at any point.** Finding disclosed as fact, not policy: `eventRequiredTopics`/`jobRequiredTopics` are ABSENT on this machine's profile snapshot (the user has never customized per-surface topics away from the Papers tab's `researchTopics`/`softTopics`), so per the app's own `topic-mirroring.ts` default-mirroring behaviour, the snapshot's `eventRequiredTopics`/`jobRequiredTopics`/`eventExploreTopics`/`jobExploreTopics` were set equal to `researchTopics`/`softTopics` — the same values the app itself would use, not a substitution.
+
+Each pull: fresh no-op `PoolCache` (`{ get: async () => null, set: async () => {} }`, never reused), `aiTier: 2`, `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }` (Tavily explicitly disabled regardless of the profile's own flag, per Ruling 118c). One bounded FOREGROUND `npx vitest run --config zz-p3a1/vitest.config.ts` invocation per pull (5 total), each appending its full final-pool rows (`name`, `url`, `startDate`, `source`, `type`) plus the pool's own `fetched`/`errors` diagnostics to a JSON file in this session's scratchpad (outside the repo). **Zero timeouts, zero flakes, zero retries across all 5 pulls** — each completed in 25-29 seconds.
+
+**A second harness (`web/zz-p3a1/trace-events.test.ts`) ran the 8 named guard predicates — `isEventIndexResult`, `isEventHubResult`, `isNewsArticleTitle`, `isPaperPageTitle`, `isEventArtefactTitle`, `isEarningsCallPage`, `isJobListingContentTitle`, plus an `isDeniedUrl`-equivalent reconstructed from the exported `DENY_HOSTS`/`PAPER_PAGE_HOSTS`/`DENY_PATH_RE`/`COMMERCE_PATH_RE` (`isDeniedUrl` itself is not exported) — by DIRECT EXECUTION against every unique recorded row's rendered `name`+`url`.** Disclosed caveat: the shipped chain runs on the RAW provider title, before `eventNameFrom`'s name-selection; this harness runs against the FINAL rendered name as the best available proxy (the pool-pull return value carries only the selected name, not the pre-selection title). For the great majority of rows below the two are the same string (no chrome-stripping visibly happened — the rendered name reads as a complete, unsplit sentence/title); this is flagged explicitly wherever a row's own shape (a bare hostname, a tag-derived fragment) makes the distinction matter.
+
+**POOL COMPOSITION, ALL 5 PULLS.** `fetched` map, every pull: `ccfddl: 80, confstech: 28, researchseminars: 39, eventweb: 31-39`. **100% of final-pool rows across all 5 pulls came from `eventweb`, the gemini-backed source — zero rows from ccfddl/confstech/researchseminars survived scoring** (expected: this profile's topics are chemistry/battery-focused, and the code's own comment names ccfddl/confs.tech as CS-heavy). Pool sizes: 9, 10, 9, 10, 10 (48 rows total, 31 unique URLs after cross-pull dedup by hand). Zero `errors` entries any pull.
+
+---
+
+## DUTY 1 FINDINGS, RANKED BY WHAT A READER LOSES, WORST FIRST
+
+**CORRECT EVENTS (real things a reader could attend) — 17 of 31 unique rows, not itemised individually here; the ranked findings below are what matters.** Representative confirmed-real witnesses, several independently verified live (WebFetch) this round: `pyro.byu.edu/moses` (MoSES, the file's own long-standing must-keep), `thebatteryshow.com` (both a real Oct 12 2026 date and its conference-overview page), `volta.foundation/battery-career-fair/`, `battery-business-forum.com` (a real, legitimately "Forum"-named conference, 6-7 Apr 2027 Frankfurt — confirmed live, contrast case for F3 below), `battery-power.eu/en/` (a real conference series homepage, 7-9 Apr 2027 Aachen — confirmed live), `web.cvent.com/.../regProcessStep1...` (STEER workshop registration page), `www.garysguide.com/events/aezc8xx/Battery-Innovation-Summit` (confirmed live: a real SF tech-event aggregator listing with a real Apr 22-24 2026 date — **not** the Ruling 79a "Battery Saloon" host, a different summit).
+
+**EXPLAINED (named costs / already-ruled, not findings):**
+- **`events.ornl.gov` bare-hostname fallback — 4 of 5 pulls** (`https://events.ornl.gov/msrworkshop2024/`). Ruling 84b(1): the honest-host fallback working exactly as designed, a recorded named cost, not a finding.
+- **Wikipedia — CONFIRMED FIXED, 0 of 5 pulls.** Grepped every pull's rows for `wikipedia.org`: zero hits. Commit `2fde9f4`'s `DENY_HOSTS` entry holds live. Not re-filed, per instruction.
+
+---
+
+### F1. Repository/bibliographic-record pages about a workshop that ended 27 months ago, admitted as if it were the event itself — 4 of 5 pulls, the round's highest-frequency finding
+
+- `https://www.osti.gov/biblio/2439124`, rendered name "Inaugural Molten Salt Technologies Workshop Powering the Future (Conference)" — pulls 0, 1, 2 (3 of 5).
+- `https://inl.elsevierpure.com/en/publications/inaugural-molten-salt-technologies-workshop-powering-the-future/`, rendered name "Inaugural Molten Salt Technologies Workshop Powering the Future" — pull 4 (1 of 5).
+
+Both rows are about the exact same real-world workshop; between them it occupies 4 of 5 pulls' final pools and the workshop's own page (if one survives at all) never once surfaced. **Both verified live (WebFetch) this round:** `osti.gov/biblio/2439124` is confirmed "a bibliographic/technical-report record hosted on OSTI.GOV (DOE's scientific information repository)... the workshop occurred on 05/21/2024 - 05/22/2024" — 27 months before this census. `inl.elsevierpure.com`'s page is confirmed "a bibliographic record documenting a conference presentation... Research output: Contribution to conference › Presentation... offers no registration details." A reader who clicks through either gets a dry citation record for a conference that ended over two years ago — zero registration path, zero forward relevance.
+
+**Guard-clause trace, both rows, by direct execution:** `isDeniedUrl` → **false** (neither `osti.gov` nor `inl.elsevierpure.com` is on `DENY_HOSTS` or `PAPER_PAGE_HOSTS`; the current `PAPER_PAGE_HOSTS` list is `programmaster.org, hal.science, hal.archives-ouvertes.fr, ui.adsabs.harvard.edu, ouci.dntb.gov.ua, colab.ws, scilit.com` — none matches). `isPaperPageTitle` → **false** (`PAPER_TITLE_RE` requires `about this abstract` / `abstract:` / `archive ouverte` vocabulary; both titles are just the workshop's own plain name, none of that vocabulary present). **Both rows are exactly the CLASS `PAPER_PAGE_HOSTS`/`isPaperPageTitle` already exists to catch — a repository page carrying its parent proceeding's own event vocabulary — on two hosts/shapes the closed list does not yet name.** Compounding: both also carry a plainly-past date (2024-05-21/22) that never reaches the pipeline's own bare-year expiry check (`years.every(y => y < currentYear)`) — `startDate` rendered empty on all 4 occurrences, meaning whatever snippet text gemini returned for these rows apparently carried no recognisable `20\d{2}` token, so the expiry arm never got a chance to fire. This finding sits at the intersection of a kind-guard gap and a silent expiry-detection miss; only the kind-guard half is in this duty's mandate, the expiry half is named for completeness.
+
+### F2. A national-lab's own research-highlight BLOG, admitted as an event — 3 of 5 pulls (host-level), the manager's own witness CONFIRMED AND EXTENDED
+
+- `https://foundry.lbl.gov/2025/07/11/slowing-down-to-speed-up/`, "Slowing Down to Speed Up: Unveiling the Secrets of Topochemical Polymerization" — pulls 0, 1, 2.
+- `https://foundry.lbl.gov/2025/04/27/unlocking-topochemical-polymerization-in-single-crystals-polycrystals-and-solution-aggregates/`, "Unlocking topochemical polymerization in single crystals, polycrystals, and solution aggregates" — pulls 0, 2.
+
+**CONFIRMED, with URLs, per Ruling 118's own request — and the second row's characterisation is CORRECTED, not just confirmed.** The manager's spot-check called the second row "a PAPER TITLE." Verified live (WebFetch) this round: it is **not** a paper's own page — it is "a news/blog post from the Molecular Foundry, a scientific research facility at Lawrence Berkeley National Laboratory. The page summarises research findings published in external journals (Nature Communications and JACS) rather than being the official journal publication itself." **Both foundry.lbl.gov rows are the same kind of page** (the Molecular Foundry's own research-highlights blog), one merely using a more colloquial headline and the other reusing the underlying paper's own technical title as its blog headline — not two different defect classes, one witness of one class at two URLs.
+
+**Guard trace, both rows:** all 8 named guards return **false** (confirmed by the automated trace). `foundry.lbl.gov` is on no host list; neither title matches any of the 8 guards' closed vocabularies (not news-headline-shaped, not paper-abstract-shaped, not artefact/earnings/job-listing/index/hub-shaped). **This is the event side's mirror of a gap the job side already closed**: Ruling 118 itself names `isDateStructuredResearchPath` (job-side, `jobweb.ts`) as the guard that already refuses this exact host class on the job surface. The event surface has no equivalent — an asymmetry between the two surfaces on the identical host, not a new host-list gap invented this round.
+
+### F3. An internet discussion-forum WEBSITE, admitted as an event — 2 of 5 pulls
+
+- `https://www.batteries-forum.com/t/lithium` (a discussion-thread URL) — pull 0.
+- `https://www.batteries-forum.com/` (the site root) — pull 1.
+
+**Verified live (WebFetch):** "a standing online discussion forum/community focused on battery topics... 'A 100% free forum powered with love and lightning bolt'... an ongoing message board rather than a scheduled conference event." Guard trace: all 8 named guards **false**; critically, `looksLikeEvent` on the name ALONE returns **true**, because `EVENT_SIGNAL_RE` lists the bare word `forum` as a positive event-kind signal, and nothing downstream distinguishes a message board's own brand name from an event actually named "___ Forum." **Contrast case, so this is not read as "the word Forum is wrong":** `battery-business-forum.com` and `battery-power.eu`'s conference series were BOTH independently verified live this round as real, correctly-admitted "Forum"/conference-series pages with real dates. The gap is specifically that nothing in the chain can tell a community message board from an event, not that "Forum" itself is unsafe vocabulary.
+
+### F4. A standing organisation's own homepage, admitted as an event — 1 of 5 pulls
+
+- `https://itmsf.org/english.htm`, "International Thorium Molten-Salt Forum" — pull 2.
+
+**Verified live (WebFetch):** "the homepage of a standing organization... registered to the local government of Japan in October 2008... approximately 50 active members across 13 countries... does not announce an upcoming dated event." Guard trace: all 8 false; `looksLikeEvent` on the name alone → true (again via "Forum," and the page's own mentions of past seminars). Second witness of F3's same underlying mechanism (nothing distinguishes a standing org/consortium from a scheduled event), different host — recorded as a second witness, not a fresh class.
+
+### F5. A generic site homepage, admitted as an event — 1 of 5 pulls
+
+- `https://moltensalt.org/`, rendered name **"Welcome to the Molten Salt Energy Technologies Web Site"** — pull 2.
+
+The rendered name states, in plain English, that it is a homepage. Guard trace: all 8 named guards false — none of the 8 has any concept of a "Welcome to X Web Site" sentence as homepage-shaped (`GENERIC_PAGE_TITLE_RE`'s vocabulary is short calendar/index words, not a full sentence). `looksLikeEvent` on the NAME alone → **false** too, meaning the row must have cleared the original title+snippet gate on OTHER text the snippet carried, while the selected name segment itself is pure site-chrome no guard catches.
+
+### F6. A blog tag/archive index page, admitted as an event — 1 of 5 pulls
+
+- `https://www.electrochem.org/ecsnews/tag/molten-salts`, rendered name "molten salts Archives" — pull 1.
+
+ECS's own news-tag archive page (`/ecsnews/tag/molten-salts`), listing many posts, not one event — "Archives" is literally in the rendered name. Guard trace: `isEventIndexResult` → **false**. `EVENT_INDEX_TITLE_RE`'s archive/calendar alternatives are anchored to an EVENT-kind noun (`events?|conferences?|seminars?`) immediately adjacent to the index word; "molten salts Archives" pairs "Archives" with a TOPIC word instead, so the regex's anchored alternatives never reach it. A narrow, precise near-miss on an existing, correctly-aimed guard rather than an absent one.
+
+### F7. A seminar that happened 41 months ago, admitted dateless — 1 of 5 pulls
+
+- `https://engineering.purdue.edu/NE/academics/seminars/2023/3-22-2023%20TBA`, "Molten Salts: Progress and Potential" — pull 0.
+
+**Verified live (WebFetch):** "a seminar announcement... featuring Dr. Kevin Robb discussing 'Molten Salts: Progress and Potential' on March 22, 2023... this describes a past seminar that has already occurred." The event's own URL states the date. **Not a kind-guard gap** — none of the 8 named guards is a date check; this sits in the separate bare-year expiry clause, which only fires on a `20\d{2}` token actually present in the title+snippet text the pipeline receives. Whatever snippet gemini returned here apparently carried no such token (the URL's own "2023" is never read by this check), so the row survived as current. Same mechanism likely explains part of F1's un-caught staleness.
+
+### F8. Real events, name replaced by an "applications open" announcement headline (one is also a duplicate row) — 2 of 5 pulls, lower severity
+
+- `https://bepassociation.eu/battery-young-researcher-award-applications-open-today/`, "Battery Young Researcher Award: Applications Open Today!" — pull 3.
+- `https://spec.ucsd.edu/node/147`, "2026 SPEC Battery Boot Camp APP is NOW OPEN" — pull 3. **The same underlying bootcamp already has a clean row via `smelab.org/spec-battery-bootcamp` ("SPEC Battery Bootcamp") in pulls 2 AND 3** — so pull 3's final pool carries both the clean name and this announcement-headline name for the identical real bootcamp as two separate rows.
+
+Both underlying things are real and the pages are genuinely about them (lower reader harm than F1-F7): the defect is narrowly that the rendered NAME is an announcement sentence rather than the award/bootcamp's own name. Not traced against a specific guard clause — none of the 8 named guards targets "announcement of availability" phrasing, and this is a name-selection quality question rather than a wrong-kind admission.
+
+### F9. A real, correctly-linked event, rendered name replaced by a mismatched string carrying a spurious "TEST" suffix — 1 of 5 pulls, single witness, mechanism not fully traced
+
+- `https://web.cvent.com/event/db0a52d9-68fa-4c07-9bee-f3903554b231/summary`, rendered name **"Investor Showcase for Battery Storage TEST"** — pull 4.
+
+**Verified live (WebFetch): the real, current page title is "Investor Day: Energy Storage Startup Showcase," with a real June 29 2026 date, a real venue (Verizon Executive Education Center) and active registration links. The word "TEST" does not appear anywhere on the live page.** This is a genuine wrong-VALUE finding, not a wrong-kind one — the event is real and correctly linked, but the rendered name is a materially different string with a fabricated-looking suffix that could make a reader distrust or skip a real opportunity. **Honestly flagged as incompletely traced:** this harness captures only the pipeline's final selected name, not the raw provider title `eventNameFrom` received before selection, so whether "TEST" came from gemini's own indexed/cached title (most likely — organisers commonly set a draft title on Cvent before finalising a page, and a search index can retain the stale one) or from some other step is not established this round. `eventNameFrom` itself never fabricates text (it only selects/trims existing substrings), so the most likely source is the raw provider title itself, not a pipeline defect — but this is inference, not verification, and is stated as such.
+
+---
+
+## RULING 118's SIX WITNESSES — CONFIRMED, REFUTED, OR EXTENDED, WITH URLS
+
+1. **Wikipedia article** — CONFIRMED FIXED, 0 of 5 pulls. Not re-filed.
+2. **`foundry.lbl.gov` blog post "Slowing Down to Speed Up..."** — CONFIRMED, 3 of 5 pulls, URL above (F2).
+3. **"Unlocking topochemical polymerization..." called a PAPER TITLE** — **REFUTED AND EXTENDED**: verified live, it is a second `foundry.lbl.gov` lab BLOG post (same kind as #2, not a paper's own page), 2 of 5 pulls, URL above (F2). Folded into F2 as one class, two witnesses, not a separate finding.
+4. **LANXESS press release "LANXESS to Showcase..."** — **NOT OBSERVED THIS ROUND, 0 of 5 pulls.** Stated as absence, not as "does not occur" — Tier 2's LLM-written queries vary pull to pull (unlike Tier 0's fixed templates), so a five-pull window not drawing a specific specimen the manager saw once is expected variance, not evidence the class is gone.
+5. **`events.inl.int` undecoded `&mdash;` entity** — CONFIRMED, 1 of 5 pulls, full seam trace below.
+6. **`events.ornl.gov` honest-host fallback** — CONFIRMED, 4 of 5 pulls, EXPLAINED per Ruling 84b(1) (see above).
+
+### THE `&mdash;` SEAM, TRACED TO ROOT CAUSE (Ruling 118's own commissioned question)
+
+- `https://www.events.inl.int/battery-science-innovation-forum2026`, rendered name **"Battery Science & Innovation Forum &mdash; EVENTS INL"** — pull 3.
+
+Confirmed mechanically: `mdash` **is** in `web/src/lib/text/clean.ts`'s `HTML_ENTITIES` table and would decode correctly if reached. But `grep -rn "cleanDisplayText" web/src/lib/events web/src/lib/jobs web/src/lib/opportunities` returns exactly **one** hit in the entire events/jobs/opportunities tree — `event-roster.ts` (LLM-enriched roster names, a different field entirely). **`cleanDisplayText`/`decodeHtmlEntities` is never called anywhere in `eventweb.ts` or `mapper.ts`.** This is not "path A cleans, path B doesn't" — no path in the event NAME pipeline decodes entities, ever. The entity survives to the card because nothing anywhere on that path was ever wired to remove it.
+
+**The second symptom, traced separately and mechanically:** `titleSegments`' own separator regex is `/\s+[-|·–—]\s+/` — real Unicode dash/pipe/middot characters only. The literal 7-character text `&mdash;` matches none of them (it is a letter-and-punctuation sequence, not a dash character), so the segmenter never recognises it as a chrome boundary, and the WHOLE string — including the trailing `EVENTS INL`, exactly the kind of site-brand fragment `isChromeSegment`/host-brand checks exist to strip — survives glued to the real name as one unsplit segment. **One root cause (a raw HTML entity from the source, decoded nowhere on this path), two visible symptoms: the literal entity text on the card, and undropped site-chrome the same un-decoded character silently prevented from ever being recognised as a separator.**
+
+---
+
+**PART 1 (DUTY 1, the event census) is COMPLETE.** Per the standing "deleted before every commit" rule (not just the round's final one), harness `web/zz-p3a1/pull-events.test.ts` and `web/zz-p3a1/trace-events.test.ts` (+ their shared `vitest.config.ts`) are deleted before THIS commit; PART 2 rebuilds its own job-surface harness from scratch in the same directory rather than reusing anything left standing. `git status --porcelain --untracked-files=all` confirmed clean before this commit. Continuing to PART 2 (DUTY 2, the job census) in the same session.
