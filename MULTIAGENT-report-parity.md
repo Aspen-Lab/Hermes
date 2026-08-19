@@ -270,22 +270,40 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent B round 2 @ 2026-08-19 19:04 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       MANAGER — Phase 3 round 1 verification and rulings before
-                  B spawns. A's Tier-2 census (both surfaces, 5 pulls each)
-                  is complete: 15 ranked findings plus one seam question,
-                  Ruling 118's six witnesses confirmed/refuted/extended with
-                  URLs, gemini-carries-Tavily measured (TRUE for events/jobs,
-                  FALSE by design for papers under the real request shape),
-                  and one new gate-level fact (a pre-existing type error in
-                  the wikipedia-fix's own test file, behaviour unaffected).
-                  See §4 `### Phase 3 Round 1 — Agent A, PART 3` for the full
-                  ranked list, gate numbers and hand-off. A does not rule on
-                  its own findings or route to B — that is the manager's job.
+WHOSE TURN:       B — Phase 3 round 2 (Ruling 119f). **Sync note:** this
+                  line still read "MANAGER — Phase 3 round 1 verification
+                  and rulings before B spawns" even though that
+                  verification is DONE — Rulings 119a-119f are written into
+                  §4 (`### Phase 3 Round 1 — MANAGER`) and explicitly route
+                  `WHOSE TURN: B — Phase 3 round 2`. Same stale-top-block
+                  class round 1 A and round 9 A each found and fixed;
+                  synced here in the lock-claim commit, per that precedent.
+                  Deliverables in order per Rulings 119c/119d/119f: (1) the
+                  family-(a) ENUMERATION of the producing path, both
+                  surfaces, incl. a MEASURED schema.org @type discriminator
+                  check (round 30 B's Tier-0 non-discriminating result does
+                  NOT transfer to Tier 2 and must be re-measured); (2) J1
+                  (`company: "name"`, 5/5 job pulls, highest frequency
+                  either surface) closed by execution against the real
+                  pipeline — A's `resolveEmployerIdentity`/
+                  `directDeclarations` trace is a LEAD, not a conclusion;
+                  (3) designs for family (b) bare `forum` over-signal,
+                  family (c) rendered-value quality incl. the
+                  `cleanDisplayText` missing-seam, family (d) staleness —
+                  structural before per-instance; (4) dispositions for
+                  anything NOT fixed, with Ruling 119e's full machinery
+                  (measurement + tally duty + protective test + reopen
+                  threshold). Also: Ruling 119b's check-me clause (does
+                  papers' web-discovery path still run under Tier 2, and
+                  through which provider — by execution). See §4 `### Phase
+                  3 Round 1 — MANAGER` for the rulings in full and `###
+                  Phase 3 Round 1 — Agent A` (3 parts) for the census this
+                  turn works from.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
