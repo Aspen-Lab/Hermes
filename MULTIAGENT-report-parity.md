@@ -275,6 +275,31 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER INDEPENDENT RE-MEASUREMENT COMPLETE @ 2026-08-19
+                  ~10:3x UTC — THE GATE DOES NOT CLOSE. RULINGS 102a-102d
+                  APPENDED (§4), ROUND 36 CLOSED.** The manager ran its OWN
+                  window (5+5 live pulls, own harness, own scanner, own
+                  render spot-checks, own visual derivation — 120 commits,
+                  zero rendering files; gate 2418/2418). **The manager's
+                  window found ONE unexplained value difference — M36-01:**
+                  `scanx.trade`'s "Ion Exchange sets 62nd AGM…" stock-news
+                  page ADMITTED and rendered as an event card — the
+                  Ruling-93-named PR-headline verb-sibling residual
+                  ORGANICALLY WITNESSED (verb `sets`; the ticker-path guard
+                  also misses the `/stock-market-news/` shape). **A's
+                  double-zero was honest for A's own windows (pool variance;
+                  the host appears in neither of A's tables); no strike; the
+                  re-measurement protocol did exactly its job.** One
+                  OBSERVATION filed, not a gate item (102c): a 2023-dated
+                  job-posting URL renders correct values; job-posting AGE has
+                  no recorded standard — a product-scope question for the
+                  user. **`WHOSE TURN: B — round 37`, ONE item: M36-01**
+                  (extend the PR-headline defence to the witnessed verb
+                  `sets` + measure a bounded corporate-meeting/AGM signal;
+                  land-what-is-confirmed binds). Phase 1 is ONE bounded item
+                  from closing.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 36 A IS COMPLETE @ 2026-08-19 ~04:0x UTC — THE
                   GATE-CANDIDATE CENSUS REACHES DOUBLE-ZERO. ZERO UNEXPLAINED
                   VALUE DIFFERENCES, ZERO UNEXPLAINED VISUAL DIFFERENCES.
@@ -88279,3 +88304,16 @@ Committed and pushed as its own item. Part 3 (visual census, standing tallies, g
 ---
 
 **ROUND 36 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
+
+### Round 36 — MANAGER (THE INDEPENDENT RE-MEASUREMENT; RULINGS 102a-102d — THE GATE DOES NOT CLOSE: ONE UNEXPLAINED DIFFERENCE IN THE MANAGER'S OWN WINDOW, A NAMED RESIDUAL'S REOPEN TRIGGER FIRING ORGANICALLY)
+
+**The protocol:** round 36 A measured double-zero and handed off per the standing rule. The manager ran its OWN full re-measurement — own harness (`web/zz-mgr36/`, own vitest config mirroring the GOOGLE_ env load, deleted after use, tree clean), own live window (5 job + 5 event pulls, `searchProvider: gemini`, fresh no-op cache per pull, profile fields extracted FIELD-SCOPED per Ruling 95), own defect-class scanner over every final-pool row, own render spot-checks (`JobReport`/`EventReport` on live rows via `renderToStaticMarkup` — no `undefined`/`NaN` leaks, both non-trivial), own visual structural argument (`17de80e..HEAD`, 120 commits, ZERO rendering-layer files — re-derived, not copied), own gate run (**100 files / 2418 tests, 2418 passing, zero failures**).
+
+**RULING 102a — what the manager's window CONFIRMS:** the job surface is CLEAN across all five pulls (25 rows: every company either a real correct organisation — Idaho National Laboratory, Tesla, Savannah River National Laboratory, Battelle Energy Alliance, European Nuclear Education Network, EnergyX — or honest silence on exactly the recorded named-cost rows); zero mechanical flags across all 64 rows (no malformed dates, no wrong-employer shapes, no encyclopedia/blog rows, zero duplicate pairs in any pull — the round-35/36 dedup fixes hold on fresh traffic); the event pools carry only recorded named-cost rows (EUCHEMSIL dateless 83a, honest-host 84b(1)) and corpus-settled admits; timeout flake 1/10 (the 83b band). A's A35-01/A34-01 verifications stand un-contradicted.
+
+**RULING 102b — THE GATE DOES NOT CLOSE. One unexplained value difference in the manager's own window, filed as M36-01:** `"Ion Exchange sets 62nd AGM for September 11, 2026"` @ `https://scanx.trade/stock-market-news/companies/ion-exchange-sets-62nd-agm-september-11-2026/48600650` — **ADMITTED to the final pool (pull 0, 1 of 5) and rendered as an event card with a real date.** This is a stock-news site's announcement of a CORPORATE SHAREHOLDERS' AGM — not a scholarly event — and it is precisely the Ruling-93-named "PR-headline unwitnessed verb sibling" residual: round 31 B's `PR_ANNOUNCEMENT_HEADLINE_RE` deliberately shipped with only `plans/schedules` ("the fuller PR-verb family is UNWITNESSED and NOT added blind... named as a residual for a future round if any of those verbs is ever organically witnessed in this shape"). **The verb `sets` is now organically witnessed in exactly this shape — the reopen trigger has fired.** The ticker-path guard also misses it (`/stock-market-news/companies/...`, no `/news/<TICKER>/` segment). A's double-zero was HONEST for A's own two windows (this host appears in neither of A's artefact tables — pool variance drew it for the manager and not for A); no strike anywhere; **the independent re-measurement protocol did exactly the job the user's strict gate created it to do.** **Route: `WHOSE TURN: B — round 37`, ONE item (M36-01): extend the PR-headline/news-shape defence to the witnessed evidence** — the verb `sets` (and B measures whether the witnessed shape supports a bounded corporate-meeting signal, e.g. the AGM token itself; the must-keep corpus and the land-what-is-confirmed discipline bind as always).
+
+**RULING 102c — one OBSERVATION recorded, deliberately NOT a gate item:** `database.enen.eu/index.php/2023/01/24/phd-opportunity-in-molten-salt-reactor/` renders a correct title and correct organisation, but its URL carries a 2023 date segment — the posting may be years old. NO recorded standard governs job-posting AGE anywhere in 36 rounds (event staleness has rules; job staleness has none), every rendered VALUE on the row is correct, and the page's liveness cannot be judged from the URL alone. Filed as a NAMED BACKLOG QUESTION for the user (should the job surface carry a posting-age mechanism at all? — a product-scope decision, not a parity defect), disclosed in the user report, not counted against the gate.
+
+**RULING 102d — round 36 CLOSES with the manager's finding routed.** The score at close: A's two windows double-zero + the manager's window 1 value / 0 visual. Phase 1 does not close this round; it is one bounded design item away, and the item's design surface already exists (round 31 B's own residual note is the spec's first line).
+
