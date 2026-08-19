@@ -270,11 +270,39 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 36 + 2026-08-19T09:05Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 36 C IS COMPLETE @ 2026-08-19 ~09:1x UTC —
+                  `mergeContainedEventNames` SHIPPED, WIRED, TESTED, VERBATIM
+                  PER RULING 100.** Run by `LAPTOP-3CL10CG5`. Gate
+                  (full-capture, first command): **100 files / 2418 tests,
+                  2418 passing, ZERO failures** (baseline 2406 + 12 new
+                  tests). `npx tsc --noEmit` clean. `npx eslint src` —
+                  exactly the one standing `quiz.tsx:46` error.
+                  **ONE DISCLOSED DEVIATION**: §3.2's printed code calls an
+                  `eventYearOf` helper that B's prose claimed already
+                  existed but does not (confirmed by grep) — added as a
+                  new, private, additive-only helper duplicating
+                  `eventDedupKey`'s own inline year expression, exactly
+                  matching gate 3's own "byte-identical rule to
+                  `eventDedupKey`'s own" spec; `eventDedupKey` itself
+                  untouched. **ONE HARNESS BUG CAUGHT AND FIXED**: three of
+                  the seven-item floor's pairs used round 35's original
+                  May/June/July 2026 dates, which are already past this
+                  test's own NOW (2026-08-19) and were silently dropped by
+                  `scoreEvents`' own unrelated expiry gate — moved forward
+                  to September 2026, same year, confirmed 11/11 survive.
+                  **`WHOSE TURN: A — round 36, GATE CANDIDATE ROUND** (value
+                  + visual, searchProvider: gemini, artefact duty, pool-count
+                  re-measure, watch list incl. the exact-prefix residual,
+                  A35-01 verification, benchmark-flake classification per
+                  Ruling 96b). If A measures double-zero: `WHOSE TURN:
+                  MANAGER — independent re-measurement before any close`.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~08:2x UTC — ROUND 36 B
                   VERIFIED INDEPENDENTLY, RULING 100 APPENDED (§4).** Gate
                   re-run (full-capture): **2406/2406, zero failures.**
@@ -87782,4 +87810,29 @@ The FIRST version of `mergeContainedEventNames` tracked a dropped-**id** `Set`, 
 - **The disclosed residual is ACCEPTED AND NAMED for the watch list: an exact-prefix different-event pair (a short title that is a genuine prefix of a longer, different event's title, same year bucket) — unwitnessed, not proven impossible; reopen on organic witness with URLs captured.**
 - C implements: the function + wiring verbatim, tests in `events/dedup.test.ts` (pure additions): the A35-01 pair merges (higher-priority/score survivor asserted), the AABC pair still merges via pass 2 (regression), the seven-row floor replayed against the FULL three-pass pipeline path, the four boundary adversarials, the ordering-invariance property for non-merged rows, and the winner-chain case (a later higher-priority row winning the merged slot).
 - **If A measures double-zero next, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet twenty-first data point: the impossibility-proof-first discipline (kill the cheaper options by construction before building the new mechanism) is design work of the first rank.
+
+### Round 36 — Agent C — ITEM 1 (Ruling 100: `mergeContainedEventNames`, verbatim from B's §3.2): **SHIPPED, WIRED, TESTED. GATE: 100 files / 2418 tests, 2418 passing, ZERO failures.**
+
+Claimed the turn lock (`5babee0`) after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 36 — Agent C` first — zero prior entries existed, fresh start not a resume. Read the Round 36 — Agent B entry (§3.0-§3.7) and Ruling 100 in full before touching any code.
+
+**SHIPPED, additive only, `dedup.ts`**: `normalizedEventText`, `MIN_CONTAINED_TOKENS = 4`, `isContainedDuplicate` (three gates: same year bucket, contiguous word-boundary-safe padded-substring containment, ≥4 distinct tokens on the contained side), `mergeContainedEventNames` (finalized-index winner-chain loop, `SOURCE_PRIORITY` then `.score` promotion) — all byte-identical to §3.2's printed code. `eventDedupKey`/`dedupEvents`/`dedupScoredEvents` untouched, confirmed by inspection and by the fact that not one existing `it` block needed editing. Doc comments carry the §3.1 impossibility construction, the four-token floor/ceiling argument, and the §3.3 winner-chain bug with an explicit "do not reintroduce the dropped-id version" warning.
+
+**ONE DEVIATION FROM §3.2's PRINTED CODE, DISCLOSED HONESTLY**: the printed `isContainedDuplicate` calls `eventYearOf(a)`/`eventYearOf(b)`, and B's prose claims this "reuse[s] the module's own existing helpers" — but no `eventYearOf` function exists anywhere in the codebase (confirmed by a fresh grep, zero hits, before writing anything). `eventDedupKey` computes the year INLINE (`item.startDate ? new Date(item.startDate).getUTCFullYear() : ""`), never as a named export. This is not a design change to rule on: §3.2's own gate 3 already fully specifies the required behaviour ("SAME YEAR BUCKET... byte-identical rule to `eventDedupKey`'s own"), so the only implementation choice was mechanical — added `eventYearOf` as a NEW, private, additive-only helper duplicating that exact inline expression, called from `isContainedDuplicate` exactly as §3.2 prints it. `eventDedupKey` itself is not touched, so the "byte-identical" claim about the three existing functions still holds. Flagged here rather than silently patched, per the loop's own disclosure tradition.
+
+**WIRED**, `pipeline.ts:126-133`: `scored = mergeContainedEventNames(scored);` one line after the existing `dedupScoredEvents` call, before `return scored;`, exactly as commissioned.
+
+**TESTS, `events/dedup.test.ts`, 12 NEW `it` blocks, pure additions (14 -> 26), all green:**
+- **A35-01 pair merges** (real recorded djk/quintus titles, quoted verbatim from B's §3.0): a premise check that the exact key does NOT match them, then `mergeContainedEventNames` collapses them to ONE survivor (the higher-score row, `quintustechnologies.com`), both arrival orders.
+- **AABC pair regression, two angles**: (a) `mergeContainedEventNames` ALONE does NOT merge the AABC pair — post-normalization their texts are byte-identical, correctly excluded by the `textA !== textB` guard, proving the new pass isn't silently doing this pair's work a second time; (b) the FULL pass-2-then-pass-3 chain still merges it to exactly one survivor, confirming the new pass is a true no-op here.
+- **Round 35's seven-item floor, replayed through the FULL `dedupEvents -> scoreEvents -> dedupScoredEvents -> mergeContainedEventNames` chain**: all five must-NOT-merge pairs (Battery Show N/S, IEX course/conference, EuChemS/EUCHEMSIL, SolarPACES 32nd/33rd, Meeting/Workshop) plus the locked collide-control, 12 raw rows in, 11 out, zero merges introduced by the new pass. **A construction bug caught by execution, fixed before banking**: three of the five pairs' dates, copied directly from the existing key-comparison-only describe block above (which never invokes `scoreEvents` and so never cared about dates), fell in May/June/July 2026 — before this test's own `NOW` (2026-08-19) — and were silently dropped by `scoreEvents`' own UNRELATED expiry gate, collapsing the expected 11 rows to 5. Traced by a throwaway debug probe (`web/src/lib/events/zzdebug.test.ts`, deleted before this commit) printing exactly which ids were dropped and why; fixed by moving those three pairs' dates forward into September 2026 (same year, same relative pairing, comment left in place explaining the shift) — confirmed 11/11 survive and zero merge.
+- **Four boundary adversarials**: the two floor-block cases from B's §3.4 (a 2-token generic phrase contiguously inside an unrelated title; the real `ibatterysummit.com` 3-token title as a literal substring of a longer one), B's own scrambled-bag-of-words construction (quoted verbatim), and — since B's entry names its two real near-vocabulary families (Molten Salt, Battery Summit) only by hostname, not full title, in this round's own text — a constructed 3-title near-vocabulary family mirroring that same shape with fixture-style names, matching this file's existing convention of synthetic (not scraped) constructions.
+- **Ordering invariance**: non-merged rows keep their original relative order; the merged winner lands in the first-seen slot, mirroring `dedupScoredEvents`' own existing invariance test.
+- **The winner-chain case** (§3.3's own disclosed bug, reproduced directly): a three-row nested-containment chain where the running winner switches TWICE, ending on the LATEST, highest-scoring row — confirms the fixed finalized-index implementation returns exactly 1 row, not the 2 the old dropped-id version would have produced.
+- **The `enrich.test.ts` fixture non-collision claim**: a direct case constructing the exact `"Battery Event NN"` shape (3 tokens) literally, contiguously embedded inside a longer title — confirmed blocked by the floor alone. `enrich.test.ts` itself is untouched and stays green as the second half of this claim's verification.
+
+**GATE, FULL-CAPTURE, FIRST COMMAND (log retained): 100 files / 2418 tests, 2418 passing, ZERO failures** (baseline 2406 + this item's 12 new tests; no flake fired). `npx tsc --noEmit` — clean, exit 0. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, matching baseline exactly.
+
+**C CHANGED CODE.** One commit this turn for the work (code + tests + this §4 entry + the §1 update below), pushed on landing; a separate prior commit claimed the turn lock. `git status --porcelain --untracked-files=all` showed exactly the three intended files (`dedup.ts`, `pipeline.ts`, `dedup.test.ts`) — the throwaway debug harness (`web/src/lib/events/zzdebug.test.ts`) was deleted before this commit. No credential anywhere; no live network calls (Ruling 75). No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or weakened.
+
+**HAND-OFF: `WHOSE TURN: A — round 36, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list incl. the exact-prefix residual, A35-01 verification, benchmark-flake classification per Ruling 96b)`.** If A measures double-zero: `WHOSE TURN: MANAGER — independent re-measurement before any close`. Turn lock RELEASED (`HELD BY: free`) in this commit.
 

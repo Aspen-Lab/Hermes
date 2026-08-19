@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { dedupEvents, dedupScoredEvents, eventDedupKey } from "./dedup";
+import {
+  dedupEvents,
+  dedupScoredEvents,
+  eventDedupKey,
+  mergeContainedEventNames,
+} from "./dedup";
 import { scoreEvents } from "./scoring";
 import type { RawEventItem, ScoredEventItem } from "./types";
 
@@ -326,5 +331,343 @@ describe("second dedup pass positioning — the expired-sibling structural case 
     const deduped = dedupScoredEvents(scored);
     expect(deduped).toHaveLength(1);
     expect(deduped[0].id).toBe("eventweb:live-twin");
+  });
+});
+
+// Round 36 B (A35-01, Ruling 99b's "genuinely different wording" duplicate
+// class) / Ruling 100 (this file, this section): a THIRD, additive dedup
+// pass, `mergeContainedEventNames`, wired one line after `dedupScoredEvents`
+// at `pipeline.ts:126-127`. `eventDedupKey`/`dedupEvents`/`dedupScoredEvents`
+// above are untouched by this item — none of the tests above needed
+// changing, and none did.
+
+describe("mergeContainedEventNames — round 36 B (A35-01, Ruling 99b's containment class)", () => {
+  // The real recorded titles round 35 A traced and round 36 B replayed
+  // (§3.0): both describe the SAME real event (Solid-State Battery Summit
+  // 2026, Chicago) but `eventDedupKey` never matches them — djk's title
+  // tokenizes to 19 significant tokens against quintus's clean 4, a
+  // token-SET SUBSET relationship (proven by construction, §3.1: no
+  // stopword list or reordering can equalize two token sets of different
+  // SIZE), not a scrambled equal set the key could ever catch.
+  const DJK = scoredEvent({
+    id: "eventweb:djk",
+    source: "eventweb",
+    name:
+      'Exhibition "Solid-State Battery Summit 2026" in Chicago ~Showcasing Products and Technologies for Next-Generation Battery Development and Mass Production~',
+    startDate: "",
+    score: 0.4,
+  });
+  const QUINTUS = scoredEvent({
+    id: "eventweb:quintus",
+    source: "eventweb",
+    name: "Solid-State Battery Summit 2026",
+    startDate: "",
+    score: 0.7,
+  });
+
+  it("the exact key does NOT match this pair (premise, confirmed by execution — this is why the new pass exists)", () => {
+    expect(eventDedupKey(DJK)).not.toBe(eventDedupKey(QUINTUS));
+  });
+
+  it("merges to exactly ONE survivor, the higher-score row on a SOURCE_PRIORITY tie, either arrival order", () => {
+    const forward = mergeContainedEventNames([DJK, QUINTUS]);
+    expect(forward).toHaveLength(1);
+    expect(forward[0].id).toBe("eventweb:quintus");
+
+    const reversed = mergeContainedEventNames([QUINTUS, DJK]);
+    expect(reversed).toHaveLength(1);
+    expect(reversed[0].id).toBe("eventweb:quintus");
+  });
+});
+
+describe("mergeContainedEventNames — the AABC pair (round 34/35's own must-merge pair), regression", () => {
+  it("does NOT merge the AABC pair by containment alone — normalized, their texts are byte-identical, excluded by the textA !== textB guard", () => {
+    // AABC_EVWIRE/AABC_ADVANCEDAUTOBAT's names differ only by the ordinal
+    // ("26th") and the acronym parenthetical ("(AABC)") that
+    // normalizedEventText strips with the SAME regexes eventDedupKey uses —
+    // so after normalization the two texts are IDENTICAL, not one contained
+    // in the other. Confirms the containment pass is not silently doing
+    // this pair's work a second time; the key-based dedupScoredEvents below
+    // is what actually closes it, exactly as it already did before this
+    // item existed.
+    const evwire = scoredEvent({ ...AABC_EVWIRE, score: 0.42 });
+    const advancedautobat = scoredEvent({ ...AABC_ADVANCEDAUTOBAT, score: 0.61 });
+    const result = mergeContainedEventNames([evwire, advancedautobat]);
+    expect(result).toHaveLength(2);
+  });
+
+  it("still merges to exactly ONE survivor through the FULL pass 2 + pass 3 chain — the new pass changes nothing here (the new pass 'must not be needed for it')", () => {
+    const low = scoredEvent({ ...AABC_EVWIRE, score: 0.42 });
+    const high = scoredEvent({ ...AABC_ADVANCEDAUTOBAT, score: 0.61 });
+    const afterPass2 = dedupScoredEvents([low, high]);
+    expect(afterPass2).toHaveLength(1);
+    const afterPass3 = mergeContainedEventNames(afterPass2);
+    expect(afterPass3).toHaveLength(1);
+    expect(afterPass3[0].id).toBe("eventweb:advancedautobat");
+  });
+});
+
+describe("mergeContainedEventNames — round 35's must-NOT-merge floor, replayed through the FULL pipeline (dedupEvents -> scoreEvents -> dedupScoredEvents -> mergeContainedEventNames)", () => {
+  const NOW = Date.parse("2026-08-19T00:00:00.000Z");
+
+  it("zero merges introduced by the new pass among the five must-NOT-merge pairs; the locked collide-control still correctly merges to one", () => {
+    const batteryNorth = event({
+      id: "eventweb:battery-north",
+      name: "The Battery Show North America",
+      startDate: "2026-09-01T00:00:00.000Z",
+    });
+    const batterySouth = event({
+      id: "eventweb:battery-south",
+      name: "The Battery Show South",
+      startDate: "2026-09-01T00:00:00.000Z",
+    });
+    const iexCourse = event({
+      id: "eventweb:iex-course",
+      name:
+        "IEX 2026 technical training introductory course: Introduction to ion exchange design and operation for industrial water treatment",
+      // Round 35's own corpus used 2026-05-01 for this pair — moved forward
+      // here only because this test's own NOW (2026-08-19) makes that date
+      // already past, which would trip scoreEvents' UNRELATED expiry gate
+      // before the dedup passes under test ever ran. Same year, same
+      // relative pairing preserved.
+      startDate: "2026-09-15T00:00:00.000Z",
+    });
+    const iexConference = event({
+      id: "eventweb:iex-conference",
+      name: "45th IEX 2026 International Conference on Ion Exchange",
+      startDate: "2026-09-15T00:00:00.000Z",
+    });
+    const euchemsCongress = event({
+      id: "eventweb:euchems",
+      name: "10th EuChemS Chemistry Congress",
+      // Same forward-date note as the IEX pair above (round 35's corpus used
+      // 2026-07-01).
+      startDate: "2026-09-20T00:00:00.000Z",
+    });
+    const euchemsilMeeting = event({
+      id: "eventweb:euchemsil",
+      name: "EUCHEMSIL 2026: 30th EUCHEMS Meeting",
+      startDate: "2026-09-20T00:00:00.000Z",
+    });
+    const solarpaces2026 = event({
+      id: "eventweb:solarpaces-32",
+      name: "32nd SolarPACES Conference",
+      startDate: "2026-10-01T00:00:00.000Z",
+    });
+    const solarpaces2027 = event({
+      id: "eventweb:solarpaces-33",
+      name: "33rd SolarPACES Conference",
+      startDate: "2027-10-01T00:00:00.000Z",
+    });
+    const meetingTitle = event({
+      id: "eventweb:meeting",
+      name: "International Battery Materials Research Association Meeting",
+      // Same forward-date note as the IEX pair above (round 35's corpus used
+      // 2026-06-01).
+      startDate: "2026-09-25T00:00:00.000Z",
+    });
+    const workshopTitle = event({
+      id: "eventweb:workshop",
+      name: "International Battery Materials Research Association Workshop",
+      startDate: "2026-09-25T00:00:00.000Z",
+    });
+    // The locked collide-control (scoring.test.ts:352-364), given a real
+    // future date here so this replay exercises scoreEvents' own expiry
+    // gate rather than tripping its unrelated dateless-non-eventweb-source
+    // rule (scoring.ts:206-222) — a concern outside this item's scope. The
+    // ORIGINAL zero-date version in the "must MERGE" describe block above is
+    // untouched.
+    const collideWeb = event({
+      id: "eventweb:collide",
+      source: "eventweb",
+      name: "Machine Learning Conf 2026",
+      startDate: "2026-11-01T00:00:00.000Z",
+    });
+    const collideCurated = event({
+      id: "ccfddl:collide",
+      source: "ccfddl",
+      name: "Machine Learning Conf 2026",
+      startDate: "2026-11-01T00:00:00.000Z",
+    });
+
+    const raw = [
+      batteryNorth,
+      batterySouth,
+      iexCourse,
+      iexConference,
+      euchemsCongress,
+      euchemsilMeeting,
+      solarpaces2026,
+      solarpaces2027,
+      meetingTitle,
+      workshopTitle,
+      collideWeb,
+      collideCurated,
+    ];
+
+    const afterPass1 = dedupEvents(raw);
+    // The collide-control pair shares a key and merges here (ccfddl wins on
+    // SOURCE_PRIORITY); every other pair keeps both rows distinct.
+    expect(afterPass1).toHaveLength(11);
+    expect(afterPass1.find((item) => item.id.startsWith("eventweb:collide") || item.id.startsWith("ccfddl:collide"))?.source).toBe("ccfddl");
+
+    const scored = scoreEvents(afterPass1, { topics: [] }, NOW, {
+      applyFloor: false,
+    });
+    // Every row above carries a real future date and topics is empty, so
+    // scoreEvents' own expiry/required-topic gate drops nothing here.
+    expect(scored).toHaveLength(11);
+
+    const afterPass2 = dedupScoredEvents(scored);
+    expect(afterPass2).toHaveLength(11); // no NEW collisions introduced by scoring
+
+    const afterPass3 = mergeContainedEventNames(afterPass2);
+    // The floor holds through the full three-pass path: zero merges beyond
+    // the one already-correct collide-control merge from pass 1.
+    expect(afterPass3).toHaveLength(11);
+  });
+});
+
+describe("mergeContainedEventNames — four boundary adversarials (round 36 B §3.4, probing the design's OWN named danger)", () => {
+  it("a 2-token generic phrase, contiguously present inside an unrelated longer title, is BLOCKED BY THE FLOOR", () => {
+    const short = scoredEvent({ id: "eventweb:short-generic", name: "Battery Conference" });
+    const long = scoredEvent({
+      id: "eventweb:long-unrelated",
+      name: "The Annual Battery Conference on Grid-Scale Energy Storage Systems",
+    });
+    expect(mergeContainedEventNames([short, long])).toHaveLength(2);
+  });
+
+  it("a 3-token short title (real title, ibatterysummit.com) that IS a literal substring of a longer one is BLOCKED BY THE FLOOR ALONE — defense in depth", () => {
+    const short = scoredEvent({ id: "eventweb:ibs-short", name: "International Battery Summit" });
+    const long = scoredEvent({
+      id: "eventweb:ibs-long",
+      name: "International Battery Summit and Trade Exhibition 2026",
+    });
+    expect(mergeContainedEventNames([short, long])).toHaveLength(2);
+  });
+
+  it("a scrambled same-bag-of-words pair (round 36 B's own adversarial construction) is NOT merged — only a genuine contiguous PHRASE matches, never scattered vocabulary", () => {
+    const a = scoredEvent({
+      id: "eventweb:bag-a",
+      name: "Battery Materials Advanced Research Symposium",
+    });
+    const b = scoredEvent({
+      id: "eventweb:bag-b",
+      name: "Symposium on Advanced Materials for Battery Research",
+    });
+    expect(mergeContainedEventNames([a, b])).toHaveLength(2);
+  });
+
+  it("a near-vocabulary family sharing 'battery'/'summit' tokens stays fully distinct, mirroring B's own real Molten-Salt/Battery-Summit family checks", () => {
+    // B's own §3.4 ran this exact property against two REAL host families
+    // (a 7-title "Molten Salt" family, a 3-title "Battery Summit" family)
+    // that round 35 A's artefact tables this entry cites only by hostname,
+    // not full title. Reproduced here with constructed titles carrying the
+    // same scattered-vocabulary shape, matching this file's existing
+    // convention of constructed (not scraped) fixture names elsewhere
+    // (e.g. "Northern Solar Workshop", "Fusion Energy Roundtable" above).
+    const family = [
+      scoredEvent({ id: "eventweb:fam-1", name: "Battery Innovation Summit Americas" }),
+      scoredEvent({ id: "eventweb:fam-2", name: "Global Summit on Advanced Battery Technology" }),
+      scoredEvent({ id: "eventweb:fam-3", name: "Battery Storage and Grid Summit Europe" }),
+    ];
+    expect(mergeContainedEventNames(family)).toHaveLength(3);
+  });
+});
+
+describe("mergeContainedEventNames — ordering invariance for non-merged rows", () => {
+  it("keeps non-merged rows in their original relative order; the merged winner lands in the FIRST-seen slot", () => {
+    const a = scoredEvent({ id: "eventweb:a", name: "Northern Solar Workshop", score: 0.5 });
+    const bContainer = scoredEvent({
+      id: "eventweb:b-container",
+      name: "International Advanced Battery Recycling Summit Special Edition",
+      score: 0.3,
+    });
+    const c = scoredEvent({ id: "eventweb:c", name: "Fusion Energy Roundtable", score: 0.5 });
+    const bContained = scoredEvent({
+      id: "eventweb:b-contained",
+      name: "Advanced Battery Recycling Summit",
+      score: 0.9,
+    });
+    const d = scoredEvent({ id: "eventweb:d", name: "Quantum Sensing Retreat", score: 0.5 });
+
+    // Premise: the two b-rows really are a contained pair, so the merge
+    // below is real, not assumed.
+    expect(mergeContainedEventNames([bContainer, bContained])).toHaveLength(1);
+
+    const result = mergeContainedEventNames([a, bContainer, c, bContained, d]);
+    // a, c, d were never duplicated and keep their original relative order.
+    // The merged survivor (bContained, the score-tie-break winner) lands in
+    // bContainer's FIRST-SEEN slot — between a and c — not at bContained's
+    // own arrival index. Mirrors dedupScoredEvents' own ordering-invariance
+    // test above.
+    expect(result.map((item) => item.id)).toEqual([
+      "eventweb:a",
+      "eventweb:b-contained",
+      "eventweb:c",
+      "eventweb:d",
+    ]);
+  });
+});
+
+describe("mergeContainedEventNames — the winner-chain case (round 36 B §3.3's own disclosed harness bug)", () => {
+  it("a later, higher-priority/score row wins the merged slot, and is not pushed a second time when the outer loop naturally reaches its own index", () => {
+    // Round 36 B §3.3: the FIRST version of this function tracked
+    // dropped-ids and marked only the LOSER of each pairwise tie-break.
+    // When the running winner switched to a LATER item mid-chain, that
+    // later row's OWN id was never marked dropped, so the outer loop's
+    // later natural pass over its own index pushed it a SECOND time as an
+    // undeduped copy. This three-row nested-containment chain reproduces
+    // exactly that shape: row0 loses to row1, then row1 (now the running
+    // winner) loses to row2 — row2 must end up FINALIZED too, or it would
+    // be double-counted when the outer loop reaches index 2 on its own.
+    // The fixed implementation tracks finalized INDICES, not ids, which is
+    // what the assertion below actually exercises.
+    const row0 = scoredEvent({
+      id: "eventweb:core",
+      name: "Advanced Battery Recycling Summit",
+      score: 0.2,
+    });
+    const row1 = scoredEvent({
+      id: "eventweb:core-asia",
+      name: "Advanced Battery Recycling Summit Asia",
+      score: 0.5,
+    });
+    const row2 = scoredEvent({
+      id: "eventweb:core-asia-pacific",
+      name: "Advanced Battery Recycling Summit Asia Pacific Forum",
+      score: 0.9,
+    });
+
+    // Premises: each consecutive pair really is a contained pair, so the
+    // chain below is real, not assumed.
+    expect(mergeContainedEventNames([row0, row1])).toHaveLength(1);
+    expect(mergeContainedEventNames([row1, row2])).toHaveLength(1);
+
+    const result = mergeContainedEventNames([row0, row1, row2]);
+    // NOT 2 (the dropped-id bug's signature: the eventual winner reached by
+    // switching mid-chain gets pushed again at its own original index).
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("eventweb:core-asia-pacific");
+  });
+});
+
+describe("mergeContainedEventNames — the enrich.test.ts fixture's non-collision claim (round 36 B §3.4)", () => {
+  it("a 'Battery Event NN'-shaped 3-token name is BLOCKED BY THE FLOOR even when literally, contiguously embedded in a longer title", () => {
+    // enrich.test.ts's 42-row fixture generator (round 35 C, Ruling 97)
+    // names every synthetic row "Battery Event NN" (zero-padded index) —
+    // every one of those names normalizes to exactly 3 tokens (battery,
+    // event, NN), one short of this item's 4-token floor. That is the
+    // property that keeps that locked fixture untouched by this item;
+    // replayed here directly against the shape most likely to expose it —
+    // a fixture-style short name literally, contiguously embedded inside a
+    // longer, unrelated title, which the floor alone must still block.
+    const short = scoredEvent({ id: "eventweb:fixture-shape", name: "Battery Event 00" });
+    const long = scoredEvent({
+      id: "eventweb:fixture-shape-long",
+      name: "Battery Event 00 Highlights Reel and Recap",
+    });
+    expect(mergeContainedEventNames([short, long])).toHaveLength(2);
   });
 });

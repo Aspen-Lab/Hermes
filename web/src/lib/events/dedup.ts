@@ -107,3 +107,126 @@ export function dedupScoredEvents(items: ScoredEventItem[]): ScoredEventItem[] {
   }
   return [...byKey.values(), ...passthrough];
 }
+
+// Round 36 B §3.1 (A35-01, Ruling 99b's "genuinely different wording"
+// duplicate class): a THIRD, additive dedup pass. `www.djk.co.jp` and
+// `quintustechnologies.com` describe the SAME real event (Solid-State
+// Battery Summit 2026) but `eventDedupKey` above never matches them: djk's
+// title tokenizes to 19 significant tokens against quintus's clean 4, so
+// quintus's name is a token-SET SUBSET of djk's, not a scrambled equal set.
+// PROVEN BY CONSTRUCTION, NOT ASSUMED: stripping the two most plausibly
+// generic words from djk's title ("exhibition", the preposition "in") still
+// leaves "chicago"/"showcasing" occupying the six-token slice, and the
+// reduced key still does not equal quintus's — no stopword list or
+// token-reprioritization scheme can ever equalize two token sets of
+// different SIZE where one is not a rearrangement of the other. Only a
+// CONTAINMENT check (is one title's text a literal substring of the
+// other's) can ever close a pair shaped like this — generic-noun-stripping
+// and token-prioritization (the two cheaper alternatives) cannot, even in
+// principle.
+//
+// `eventDedupKey`, `dedupEvents`, and `dedupScoredEvents` above are
+// UNTOUCHED by this item — zero risk to any locked key-equality test. This
+// pass runs once more, additively, after `dedupScoredEvents` at the same
+// structurally-safe pipeline site (pipeline.ts, immediately after the
+// existing `dedupScoredEvents` call) — every candidate it ever sees has
+// ALREADY individually survived `scoreEvents`' own expiry + required-topic
+// gate, for the same reason `dedupScoredEvents`' own candidates have (see
+// that function's comment above): an expired sibling is structurally
+// incapable of reaching this merge.
+
+// Same rule `eventDedupKey` uses for its year half, extracted here as its
+// own tiny helper so this item's year gate stays byte-identical to that
+// rule without touching `eventDedupKey` itself.
+function eventYearOf(item: ScoredEventItem): number | string {
+  return item.startDate ? new Date(item.startDate).getUTCFullYear() : "";
+}
+
+// Reuses `eventDedupKey`'s own `ORDINAL_RE`/`SHORT_ACRONYM_PAREN_RE`/
+// year-strip/non-alnum-strip pipeline, but WITHOUT the six-token cap and
+// WITHOUT the alphabetical sort — word ORDER must survive here, because a
+// substring check on a bag-of-words would be meaningless.
+function normalizedEventText(name: string): string {
+  return name
+    .replace(ORDINAL_RE, " ")
+    .replace(SHORT_ACRONYM_PAREN_RE, " ")
+    .toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 1)
+    .join(" ")
+    .trim();
+}
+
+// Four is not an arbitrary round number: it is the EXACT token width of
+// quintus's own clean name ("solid state battery summit"). Raising the
+// floor to five would make this pass unable to catch its own target case,
+// so four is both the minimum viable floor AND the ceiling this evidence
+// supports — tightening it further breaks the one confirmed must-merge
+// pair.
+const MIN_CONTAINED_TOKENS = 4;
+
+// Bounded three independent ways, each required, none optional:
+// 1. CONTIGUOUS, WORD-ORDER-PRESERVING SUBSTRING — not bag-of-words. The
+//    shorter title's normalized text must appear as a literal,
+//    word-boundary-safe substring of the longer title's normalized text
+//    (padded with spaces on both sides before `.includes()`, so a token can
+//    never partial-match inside a longer token). This is the single
+//    biggest safety property: a coincidental SCATTERED token overlap (two
+//    titles sharing several words in different positions/order) produces
+//    no match, only a genuine shared PHRASE does.
+// 2. MINIMUM FOUR DISTINCT TOKENS on the CONTAINED (shorter) side — see
+//    `MIN_CONTAINED_TOKENS` above. Blocks generic 2-3-word phrases
+//    ("Battery Conference") regardless of what they are found inside.
+// 3. SAME YEAR BUCKET. Exact string/number equality on the year half —
+//    byte-identical rule to `eventDedupKey`'s own, never loosened, never a
+//    range/fuzzy match.
+function isContainedDuplicate(a: ScoredEventItem, b: ScoredEventItem): boolean {
+  if (eventYearOf(a) !== eventYearOf(b)) return false;
+  const textA = normalizedEventText(a.name);
+  const textB = normalizedEventText(b.name);
+  if (!textA || !textB) return false;
+  const paddedA = ` ${textA} `, paddedB = ` ${textB} `;
+  const tokensA = new Set(textA.split(" ")).size;
+  const tokensB = new Set(textB.split(" ")).size;
+  if (paddedA.includes(paddedB) && tokensB >= MIN_CONTAINED_TOKENS && textA !== textB) return true;
+  if (paddedB.includes(paddedA) && tokensA >= MIN_CONTAINED_TOKENS && textA !== textB) return true;
+  return false;
+}
+
+// A HARNESS BUG FOUND BY EXECUTION, FIXED BEFORE ANY RESULT WAS BANKED
+// (round 36 B §3.3): the FIRST version of this loop tracked a dropped-id
+// `Set` and marked only the LOSER of each pairwise tie-break. When the
+// running `winner` switched to a LATER item at index `j` (that later row
+// outscored/outranked the current winner), that later row's OWN id was
+// never marked dropped, so the outer loop's later natural pass over
+// `i = j` pushed it a SECOND time as an undeduped copy — traced by a
+// dedicated debug probe. Fixed by tracking FINALIZED INDICES instead:
+// index `j` is marked finalized the moment it is compared, win or lose,
+// while the winning VALUE still lands in `i`'s push slot (preserving
+// first-seen-slot ordering, mirroring `dedupScoredEvents`'s own documented
+// `Map` behaviour). DO NOT REINTRODUCE THE DROPPED-ID VERSION — it
+// double-counts a winner that wins by switching to a later index
+// mid-chain.
+export function mergeContainedEventNames(
+  items: ScoredEventItem[],
+): ScoredEventItem[] {
+  const result: ScoredEventItem[] = [];
+  const finalized = new Array(items.length).fill(false);
+  for (let i = 0; i < items.length; i++) {
+    if (finalized[i]) continue;
+    let winner = items[i];
+    for (let j = i + 1; j < items.length; j++) {
+      if (finalized[j]) continue;
+      const other = items[j];
+      if (!isContainedDuplicate(winner, other)) continue;
+      finalized[j] = true;
+      const pWinner = SOURCE_PRIORITY[winner.source] ?? 0;
+      const pOther = SOURCE_PRIORITY[other.source] ?? 0;
+      if (pOther > pWinner || (pOther === pWinner && other.score > winner.score)) winner = other;
+    }
+    result.push(winner);
+  }
+  return result;
+}

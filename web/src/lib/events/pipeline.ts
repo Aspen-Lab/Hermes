@@ -31,7 +31,7 @@ import {
   templateEventQueries,
 } from "@/lib/opportunities/query-gen";
 import { eventSources } from "./sources";
-import { dedupEvents, dedupScoredEvents } from "./dedup";
+import { dedupEvents, dedupScoredEvents, mergeContainedEventNames } from "./dedup";
 import { MIN_SCORE, scoreEvents } from "./scoring";
 import type { EventScoringProfile } from "./scoring";
 import { scoredEventToEvent } from "./mapper";
@@ -124,6 +124,14 @@ export async function scoreEventPoolCandidates(
   // so an expired sibling cannot structurally reach the merge — no
   // hand-rolled expiry predicate is needed, and none is written.
   scored = dedupScoredEvents(scored);
+  // Round 36 B §3.2 / Ruling 100 (A35-01, Ruling 99b's "genuinely different
+  // wording" duplicate class): a THIRD, additive pass at this same
+  // structurally-safe site — contiguous-substring name containment with a
+  // four-token floor and same-year gate, catching a cross-source pair whose
+  // titles are not token-set-equal (so the key-based passes above can never
+  // match them) but where one title's text is a genuine literal substring
+  // of the other's. See dedup.ts for the full construction.
+  scored = mergeContainedEventNames(scored);
   return scored;
 }
 
