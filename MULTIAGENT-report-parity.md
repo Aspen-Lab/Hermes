@@ -270,13 +270,19 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent C round 6 + 2026-08-19 22:16 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       MANAGER — Phase 3 round 5 verification and rulings before
-                  C spawns. B's round 5 is COMPLETE: Deliverable 1 resolved
+WHOSE TURN:       C — Phase 3 round 6 (Ruling 123g). **This line was STALE on
+                  arrival** — it still named MANAGER even though the
+                  manager's round 5 verification and rulings (123a-123g, §4
+                  `### Phase 3 Round 5 — MANAGER`) were already COMPLETE and
+                  had already routed to C with six items; synced here in C
+                  round 6's claim commit, the same pattern four consecutive
+                  prior agents this phase each found and fixed. B's round 5
+                  is COMPLETE: Deliverable 1 resolved
                   the F11/dedup merge-vs-drop conflict by execution (the
                   dedup pass is score-driven, not host-preferential; a bare
                   host-level fix for djk.co.jp's own org-domain shape is
