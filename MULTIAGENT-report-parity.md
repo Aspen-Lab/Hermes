@@ -270,11 +270,63 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 35 resumed @ 2026-08-19 02:06 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 35 C IS FULLY COMPLETE @ 2026-08-19 ~02:1x UTC —
+                  A34-01 SHIPPED IN FULL, BOTH PARTS LIVE.** Resumed after
+                  RULING 97 (manager: repair the fixture, wire the pass).
+                  Re-pulled, re-confirmed branch, re-claimed the lock
+                  (`e200338`). **FIXTURE REPAIRED**
+                  (`web/src/lib/opportunities/enrich.test.ts:17-30`) — the
+                  `event()` generator's name now zero-pads its index
+                  (`Battery Event 00`..`41`), so every one of its 42
+                  synthetic rows is `eventDedupKey`-distinct; one mechanical
+                  comment rename (`"Battery Event 0"` -> `"Battery Event
+                  00"`), the only literal reference to the unpadded name
+                  anywhere in the file. Every assertion keeps its original
+                  strength and count — nothing loosened. **PART 2 WIRED**
+                  (`web/src/lib/events/pipeline.ts:34,118-124`) —
+                  `scored = dedupScoredEvents(scored);` restored at the
+                  commissioned call site, after stage 2's `scoreEvents`,
+                  before `scoreEventPoolCandidates`'s own `return scored;`,
+                  byte-identical to B's §2.2 design. **SURVIVOR-COUNT ARC ON
+                  THE ONCE-BROKEN TEST: 42 -> 33 (unpadded + wired, the STOP
+                  trigger) -> 42 (padded + wired, confirmed).**
+
+                  **GATE, FULL-CAPTURE, FIRST COMMAND: 100 files / 2406
+                  tests, 2406 passing, ZERO failures** — no flake fired this
+                  run. `npx tsc --noEmit` clean. `npx eslint src` — exactly
+                  the one standing `quiz.tsx:46` error, zero warnings.
+
+                  **A34-01's production fix is now fully live**: the ordinal
+                  + short-acronym-paren key normalization AND the post-
+                  stage-2 score-aware dedup pass are both wired, both
+                  covered by `events/dedup.test.ts`'s 14 `it` blocks (incl.
+                  the AABC must-merge pair and the manager's pool-ordering
+                  invariance check), and the fixture that once encoded a
+                  state production could never reach no longer does.
+
+                  **C CHANGED CODE, BOTH PARTS NOW LIVE.** One commit (fixture
+                  repair + wiring restoration + §4 line + this §1 update),
+                  pushed on landing. `git status --porcelain
+                  --untracked-files=all` showed exactly the two intended
+                  files — no throwaway scaffold. No credential anywhere; no
+                  live network calls (Ruling 75). No branch/worktree/PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No
+                  test deleted or weakened.
+
+                  **HAND-OFF: `WHOSE TURN: A — round 35, GATE CANDIDATE ROUND
+                  (value + visual, searchProvider: gemini, artefact duty,
+                  pool-count re-measure, watch list, A34-01 verification —
+                  the AABC pair must merge if re-offered, and by direct
+                  execution regardless; benchmark-flake classification per
+                  Ruling 96b)`.** Turn lock RELEASED (`HELD BY: free`) in
+                  this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 35 C IS COMPLETE @ 2026-08-19 ~02:0x UTC — PART 1
                   (KEY NORMALIZATION) SHIPPED AND WIRED; PART 2
                   (`dedupScoredEvents`) IMPLEMENTED AND FULLY UNIT-TESTED
@@ -86957,3 +87009,21 @@ Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and confirming `git 
 
 **RULING 97 — OPTION (1): REPAIR THE FIXTURE; PART 2 WIRES THIS ROUND.** The deciding fact: **the fixture encodes a state PRODUCTION CANNOT REACH.** In the real pipeline, the FIRST dedup pass (`dedupEvents` at `pipeline.ts:184`, same key function) would have merged those ten identical-key rows before `scoreEventPoolCandidates` was ever called — the fixture only survives because the test enters mid-pipeline, bypassing the outer pass. A locked test's PURPOSE is what is protected, and this test's purpose is enrichment fetch budgeting (`MAX_ENRICHMENT_CANDIDATES` caps, name-override behaviour) — none of which depends on ten synthetic rows being key-identical. **Zero-padding the fixture's indices (`Battery Event 00`…`41`) makes every row key-distinct, preserves every assertion's strength and count, and is a FIXTURE REPAIR in the round-28/29 self-caught-fixture-defect tradition — not a weakening.** Literal expectations that reference specific fixture names (`"Battery Event 0"`/`"Enriched Event 0"` etc.) are renamed mechanically with the fixture, nothing loosened. **C resumes the SAME turn: repair the fixture, wire `dedupScoredEvents` at the commissioned call site, re-run the full gate (96b flake classification applies), and close out to A — round 35 GATE CANDIDATE as originally commissioned.** One additional §4 line from C naming the fixture repair and its before/after survivor count is sufficient; no new design entry needed.
 
+
+### Round 35 — Agent C — RESUME (Ruling 97): fixture repaired, Part 2 wired, item closed
+
+Resumed the same turn after Ruling 97. Pulled, re-confirmed `git branch --show-current` reads `feature/summary-report-revamp`, re-claimed the turn lock (`e200338`).
+
+**FIXTURE REPAIR, EXACTLY AS RULED.** `web/src/lib/opportunities/enrich.test.ts`'s `event()` generator (`:17-30`) now emits `name: \`Battery Event ${String(index).padStart(2, "0")}\`` — zero-padded, so indices 0-9 keep a two-character index token that survives `eventDedupKey`'s own pre-existing `t.length > 1` filter, making all 42 rows key-distinct. `id`/`url` left unpadded (neither feeds `eventDedupKey`; every other test in the file references them by variable, never by a literal string — confirmed by reading every `event(N)` call site in the file before editing). One mechanical comment rename: `"Battery Event 0"` → `"Battery Event 00"` at `enrich.test.ts:104-107`, the only literal reference to the unpadded ingestion-guess name anywhere in the file (`"Enriched Event 0"` is derived from the fetch mock's own URL-parsed index, which stays unpadded, so it needed no rename — checked directly, not assumed). No assertion was loosened: the same counts (42 survivors, `MAX_ENRICHMENT_CANDIDATES` fetches) are still asserted at the same strength.
+
+**PART 2 WIRED, EXACTLY AS COMMISSIONED.** `web/src/lib/events/pipeline.ts:34,118-124` — the withheld-wiring comment replaced with the live call `scored = dedupScoredEvents(scored);`, restored immediately after stage 2's `scoreEvents` and before `scoreEventPoolCandidates`'s own `return scored;`, byte-identical to B's §2.2 insertion point and this round's original (pre-STOP) implementation. `dedupScoredEvents` re-imported from `./dedup`.
+
+**SURVIVOR-COUNT ARC ON THE ONCE-BROKEN TEST, 42 -> 33 -> 42:** unpadded fixture + wired pass = 33 (the STOP trigger, first pass through this turn); padded fixture + wired pass = 42 (confirmed by direct isolated run of `enrich.test.ts` + `dedup.test.ts` together before the full gate, 70/70 passing).
+
+**GATE, FULL-CAPTURE, FIRST COMMAND:** **100 files / 2406 tests, 2406 passing, ZERO failures** — no flake fired this run, no re-run needed. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, zero warnings.
+
+**C CHANGED CODE, BOTH PARTS NOW LIVE.** One commit (fixture repair + wiring restoration + this §4 line + the §1 close-out), pushed on landing. `git status --porcelain --untracked-files=all` showed exactly the two intended files (`pipeline.ts`, `enrich.test.ts`) — no throwaway scaffold. No credential anywhere; no live network calls (Ruling 75). No branch/worktree/PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or weakened — every assertion in `enrich.test.ts` keeps its original strength and count; only the fixture's own naming changed, per Ruling 97.
+
+**A34-01's production fix is now fully live**: both the key normalization and the post-stage-2 dedup pass are wired, tested (14 `it` blocks in `dedup.test.ts`, including the AABC must-merge pair and the manager's pool-ordering invariance check), and the once-colliding `enrich.test.ts` fixture no longer encodes a state production cannot reach.
+
+**HAND-OFF: `WHOSE TURN: A — round 35, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list, A34-01 verification — the AABC pair must merge if re-offered, and by direct execution regardless; benchmark-flake classification per Ruling 96b)`.** Turn lock RELEASED (`HELD BY: free`) in this commit.

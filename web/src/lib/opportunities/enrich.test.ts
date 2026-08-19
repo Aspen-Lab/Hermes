@@ -18,7 +18,19 @@ function event(index: number): RawEventItem {
   return {
     id: `eventweb:${index}`,
     source: "eventweb",
-    name: `Battery Event ${index}`,
+    // Round 35 C (Ruling 97) fixture repair: zero-padded so every one of
+    // this generator's rows is `eventDedupKey`-distinct. Unpadded, indices
+    // 0-9's single-character index token was dropped by the key's own
+    // pre-existing `t.length > 1` filter, so all ten collapsed onto the
+    // identical key `"battery event::"` (empty year, since `startDate` is
+    // `""`) — a state production can never reach, because the FIRST dedup
+    // pass (`dedupEvents`, `pipeline.ts:184`) would already have merged them
+    // before `scoreEventPoolCandidates` ever ran; this fixture only survived
+    // unpadded because its own tests call `scoreEventPoolCandidates`
+    // directly, bypassing that outer pass. `id`/`url` are left unpadded —
+    // neither feeds `eventDedupKey`, and every other test in this file that
+    // depends on them does so by variable reference, not by a literal string.
+    name: `Battery Event ${String(index).padStart(2, "0")}`,
     type: "conference",
     startDate: "",
     location: "See event page",
@@ -90,9 +102,10 @@ describe("event detail enrichment", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(MAX_ENRICHMENT_CANDIDATES);
     // B4-01: the fetched page's own JSON-LD name ("Enriched Event 0") now
-    // wins over the pre-fetch ingestion guess ("Battery Event 0") once it
-    // clears the title-shape guard — this fixture's name is a plain string,
-    // so it passes and is preferred, same as a real page's own title would be.
+    // wins over the pre-fetch ingestion guess ("Battery Event 00", round 35
+    // C's zero-padded form) once it clears the title-shape guard — this
+    // fixture's name is a plain string, so it passes and is preferred, same
+    // as a real page's own title would be.
     expect(enriched[0]).toMatchObject({
       name: "Enriched Event 0",
       location: "Chicago, IL, United States",

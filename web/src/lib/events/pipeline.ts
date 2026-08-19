@@ -31,10 +31,7 @@ import {
   templateEventQueries,
 } from "@/lib/opportunities/query-gen";
 import { eventSources } from "./sources";
-import { dedupEvents } from "./dedup";
-// `dedupScoredEvents` (A34-01 part 2, round 35 B §2.2/§2.3) is deliberately
-// NOT imported here — see the withheld-wiring comment inside
-// `scoreEventPoolCandidates` below (round 35 C, `POLICY — manager decides`).
+import { dedupEvents, dedupScoredEvents } from "./dedup";
 import { MIN_SCORE, scoreEvents } from "./scoring";
 import type { EventScoringProfile } from "./scoring";
 import { scoredEventToEvent } from "./mapper";
@@ -115,25 +112,18 @@ export async function scoreEventPoolCandidates(
     now,
     { applyFloor: false },
   );
-  // A34-01 part 2 (round 35 B §2.2, Ruling 96a) — DESIGNED, IMPLEMENTED,
-  // AND UNIT-TESTED (`dedupScoredEvents`, `dedup.ts`, exercised standalone by
-  // `dedup.test.ts`'s full suite), but its call site here is WITHHELD per
-  // this round's own STOP protocol (round 30 C item 1's precedent,
-  // `MULTIAGENT-report-parity.md` round 30 C entry): wiring
-  // `scored = dedupScoredEvents(scored);` in HERE, exactly as commissioned,
-  // makes `opportunities/enrich.test.ts`'s locked
-  // "fetches only gate survivors, retains candidate 41, and re-scores
-  // enrichment" test fail (42 -> 33 survivors) — that test calls this
-  // function directly (bypassing `buildEventPool`/`dedupEvents`), and its
-  // synthetic fixture ("Battery Event 0".."Battery Event 41", no
-  // `startDate`) collapses indices 0-9 onto one `eventDedupKey` because the
-  // key's own PRE-EXISTING token filter (`t.length > 1`, unrelated to this
-  // item) drops their single-digit-index token, leaving all ten with the
-  // identical name-half "battery event" and an identical empty year. Filed
-  // `POLICY — manager decides` in §4, round 35 C. A34-01's actual fix does
-  // NOT land in production until this is wired — restoring the removed call
-  // exactly reproduces round 35 B's own printed §2.2/§2.3 design the moment
-  // the manager rules on the fixture question.
+  // A34-01 part 2 (round 35 B §2.2, Ruling 96a; wired round 35 C per Ruling
+  // 97 after the withheld/POLICY interval): a cross-source duplicate (e.g.
+  // one row's title states a parseable date, another's doesn't) can still
+  // carry two different pre-enrichment `eventDedupKey`s that the FIRST dedup
+  // pass (`dedupEvents`, called on the raw pool before this function ever
+  // runs) cannot catch, because enrichment — which can recover the missing
+  // date — has not happened yet at that point. Running the second pass HERE,
+  // after stage 2 above, means every candidate it sees has ALREADY
+  // individually survived `scoreEvents`' own expiry + required-topic gate,
+  // so an expired sibling cannot structurally reach the merge — no
+  // hand-rolled expiry predicate is needed, and none is written.
+  scored = dedupScoredEvents(scored);
   return scored;
 }
 
