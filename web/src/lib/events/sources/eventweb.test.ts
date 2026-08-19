@@ -24,6 +24,7 @@ import {
   isJobListingContentTitle,
   isNewsArticleTitle,
   looksLikeEventTitle,
+  NEWS_MEDIA_HOSTS,
   ownedTitleSpan,
   resolveSearchProvider,
   webResultToRawEventItem,
@@ -3399,5 +3400,137 @@ describe("isDateStructuredResearchPath (F2, Phase 3 round 3 — lab blog posts a
           "The Molten Salt Electrochemistry Symposium (MoSES) takes place in October 2026.",
       }, NOW),
     ).not.toBeNull();
+  });
+});
+
+// Phase 3 round 6 C, ITEM 1 (F11, Rulings 123b/123e(1)/123g item 1): B's
+// bounded fix, verbatim — NEWS_MEDIA_HOSTS (its own sibling list, not
+// appended to DENY_HOSTS) plus the unanchored event-report(s) path regex.
+// Corpus per Phase 3 round 5 B, Deliverable 2 — must-catch witnesses and the
+// full 13-URL must-keep corpus, executed with zero collisions.
+describe("F11 — press-wire hosts + event-report(s) path (Phase 3 round 6 C, ITEM 1)", () => {
+  // A fixed instant well before every future-dated snippet below, matching
+  // this file's own standing discipline for these blocks.
+  const NOW = Date.parse("2026-01-01T00:00:00Z");
+
+  it("lists both press-wire/trade-media hosts in their own sibling list (Ruling 123e(1))", () => {
+    expect(NEWS_MEDIA_HOSTS).toContain("prnewswire.com");
+    expect(NEWS_MEDIA_HOSTS).toContain("news.metal.com");
+  });
+
+  describe("must-catch — B's live-verified witnesses (Phase 3 round 5 B, Deliverable 2)", () => {
+    // A's own record carried a TRUNCATED URL for this witness
+    // (`.../cibf2026-opens-in-shenzhen-...`); B's own completion attempt
+    // 404'd and did NOT fabricate the rest of the path — the host itself is
+    // the signal, so this case only needs to sit on the real host, not
+    // reproduce an unverifiable exact path.
+    it("drops the prnewswire.com witness by host alone", () => {
+      expect(
+        webResultToRawEventItem({
+          title: "CIBF2026 Opens in Shenzhen",
+          url: "https://www.prnewswire.com/apac/news-releases/cibf2026-opens-in-shenzhen-representative-example.html",
+          snippet:
+            "CIBF2026, the world's largest battery industry event, has officially commenced in Shenzhen.",
+        }, NOW),
+      ).toBeNull();
+    });
+
+    it("drops the news.metal.com witness, re-fetched live by B", () => {
+      expect(
+        webResultToRawEventItem({
+          title:
+            "Chicago Summit Sets the Tone for SSB Race: Oxide Route Prevails, Sulfide‑Route Mass Production Delayed until 2030",
+          url: "https://news.metal.com/en/newscontent/104058915-chicago-summit-sets-the-tone-for-ssb-race-oxide-route-prevails-sulfide-route-mass-production-delayed-until-2030",
+          snippet:
+            "Coverage of the 6th Annual Global Solid-State Battery Summit held in Chicago on August 11, 2026.",
+        }, NOW),
+      ).toBeNull();
+    });
+
+    it("drops the fz-juelich.de event-report(s) witness via the new path regex", () => {
+      expect(
+        webResultToRawEventItem({
+          title: "ELECTRA.Battery Symposium 2026",
+          url: "https://www.fz-juelich.de/en/iet/iet-1/news/event-reports/electra-battery-symposium-2026",
+          snippet:
+            "A retrospective report on the ELECTRA.Battery Symposium 2026, held May 11-13, 2026.",
+        }, NOW),
+      ).toBeNull();
+    });
+
+    it("isolates the path-regex signal: isNewsArticleTitle is true on the fz-juelich.de witness though its title alone carries no news tell", () => {
+      // The witness title has NO news-vocabulary word anywhere — B measured
+      // this: title vocabulary reaches zero of the four re-fetched
+      // witnesses. This must be the URL-path clause firing, not NEWS_TITLE_RE
+      // or either PR-headline regex.
+      expect(
+        isNewsArticleTitle(
+          "ELECTRA.Battery Symposium 2026",
+          "https://www.fz-juelich.de/en/iet/iet-1/news/event-reports/electra-battery-symposium-2026",
+        ),
+      ).toBe(true);
+      // And confirm the anchored existing NEWS_HEADLINE_PATH_RE genuinely
+      // could not have reached it (B's own proof point): the same title/url
+      // pair with the new path regex's own host swapped for a host that
+      // cannot fire it must fall back to false.
+      expect(isNewsArticleTitle("ELECTRA.Battery Symposium 2026")).toBe(false);
+    });
+  });
+
+  describe("must-keep — B's 13-URL corpus, zero collisions (Phase 3 round 5 B, Deliverable 2)", () => {
+    // Recorded exactly as B's own corpus lists them (Deliverable 2's must-keep
+    // paragraph) — the every-host check below reproduces isDeniedUrl's own
+    // www-stripped suffix-match algorithm precisely, which is the actual
+    // mechanism NEWS_MEDIA_HOSTS plugs into.
+    const MUST_KEEP_HOSTS = [
+      "pyro.byu.edu",
+      "thebatteryshow.com",
+      "web.cvent.com",
+      "volta.foundation",
+      "globalevents.fastmarkets.com",
+      "recyclinginternational.com",
+      "www.rsc.org",
+      "engr.ncsu.edu",
+      "advancedautobat.com",
+      "events.ornl.gov",
+      "battery-business-forum.com",
+      "smelab.org",
+      "bepassociation.eu",
+    ];
+
+    it.each(MUST_KEEP_HOSTS)(
+      "host %s does not suffix-match either new NEWS_MEDIA_HOSTS entry",
+      (rawHost) => {
+        const host = rawHost.toLocaleLowerCase().replace(/^www\./, "");
+        for (const denied of NEWS_MEDIA_HOSTS) {
+          expect(host === denied || host.endsWith(`.${denied}`)).toBe(false);
+        }
+      },
+    );
+
+    // The two witnesses B named as the corpus's own decisive controls, run
+    // end to end through the real, unmodified webResultToRawEventItem rather
+    // than only through the mechanical host check above.
+    it("keeps the events.ornl.gov honest-host-fallback control end to end — the exact case a bare org-domain host entry would have broken (Ruling 84b(1))", () => {
+      expect(
+        webResultToRawEventItem({
+          title: "Home",
+          url: "https://events.ornl.gov/",
+          snippet:
+            "Upcoming workshop: the Molten Salt Reactor Workshop, registration open, December 2026.",
+        }, NOW),
+      ).not.toBeNull();
+    });
+
+    it("keeps the battery-business-forum.com forum-contrast control end to end — a real Forum-named conference, not a discussion forum", () => {
+      expect(
+        webResultToRawEventItem({
+          title: "Battery Business Forum 2026",
+          url: "https://battery-business-forum.com/",
+          snippet:
+            "The Battery Business Forum 2026 conference brings together industry leaders. Registration open for December 2026.",
+        }, NOW),
+      ).not.toBeNull();
+    });
   });
 });

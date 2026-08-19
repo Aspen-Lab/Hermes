@@ -265,6 +265,35 @@ export const PAPER_PAGE_HOSTS = [
 export const PAPER_TITLE_RE =
   /^\s*(?:about\s+this\s+abstract|abstract\s*[:#-]|archive\s+ouverte)\b|\b(?:archive\s+ouverte|hal\s+open\s+science)\b/i;
 
+/**
+ * Phase 3 round 6 C, ITEM 1 (F11, Rulings 123b/123e(1)). Wire-distribution and
+ * trade-media hosts whose entire business is publishing OTHER organisations'
+ * news — `prnewswire.com` (a live specimen of Ruling 118's own witness #4
+ * press-release class) and `news.metal.com` (an industry trade outlet
+ * reporting ON a real battery summit, not hosting it). Phase 3 round 5 B,
+ * Deliverable 2 re-fetched F11's witnesses live and measured that title
+ * vocabulary reaches ZERO of them — `isNewsArticleTitle`'s closed vocabulary
+ * cannot close this family, because the tell is the HOST, not the title.
+ *
+ * OWN SIBLING LIST, NOT APPENDED TO `DENY_HOSTS` (Ruling 123e(1)) —
+ * `PAPER_PAGE_HOSTS` above is the shipped precedent for keeping a
+ * semantically distinct denial reason legible rather than folding it into
+ * the general list a reader would have to infer the reason for.
+ *
+ * SAFE BY CONSTRUCTION, UNLIKE AN ORGANISATION'S OWN DOMAIN. F11's other
+ * witnesses this round (`ornl.gov`, `fz-juelich.de`, `pi-kem.co.uk`,
+ * `djk.co.jp`) are all DISPOSITIONED, not fixed, exactly because a lab,
+ * company or institute can legitimately host both a real event page and
+ * third-party-style news content on different subpaths — proven unsafe by
+ * execution against `events.ornl.gov` (Ruling 84b(1)'s own standing
+ * must-keep; Phase 3 round 5 B, Deliverable 1). A wire-distribution or
+ * trade-media outlet's entire purpose is publishing about things it does not
+ * organise, so there is no legitimate "this host hosts its own real event"
+ * counter-case to protect, and no such host appears anywhere in this file's
+ * own must-keep corpus (verified — see eventweb.test.ts).
+ */
+export const NEWS_MEDIA_HOSTS = ["prnewswire.com", "news.metal.com"] as const;
+
 function isDeniedUrl(rawUrl: string): boolean {
   let parsed: URL;
   try {
@@ -279,6 +308,9 @@ function isDeniedUrl(rawUrl: string): boolean {
       (denied) => host === denied || host.endsWith(`.${denied}`),
     ) ||
     PAPER_PAGE_HOSTS.some(
+      (denied) => host === denied || host.endsWith(`.${denied}`),
+    ) ||
+    NEWS_MEDIA_HOSTS.some(
       (denied) => host === denied || host.endsWith(`.${denied}`),
     )
   ) {
@@ -448,6 +480,40 @@ function isTickerNewsPath(url: string | undefined): boolean {
 }
 
 /**
+ * Phase 3 round 6 C, ITEM 1 (F11, Ruling 123b). A second URL-path signal for
+ * the same family `isTickerNewsPath` above polices — mirroring its precedent
+ * exactly: a narrow, UNANCHORED raw-pathname regex, not routed through the
+ * existing `^`-anchored `urlPathPhrase`/`NEWS_HEADLINE_PATH_RE`, which
+ * PROVABLY CANNOT reach this witness (Phase 3 round 5 B, Deliverable 2):
+ * `fz-juelich.de`'s path-phrase is "en iet iet 1 news event reports
+ * electra...", and "event reports" sits mid-phrase, not at index 0, so the
+ * existing anchor structurally misses it.
+ *
+ * Catches the `event-report(s)` URL shape — the live witness is an
+ * organiser's OWN post-event retrospective report page
+ * (`.../news/event-reports/electra-battery-symposium-2026`, written entirely
+ * in past tense about an already-concluded event), a distinct sub-shape from
+ * a third party's news coverage.
+ *
+ * n=1 witness — the same vacuity discipline this campaign applies to every
+ * closed-list/path addition (F8, F9, J2). Verified by execution against the
+ * full must-keep corpus with zero collisions — see eventweb.test.ts. Does
+ * NOT reach `djk.co.jp` (`/news/detail.html`), `ornl.gov`
+ * (`/news/ten-years-...`, no "report(s)" token) or `pi-kem.co.uk`
+ * (`/articles/...`) — a narrow, partial close, not a general "news path" fix.
+ */
+const EVENT_REPORT_PATH_RE = /\/event[-\s]?reports?\//i;
+
+function isEventReportPath(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    return EVENT_REPORT_PATH_RE.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Round 31 C (Ruling 84c, implementing B's item 3 §3.2 design B verbatim).
  * A30-03's title-shape sibling: mirrors this file's own precedented
  * "subject (1-5 title-case-ish words) + closed PR-style verb" convention
@@ -518,6 +584,8 @@ export function isNewsArticleTitle(title: string, url?: string): boolean {
   if (PR_ANNOUNCEMENT_HEADLINE_RE.test(trimmedTitle)) return true;
   if (PR_SETS_ORDINAL_HEADLINE_RE.test(trimmedTitle)) return true;
   if (isTickerNewsPath(url)) return true;
+  // Phase 3 round 6 C, ITEM 1 (F11, Ruling 123b) — see isEventReportPath above.
+  if (isEventReportPath(url)) return true;
   const phrase = urlPathPhrase(url);
   return phrase !== undefined && NEWS_HEADLINE_PATH_RE.test(phrase);
 }
