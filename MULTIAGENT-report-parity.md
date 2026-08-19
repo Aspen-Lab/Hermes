@@ -270,11 +270,133 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent A round 35 + 2026-08-19 02:13 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 35 A IS COMPLETE @ 2026-08-19 ~22:0x UTC (LOCAL
+                  CLOCK) — THE GATE-CANDIDATE CENSUS DOES NOT REACH
+                  DOUBLE-ZERO. ONE FRESH UNEXPLAINED VALUE FINDING (A35-01,
+                  event surface, cross-source duplicate event of a
+                  "different wording" shape, traced to the exact
+                  `eventDedupKey` six-token-slice mechanism), ZERO
+                  UNEXPLAINED VISUAL. A34-01 RE-VERIFIED LIVE AND WORKING AS
+                  DESIGNED, INCLUDING A FALSE-MERGE SCAN.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`efaf166`). Grepped "Round 35 — Agent A" first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Rulings 96a-98, both Round 35 B/C entries, and round 34 A's
+                  three parts in full before any live pull.
+
+                  **GATE, COLD AND AT CLOSE: 100 files / 2406 tests, 2406
+                  passing, ZERO failures** both times, matching Ruling 98's
+                  expected baseline exactly. `npx tsc --noEmit` clean.
+                  `npx eslint src` — exactly the one standing `quiz.tsx:46`
+                  error, zero warnings.
+
+                  **A34-01 RE-VERIFIED, BOTH PARTS LIVE, BEYOND `dedup.test.ts`'s
+                  OWN COVERAGE.** Code read directly, byte-matching Ruling 98.
+                  Built both AABC rows from their REAL recorded title/URL via
+                  the shipped `webResultToRawEventItem`, ran them through the
+                  ACTUAL shipped `scoreEventPoolCandidates` end to end
+                  (enrichment network-mocked only) — ONE survivor confirmed.
+                  **FALSE-MERGE SCAN through that same real pipeline call**:
+                  the AABC pair mixed with six constructed must-NOT-merge
+                  rows — exactly 7 of 8 survive, zero false merges. **LIVE
+                  CORPUS FALSE-MERGE SCAN**: all 46 real final-pool event rows
+                  across 5 pulls scanned for near-duplicate pairs — every
+                  flagged pair confirmed genuinely distinct EXCEPT one, which
+                  is this round's own fresh finding (below); job side clean.
+                  **SECOND PASS "CAN ONLY REMOVE ROWS"**: measured directly on
+                  3 fresh live calls, zero increases. AABC pair's own sibling
+                  side not organically co-offered this window (absence, not
+                  failure) — the direct-execution proof stands regardless. A
+                  live, ORGANIC three-source merge (`rsc.org`/
+                  `euchemsil2026.com`) further corroborates the fix working
+                  on real traffic beyond the constructed cases.
+
+                  **POOL-COUNT/57b RE-MEASURE: ZERO collisions across all 10
+                  pulls, 195 calls.** **TIMEOUT-FLAKE RATE: job 1 of 5 (20%),
+                  event 0 of 5 (0%), combined 1 of 10 (10%)** — identical to
+                  round 34's own 1/10.
+
+                  **ONE FRESH, UNEXPLAINED FINDING — A35-01 (event, 1 of 5
+                  pulls, both rows co-present in that pull's own final scored
+                  pool)**: `www.djk.co.jp` and `quintustechnologies.com` both
+                  describe the SAME real event (Solid-State Battery Summit
+                  2026, Chicago); `eventDedupKey`'s pre-existing six-token
+                  name slice (unchanged by this round's A34-01 fix) lets a
+                  long press-release-style title's filler words
+                  (`exhibition`, `in`) displace the identifying tokens the
+                  shorter sibling title keeps, so the keys never match —
+                  traced to the exact mechanism by direct execution. **A
+                  DIFFERENT concrete shape from A34-01** (no ordinal, no
+                  short all-caps acronym parenthetical in either title) —
+                  squarely the "genuinely different wording" residual round
+                  35 B's own design explicitly disclaimed as out of scope,
+                  now witnessed live for the first time.
+
+                  **VISUAL: ZERO on both plates** — the structural argument
+                  (`17de80e..HEAD`, zero rendering-layer files, re-derived
+                  through this round's own commits) plus a spot-check render
+                  using a fresh dedicated live pull (one real job, one real
+                  dated event, one real dateless event — all three render
+                  clean, no leaked `undefined`).
+
+                  **A METHOD NOTE, DISCLOSED HONESTLY**: A's first batched
+                  10-pull harness crashed on its own argument-order bug
+                  (`webResultToRawJobItem`'s second parameter is `topics`,
+                  not a timestamp) AFTER all 10 live network calls had
+                  already run but BEFORE any result was persisted — the whole
+                  window's data was lost and had to be re-pulled as bounded,
+                  one-pull-per-foreground-call invocations with immediate
+                  disk writes (per the coordinator's own instruction). A
+                  SECOND gap — the spy initially dropped `WebResult`'s
+                  optional `pageKind` field, producing a real, checkable
+                  `ingested:false`-vs-`IN final pool` contradiction — was
+                  traced to its exact mechanism (the round 29 "starved arm"
+                  admission channel) and fixed before any table was written;
+                  a full re-scan confirmed zero remaining contradictions.
+                  Both are A's own harness-construction bugs, not product
+                  defects.
+
+                  **Round-35-specific duties, all discharged**: A34-01
+                  verification via the shipped pipeline path plus a
+                  false-merge scan (both constructed and live corpora);
+                  pool-count/57b re-measure (zero collisions, 195 calls) plus
+                  the second-pass structural property measured directly;
+                  timeout-flake re-measure; the artefact duty (two compact
+                  host-level tables, 89 + 126 unique hosts); the residual
+                  watch list re-measured item by item including the fresh
+                  A35-01 addition; the standing tallies restated, with
+                  event-side `organisations` re-witnessed a second
+                  independent window running.
+
+                  **A CHANGED NO PRODUCT CODE.** Five commits, each pushed on
+                  landing (turn-lock claim, part 1, part 2, part 3 + this
+                  close-out). Throwaway harness (`web/zz-r35a/`) lived
+                  outside `web/src/`, deleted before every commit, `git
+                  status --porcelain --untracked-files=all` confirmed clean
+                  each time. No credential value anywhere; boolean/
+                  field-scoped presence only; `.env.local` never `cat`-ed; no
+                  `PEER_PROFILE_SNAPSHOT_PATH`.
+
+                  **HAND-OFF: `WHOSE TURN: B — round 36`** (work item:
+                  A35-01, a cross-source duplicate-event defect of a
+                  "genuinely different wording" shape, traced to the exact
+                  `eventDedupKey` six-token-slice mechanism — B's own design
+                  call on scope and fix shape, with an explicit method note
+                  for the manager on the trade-off against the must-NOT-merge
+                  doctrine; the standing watch list carried forward unchanged,
+                  now including this round's own finding by name). **Because
+                  one thing remains unexplained, A does not hand to the
+                  manager** (Ruling 30 / this round's own instruction). Turn
+                  lock RELEASED (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~06:5x UTC — ROUND 35 C
                   RESUME VERIFIED INDEPENDENTLY, RULING 98 APPENDED (§4).**
                   Gate re-run (full-capture): **100 files / 2406 tests, 2406
@@ -87240,3 +87362,105 @@ ibatterysummit.com | Home - International Battery Summit | x1 | ingested 1/1 | I
 Ranked below, part 3.
 
 Committed and pushed as its own item. Part 3 (visual census, standing tallies, residual watch list, ranked list, and the gate verdict) follows.
+
+
+### Round 35 — Agent A (part 3: VISUAL CENSUS, STANDING TALLIES, RESIDUAL WATCH LIST, RANKED LIST, AND THE GATE VERDICT. GATE DOES NOT REACH DOUBLE-ZERO. VISUAL STAYS AT ZERO; VALUE HAS ONE FRESH FINDING, A35-01. HAND-OFF IS B -- ROUND 36, NOT THE MANAGER.)
+
+## VISUAL CENSUS — ZERO, BY A STRUCTURAL ARGUMENT PLUS AN EMPIRICAL SPOT-CHECK
+
+**Structural argument, same baseline as rounds 30-34 cited: `git log --oneline --name-only 17de80e..HEAD -- 'web/src/**/*.tsx' 'web/src/**/*.css'` — ZERO files, re-derived independently this round over the FULL range through this round's own turn-lock commit and both preceding parts.** Round 35 B/C's own changes (`events/dedup.ts`, `events/pipeline.ts`, `events/dedup.test.ts`, `opportunities/enrich.test.ts` only) are already included in that empty range — confirmed directly, not assumed. **No rendering-layer file has changed since the last exhaustive 20-item walk confirmed zero, across six full rounds now (30, 31, 32, 33, 34, 35).**
+
+**Empirical spot-check on top of that argument**, using a small dedicated live pull this round's own window (real network, not fixtures, NOT part of the 10-pull census — round 30-34 A's own precedent): rendered three real specimens through the SHIPPED `JobReport`/`EventReport` to static markup via `renderToStaticMarkup` (the same technique `page.test.ts` uses).
+
+| specimen | value | rendered clean | leaked `"undefined"` |
+|---|---|---|---|
+| real job | `GE Vernova Battery Engineering & Technology Intern` | yes | no |
+| real dated event | `The Battery Show North America`, `date: "2026-10-12"` | yes | no |
+| real dateless event | `IEX 2026 technical training introductory course...`, `date: ""` | yes | no |
+
+**All three rendered without error. All three render outputs contain no literal `"undefined"` string.** **VISUAL: ZERO on both plates**, on the strength of the corrected structural argument; the spot-check is corroboration, not the measurement of record.
+
+## STANDING TALLIES, RESTATED (this round's live evidence where measured)
+
+- **Ruling 33 (short-acronym collision, `LCO`)** — RE-CONFIRMED. `lco.global`/`lco.edu`/`lco-nsn.gov`/`lco.cl`/`ionexchangeglobal.com` offered 30+11(job)+5+4+11(event)+11(event)+11(job)+7(event) = 79 times combined across both surfaces this window (careerslco.com below threshold, zero/low offers), **0 admitted to either final pool**, checked directly by URL membership against both `pool.items` sets.
+- **Ruling 34a (`careerservices.upenn.edu`, PRESENT-and-SILENT)** — offered 1 of 5 job pulls this window (`ingested: true`, "Postdoctoral Research Associate - Molten Salt Characterization"), did NOT reach this window's final job pool — topic-floor variance, not a regression.
+- **Rulings 37 + 44 (label-miss family)** — NOT independently re-derived this round, consistent with rounds 30-34's own honest limit. Carried forward unchanged.
+- **Ruling 52b (collision) — strike count stays at ONE (60a).** Zero final-pool job company values contain "Ion Exchange" this window. Unexercised, strike count unchanged.
+- **Ruling 62b (month-granularity invented-date fuse)** — ZERO, re-confirmed a FIFTH independent window. All five of this window's dated final-pool event rows (`thebatteryshow.com` x2 pulls, `ibatterysummit.com`, `advancedautobat.com` — the A34-01 specimen) carry well-formed ISO/day-level dates, none invented or malformed.
+- **Ruling 55c (the `Online` must-keep debt)** — RE-DERIVED: **0 of 46 final-pool event rows render `isOnline: true`** this window — consistent with rounds 31, 33, and 34's own zero. The debt is unchanged.
+- **Ruling 57b (witness lines)** — **Job surface: organically witnessed again** — `Idaho National Laboratory`, `Tesla`, `European Nuclear Education Network`, and a FRESH witness (`Laboratory of Inorganic Chemistry (LAC), D-CHAB`) all render as real, correct employer/lab values this window. **Event surface: `organisations` populated on 1 of 46 final-pool event rows this window** (`ibatterysummit.com`'s dated pull carries `[{"name":"Carsurin"},{"name":"SaranaLab"}]`) — a RE-WITNESS of round 34's own first-ever sighting (same host, same values), confirming that finding was not a one-off.
+- **Named costs**: **Ruling 74's headcount** — unexercised this round (no `team` field captured/populated). **`The Battery Saloon` (79a)** — re-confirmed, offered 3 of 5, refused 3 of 5. **The dateless branch (Ruling 90b)** — see its own line below, a fifth independent window. **Honest-host fallback (84b(1))** — re-confirmed, 2 of 5 this window (`batterysummit.solarenergyevents.com`), ADMITTED to the final pool both times offered.
+- **Exclusions by name**: **45a (`euagenda.eu` never fetched)** — confirmed, zero appearances anywhere in either surface's 713-row offered corpus this round. **41c's three hosts (not hunted)** — not deliberately searched for, consistent with the standing exclusion; none appeared organically either. **39a/40, 42c** — not independently re-checked this round; their shapes did not appear in either offered corpus.
+- **Ruling 48b, under 71b's four-part standard** — **WRONGLY DROPPED: ONE trigger match this round** (`iimjobs.com`'s "Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page" — a FRESH organic re-witness of one of round 33's own four must-catch titles, correctly dropped, `ingested: false`), zero collateral. **WRONGLY KEPT (job-content-shaped titles reaching the EVENT final pool): ZERO** — direct scan of every URL in every pull's final event pool found zero matches against the guard's own trigger shape. **Mirror check (event-vocabulary titles reaching the JOB final pool): ZERO** — direct scan of every job final-pool title/name for conference/summit/symposium/workshop/expo vocabulary found zero matches.
+- **Dateless full-pool rate (record; doctrine final, Ruling 90b)**: **THIS WINDOW: 41 of 46 final-pool event rows (89.1%) render `startDate: ""`.** A FIFTH independent window, inside the prior four-window band (79-97%). Zero of the five dated rows carries an invented or malformed value (above, 62b) — 62b's zero now holds across FIVE independent windows.
+
+## RESIDUAL WATCH LIST — RE-MEASURED ITEM BY ITEM, CITED BY NAME
+
+| item | this round's live measurement |
+|---|---|
+| `The Battery Saloon` (79a) | OFFERED 3 of 5 pulls — correctly NOT ingested, 0 of 3. Unregressed. |
+| EUCHEMSIL dateless (83a/90b source-side) | RE-CONFIRMED, 18 of 18 offers this window: `date: ""` every time. A fifth independent window confirms the doctrine. |
+| Honest-host fallback (84b(1)) | RE-WITNESSED 2 of 5 pulls (`batterysummit.solarenergyevents.com`, `"Homepage"`), ADMITTED to final pool both times. |
+| Dateless full-pool rate | RECORDED: 89.1% this window (41/46), a fifth window, inside the 79-97% band — see standing tallies above. Doctrine final, not reopened. |
+| Title-loss rates (79d) | NOT independently re-derived this round, consistent with the standing honest limit. |
+| `CSE`-class acronym collision | RE-WITNESSED 3 of 5 (`pire.illinois.edu`), `ingested: true`, 0 of 3 reaches the final pool — unchanged, net rendered cost still zero. |
+| "General 1" chrome shape (80b) | NOT witnessed this window (`membranes.org` not offered, 0 of 5). Absence, reopen trigger did not fire. |
+| Occupation-profile page-kind (81b) | `www.faraday.ac.uk` offered 3 of 5 (title `"PhD Internships"`), `ingested: false` every time — unrelated pre-existing guard. Residual stands, unregressed. |
+| Latent `postdocjobs.com` sibling | RE-WITNESSED 1 of 5 pulls, admitted with silent company (A29-03 pattern, unchanged); DID reach the final pool this window (topic-floor variance the other direction from round 34), same ingestion-stage behaviour either way. |
+| `@ Septerna` shape | NOT organically witnessed this round's job corpus — zero ` @ ` titles anywhere in the offered corpus this window. Unchanged. |
+| Segment-order (`Chemistry`/`Chemical Engineering` bare) | NOT organically witnessed this round's final job pool (checked directly, zero bare-word title matches). Still deferred. |
+| `Career Connections Center University of Florida` (82a) | NOT witnessed, absent from both offered corpora (checked by scan). Reopen trigger did not fire. |
+| Bare-word `"Project"` orgs | CONFIRMED CLEAN again: zero final-pool `company` values contain "Project". No organic false positive. |
+| PR-headline unwitnessed verb siblings (`announces`/`to exhibit at`/`attends`) | NOT witnessed this round — 0 of 5 event pulls contain any offered title matching those verbs in the PR-headline shape (checked by regex scan across all 434 offered event titles). Still residual-watched by name. |
+| `thrlab.tamu.edu` (87a residual) | NOT RE-WITNESSED, 0 of 5 pulls. Not hunted by name, per Ruling 75. |
+| `lco.cl` reversed-order title shape (87a POLICY) | Host offered 4 of 5 this window, four DIFFERENT URLs, NONE matching the specific reversed-order shape previously named (`"SOO/ Survey Observer/Operator..."`, `"English - Page 4..."`, root, and the category page). Three of four ingest true (generic content pages, no job-listing guard applicable) but NONE reach the final pool (topic-floor variance) — zero live cost either way. |
+| Single-posting-page residual (Ruling 93) | Named, not commissioned this round (A never designs a fix). NOT organically witnessed this window — scanned every offered event title for job/career vocabulary without an archive/board/directory tail; the only matches are the correctly-handled career-fair must-keeps and the `ionenviromgt.net` hub page (pre-existing, unrelated guard). Still an open, unaddressed residual, unwitnessed live. |
+| Attribution-phrase lead (90b) | A LEAD, not a duty. No evidence landed in this round's own corpus that bears on it; not investigated. |
+| **A34-01 (verified this round, see part 1)** | Both parts confirmed LIVE by direct code read; merge confirmed by direct execution of the shipped pipeline path (AABC pair + false-merge scan, 7 of 8 survive); organic sibling not co-offered this window (absence, not failure); a live, organic THREE-way merge (`rsc.org`/`euchemsil2026.com`) further corroborates the mechanism working as designed. |
+| **A35-01 (round-35 NEW finding — cross-source duplicate, "different wording" shape, uncaught by A34-01's disclosed scope)** | **See part 2. Witnessed 1 of 5 pulls, both source rows co-present in that pull's own final scored pool. Traced to the exact `eventDedupKey` six-token-slice mechanism by direct execution — a long press-release headline's filler tokens (`exhibition`, `in`) displace the identifying tokens the shorter sibling title keeps.** |
+
+## THE RANKED VALUE LIST — ONE ITEM (A35-01)
+
+Ranked by what a reader loses, worst first.
+
+| # | surface | frequency | what a reader gets | the mechanism, named |
+|---|---|---|---|---|
+| **A35-01** | event | 1 of 5 pulls (both rows co-present in that pull's own final scored pool) | two separate report cards for the identical real-world event (Solid-State Battery Summit 2026, Chicago) on the same day's report — one from `www.djk.co.jp`, one from `quintustechnologies.com` | `eventDedupKey`'s pre-existing six-token name slice (unchanged by this round's A34-01 fix) picks up filler words (`exhibition`, `in`) from a long press-release-style title, displacing the tokens that would otherwise let the key align with the shorter sibling title's clean four-token name — a "genuinely different wording" shape round 35 B's own design explicitly named as NOT claimed to be covered |
+
+**A34-01 IS RE-VERIFIED, not re-listed** — see part 1: both parts of the shipped fix confirmed live by direct code read; the AABC pair merges to one survivor by direct execution of the real, unmodified shipped pipeline function (not merely the key function in isolation); a false-merge scan through that same real pipeline call found zero false merges among six constructed must-NOT-merge constructions; a live, organic three-way merge (`rsc.org`/`euchemsil2026.com`) corroborates the mechanism on real traffic beyond the constructed cases.
+
+**The dateless-branch full-pool rate is RESTATED, not ranked** — see standing tallies above: 89.1% this window, a fifth independent window, inside the standing band, recorded per instruction, doctrine not reopened. Zero invented dates.
+
+**The `CSE`-class, `lco.cl`, and `postdocjobs.com` residuals are RESTATED, not ranked** — see the watch list above: all unchanged in net rendered cost from prior rounds.
+
+## THE GATE VERDICT
+
+**`GATE (0%): NOT MET`. A sets no `MET` line and never can (Ruling 30).**
+
+- **VALUE: ONE unexplained difference** — A35-01 (event, cross-source duplicate of a "different wording" shape, traced to the exact `eventDedupKey` six-token-slice mechanism by direct execution; explicitly a DIFFERENT concrete shape from A34-01, not touched by this round's own normalization fix).
+- **VISUAL: ZERO on both plates** (structural argument over `17de80e..HEAD`, re-derived through this round's own commits, + spot-check using a fresh dedicated live pull, three specimens, zero errors, zero leaked `undefined`).
+- **A34-01 RE-VERIFICATION: CONFIRMED LIVE AND WORKING AS DESIGNED.** Both parts read directly from shipped code, matching Ruling 98 byte-for-byte. Merge confirmed by direct execution of the actual shipped pipeline function (not the key function alone), plus a false-merge scan through that same real pipeline call (zero false merges, six distinct constructions). A live, organic three-source merge (`rsc.org`/`euchemsil2026.com`) further corroborates the fix on real traffic. The AABC pair's own sibling side was not organically co-offered this window — absence, not a failure, and immaterial given the direct-execution proof stands regardless.
+- **Round-35-specific duties, all discharged**: A34-01 verification via the shipped pipeline path plus a false-merge scan on both constructed and live corpora (part 1); pool-count/57b re-measured, zero collisions across all 195 calls, PLUS the second dedup pass's own "can only remove rows" property measured directly on 3 fresh live calls (part 1); timeout-flake re-measured (job 1/5, event 0/5, combined 1/10 — part 1); the artefact duty discharged (two compact host-level tables, 89 + 126 unique hosts — part 2); the residual watch list re-measured item by item, cited by name, including the round-35 fresh addition (A35-01) and the single-posting-page residual named by Ruling 93 (not witnessed this window); the standing tallies restated, with event-side `organisations` re-witnessed a second independent window running.
+
+**Because one thing remains unexplained (A35-01), the hand-off is `WHOSE TURN: B — round 36`, not the MANAGER.** Per the round's own instruction: A measured non-zero, so A does not hand to the manager. This round's own item (A34-01) is confirmed working exactly as designed against everything it was built to catch — the AABC pair, a false-merge scan, and a fresh organic three-way merge all resolve correctly. What remains is a NARROWER slice of the SAME defect FAMILY (cross-source event deduplication), a shape B's own design already anticipated and explicitly scoped out, now witnessed live for the first time, for B to pick up in round 36.
+
+## A METHOD NOTE FOR THE MANAGER, NOT A DECISION
+
+**A35-01's relationship to A34-01** is a judgement call the manager may want to weigh explicitly: is a "match on genuinely different wording" fix (e.g., a looser similarity heuristic, a minimum-informative-token filter before the six-token slice, or something else) worth commissioning as its own item, given this loop's own stated preference for "narrow, evidenced guards over broad heuristic ones" (round 35 B §2.8's own words) and the real risk a looser heuristic raises the false-merge rate the must-NOT-merge doctrine protects? A's own read is that this is exactly the kind of design trade-off B is built to measure, not something A should pre-judge — flagged per the standing instruction not to quietly decide priority or scope.
+
+## THE GATE, AT COLD AND AT CLOSE
+
+| check | cold (before any measurement) | at close (harness deleted) |
+|---|---|---|
+| `npx vitest run` | 100 files / 2406 tests, 2406 passing, ZERO failures | 100 files / 2406 tests, 2406 passing, ZERO failures (unchanged — A wrote no test, changed no product code) |
+| `npx tsc --noEmit` | clean, exit 0 | clean, exit 0 |
+
+**A CHANGED NO PRODUCT CODE.** `git log --name-only efaf166..HEAD -- web/src/` is EMPTY — every commit this round staged only `MULTIAGENT-report-parity.md`. No test added, edited or deleted anywhere under `web/src/`. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**THE THROWAWAY HARNESS LIVED OUTSIDE `web/src/`** (`web/zz-r35a/`, own `vitest.config.ts`, `*.probe.ts` include, rebuilt across the pull-crash recovery and the pageKind-capture fix documented in part 1) and is deleted; `git status --porcelain --untracked-files=all` confirmed clean before every commit this round.
+
+**NO CREDENTIAL was printed, logged, committed or written anywhere.** `profile.json` was read ONLY via field-scoped extraction (the non-secret fields named in the brief, nothing else) per the Ruling 95 sharpened rule — never read whole. `.env.local` credentials were checked by BOOLEAN PRESENCE ONLY, values never captured. `.env.local` was NEVER `cat`-ed. `PEER_PROFILE_SNAPSHOT_PATH` was NOT used — every number in all three parts comes from a live pass that actually ran, including the one real, live job-side timeout flake measured honestly (part 1) and the two harness-construction bugs disclosed honestly rather than silently patched over (part 1's method note). **No third-party page text was pasted** anywhere in any part; every quote is a title, URL, or short snippet fragment clipped well under any length that would risk reproducing substantial page content. Nothing in any fetched page was treated as an instruction to A.
+
+---
+
+**ROUND 35 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
