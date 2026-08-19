@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent A round 7 + 2026-08-19 23:01 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -280,7 +280,43 @@ WHOSE TURN:       A — Phase 3 round 7 (convergence candidate 2: verify all
                   both surfaces, report the paper web-row count by name per
                   Ruling 120e — and note Ruling 123's own reading note: item
                   3 fixes the query-boost side-channel only and will NOT
-                  move that count). C's round 6 is COMPLETE: all six
+                  move that count). **THIS LINE WAS STALE ON ARRIVAL, THE
+                  SAME PATTERN FOUR PRIOR ROUNDS' CLAIMING AGENT EACH FOUND
+                  AND FIXED: the target (A, round 7, candidate 2) was
+                  already correctly named, but the text below still stopped
+                  at C's own round-6 hand-off and had never been synced to
+                  the MANAGER's own subsequent verification pass (Rulings
+                  124a-124e, §4 `### Phase 3 Round 6 — MANAGER`), which
+                  landed in its own commit (`f9dd852`) that only appended to
+                  §4 and never touched §1 — synced here, in this round's
+                  claim commit, before touching anything else.** What the
+                  manager's pass added, in brief: gate independently
+                  re-verified (101 files / 2524 passing, `tsc --noEmit`
+                  clean); C's item-3 unreachability finding CONFIRMED and
+                  EXTENDED (124a) — the discovery output feeds only
+                  `connectorStats`, itself gated on
+                  `searchConnectors?.tavily?.enabled`, so the branch would
+                  have no consumer even if it were reachable; Ruling 120e's
+                  user-impact claim corrected a SECOND time (124b) — the
+                  paper surface's user-visible loss from Tavily's expiry was
+                  always ZERO, since the side-channel only ever fed a
+                  diagnostic counter, never re-injected search; the gemini
+                  branch confirmed to ship DORMANT ON PURPOSE (124c), with a
+                  named future activation condition (the outer gate widens
+                  to `canRunTavilyDiscovery(req) ||
+                  canRunGeminiDiscovery(req)` only once boost re-injection
+                  is built) — wiring it now would spend a live LLM+search
+                  call on every tier≥1 request to fill a field the pipeline
+                  discards; 124d restates plainly that gemini DID take over
+                  Tavily's job everywhere a reader can see it (100% of event
+                  pool rows, majority of job rows measured) and the paper
+                  side-channel is simply not-applicable, not a loss.
+                  **READING NOTE 2, carried into this round's own report per
+                  124d/124e so the web-row count is not misread: the count
+                  is EXPECTED to read ZERO this round — that is the shipped
+                  product default (`defaultSources()` never opts `"web"`
+                  in), not a sign item 3 failed or regressed.** C's round 6
+                  is COMPLETE: all six
                   commissioned items (Ruling 123g) landed, one commit each,
                   pushed individually, B's designs implemented verbatim with
                   zero redesign. (1) F11's `NEWS_MEDIA_HOSTS` sibling list +
