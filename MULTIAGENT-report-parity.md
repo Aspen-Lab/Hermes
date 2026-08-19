@@ -92061,3 +92061,134 @@ companyName (raw, exact): "name"        <- both A witnesses, byte-identical
 **Gate re-confirmed unchanged after harness deletion:** 100 files / 2446 tests passing, `tsc` clean, `eslint` — `quiz.tsx:46` only.
 
 Continuing to Deliverable 2 (the family-(a) enumeration) in the same session.
+
+
+---
+
+### Phase 3 Round 2 — Agent B, DELIVERABLE 2 (Ruling 119c: the family-(a) enumeration + the schema.org discriminator measurement)
+
+**STATUS: DELIVERABLE 2 COMPLETE.** Both `web/src/lib/events/sources/eventweb.ts` (2446 lines) and `web/src/lib/jobs/sources/jobweb.ts` (2086 lines) read END TO END, not sampled, plus their shared upstream `web/src/lib/sources/gemini-search.ts` and `web/src/lib/text/clean.ts`. Gate re-confirmed before writing this entry: `npx vitest run` — **100 files / 2446 tests passing** on the clean runs; **`src/lib/events/benchmark.test.ts` flaked RED twice across six total runs this deliverable** (`EVENT_BENCHMARK_TOP5 []`, an empty live-search pool, both times self-healing on the very next run with zero code changed in between) — this is Ruling 96b's own named, pre-authorised live-search flake, positively identified by file name and test name this time (not merely assumed), record-and-proceed, not stop-everything. `npx tsc --noEmit` — clean, 0 errors. All harnesses (`web/zz-p3b2/`) deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean.
+
+---
+
+## PART A — THE EVENT-SURFACE MAP: every branch from a fetched web row to an admitted event
+
+**Stage 0, UPSTREAM OF eventweb.ts, PROVIDER-DEPENDENT (this is new context A's own report did not have — A scoped its `cleanDisplayText` grep to `web/src/lib/events web/src/lib/jobs web/src/lib/opportunities`, which does not include the actual file this runs in):**
+
+- **gemini rows:** `searchGemini` (`web/src/lib/sources/gemini-search.ts:608`) fetches the target page's real HTML (`fetchPagesConcurrently`, `@/lib/opportunities/page-fetch`) and derives `title`/`snippet` via `pageTitleFromHtml`/`pageSnippetFromHtml` (`:489`, `:507`). **Both paths of `pageTitleFromHtml` (the preferred `og:title` via `metaContent`, and the `<title>`-tag fallback) DO call `cleanDisplayText`/`decodeHtmlEntities`** (`metaContent` line 425 is pass 1; `decodeTitleUntilStable` runs further passes until stable). Channel L (`pageKind: "event"`) is also stamped here, off the SAME fetched HTML, at zero extra cost (`:662`).
+- **tavily/brave rows:** `searchTavily`/`searchBrave` (both files, near their own `fetchImpl`) map the provider's OWN API response fields (`r.title`, `r.content`/`r.description`) **directly into `WebResult`, with NO cleaning function called at all** — neither `cleanDisplayText` nor anything else. This is a REAL, CONFIRMED-BY-READING, CURRENTLY DORMANT gap: Tavily is disabled this phase (Ruling 118c, HTTP 433) and gemini "carries its role," so no reader is exposed to this branch today, but the code difference is real and asymmetric by PROVIDER, not just by file. Recorded as a residual (see DISPOSITIONS, Deliverable 4).
+
+**`webResultToRawEventItem(result, now)` — `eventweb.ts:2063` — called once per offered row from `fetchImpl`'s `Promise.all` fan-out. EVERY guard below is a VETO: a miss falls through to the NEXT guard; the row is admitted only if EVERY guard is cleared.**
+
+| # | Guard | Input | Miss (fails to detect) → |
+|---|---|---|---|
+| 1 | `title`/`url` presence | `result.title`, `result.url` (trimmed) | drop (`null`) |
+| 2 | `isDeniedUrl(url)` (`:268`) | host ∈ `DENY_HOSTS` (23 entries, social/paywalled-journal/encyclopedia hosts) OR host ∈ `PAPER_PAGE_HOSTS` (7 bibliographic-record hosts) OR `DENY_PATH_RE` (`/article,doi,abs,reel,posts,p/`) OR `COMMERCE_PATH_RE` (`/shop,store,product,products,collections,cart,checkout,catalog(ue),pricing,buy/`) | drop |
+| 3 | `isEventIndexResult(title)` (`:698`) | `EVENT_INDEX_TITLE_RE` on whole title OR its first `titleSegments()` segment | drop |
+| 4 | `isEventHubResult(title, url)` (`:797`) | URL's terminal path segment ∈ closed hub-word list AND title head matches a hub tail/head regex | drop |
+| 5 | `isNewsArticleTitle(title, url)` (`:515`) | `NEWS_TITLE_RE` / `PR_ANNOUNCEMENT_HEADLINE_RE` / `PR_SETS_ORDINAL_HEADLINE_RE` on title, OR ticker-path / `NEWS_HEADLINE_PATH_RE` on URL path-as-phrase | drop |
+| 6 | `isPaperPageTitle(title)` (`:525`) | `PAPER_TITLE_RE` — ONLY `"about this abstract"/"abstract:"/"archive ouverte"` vocabulary (note: `PAPER_PAGE_HOSTS`, the host list, is already spent at guard 2 — this is title-vocabulary-only, a narrower net than it sounds) | drop |
+| 7 | `isEventArtefactTitle(title)` (`:572`) | `EVENT_ARTEFACT_HEAD_RE` — slides/proceedings/posters/presentations FROM/OF/AT | drop |
+| 8 | `isEarningsCallPage(title, url)` (`:653`) | `EARNINGS_CALL_PAGE_RE` / `CALL_ARTEFACT_TITLE_RE` on title or URL-path-phrase | drop |
+| 9 | `isJobListingContentTitle(title)` (`:2056`) | job vocabulary (`JOB_LISTING_CONTENT_RE` or repeated "jobs" mention) AND NOT `looksLikeEvent(title)` (safety net) | drop |
+| 10 | **TOPICALITY GATE** (`:2141-2143`) | `looksLikeEvent(title+snippet)` (EVENT_SIGNAL_RE — conference/symposium/workshop/seminar/…/**forum**/…) **OR** `snippetAbsent` (empty-after-trim — "absence is not evidence," title still votes) **OR** `pageKind === "event"` (channel L, gemini-only, RESCUE ONLY, never a rejection) | if ALL THREE are false → drop |
+| 11 | Date/expiry (`:2155-2264`) | `extractEventDate`/`extractEventDayCandidates`/clustering/`ownedTitleSpan`/`extractDeadline`; a genuinely-past anchor drops; a dateless row with every year token in the past (and no future-year escape) drops | drop; otherwise survives, possibly with `startDate: ""` |
+| **12** | **SURVIVOR — fields assembled and rendered** | `name = eventNameFrom(title, snippet, url)` (chrome-strip chain → slug fallback → snippet-mining fallback → bare-hostname fallback → literal `"Untitled event"`); `location` is **ALWAYS EITHER** the literal string `"Online"` (if `/online\|virtual\|hybrid/i` matches text) **OR** the literal string `"See event page"` — **a web-discovered event NEVER gets a real parsed venue, by construction**; `type` via `classifyEventType`; `deadline`; `description` = snippet clipped to 600 chars; `tags: ["web discovery"]` | — |
+
+**Guard 12's `eventNameFrom` is itself a five-stage fallback chain** (title-segment select with 6 composed strips [`isChromeSegment`, `recoverFromNarrative`, `stripWeldedPageTypeLabel`, `stripBannerLeadIn`, `stripListingFurniture`] → URL-slug recovery → snippet-mining with `leadingNameSpan` → bare hostname → `"Untitled event"`). This is where F5's homepage-declaring title and F9's "TEST" suffix live — a SEPARATE map from the kind-admission chain above, because by the time it runs, the row has ALREADY been admitted; nothing here can un-admit a row, it can only choose what string names it.
+
+---
+
+## PART B — THE JOB-SURFACE MAP
+
+**Stage 0:** identical `pageTitleFromHtml`/`pageSnippetFromHtml` upstream for gemini rows (shared file); jobweb.ts additionally runs `cleanJobTitle` (`job-cleanup.ts`, bracket-strip + call-to-action rejection — **no entity decoding of its own**, relies entirely on the upstream pass having already run). Tavily/brave rows: same dormant gap as events (`searchTavily`/`searchBrave` in `jobweb.ts` map `r.title`/`r.content` raw).
+
+**`webResultToRawJobItem(result, topics)` — `jobweb.ts:1627`:**
+
+| # | Guard | Input | Miss → |
+|---|---|---|---|
+| 1 | `title` (`cleanJobTitle`) / `url` presence | — | drop |
+| 2 | URL parse + `http(s):` protocol | — | drop |
+| 3 | `hasEmptyPostingIdentifier(path+query)` | a link with no real posting id | drop |
+| 4 | `NON_JOB_PATH_RE.test(pathname)` (`:69`) | `/article,articles,doi,paper,papers,publication,publications,news,blog,posts,collections/` — **no `/products/` clause; the code's own comment names this exact gap in advance** | drop |
+| 5 | `isNonJobHost(host)` (`:84`) | `wikipedia.org` only | drop |
+| 6 | `isDateStructuredResearchPath(title, path+query)` (`:101`) | `/^\/\d{4}\/\d{2}\/\d{2}\//` path AND title lacks `JOB_TEXT_RE` — **the job side's own mirror of the event side's F2 gap; JOB has this guard, EVENTS does not (A's own named asymmetry, confirmed by reading both files)** | drop |
+| 7 | **TOPICALITY GATE** (`:1689-1696`) | `snippetAbsent` **OR** `JOB_PATH_RE.test(pathname)` **OR** `JOB_TEXT_RE.test(text)` — survives if ANY ONE is true | if ALL THREE false → drop |
+| 8 | `isListingPage(title, host, path+query)` (`:1580`) — **11 sub-checks, in order**: `FEED_PATH_RE` → `FORUM_THREAD_URL_RE` → `isTopicLandingPage` → `LISTING_TITLE_RE` → `CAREERS_INDEX_TITLE_RE` → `LISTING_SECTION_TITLE_RE` → `isOwnerSectionIndexTitle` → `isHostBrandProgrammePage` → `isConjoinedSectionLabelTitle` → `isCareersSectionRoot` → `isBrandOnlySearchResultsPage` → *(if host ∈ `AGGREGATOR_HOSTS` only)* `LISTING_URL_RE` OR `!POSTING_ID_RE` | drop |
+| 9 | `isListingPage` AGAIN, on `roleTitle` (the first split segment — the guard chain's own admission that a whole-title pass and a rendered-segment pass can disagree) | same 11 sub-checks | drop |
+| **10** | **SURVIVOR** | `title = roleTitle`; `company` = first survivor of an ordered candidate list (`titleEmployer` "at X" capture → remaining split segments → parenthetical-with-org-designator) filtered through **15 rejection checks** (`KNOWN_JOB_BOARD_DOMAINS`, `SEASON_COHORT_LABEL_RE`, `looksLikeBareLocation`, `looksLikeHostBrand`, `looksLikeTopicLabel`, `looksLikeHostBoilerplatePhrase`, `looksLikeNavChrome`, `looksLikeBoardSelfName`, `looksLikeProgrammeAreaList`, `CAREERS_INDEX_TITLE_RE`, `TRUNCATED_CANDIDATE_RE`, `CAREERS_OFFICE_LABEL_RE`, `ROLE_TEXT_CANDIDATE_RE`, `BOARD_DOMAIN_BRAND_RE`, `looksLikeProjectLabelWithDescription`) — **when NO candidate exists at all (no "at X", no split segment, no parenthetical), nothing in this 15-check list ever runs, and `company` is simply whatever `.find()` returns on an empty/no-match list (`undefined`)**; `location = ""` **ALWAYS — a hardcoded literal empty string, structurally stronger than the event side's "See event page": a web-discovered job NEVER gets ANY location text at ingestion, full stop** (a later `enrich.ts` pass may fill it from the fetched page's own structured data, not examined this round); `isRemote` = `/\bremote\b/i.test(text)`; `description` = `cleanJobDescription(snippet)`; `tags: ["web job listing", host]` | — |
+
+---
+
+## PART C — PER-FINDING TRACE, BY EXECUTION (not by re-stating A's summary)
+
+Confirmed live this round, running the REAL exported regexes/functions directly (throwaway harness, deleted):
+
+- **F1a/F1b (osti.gov, inl.elsevierpure.com):** `looksLikeEvent(title)` = **TRUE** on the recorded title alone ("Workshop"/"Conference" vocabulary) — clears guard 10 on TITLE evidence, no snippet needed. All of guards 2-9 independently confirmed false by A's own harness; not re-run.
+- **F2a/F2b (foundry.lbl.gov):** `looksLikeEvent(title)` = **FALSE** on title alone — these rows must clear guard 10 via the SNIPPET carrying event vocabulary (a lab-blog post about a symposium plausibly mentions "conference"/"presented at" in its body) or via `snippetAbsent`; not separable further without the exact recorded snippet text (not pasted, per the no-large-block rule). Either way, **guards 2-9 (the actual KIND guards) are unanimously false** — this is squarely a MISSING kind-guard, not a topicality-gate quirk.
+- **F4 (itmsf.org):** `looksLikeEvent(title)` = **TRUE** — "Forum" in `EVENT_SIGNAL_RE` clears guard 10 directly, same mechanism as F3 (family b).
+- **F5 (moltensalt.org):** `looksLikeEvent(title)` = **FALSE** on title — confirms A's own inference (the row cleared guard 10 on snippet text the homepage's meta description carried, not on the rendered name itself).
+- **F6 (electrochem.org):** `looksLikeEvent(title)` = **FALSE** on title ("molten salts Archives" has no event-signal word) — same as F5, must clear on snippet/absence. `isEventIndexResult` independently confirmed false (A): "Archives" pairs with the TOPIC word, not an event noun, in this specific title.
+- **J2 (neicorporation.com):** `NON_JOB_PATH_RE` = **FALSE**, `JOB_PATH_RE` = **FALSE** on the real path — confirms A's "no live case in this pull" gap exactly. Neither the path nor (almost certainly) the title clears guard 7's `JOB_TEXT_RE` arm either ("Lithium Cobalt Oxide Powder" carries none of that closed vocabulary) — **survival requires `snippetAbsent`**, consistent with a product page's meta description being genuinely empty or non-job-shaped.
+- **J3 (developingexperts.com):** `NON_JOB_PATH_RE` = **FALSE**, `JOB_PATH_RE` = **FALSE** — note the exact mechanism: the path is `/career-builder/1537`, and `JOB_PATH_RE` requires the segment to be EXACTLY `career` (or one of its closed siblings) bounded by `/` or end-of-string; `career-builder` is one compound segment, so the regex correctly does NOT fire on it — this is not a near-miss worth widening (widening to substring-match `career` would be a much bigger, riskier change with no clear benefit, since the real defect is kind, not path-vocabulary). Same as J2, survival requires `snippetAbsent` or non-obvious snippet content.
+- **J5a/J5b (faraday.ac.uk):** `JOB_PATH_RE` = **TRUE** (`/opportunities/` is in the closed list) — confirms these clear guard 7 on PATH alone, reach `isListingPage`, and `LISTING_TITLE_RE` is confirmed **FALSE** for both real titles by direct execution — exactly A's two named near-misses (J5a: "Studentships" not in the noun list; J5b: "Opportunities" IS in the list but no leading digit-count precedes it).
+
+---
+
+## PART D — THE SCHEMA.ORG `@type` MEASUREMENT (Ruling 119c's mandated discriminator check)
+
+**Method:** the pipeline's own `fetchPagesConcurrently` (`@/lib/opportunities/page-fetch`, the ratified re-check pattern) fetched all 11 family-(a) wrong-row URLs plus 10 control URLs (6 events + 3 jobs drawn from A's own "correct" tables, full URLs recovered from A's report and this file's own prior-round witness records, plus 1 bonus contrast row) — 21 real, live fetches, throwaway harness, deleted before this commit. `@type` extracted with the SAME regex logic `web/src/lib/sources/gemini-search.ts`'s own `pageDeclaresEventFromHtml` uses (`LD_JSON_BLOCK_RE`/`LD_TYPE_VALUE_RE`/`schemaTypeToken`, module-private so not importable — copied read-only for this measurement, not shipped), PLUS the real exported `pageDeclaresEventFromHtml` itself for a boolean cross-check. Sanity-checked: two "NONE FOUND" pages independently grepped for the raw strings `ld+json`/`@type` — zero occurrences in either raw HTML, confirming "none found" reflects the real page, not a regex miss.
+
+**Results (clipped to the type list; full labels in the harness, not reproduced verbatim here):**
+
+| Row | @type declared |
+|---|---|
+| F1a osti.gov (wrong) | `report`, `organization` |
+| F1b inl.elsevierpure.com (wrong) | NONE FOUND |
+| F2a/F2b foundry.lbl.gov (wrong, x2) | NONE FOUND |
+| F4 itmsf.org (wrong) | NONE FOUND |
+| F5 moltensalt.org (wrong) | NONE FOUND |
+| F6 electrochem.org (wrong) | `collectionpage`, `imageobject`, `breadcrumblist`, `website`, … |
+| J2 neicorporation.com (wrong) | `webpage`, `organization`, … (**no `product`, no `jobposting`**) |
+| J3 developingexperts.com (wrong) | `breadcrumblist`, `listitem` only |
+| J5a/J5b faraday.ac.uk (wrong, x2) | `website`, `organization`, `webpage`, … (**no `jobposting`**) |
+| CTRL event MoSES (correct, must-keep) | NONE FOUND |
+| CTRL event The Battery Show (correct) | **`event`**, `place`, `organization`, … |
+| CTRL event Battery Career Fair (correct) | `webpage`, `organization`, … (**no `event`**) |
+| CTRL event battery-power.eu (correct) | `webpage`, `organization`, … (**no `event`**) |
+| CTRL event garysguide (correct) | NONE FOUND |
+| CTRL event F9 cvent (correct, real+linked) | NONE FOUND |
+| BONUS battery-business-forum.com (real "Forum" event, family b contrast) | NONE FOUND |
+| CTRL job GE Vernova (correct) | **`jobposting`**, `organization`, … |
+| CTRL job Savannah River (correct) | **`jobposting`**, `organization`, … |
+| CTRL job INL postdoc (correct) | **`jobposting`**, `organization`, … |
+
+**THE MEASURED, CALIBRATED CONCLUSION — Round 30 B's Tier-0 "non-discriminating" verdict does NOT transfer to Tier 2, exactly as Ruling 119c warned, and the reason is now measured rather than assumed:**
+
+1. **JOB SURFACE: a clean, zero-overlap POSITIVE signal, but the control sample is too small (n=3) to promote to a hard requirement.** All 3 real, correct job-control pages declare `JobPosting`; none of the 4 wrong job pages do. This is a real, currently completely UNUSED signal (job side "deliberately ignores" channel L per its own code comment, `jobweb.ts:1686-1688`) — recommend adding it as an ADDITIVE POSITIVE/rescue signal only (mirroring the event side's own proven-safe usage of channel L), **not** a hard "must declare JobPosting to admit" gate: the event side's own control sample (below) directly proves that real, must-keep rows in this exact population routinely carry NO type-specific schema at all, and nothing in this round's small job sample rules out the same being true of some real, schema-less postings this pipeline has not yet drawn. Flagged as a measurement gap for a future A round (widen the job-control sample specifically hunting for a real posting with no `JobPosting` schema) before any hard gate is considered.
+2. **EVENT SURFACE: schema.org is NOT a safe admission-requirement signal — measured, not assumed.** 5 of 6 real, correct, already-admitted event controls (MoSES, Battery Career Fair, battery-power.eu, garysguide, the F9 cvent page) carry **NO** `Event` declaration at all. A guard requiring `@type: Event` to admit would have WRONGLY DROPPED 5 of 6 real must-keep rows in this very sample — this is the exact must-keep proof the method rules require before trusting a guard, and it independently vindicates the shipped code's own existing restraint (channel L is rescue-only, never a requirement, already correct by design).
+3. **EVENT SURFACE: schema.org DOES give a small, safely-bounded REJECTION-only signal, on a short closed list of named, clearly-incompatible declared types.** Two of the seven event wrong-rows (F1a's `report`, F6's `collectionpage`) declare a type that is unambiguously NOT an event, and ZERO of the six event controls declare either of those two types — a clean, zero-measured-cost close for 2 of 7. The other five wrong-rows (F1b, F2a, F2b, F4, F5) return NO schema at all, so this discriminator cannot help with the majority of family (a)'s event side — **schema.org is a real but PARTIAL tool here, not a silver bullet**, and the remaining five need the title/URL-vocabulary-shaped guards designed in Deliverable 3, not a schema fix.
+4. **The measured-vs-reasoned line, stated per the escape clause:** the safe rejection list this round can actually PROVE is `{report, collectionpage}` (2 live witnesses, 0 false-positive risk on the measured control set). Extending it to `{ScholarlyArticle, Article, BlogPosting, Dataset, Product}` by analogy (the obviously-adjacent "this page is about something, not an instance of it" schema.org vocabulary) is REASONED, not measured this round — none of those exact tokens appeared live. Recommend shipping the 2 measured tokens now and naming the analogy-only extension as an explicit future-A tally duty, exactly as J1's placeholder list was handled.
+
+---
+
+## PART E — THE CHANNEL-L STRUCTURAL FINDING
+
+`WebResult.pageKind` (the schema.org channel) is populated ONCE, in the SHARED `searchGemini` function, for **every** row on **both** surfaces (events and jobs both call the same function) — but:
+- it is collapsed to a **boolean** at the point of extraction (`pageDeclaresEventFromHtml` returns `true`/`false`/nothing, never the actual declared type), so the richer information this round's own measurement used (Report, CollectionPage, JobPosting, WebPage…) is READ off the HTML and then immediately THROWN AWAY unless it happens to match the closed `SCHEMA_EVENT_TYPES` set;
+- even the boolean it keeps is used ONLY as a positive rescue signal on the event side (never a rejection basis);
+- the job surface reads it **not at all**, by explicit, deliberate policy comment (`jobweb.ts:1686-1688`, "each surface keeps its own policy").
+
+This is why Deliverable 3's designs (next entry) can propose extending `pageKind` to carry the actual declared type — the fetch-and-parse machinery already exists and costs nothing extra; only the TYPE OF SIGNAL each surface derives from it needs to change.
+
+---
+
+## PART F — THE `&mdash;` SEAM: RE-TRACED LIVE, A's ROOT CAUSE DOES NOT REPRODUCE
+
+**A's claim:** `cleanDisplayText` is never called anywhere in the events pipeline (`web/src/lib/events`), so the entity survives structurally. **Confirmed true as literally stated** (re-grepped this round, same zero hits) — but the CAUSAL story built on it is INCOMPLETE, and this round's own execution shows the specific recorded row does not reproduce through it.
+
+**Fetched the exact recorded URL (`https://www.events.inl.int/battery-science-innovation-forum2026`) FOUR times this round, byte-identical every time (901,275 bytes, diffed).** The raw page's own `og:title` is literally `content="Battery Science &amp; Innovation Forum &mdash; EVENTS INL"`. Running the REAL, unmodified, shipped `pageTitleFromHtml` (`gemini-search.ts`) on this exact fetched HTML produces `"Battery Science & Innovation Forum - EVENTS INL"` — **both entities correctly decoded** (`metaContent`'s own `cleanDisplayText` pass 1 handles both `&amp;` and `&mdash;` in one pass; `HTML_ENTITIES` maps `mdash` to a plain ASCII hyphen, not a Unicode dash). Running the REAL, unmodified `webResultToRawEventItem` on this reconstructed `WebResult` produces `name: "Battery Science & Innovation Forum"` — **the "- EVENTS INL" site-chrome tail is also correctly stripped** (the decoded plain hyphen IS recognised by `titleSegments`' separator class `[-|·–—]`, which includes a literal ASCII hyphen).
+
+**So today, live, through the real pipeline, on the exact recorded URL: no undecoded entity, no site-chrome tail. A's one-time observed string does not reproduce.** Two honest possibilities, neither confirmed: (a) the live page's markup was briefly different at A's exact pull moment (no evidence for this — the page is stable across 4 fetches spanning this session, and A's own pull was only ~10-15 minutes before this round started, not a plausible edit window, though not impossible); (b) Gemini's own grounding/redirect resolution supplied different content that specific call (its indexed snapshot could differ from a live fetch) — plausible but not verifiable without re-running the exact live grounding call, which this round did not do (would consume a live LLM search call for uncertain benefit). **This is treated as a DISPOSITION candidate (Deliverable 4), not a fix** — the mechanism A and the manager both endorsed does not hold up under the SAME "close it by execution" standard Ruling 119d demanded for J1, and manufacturing a fix for an unreproduced defect risks fixing the wrong thing. What IS real and confirmed by reading (Part A above): the Tavily/Brave provider path skips ALL title/snippet cleaning, a genuine, separate, currently-dormant gap.
+
+Continuing to Deliverable 3 (designs for families b/c/d) in the same session.
