@@ -85427,3 +85427,83 @@ bebee.com | Internship, Battery Materials, Battery Engineering (Wi... | x1 | ADM
 Named-row sanity checks against this table: `hyetlithium.com` and `postdocjobs.com` both re-confirmed ADMITTED with silent company (A29-03 stays ADDRESSED, unregressed). `stemgateway.nasa.gov` still not pooled -- unchanged, still NAMED NOT COUNTED. `talents.vaia.com`/Solid Power, `ev.careers`/Tesla are fresh 57b witness lines re-confirmed this round. `psi.ch`'s BALDER-titled row (`"Summer Internship Opportunity - BALDER Project (Licensing Support for a Molten Salt Reactor)"`) was offered exactly once this window (pull 4) and DID reach the final pool this time (title renders shortened to `"Summer Internship Opportunity"`, silent company) -- round 32 measured 0 of 5 reaching final pool; this window's 1-of-1 reaching final pool is the same topic-floor/scoring variance A already named, now resolved the other direction. The ingestion-stage fix (honest silence, no invented company) is unambiguously intact either way, confirmed directly against the shipped `webResultToRawJobItem` output.
 
 Committed and pushed as its own item, per the write-as-you-go discipline. Part 2 (event surface census, A32-01 verification, and the fresh finding) follows.
+
+### Round 33 — Agent A (part 2: THE EVENT SURFACE VALUE CENSUS. A32-01 VERIFICATION: ONE OF FOUR SHAPES ORGANICALLY RE-WITNESSED AND CONFIRMED DROPPED LIVE; ALL FOUR CONFIRMED BY DIRECT EXECUTION REGARDLESS OF WINDOW. TWO OF SEVEN MUST-KEEP FAIRS RE-WITNESSED AND CONFIRMED ADMITTED. ONE FRESH FINDING -- A33-01, A FIFTH JOB-CONTENT SHAPE THE NEW GUARD DOES NOT COVER, INGESTED BUT NOT WITNESSED REACHING THE FINAL POOL THIS WINDOW.)
+
+STATUS: PARTIAL BY DESIGN, continuing part 1's method (same profile, same fuse, same no-op cache, same spy-on-`searchGemini` instrument). Same single window, five independent live pulls, run as part of the same background job as part 1's job pulls. No gate verdict is set here.
+
+## A32-01 VERIFICATION -- THE FOUR WITNESSED SHAPES
+
+**`iimjobs.com` ORGANICALLY RE-WITNESSED, 1 of 5 pulls, DROPPED AT INGESTION -- VERIFIED FIXED LIVE.**
+
+> `"Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page - iimjobs.com"` @ `iimjobs.com/ion-exchange-india-careers` -- offered pull 1, `ingested: false`, confirmed by direct execution of the shipped `webResultToRawEventItem` on the exact captured row. The title's own `"Company Page"` phrase is one of `JOB_LISTING_CONTENT_RE`'s own alternatives.
+
+**`industrialguide.co.in`, `jobitus.com`, `shine.com` NOT ORGANICALLY OFFERED this window (0 of 5 each)**, checked directly against the recorded JSON. Per the round's own honesty standard, absence is reported as absence, not silently treated as a pass.
+
+**DIRECT EXECUTION CHECK ON ALL FOUR, REGARDLESS OF WINDOW (the round's own commissioned duty)** -- ran the shipped, exported `isJobListingContentTitle` on all four witnessed titles verbatim:
+
+| title | `isJobListingContentTitle` |
+|---|---|
+| `"Ion Exchange Mumbai Job Openings Check here"` | **true** (drops) |
+| `"Ion Exchange Jobs,Jobs for Ion Exchange, -:JobItUs"` | **true** (drops) |
+| `"Executive Jobs in All-India - 12,878 Executive Job Vacancies in All-India - Aug 2026"` | **true** (drops) |
+| `"Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page - iimjobs.com"` | **true** (drops) |
+
+**All four return `true` (would drop at ingestion).** Combined with the one organic live re-witness above (`iimjobs.com`, actually offered and actually dropped through the full pipeline, not just the isolated predicate), **A32-01 is VERIFIED FIXED** on the standard the round set: the three absent shapes are confirmed by direct execution of the shipped guard exactly as it ships in `webResultToRawEventItem`, and the fourth is confirmed both by direct execution AND by an organic live re-offer through the complete pipeline.
+
+## A32-01 VERIFICATION -- THE SEVEN MUST-KEEP JOB/CAREER-FAIR ROWS
+
+**TWO of seven organically re-witnessed this window, both correctly ADMITTED:**
+
+> `"Nuclear Career Fair - S&T Women in Nuclear"` @ `win.mst.edu` -- offered 1 of 5, `ingested: true`.
+> `"Nittany Lion Careers"` @ `pennstate-csm.symplicity.com` -- offered 1 of 5, `ingested: true`.
+
+**The other five** (`"2026 Job Fair & Hiring Event Calendar - JobFairX"`, `"Career Expo & Job Fair"`, `"2026 MSE-NE Career Fair"`, `"Clean Energy Job Fairs - RE+ Events"`, `"Nuclear job fair"`) **were NOT organically offered this window** -- checked directly, zero appearances in the offered corpus. Absence, not a failure; the two that were re-offered are both correctly kept, confirming the `looksLikeEvent` safety net is firing exactly as designed against real traffic, not just in the adversarial test corpus.
+
+## TIMEOUT-FLAKE RATE, EVENT SIDE (83b re-measure duty)
+
+**0 of 5 event pulls lost the `eventweb` source to the 25000ms timeout this round (0%)** -- `errors: {}` on all 5 pulls, confirmed directly in the recorded JSON. Combined with part 1's job-side rate (2 of 5, 40%), this round's combined flake rate is **2 of 10 (20%)** -- higher than round 32's 1 of 10, reported honestly as measured. No code touching either source's fetch/timeout path changed this round (confirmed by the same file-scope check as part 1); read as ordinary network variance on a hard fuse, not a regression.
+
+## MIRROR CHECKS (round 33 B's own §1.0 technique, re-run this window)
+
+**Job/career-worded rows in the EVENT offered corpus, this window: 11 distinct rows.** All checked individually by direct execution, not swept by keyword alone:
+
+```
+ionenviromgt.net       | CAREER | Ion Exchange                                    | ingested: false (isEventHubResult, careers path)
+ionexchangeglobal.com  | Careers - Ion Exchange                                   | ingested: false (isEventHubResult, careers path)
+ionexchangeglobal.com  | Job Postings Archive - Ion Exchange                      | ingested: TRUE -- see A33-01 below
+eventbrite.com         | Recruiting Event - Morton Salt is Hiring!                | ingested: false (pre-existing guard, not traced further -- not in final pool)
+thorizon.com           | Careers - Thorizon                                       | ingested: false (isEventHubResult, careers path)
+naturaresources.com    | Careers                                                  | ingested: false (isEventHubResult, careers path)
+pennstate-csm.symplicity.com | Nittany Lion Careers                               | ingested: true -- must-keep fair, correct (above)
+win.mst.edu             | Nuclear Career Fair - S&T Women in Nuclear              | ingested: true -- must-keep fair, correct (above)
+iimjobs.com             | Ion Exchange India Careers...Company Page - iimjobs.com | ingested: false -- A32-01 witness, correct (above)
+jobaaj.com               | Apply now in Ion Exchange India with Jobaaj...          | ingested: false (pre-existing guard)
+iongroup.com             | Careers                                                 | ingested: false (isEventHubResult, careers path)
+```
+
+Eleven distinct URLs (one host, `ionexchangeglobal.com`, appears twice under two different titles at two different paths, counted separately per B's own convention). **Ten of eleven are already correctly handled** (seven by the pre-existing `isEventHubResult` careers-path guard, two are the correctly-admitted must-keep fairs, one is A32-01's own witness, now correctly dropped). **The eleventh, `ionexchangeglobal.com/job_posting/`, is NOT correctly handled — see A33-01.**
+
+**Mirror-image check, event-vocabulary titles wrongly admitted to the JOB pool: ZERO matches**, checked directly across all job-ingested rows this window (a scan for `conference|symposium|summit|workshop|congress|expo|fair` in any `ingested: true` job row's title) -- consistent with round 32's own zero.
+
+## ONE FRESH FINDING THIS ROUND -- A33-01 (event surface, a fifth job-content shape the round-33 guard does not cover)
+
+Witnessed **2 of 5 pulls** (pulls 1 and 2, same row both times):
+
+> `"Job Postings Archive - Ion Exchange"` @ `https://ionexchangeglobal.com/job_posting/` -- `ingested: true` both times, confirmed by direct execution of the shipped `webResultToRawEventItem`.
+
+**This is a job-listing archive page -- the same underlying defect class as A32-01 -- admitted at the ingestion stage.** Traced against the shipped guard chain directly: `isEventIndexResult`, `isEventHubResult`, `isNewsArticleTitle`, `isPaperPageTitle`, `isEventArtefactTitle`, `isEarningsCallPage`, and this round's own new `isJobListingContentTitle` all return `false` on this exact title/URL pair. Checked clause by clause: `isEventHubResult`'s path check requires the URL's TERMINAL path segment to match a closed word list (`events?|conferences?|seminars?|workshops?|symposium|symposia|calendar|agenda|careers?|jobs|meetings?|...`) -- the terminal segment here is `job_posting` (singular, underscore), which matches none of those words (`jobs` is in the list; `job_posting` is not). `isJobListingContentTitle`'s two triggers both miss: `JOB_LISTING_CONTENT_RE` requires `"job openings"`/`"job vacancy/vacancies"`/`"vacancy/vacancies"`/`"company page"`, none present; `hasRepeatedJobsMention` requires the word "job"/"jobs" stated **twice or more**, and this title states it **exactly once** (`"Job Postings Archive"`).
+
+**This specimen has a documented history in this loop and appears to have DRIFTED, not merely been missed from the start.** A grep of this file's own prior rounds (round 25's own entry, `MULTIAGENT-report-parity.md` history) shows `ionexchangeglobal.com/job_posting` was previously offered and DROPPED 5 of 5, grouped under the "index-page class" (`isEventIndexResult`, `EVENT_INDEX_TITLE_RE`). Checked directly: `EVENT_INDEX_TITLE_RE` tested against THIS window's own title, `"Job Postings Archive - Ion Exchange"`, returns `false` (the regex requires the title to LEAD with "event(s)"/"conference(s)"/"seminar(s)" before "calendar/archive/listings/schedule" -- "Job Postings Archive" leads with "Job", not an event-kind noun, so it never matched to begin with under the CURRENT regex; the live page's own `<title>` text has evidently changed since round 25 to no longer carry whatever event-shaped wording it carried then). **This is not a code regression -- the guard's own regex is unchanged and was never designed to catch this exact wording -- but the SOURCE PAGE'S live title has drifted into a shape that now falls through every guard in the chain, including this round's brand-new one.**
+
+**NOT WITNESSED REACHING THE FINAL SCORED POOL this window (0 of 5 pulls' `pool.items` contain this URL)**, checked directly. Per the loop's own established distinction (round 32's `psi.ch`/BALDER precedent): ingestion-stage admission is a real, confirmed gap, but this window's topic-floor/relevance scoring did not select it into the rendered pool (high competition for "ion exchange"-topic slots this window -- `ionexchangeglobal.com` alone offered 7 times combined across both its titles, plus `ionenviromgt.net`, `ionscience.com`, `aquabattery.com` all competing for the same topic signal). **Unlike A32-01, which round 32 A witnessed actually rendered as a card, A33-01 has NOT been witnessed rendering** -- the risk is real and confirmed at the ingestion stage by direct execution, but no reader has been shown this specific card in either window measured so far.
+
+A does not investigate which guard SHOULD catch this or design a fix (not A's role) -- the observation is: the round-33 guard closed the four witnessed shapes it was built against, but the underlying CLASS (a company's own job-listing archive page, admitted to the event pool on a kind-miss) has at least one more live member the guard's own vocabulary and threshold do not reach, and this member carries directly relevant history in this loop's own file that a future design item should read before rebuilding the word list from scratch.
+
+## THE DATELESS-BRANCH RATE, THIS WINDOW -- RESTATEMENT, NOT A NEW FINDING
+
+**38 of this window's 41 total final-pool event rows (93%) render `startDate: ""`.** Consistent with the two prior independently-measured windows (round 32: 34/35, 97%; round 33 B: 34/39, 87%) -- all three windows fall inside the same 87-97% range Ruling 90b's registry entry already names. Zero of the 3 dated rows carries an invented or malformed value (checked directly: `2026-10-12`/`2026-10-15` for `thebatteryshow.com`, `2026-12-07T12:00:00.000Z`/`2026-12-10` for the fourth-window's own third dated row) -- **62b's zero holds across this window's full final pool too**, a third independent confirmation. EXPLAINED under Ruling 90b's own already-final doctrine (source-side coverage gap, not a pipeline defect); not re-opened, not re-litigated.
+
+For comparison, the job side's silent-company rate this window: **7 of 12 final-pool job rows (58%) render silent, 5 (42%) carry a real company** -- consistent with the same honest-silence doctrine (Ruling 32), a less extreme split than the event side's date field, matching the pattern round 32 already named.
+
+Committed and pushed as its own item. Part 3 (visual census, standing tallies, residual watch list, artefact table, and the gate verdict) follows.
