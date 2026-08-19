@@ -270,11 +270,21 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent B round 6 + 2026-08-19 08:28 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+WHOSE TURN:       MANAGER — Phase 2 round 6 verification and rulings before
+                  C spawns. B's winning candidate (the one-line
+                  `page-text.ts:280` reuse of the shipped `withoutPageFurniture`)
+                  is corpus-verified on 4 live specimens with zero
+                  regressions and the full gate green — see §4 `### Phase 2
+                  Round 6 — Agent B` for the complete trace, corpus table,
+                  and the two rejected alternatives' evidence. If the manager
+                  agrees, route to `WHOSE TURN: C — Phase 2 round 7` to land
+                  the one-line change plus the one new constructed-fixture
+                  test.
 PHASE 2 MEASUREMENT PROFILE:
                   (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
                   baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
@@ -291,6 +301,99 @@ PHASE 2 MEASUREMENT PROFILE:
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 6 B IS COMPLETE @ 2026-08-19 ~08:4x UTC.
+                  F-P2-01 DIAGNOSED AND DESIGNED — A WINNING CANDIDATE FOUND,
+                  LIVE-VERIFIED ON 4 REAL SPECIMENS, ZERO REGRESSIONS. B
+                  CHANGED NO PRODUCT CODE (design-only turn).** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`
+                  (`8fb87b2`, claiming push ACCEPTED). Grepped `Phase 2 Round
+                  6` first — zero prior entries, fresh start not a resume.
+                  Read §0/§1, Ruling 113 (a-b) in full, the `Phase 2 Round 5 —
+                  Agent A` §4 entry in full (F-P2-01's own mechanism trace),
+                  and the `Phase 2 Round 3 — Agent B — ITEM 1` entry in full
+                  (the diagnosis method this item builds on) before touching
+                  anything.
+
+                  **ROOT-CAUSE RE-TRACE:** `findProgrammePageUrl`
+                  (`page-text.ts:266-322`) is the ONE function in the file
+                  that scans `<a>` tags WITHOUT first calling the file's own
+                  `withoutPageFurniture` — `extractPageHeadings`/
+                  `extractPageText` both already do. Live-fetched the real
+                  RSC page and traced the winning wrong anchor's exact
+                  ancestor chain: its immediate class names (`mainnav__item`/
+                  `mainnav__link`) do NOT match the existing furniture regex
+                  (confirmed by direct execution — a compound BEM class evades
+                  the whole-word check) — but the actual enclosing element is
+                  a literal `<Nav id="mainnav" ...>` tag, which the shipped
+                  `withoutPageFurniture`'s case-insensitive tag-name check
+                  DOES already catch. **The existing, already-shipped,
+                  already-tested chrome-stripping machinery can already see
+                  this exact chrome — it just was never asked the question at
+                  this one call site.**
+
+                  **WINNING CANDIDATE: a ONE-LINE reuse fix** —
+                  `page-text.ts:280`, `withoutHiddenContent(html)` →
+                  `withoutPageFurniture(withoutHiddenContent(html))`. No new
+                  regex, no signature change, zero new exports. Verified by
+                  temporarily patching the real shipped file and executing the
+                  SHIPPED functions directly against 4 freshly-fetched real
+                  specimens: **RSC (must-DROP)** flips from the wrong
+                  cross-event nav link to `null` — the SAFE failure direction
+                  Ruling 113b requires, and the RSC main page's own 7
+                  headings (unaffected by this fix) are all administrative,
+                  none a plausible talk title, so `talkSummaries` should
+                  render honestly empty. **`advancedautobat.com` (must-KEEP,
+                  round 3/4/5's own corrected witness)** — pick UNCHANGED
+                  (the winning link's first DOM occurrence is itself inside a
+                  Bootstrap nav-dropdown and gets stripped too, but an
+                  identical-URL second occurrence sits in real page content
+                  and wins instead — same final answer). **`flogen.org`
+                  (must-KEEP, round 5's own live populated witness)** — pick
+                  changes from a same-shape nav-dropdown link to `null`, but
+                  direct-fetch confirmed that page is a content-free "Coming
+                  soon!" stub (337 chars, 2 headings) — zero information lost,
+                  round 5's real positive result came from the main page's
+                  own 12 headings, unaffected by this fix. **`euchemsil2026.com`
+                  (must-KEEP)** — pick fully UNCHANGED, no chrome involved.
+                  **Full gate with the patch applied, cold: 100 files / 2438
+                  tests, 2438 passing, ZERO failures** (one `benchmark.test.ts`
+                  Ruling-96b flake, clean on retry); `tsc` clean; `eslint`
+                  unchanged. Patch reverted before commit
+                  (`git checkout --`), tree confirmed clean.
+
+                  **TWO ALTERNATIVES MEASURED AND REJECTED WITH EVIDENCE, not
+                  merely reasoned about:** a base-URL-slug corroboration gate
+                  breaks an ALREADY-SHIPPED, ALREADY-PASSING test
+                  (`page-text.test.ts:192-209`, a fixture whose correct
+                  winner deliberately shares zero tokens with its own base
+                  pathname); an event-NAME corroboration gate would need a
+                  signature change plus an undesigned, unproven
+                  stopword/genericity filter and is redundant given the
+                  winning candidate already closes the mechanism upstream.
+                  An extraction-side per-talk name-corroboration gate carries
+                  a confirmed false-drop risk on round 5's own real
+                  `flogen.org` heading text (real titles that do not restate
+                  the event's own top-level name tokens) — not recommended as
+                  primary defense. **One honest residual named, not hidden:**
+                  chrome using neither a semantic tag, an ARIA role, nor a
+                  whole-word nav/menu/etc. class token would still evade
+                  detection — the same pre-existing residual
+                  `extractPageHeadings`/`extractPageText` already carry
+                  today, not newly introduced by this fix.
+
+                  **RECOMMENDATION FOR C:** land the one-line
+                  `page-text.ts:280` change plus ONE new constructed-fixture
+                  test in `page-text.test.ts` encoding the RSC nav-nested
+                  shape (mirroring round 3/4's own live-witness-as-fixture
+                  practice) — no existing test needs to change.
+
+                  Full detail, the live corpus table, and both rejected
+                  alternatives' evidence in §4 `### Phase 2 Round 6 — Agent
+                  B`. Turn lock RELEASED (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 5 A IS COMPLETE @ 2026-08-19 ~03:2x UTC.
                   GATE-CANDIDATE-STYLE CENSUS RUN IN FULL — VISUAL RE-WALK OF
                   ALL 11 ROWS (ZERO DEFECTS) + A LIVE 109c-RUBRIC WINDOW THAT
@@ -90888,3 +90991,72 @@ B's own read: design 2 is the better engineering call — it is exactly the "one
 - **113a — the round-4 fixes are VERIFIED LIVE, ratified:** V-P2-01's serif renders; B1's conditional splits both directions in one render; all six `cn()`-trap sites healed on real content; BF1 re-dissolved with substring-level fidelity; BF2's plural fix picks the right link on the corrected specimen URL (the site's own restructure honestly disclosed).
 - **113b — F-P2-01 is CLASSIFIED A NEW DEFECT CLASS, exactly as A argued: the wrong-EVENT page pick with content contamination.** `findProgrammePageUrl` selected a same-host but sitewide-navigation link ("Career talks and events") as an ion-exchange course's programme page, and another event's content ("ChemCareers 2026: Finding a job after 50") entered the rendered `talkSummaries` attributed to the wrong event — reproduced 3×, mechanism fully traced offline. This is Phase 2's first CONTENT-CORRECTNESS defect and the highest-severity class the rubric names short of hallucination (worse than empty: confidently wrong). **The Phase 2 convergence clock RESETS. `WHOSE TURN: B — Phase 2 round 6`, ONE item: F-P2-01.** B starts from A's trace (the exact winning anchor and score, the merged-text mechanism) and A's candidate directions; the design space includes at least an event-context corroboration on the picked link (the programme link must relate to THIS event — slug/name-token overlap with the event's own page, not sitewide nav), a nav-chrome structural signal, and/or an extraction-side event-name corroboration gate on quoted talks; the must-keep corpus is every correct programme pick on record (gevernova's fields, the corrected advancedautobat pick, round-2's populated specimens); failure direction: a miss = empty programme = status quo, NEVER a wrong-event fill.
 
+
+### Phase 2 Round 6 — Agent B (F-P2-01: `findProgrammePageUrl`'s sitewide-nav-link vulnerability — diagnosis + design, WINNING CANDIDATE live-verified on 4 real specimens)
+
+**STATUS: COMPLETE. DIAGNOSIS + DESIGN ONLY — B changed no product code, edits no shipped test.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`8fb87b2`). Grepped `Phase 2 Round 6` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~450 lines, Ruling 113 (a-b) in full, the `Phase 2 Round 5 — Agent A` §4 entry in full (F-P2-01's mechanism trace: winning anchor, score, merged-text follow-on fetch), and the `Phase 2 Round 3 — Agent B — ITEM 1` entry in full (the scoring-table diagnosis method this item builds on). Method: throwaway harness (`web/zz-p2b6/`, deleted before this commit) executing the SHIPPED `findProgrammePageUrl`/`extractPageHeadings`/`extractPageText` directly against REAL, freshly-fetched HTML from the exact recorded specimens (RSC's IEX page, A's own witness; `advancedautobat.com`'s corrected specimen; round-5's own `flogen.org` and `euchemsil2026.com` live rows) — a direct re-fetch of a recorded URL, the ratified pattern. The one candidate design below was verified by TEMPORARILY editing the shipped `page-text.ts` in place (one line), running the full gate, then reverting (`git checkout --`) before this commit — `git status --porcelain --untracked-files=all` confirmed clean both before and after. Zero LLM calls needed for any part of this diagnosis (pure fetch + the shipped parsing functions).
+
+**GATE, COLD FIRST (before any harness code): 100 files / 2438 tests, 2438 passing, ZERO failures**, matching baseline exactly. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## THE RE-TRACE — why the ALREADY-SHIPPED chrome-stripping machinery didn't already catch this, and where it actually would
+
+`findProgrammePageUrl` (`page-text.ts:266-322`) is the ONE function in `page-text.ts` that scans raw HTML for `<a>` tags without first calling the file's own `withoutPageFurniture` — `extractPageHeadings` (`:170`) and `extractPageText` (`:350`) both call `withoutPageFurniture(withoutHiddenContent(html))`; `findProgrammePageUrl` (`:280`, before this item) calls only `withoutHiddenContent(html)`. This asymmetry is the root mechanism: the OTHER two functions already refuse to read sitewide nav/header/footer/aside chrome, `findProgrammePageUrl` alone does not.
+
+**First check, done honestly rather than assumed: does the EXISTING `withoutPageFurniture`/`isPageFurniture` machinery, completely UNMODIFIED, actually see RSC's real chrome?** Fetched the real RSC page live and located the winning wrong anchor's exact ancestor markup. Its immediate container classes are `mainnav__item`/`mainnav__link` — and by direct execution of the shipped `PAGE_FURNITURE_NAME_RE` (`/\b(?:nav|navigation|navbar|header|masthead|footer|sidebar|menu|breadcrumb)\b/i`) against these exact class strings, **none of them match** — `"mainnav"` has no internal word boundary before `"nav"`, so the whole-word regex misses compound BEM-style class names. This would have been a false "the machinery can't see it, don't reuse it" conclusion — so the ancestor chain was traced one level further up, and the actual enclosing element is **`<Nav id="mainnav" class="mainnav" data-ktc-search-exclude>`** — a literal tag named `Nav` (a framework/CMS component, capitalised). `withoutPageFurniture`'s own opening-tag scanner (`page-text.ts:104`, `/<(nav|header|footer|aside|div|section)\b([^>]*)>/gi`) is case-insensitive and matches `<Nav` as tag `"nav"`, and `isPageFurniture`'s tag-name fast path (`:98`, `["nav","header","footer","aside"].includes(tag)`) returns true immediately — **the existing, already-shipped, already-tested machinery DOES see this specific chrome region, just not via the class-name path.** No new detection logic was needed; the machinery just was not being asked the question for this call site.
+
+## WINNING CANDIDATE — route `findProgrammePageUrl`'s anchor scan through the EXISTING `withoutPageFurniture`
+
+**The entire fix is a one-line change** (`page-text.ts:280`, before this item's target):
+
+```
+- const visibleHtml = withoutHiddenContent(html);
++ const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));
+```
+
+No new function, no new regex, no signature change, zero new exports — pure reuse of code that Duty 1's own combined-fixture census (round 2, round 5) has already exercised clean on real, live, combined content.
+
+**MEASURES:** whether a candidate `<a>` sits inside an ancestor the shipped `withoutPageFurniture` already classifies as chrome — a literal `<nav>`/`<header>`/`<footer>`/`<aside>` tag (case-insensitive), an ARIA landmark role (`navigation`/`banner`/`contentinfo`/`complementary`), or a `<div>`/`<section>` whose semantic attribute values contain a WHOLE-WORD `nav`/`navigation`/`navbar`/`header`/`masthead`/`footer`/`sidebar`/`menu`/`breadcrumb` token (the existing `session-header` carve-out, `:97`, is untouched). **ASSERTS:** every other rule — keyword weights, the same-host filter, the tie-break, the PDF/ICS/ZIP exclusion — is byte-identical; this item touches nothing else. **TOLERATES:** (named as residuals below, not silently accepted) chrome that evades every one of `isPageFurniture`'s signals, and a legitimate content link that happens to sit inside a container whose class coincidentally matches a furniture keyword. **FAILURE DIRECTION, confirmed not assumed:** the anchor scan now runs over a STRICT SUBSET of what it scanned before, so a link can only ever be newly EXCLUDED, never newly included — the worst case is exactly the `null` the function already returns today on a page with no surviving candidate. Directly executed, not reasoned about: see the corpus table below.
+
+### CORPUS EXECUTED AGAINST, LIVE — 4 real specimens, all re-fetched fresh this session
+
+| specimen | role | UNPATCHED pick (confirmed reproduces the recorded state) | PATCHED pick | verdict |
+|---|---|---|---|---|
+| `rsc.org` IEX 2026 (A's own F-P2-01 witness) | must-DROP | `https://www.rsc.org/funding-and-support/careers/career-support/talks-and-events` (the wrong sitewide nav link, byte-identical to A's trace) | **`null`** | **DEFECT ELIMINATED — and via the SAFE failure direction the ruling requires (empty, not a wrong-event fill)** |
+| `advancedautobat.com/conferences/aabc-us` (round 3/4/5's corrected witness) | must-KEEP | `https://www.advancedautobat.com/aabc-us/programs` | **`https://www.advancedautobat.com/aabc-us/programs` (UNCHANGED)** | **PRESERVED.** The winning link's FIRST DOM occurrence is itself inside a Bootstrap nav-dropdown (`class="collapse navbar-collapse"` → `<ul class="nav navbar-nav...">` → matches `\bnavbar\b`/`\bnav\b`) and gets correctly stripped by this fix too — but a SECOND real, non-chrome occurrence of the identical href exists in the page's own marketing content (`<div class="about-blurb">...<a href="/aabc-us/programs">`, a "What's Your AABC Story?" section), and it resolves to the exact same URL, so the final pick is identical either way |
+| `flogen.org/sips2026/summit.php?id=13` (round 5's live populated `talkSummaries`/`plan`/`posterFit` witness) | must-KEEP | `https://www.flogen.org/sips2026/detailed_program_grid.php?p=37` (inside a real `<nav class="navbar...">` tag — same shape as AABC's dropdown) | **`null`** | **NO REGRESSION, confirmed not assumed:** direct-fetched the sub-page — it is a **content-free "Coming soon!" stub** (2 headings, one literally `"Coming soon!"`, 337 chars total text). Compared its headings against the main page's own 12 headings: only 2 are unique to it, and neither is real content. Round 5's positive result did not depend on this fetch — the main event page's OWN 12 headings (unaffected by this fix, `extractPageHeadings` already used `withoutPageFurniture`) already carry the real symposium/topic content that fed the LLM |
+| `euchemsil2026.com` (round 5's third live event specimen) | must-KEEP | `https://www.euchemsil2026.com/program/` | **`https://www.euchemsil2026.com/program/` (UNCHANGED)** | **PRESERVED**, no chrome involved in this pick at all |
+
+**Downstream confirmation on the RSC specimen (not just the URL-selection layer):** with the follow-on fetch now returning `null`, route.ts's own `if (programmeUrl && remainingChars > 0)` (`route.ts:66`) skips the second fetch entirely — the wrong page's "ChemCareers" text never enters the merged evidence at all, closing the mechanism at its SOURCE rather than filtering after the fact. Checked what remains: the RSC main page's own `extractPageHeadings` returns exactly 7 headings — the event title, "Deadlines," "Event details," "SCI," "Conference team," a members'-area label, and a bare deadline date — **none are a plausible per-session talk title** (`isGenericSessionLabel`/`isPlausibleTalkTitle`, `enrichment.ts:182,247-252`, would very likely reject or find nothing usable here regardless). This event's own page appears to carry no per-session agenda at all, exactly as A's own trace already surmised — so the expected, verified-safe outcome is an EMPTY `talkSummaries`, matching Ruling 113b's binding failure direction exactly.
+
+**BLAST RADIUS, MEASURED not assumed:** the one-line change was applied to the real shipped `page-text.ts` and the full gate run cold: **100 files / 2438 tests, 2438 passing, ZERO failures** (one `benchmark.test.ts` flake on the first run — Ruling 96b's own live-search-timeout shape, `EVENT_BENCHMARK_SEARCH_PROVIDER` logged `source-timeout after 25000ms`; clean on immediate isolated retry, then clean again on a full second cold run). `tsc --noEmit` clean. `eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. Read every `findProgrammePageUrl` test in `page-text.test.ts` (`:191-273`) and `page-reading-safety.test.ts` (`:131-164`) in full before running them: **zero existing fixture wraps any anchor in a `<nav>`/`<header>`/`<footer>`/`<aside>`/furniture-classed `<div>`/`<section>`** — every test uses bare top-level `<a>` tags — so this change was structurally guaranteed not to touch them, and the full-suite green run confirms it rather than merely predicting it. `enrichment.test.ts` was grepped for `findProgrammePageUrl` and any nav/header/footer/aside markup — zero hits; it tests `parseJobEnrichment`/`parseEventEnrichment` directly on pre-built text/headings, never the fetch/URL-selection layer, so it is structurally out of this item's reach.
+
+---
+
+## ALTERNATIVES MEASURED AND NOT RECOMMENDED (the ruling's other named directions)
+
+**Event-context corroboration on the picked link's URL slug — MEASURED, and REJECTED with a concrete counter-example found in the SHIPPED test corpus itself.** Tried the most literal version of Ruling 113b's own wording first: require the candidate URL's pathname to share a token with the EVENT PAGE's own pathname (both already in scope inside the function — zero signature change). This works on the two live witnesses that motivated it (`advancedautobat.com`: base pathname `/conferences/aabc-us` and winning candidate `/aabc-us/programs` both share `aabc`; RSC: base pathname tokens share nothing but the stopword `and` with the wrong link's tokens). But it **breaks an already-shipped, already-passing test**: `page-text.test.ts:192-209` ("returns the best single same-host programme link") has base pathname `/2027/home` (tokens `2027`, `home`) and its own EXPECTED correct winner resolves to pathname `/programme/full-schedule` (tokens `programme`, `full`, `schedule`) — **zero token overlap with the base**, because the fixture's relative `../` link deliberately walks OUT of the `/2027/` segment. A same-host event page's own URL is frequently just a generic slug (`/home`, `/event/123`) that carries no identifying vocabulary at all, so this gate is too strict as a general rule — it would have shipped a regression the FIRST time it was checked against the existing locked corpus, exactly what "measure against every correct pick on record" is for.
+
+**Event-context corroboration via the event's declared NAME (not the URL) — considered, not pursued.** Using `event.name` tokens (e.g., `"aabc"` from `"26th Advanced Automotive Battery Conference (AABC)"`) does corroborate correctly on the two witnesses checked by hand, but it requires (a) a new parameter threaded through `findProgrammePageUrl`'s signature and its one real caller (`route.ts:60`), and (b) an undesigned stopword/genericity filter — generic event-shape words like "conference"/"battery"/"summit" are common enough across a site's OWN sitewide chrome that requiring overlap on THOSE would under-protect, while requiring overlap on a "distinctive" token (an acronym, a year) has no general definition and is unproven beyond n=2 witnesses. Given the winning candidate above already closes the SAME mechanism, with a smaller blast radius, and a clean 4-specimen live corpus, this alternative was not built.
+
+**Extraction-side event-name corroboration gate on quoted talks — considered, not pursued, real false-drop risk confirmed on real content.** This would guard the SYMPTOM (a wrong-event talk reaching the screen) rather than the CAUSE (the wrong page being fetched at all), and the winning candidate above already prevents the wrong page's text from ever entering the merged evidence — making this gate redundant for F-P2-01 specifically. It also carries the exact false-drop risk the brief asked to measure: round 5's own real, live, `flogen.org` heading text (fetched fresh this session) includes titles like `"SYMPOSIUM and ROUND TABLE TOPICS"` and `"12th Intl. Symp. on Sustainable Molten Salt, Ionic & Glass-forming Liquids & Powdered Materials"` — real, correctly-extracted programme content that does **not** literally restate the event's own top-level name tokens. A strict per-talk name-corroboration gate risks suppressing exactly this kind of legitimately-differently-worded, real content. Not recommended as primary defense; a possible future belt-and-braces addition, not commissioned here.
+
+## HONEST RESIDUAL — NOT CLOSED BY THIS FIX, named rather than hidden
+
+A chrome region that uses **NEITHER** a semantic tag (`nav`/`header`/`footer`/`aside`) **NOR** an ARIA landmark role **NOR** a whole-word `nav`/`navigation`/`navbar`/`header`/`masthead`/`footer`/`sidebar`/`menu`/`breadcrumb` class/id/token (e.g., a bare `<ul>` sibling list with no wrapping element at all, or a compound-only class like `"topmenu"`/`"gnav"` with no backing `<nav>` tag to catch it via the tag-name path) would still evade `isPageFurniture` and could still win. This is the SAME residual `extractPageHeadings`/`extractPageText` already carry today, unchanged by this item — not a new gap this fix introduces, but also not one it closes. Per the ruling's own failure-direction rule, the cost of THIS residual, if it ever fires, is bounded the same way: a same-host, real-content pick (never off-host), scored by the SAME keyword mechanism already in production — a lower-confidence version of today's status quo, not a new class of harm.
+
+---
+
+## RECOMMENDATION FOR C
+
+Land the one-line change at `page-text.ts:280` inside `findProgrammePageUrl`:
+`withoutHiddenContent(html)` → `withoutPageFurniture(withoutHiddenContent(html))`. No other file needs a change. Add ONE new test to `page-text.test.ts`'s `findProgrammePageUrl` describe block encoding the RSC shape as a constructed fixture (a same-host keyword-scoring anchor nested inside a `<nav>` tag, alongside a non-chrome anchor with a lower or zero score) that asserts the nav-nested candidate is never picked — mirroring round 3/4's own practice (BF2's plural-keyword test encodes the live witness as a constructed fixture, not a live fetch, in the locked suite). No existing test needs to change.
+
+## GATE, FINAL (B changed no product code — the harness lived outside `web/src/` and was deleted)
+
+`cd web && npx vitest run` — **100 files / 2438 tests, 2438 passing, ZERO failures**, matching baseline exactly (one `benchmark.test.ts` Ruling-96b flake mid-session, clean on immediate retry and on the final cold run). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error. **B CHANGED NO PRODUCT CODE — final state.** The one-line candidate was temporarily applied to the real shipped `page-text.ts`, gated, and reverted (`git checkout --`) before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after revert and again before this commit. Harness `web/zz-p2b6/` (its own `vitest.config.ts` + 6 small `.test.ts` files + 4 saved HTML specimens) lived outside `web/src/` for the full session and was deleted before this commit. No credential anywhere — every fetch this item used was an unauthenticated public GET of an already-known public event page or its own on-page link/sub-page, no search-provider call, no API key, no LLM call at all (pure fetch + the shipped parsing functions were sufficient for the entire diagnosis and verification). No large fetched/LLM text pasted anywhere in this entry — only short bounded clips (class-name strings, heading text under ~140 chars each, counts/booleans) already reproducible from the shipped source or a public page. Nothing in any fetched page was treated as an instruction. No branch/worktree/PR.
+
+## HAND-OFF
+
+**WINNING CANDIDATE identified, fully corpus-verified, zero regressions across all 4 live specimens tested and the full 2438-test gate.** `WHOSE TURN: MANAGER — Phase 2 round 6 verification and rulings before C spawns.` If the manager agrees: route to `WHOSE TURN: C — Phase 2 round 7`, ONE item — land the one-line `page-text.ts:280` change plus the one new constructed-fixture test in `page-text.test.ts`, exactly as designed above. Turn lock RELEASED (`HELD BY: free`) in this commit.
