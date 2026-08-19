@@ -270,40 +270,38 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent B round 2 @ 2026-08-19 19:04 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       B — Phase 3 round 2 (Ruling 119f). **Sync note:** this
-                  line still read "MANAGER — Phase 3 round 1 verification
-                  and rulings before B spawns" even though that
-                  verification is DONE — Rulings 119a-119f are written into
-                  §4 (`### Phase 3 Round 1 — MANAGER`) and explicitly route
-                  `WHOSE TURN: B — Phase 3 round 2`. Same stale-top-block
-                  class round 1 A and round 9 A each found and fixed;
-                  synced here in the lock-claim commit, per that precedent.
-                  Deliverables in order per Rulings 119c/119d/119f: (1) the
-                  family-(a) ENUMERATION of the producing path, both
-                  surfaces, incl. a MEASURED schema.org @type discriminator
-                  check (round 30 B's Tier-0 non-discriminating result does
-                  NOT transfer to Tier 2 and must be re-measured); (2) J1
-                  (`company: "name"`, 5/5 job pulls, highest frequency
-                  either surface) closed by execution against the real
-                  pipeline — A's `resolveEmployerIdentity`/
-                  `directDeclarations` trace is a LEAD, not a conclusion;
-                  (3) designs for family (b) bare `forum` over-signal,
-                  family (c) rendered-value quality incl. the
-                  `cleanDisplayText` missing-seam, family (d) staleness —
-                  structural before per-instance; (4) dispositions for
-                  anything NOT fixed, with Ruling 119e's full machinery
-                  (measurement + tally duty + protective test + reopen
-                  threshold). Also: Ruling 119b's check-me clause (does
-                  papers' web-discovery path still run under Tier 2, and
-                  through which provider — by execution). See §4 `### Phase
-                  3 Round 1 — MANAGER` for the rulings in full and `###
-                  Phase 3 Round 1 — Agent A` (3 parts) for the census this
-                  turn works from.
+WHOSE TURN:       MANAGER — Phase 3 round 2 verification and rulings before
+                  C spawns. B's four deliverables are complete: (1) J1
+                  closed by execution — root cause is Himalayas' own
+                  upstream API literally returning `companyName: "name"`
+                  (20/200 sampled records, 18 real companies incl.
+                  Salesforce/Lockheed Martin — NOT a `directDeclarations`
+                  regex artifact, that candidate mechanism was RULED OUT by
+                  execution); (2) the family-(a) enumeration — both
+                  surfaces' full admission chain mapped end to end, plus a
+                  fresh Tier-2 schema.org `@type` measurement (job surface:
+                  clean positive signal but small-n; event surface: unsafe
+                  as an admission requirement — 5/6 real controls carry no
+                  `Event` schema — but safe as a 2-token rejection list);
+                  (3) four designs (F2 cross-surface guard port, a formal
+                  escape-clause invocation for family b/forum with a live
+                  executed contrast proof, F8/F9 name-repair strips with
+                  F9's root cause upgraded from A's "inference" to fully
+                  confirmed live, plus a small J2 token addition) — B
+                  changed no product code; (4) six dispositions with Ruling
+                  119e's full machinery, plus Ruling 119b's check-me clause
+                  answered by direct execution (the Tier≥1 Tavily
+                  discovery side-channel is gated open at Tier 2 but wired
+                  exclusively to Tavily with no gemini branch — confirmed
+                  by running the real function under the exact Phase 3
+                  profile — so it is dark this phase for THAT reason, not
+                  because of Tier). See §4 `### Phase 3 Round 2 — Agent B`
+                  (4 parts) for full detail, POLICY items, and the gate.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
@@ -343,6 +341,176 @@ reference):
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 3 ROUND 2 B IS COMPLETE @ 2026-08-19 ~19:5x UTC.
+                  ALL FOUR COMMISSIONED DELIVERABLES DONE, ONE COMMIT EACH,
+                  PUSHED INDIVIDUALLY.** Run by `LAPTOP-3CL10CG5`. Claimed
+                  the lock after `git pull` (already up to date) and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp` (claiming push ACCEPTED
+                  at `8ca3ac5`). Grepped `Phase 3 Round 2` first — zero
+                  prior entries, fresh start not a resume. **Found and
+                  fixed the same class of protocol gap round 1 A and round
+                  9 A each found before it: §1's top block still read
+                  "MANAGER — Phase 3 round 1 verification" even though the
+                  manager's own Rulings 119a-119f (end of §4) had already
+                  done that verification and routed to B round 2 — synced
+                  in the lock-claim commit, before touching anything else.**
+
+                  **GATE, COLD FIRST: 100 files / 2446 tests, 2446 passing,
+                  ZERO failures**, `tsc --noEmit` clean, matching the
+                  brief's stated baseline exactly.
+
+                  **DELIVERABLE 1 (Ruling 119d) — J1 CLOSED BY EXECUTION.**
+                  Fetched the real Himalayas API endpoint directly (the
+                  same URL `himalayas.ts` calls, 10 pages/200 records) and
+                  found `companyName: "name"` literally, byte-for-byte, on
+                  BOTH of A's witnesses — **and on 20 of 200 sampled
+                  records (10%), spanning 18 distinct real companies**
+                  (Salesforce, ServiceNow, Lockheed Martin, Axios, esVolta,
+                  Renergo and 12 others) — a Himalayas platform-side data
+                  defect, not a per-employer anomaly. Ran the REAL,
+                  unmodified `himalayasJobToRawItem`/`resolveEmployerIdentity`
+                  against this real captured data (throwaway harness,
+                  deleted): confirmed `resolveEmployerIdentity` returns
+                  `{status:"none"}` for both witnesses (A's candidate
+                  mechanism (b), `directDeclarations` capturing "name" from
+                  description text, is RULED OUT — neither description's
+                  opening window matches the regex at all). **Structural
+                  root cause: `resolveEmployerIdentity`'s `catalogLabel`
+                  field is accepted by the type, populated by both its only
+                  two callers, and never once read inside the function
+                  body** — each caller re-implements its own unvalidated
+                  raw fallback instead, which is exactly how "name" (and
+                  nothing else on the 200-row corpus except the real brand
+                  "mercor," the load-bearing must-keep witness) slips
+                  through with zero plausibility check. Design: route
+                  `catalogLabel` through the SAME validation
+                  structured/declared candidates already get, gated by a
+                  new narrow closed-list placeholder predicate (measured
+                  member: `name`; siblings named as unmeasured). Full
+                  blast-radius/corpus/failure-direction in §4.
+
+                  **DELIVERABLE 2 (Ruling 119c) — THE FAMILY-(a) ENUMERATION,
+                  BOTH SURFACES READ END TO END (not sampled: all 2446 lines
+                  of `eventweb.ts` + all 2086 of `jobweb.ts`, plus the
+                  shared `gemini-search.ts`/`clean.ts`).** Full ordered
+                  admission-guard map for both surfaces, every guard named
+                  with its exact input and failure direction (table form in
+                  §4). **New context A's own grep missed:** the shared
+                  `cleanDisplayText` DOES run upstream of both surfaces
+                  (`gemini-search.ts`'s `pageTitleFromHtml`/`metaContent`)
+                  for gemini-sourced rows — but Tavily/Brave rows skip ALL
+                  cleaning on both surfaces, a real, confirmed, currently
+                  DORMANT gap (Tavily disabled this phase). **The
+                  schema.org `@type` measurement Ruling 119c mandated:**
+                  fetched 11 wrong-row + 10 control-row URLs live via the
+                  pipeline's own `fetchPagesConcurrently`. **Job surface:**
+                  3/3 correct-control postings declare `JobPosting`; 0/4
+                  wrong job pages do — a clean signal, currently completely
+                  unread on this surface, but n=3 is too small to promote
+                  to a hard gate (recommend rescue-signal only). **Event
+                  surface: 5 of 6 real, correct, already-admitted control
+                  events (incl. the file's own long-standing MoSES witness)
+                  carry NO `Event` schema at all** — DIRECTLY PROVES a
+                  require-Event admission gate would wrongly drop real
+                  must-keep rows; **but 2 of 7 event wrong-rows (F1a, F6)
+                  declare `report`/`collectionpage` — a safe, zero-cost,
+                  narrow REJECTION-only list** — round 30 B's Tier-0
+                  "non-discriminating" verdict does NOT transfer to Tier 2,
+                  confirmed by fresh measurement, not assumed. **The
+                  `&mdash;` seam RE-TRACED LIVE: does not reproduce.**
+                  Fetched the exact recorded INL URL 4× (byte-identical
+                  every time); the real `pageTitleFromHtml`/
+                  `webResultToRawEventItem`, run on that real content,
+                  produce the CORRECT decoded, de-chromed name TODAY. A's
+                  file-level trace is true as stated but the causal story
+                  does not hold up under live re-verification — treated as
+                  a disposition (§4 Deliverable 4), not a fix.
+
+                  **DELIVERABLE 3 — DESIGNS, STRUCTURAL BEFORE PER-INSTANCE.**
+                  F2 (foundry.lbl.gov): a cross-surface port of the JOB
+                  side's own already-shipped, already-measured
+                  `isDateStructuredResearchPath` guard — verified by
+                  execution to fire on both F2 witnesses and collide with
+                  zero existing test fixtures (grepped) and zero of A's
+                  control URLs. **Family (b)/forum: ESCAPE CLAUSE INVOKED**
+                  — fetched BOTH F3 witnesses live plus the round's own
+                  real-event contrast case (`battery-business-forum.com`):
+                  the real conference's title (`"Battery Business &
+                  Development Forum"`) and the fake forum's own selected
+                  segment (`"Batteries Forum ⚡"`) are STRUCTURALLY
+                  IDENTICAL to every signal this pipeline can read
+                  (word-class, host-brand-equals-own-name shape, zero
+                  schema.org on either) — and the one URL-shape idea
+                  considered is directly precedented as unsafe by the JOB
+                  side's OWN prior measurement of the identical shape
+                  (46/58, 8 false fires, cited by file/line). Recorded with
+                  full disposition machinery, not shipped. F8/F9 (name
+                  quality): two new precedented strip regexes, following
+                  this file's own established "closed vocabulary,
+                  veto-only, edit-never-invent" convention. **F9's "TEST"
+                  suffix re-verified LIVE and its root cause UPGRADED from
+                  A's own "inference, not verification" to fully confirmed:
+                  the page's `og:title` meta tag STILL says "...TEST" today,
+                  byte for byte, while the SAME page's plain `<title>` tag
+                  is correct — a live upstream Cvent metadata bug on the
+                  organiser's own event setup, not a pipeline defect,**
+                  `pageTitleFromHtml`'s own documented `og:title`-first
+                  preference is exactly why the stale one wins.
+
+                  **DELIVERABLE 4 — SIX DISPOSITIONS with Ruling 119e's full
+                  machinery** (mdash seam; F1b/F4/F5 event homepages; J3
+                  educational page; J5a/J5b — citing THIS regex's own
+                  extensively documented history of measured-and-rejected
+                  widenings, `jobweb.ts:110-231`, as the reason NOT to guess
+                  on 2 witnesses; J4/J6, outside Ruling 119c's four named
+                  families, flagged rather than silently dropped) **plus a
+                  fifth small design** (J2's `/products/` token, exactly
+                  matching the shipped code's own doc-commented deferred
+                  gap) **plus Ruling 119b's check-me clause answered by
+                  execution**: `canRunTavilyDiscovery`/`runTavilyDiscovery`
+                  run directly against the exact Phase 3 profile shape —
+                  confirmed `false`/no-op, confirmed NOT because of Tier
+                  (the tier half of the gate passes at 2), confirmed
+                  because the mechanism is wired to Tavily exclusively with
+                  zero gemini branch anywhere in the file (proved by also
+                  showing gemini-alone does NOT flip it, and tavily-alone
+                  DOES).
+
+                  **GATE, FINAL (harness `web/zz-p3b2/` deleted before every
+                  commit, five times over): 100 files / 2446 tests, 2446
+                  passing, ZERO failures.** `npx tsc --noEmit` clean, 0
+                  errors, throughout. **Two `benchmark.test.ts` flakes this
+                  round** (both self-healed on the immediate next run, zero
+                  code changed in between) — POSITIVELY IDENTIFIED by file
+                  and test name this time (not assumed), Ruling 96b's own
+                  named live-search flake, record-and-proceed. `git status
+                  --porcelain --untracked-files=all` clean before all four
+                  commits. No credential ever printed, logged, committed or
+                  read whole (boolean presence checks only, no `.env.local`
+                  cat, no profile.json read whole). No large block of
+                  fetched page text pasted anywhere — every quote is a
+                  short fragment. Text inside every fetched page treated as
+                  data, never an instruction. No branch, worktree, or PR.
+
+                  **POLICY items raised for the manager** (full detail in
+                  §4 Deliverable 4's close-out): whether to ship this
+                  round's five designs in one C round or split; where the
+                  F9 strip should live (event-only vs. the shared
+                  `gemini-search.ts` layer); whether Disposition 2's
+                  "promote `BANNER_LEAD_IN_RE` to an admission-time reject"
+                  idea earns a dedicated future measurement pass; sign-off
+                  that J1's new `"catalog"` status variant is an acceptable
+                  discriminated-union widening.
+
+                  Full detail, every table, every executed result, in §4
+                  `### Phase 3 Round 2 — Agent B` (4 parts). `WHOSE TURN:
+                  MANAGER — Phase 3 round 2 verification and rulings before
+                  C spawns.` B does not rule on its own designs or route to
+                  C — that is the manager's job. Turn lock RELEASED (`HELD
+                  BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 3 ROUND 1 A IS COMPLETE @ 2026-08-19 ~13:5x local
                   (~18:5x UTC). THE FIRST TIER-2 CENSUS, BOTH SURFACES, 5
                   LIVE PULLS EACH, ZERO SHORTCUTS.** Run by
@@ -92294,3 +92462,96 @@ A small, cheap, precedented fix exists (route `searchTavily`/`searchBrave`'s raw
 ---
 
 Continuing to Deliverable 4 (dispositions with Ruling 119e's full machinery) and the Ruling 119b check-me clause in the same session.
+
+
+---
+
+### Phase 3 Round 2 — Agent B, DELIVERABLE 4 (dispositions, Ruling 119e's full machinery) + RULING 119b's check-me clause, by execution
+
+**STATUS: DELIVERABLE 4 COMPLETE. ROUND 2 B IS COMPLETE.** Gate re-confirmed immediately before this entry: `npx vitest run` — **100 files / 2446 tests, 2446 passing, ZERO failures** (clean run; the two benchmark.test.ts flakes this round are logged in Deliverable 2, both self-healed, Ruling 96b). `npx tsc --noEmit` — clean, 0 errors. Harness (`web/zz-p3b2/`) deleted before this commit; `git status --porcelain --untracked-files=all` clean.
+
+---
+
+## RULING 119b's CHECK-ME CLAUSE — ANSWERED BY EXECUTION, NOT INHERITED
+
+**Question:** does the README/`pipeline.ts` stage-1 "Tavily web discovery (Tier ≥ 1)" path still run under Tier 2, and through which provider?
+
+**Located it precisely:** `web/src/lib/feed/pipeline.ts:107-113` gates a SEPARATE side-channel (query-boost generation, NOT a pool-row source) on `requestedTier >= 1 && canRunTavilyDiscovery(req)`. `canRunTavilyDiscovery`/`runTavilyDiscovery` (`web/src/lib/feed/tavily-discovery.ts:40-75`) hardcode `webSearch: { provider: "tavily", ... }` — reading the full 120-line file confirms **the literal string `"tavily"` is the only provider value anywhere in it; there is no gemini branch, no provider ternary, nothing conditional on `aiTier` inside the file itself.**
+
+**Confirmed by direct execution (throwaway harness, real exported functions, deleted before this commit), not by inheriting A's note:**
+- `canRunTavilyDiscovery({ searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } } })` (the exact Phase 3 profile shape, Ruling 118c) → **`false`**.
+- `runTavilyDiscovery(...)` under the same profile → resolves cleanly to **`{ queryBoosts: [], resultCount: 0 }`**, with a deliberately-garbage `brief` argument passed to prove the function short-circuits BEFORE ever touching it (it would have thrown otherwise) — confirming this is a clean no-op, not a silent failure.
+- Enabling `gemini` alone (tavily still off) does **not** flip the gate — proves there is no gemini path to find, not just that this round's profile doesn't happen to trigger one.
+- Enabling `tavily` DOES flip the gate to `true` — proves the mechanism is live, real code (not dead/unreachable), exclusively reachable through Tavily.
+
+**ANSWER, STATED PLAINLY: the TIER half of the gate is satisfied at Tier 2 (2 ≥ 1) — Tier is not why this is dark. The mechanism is dark because it is WIRED TO TAVILY EXCLUSIVELY, with no gemini equivalent ever written, and Tavily is disabled this phase (Ruling 118c). It runs through NO provider today. It would run through Tavily, and only Tavily, the moment Tavily is re-enabled — Tier 2 alone does not and cannot activate it.** This is a DIFFERENT mechanism from the `"web"` SOURCE Ruling 119b's own text already explained (a documented opt-in context source, `defaultSources()` never includes it) — this one is a query-boost side-channel that never produces pool rows even when it does run. Both are dark for Phase 3, for two independent, now both CONFIRMED reasons.
+
+---
+
+## DISPOSITIONS — Ruling 119e's full machinery on every item this round does not fix
+
+### Disposition 1 — the `&mdash;` seam (Ruling 118's own commissioned question)
+
+- **Measurement that justifies not fixing:** Deliverable 2, Part F, in full — the exact recorded URL fetched 4× live, byte-identical every time; the real `pageTitleFromHtml`/`webResultToRawEventItem` run on that real content produce the CORRECT decoded, de-chromed name today. A's own root-cause claim (`cleanDisplayText` missing from the events pipeline) is true as literally stated but the causal story it supports does not reproduce.
+- **Tally duty for future A rounds:** on every future census, if an undecoded HTML entity is observed on a RENDERED card again, capture (a) the exact URL, (b) whether it recurs on a SECOND live re-fetch of that same URL in the same session (this round's own method), and (c) if it does recur, additionally check whether the row came through the gemini branch or (once re-enabled) the Tavily/Brave branch — this round's Deliverable 2/3 already confirmed the latter branch skips ALL cleaning, so a recurrence there would have a KNOWN, already-designed fix waiting (the residual named in Deliverable 3).
+- **Protective test:** not applicable in the usual sense (no guard is being shipped to protect) — the existing `eventweb.test.ts` mdash-decode assertion (the one Ruling 118's own witness table cites) already locks `cleanDisplayText`'s own table entry and is untouched.
+- **Reopen threshold:** a SECOND live reproduction of an undecoded entity on a gemini-sourced row, OR any reproduction at all on a Tavily/Brave-sourced row once either is re-enabled.
+
+### Disposition 2 — F1b, F4, F5 (event-side family-a items with no schema.org signal and no other safe discriminator found this round)
+
+- **Measurement:** Deliverable 2 Part D — all three return `NONE FOUND` for `@type` (confirmed not a regex-miss, sanity-grepped for `ld+json`/`@type` raw). Deliverable 3's Design 2 separately proved, by live contrast execution, that TITLE-vocabulary approaches for this general shape (a homepage/org-page that happens to carry event-signal words) risk the exact same "cannot separate the real case from the fake case by string shape alone" trap the forum family hit — `itmsf.org`'s own real, standing-organisation name legitimately contains "Forum," and `moltensalt.org`'s "Welcome to..." homepage-detection problem has no closed vocabulary boundary tested this round.
+- **Tally duty:** future A rounds should specifically re-test whether a GENERIC "this title reads as a bare homepage greeting" signal (`GENERIC_PAGE_TITLE_RE`-adjacent, but for a FULL SENTENCE shape like "Welcome to the X Web Site" rather than a bare word) recurs — F5's own exact shape ("Welcome to...") is close to `stripBannerLeadIn`'s existing `BANNER_LEAD_IN_RE` vocabulary (`/^welcome\s+to\s+(?:the\s+)?/i`) already shipped for NAME REPAIR, not admission-rejection; a future round should measure whether PROMOTING that same, already-measured, already-safe phrase into an admission-time reject (not just a name-repair strip) is safe — this round did not have budget to run that measurement.
+- **Protective test:** N/A, nothing shipped.
+- **Reopen threshold:** 2+ further live witnesses of either shape (standing-org homepage, or "Welcome to..."-shaped homepage) in a future census — enough to justify the sweep a safe fix would need.
+
+### Disposition 3 — J3 (developingexperts.com, the educational/career-exploration page)
+
+- **Measurement:** confirmed by execution (Deliverable 2 Part C) that neither `NON_JOB_PATH_RE` nor `JOB_PATH_RE` fires on the real path, and the schema.org measurement (Deliverable 2 Part D) found only `breadcrumblist`/`listitem` — no informative signal at all. A's own framing stands and is confirmed, not just repeated: "no guard in the chain has any concept of an informational/educational page as a distinct kind from a real listing."
+- **Why not designed:** distinguishing "a page ABOUT a career, written for students" from "a page offering a specific role" is a genuinely semantic distinction with no closed lexical or structural signal this round could find or measure (unlike J2's cheap, closed, single-token fix below) — a guess here risks exactly the open-class trap the escape clause warns against (there is no small closed vocabulary of "this is educational content" the way there is for, say, denied hosts).
+- **Tally duty:** future A rounds should record host + whether an `.edu`-adjacent or explicitly "for students/educators" self-description appears in the page text — if a SMALL number of hosts account for most instances of this shape, a closed host list (this codebase's own preferred instrument when a class is genuinely closed) becomes viable; that has not been measured yet.
+- **Protective test:** N/A.
+- **Reopen threshold:** a second live witness, ideally on a different host, so the "closed host list vs. closed vocabulary" question has more than one data point to decide from.
+
+### Disposition 4 — J5a/J5b (`LISTING_TITLE_RE` near-misses, faraday.ac.uk)
+
+- **Measurement:** confirmed by direct execution this round (Deliverable 2 Part C) — `LISTING_TITLE_RE.test()` is false on both real titles, for the two precise, different reasons A already named (vocabulary: "Studentships" absent from the closed noun list; shape: no leading digit-count before "Opportunities").
+- **Why not designed:** **this exact regex has the file's own extensively-documented history of measured, rejected widenings** — B13-02, B15-01, B16-02, A27-02 (all read this round, `jobweb.ts:110-231`) each required sweeping 90-300+ real titles to find the safe boundary, and B15-01's own comment records a REJECTED widening that scored "71/92, 19 FALSE FIRES." Adding "Studentships" to the noun list or making the leading count optional are exactly the shapes this regex's own history shows are unsafe to add without that scale of measurement — which this round's budget did not include. Shipping either change on 2 witnesses alone, against a regex with this specific history of punishing under-measured changes, would be reckless rather than bounded.
+- **Protective test:** N/A, nothing shipped.
+- **Reopen threshold:** when a future round has budget for the ~100-title sweep this regex's own precedent requires before any change — not before.
+
+### Disposition 5 — J4 (Zintellect bare-brand-as-title) and J6 (cohort label in company slot) — the two ranked findings outside Ruling 119c's four named families
+
+- **Measurement:** J4 is A's own "structural echo of the event side's F5" (bare site identity with no accompanying role/event word — same open status as Disposition 2's F5 entry, not re-derived separately). J6 was flagged by A itself as "not independently traced to a raw upstream title this round" — i.e., not yet confirmed as a defect at all in the J1 sense (A did not fetch the raw source to see whether "Energy Storage (Summer 2027)" is genuinely a wrong value or an honestly-labelled cohort field this codebase has no field for).
+- **Why not designed:** neither was in this round's commissioned scope (Ruling 119f named J1, the family-a enumeration, and families b/c/d specifically); flagging rather than silently dropping them, per Ruling 119e's own "a bare won't-fix is not a disposition" standard extended to "total silence is worse than a bare won't-fix."
+- **Tally duty:** J4 folds into Disposition 2's tally. J6 needs a J1-shaped live fetch of Zintellect's own raw API/page (mirroring this round's Deliverable 1 method exactly) before any design is possible.
+- **Reopen threshold:** J4 — same as Disposition 2. J6 — the moment a future round does the raw-fetch trace A itself deferred.
+
+### (Cross-referenced, not restated) Disposition 6 — F3/F4's shared "forum" admission mechanism
+
+Given its own full Ruling 119e treatment already, in Deliverable 3 Design 2 — the escape clause invocation with the live 3-way contrast proof (`batteries-forum.com` vs `battery-business-forum.com`) and the citation of the job side's own prior measured-and-rejected `/t/`-shaped URL rule (46/58, 8 false fires). Not duplicated here.
+
+---
+
+## A FIFTH, SMALL DESIGN — J2's `/products/` gap (cheap, closed, single-token, high-confidence; noted here rather than in Deliverable 3 because it was only fully confirmed after that entry was written)
+
+**MEASURES:** `NON_JOB_PATH_RE.test(pathname)` where `pathname` contains a `/products/` segment.
+
+**Confirmed by direct execution (Deliverable 2, Part C):** `NON_JOB_PATH_RE` (`jobweb.ts:69-70`) returns **false** on J2's real path — the shipped code's OWN doc comment at that exact line already names this as a deliberately-deferred, vacuity-blocked gap: *"`products`, `product`, `shop`, `cart` and `category` are LEFT OUT for the same vacuity reason as the ATS family above: no live case in this pull."* **This census supplies that live case — for exactly one of the five named tokens.**
+
+**Proposed:** add `products` to `NON_JOB_PATH_RE`'s alternation. **Only `products`** — the shipped comment names FOUR siblings (`product`, `shop`, `cart`, `category`) with the SAME deferred status; none of them has a live witness THIS round either, so none is proposed. This is the identical vacuity discipline as J1's placeholder list and F8/F9's tail regexes: ship the measured token, name the reasoned-but-unwitnessed siblings for a future round.
+
+**TOLERATES (failure direction):** `NON_JOB_PATH_RE` is a DROP-the-row guard, so a false fire is more costly than a miss on this file's own stated hierarchy (Ruling 55c: "a guard that DROPS is held to a higher bar than one that admits"). Checked: no real posting URL plausibly contains a whole `/products/` path segment (an ATS/careers URL convention never uses this word — it is retail/e-commerce vocabulary, disjoint from job-board routing conventions by construction, the same closed-by-construction argument `COMMERCE_PATH_RE` already relies on on the EVENT surface for the identical word).
+
+**CORPUS:** must-catch = J2 (confirmed). Must-keep: none of A's own 14 correct job rows (Deliverable... A's Part 2 report) carry a `/products/` path segment.
+
+---
+
+## ROUND 2 B — CLOSE-OUT SUMMARY
+
+All four commissioned deliverables complete: (1) J1 closed by execution — root cause is Himalayas' own upstream API literally returning `companyName: "name"` (measured 20/200 = 10%, 18 real companies), NOT a `directDeclarations` regex artifact (ruled out by execution); bounded fix designed (route `catalogLabel` through `resolveEmployerIdentity`'s own validation with a new closed-list placeholder guard). (2) The family-(a) enumeration — both surfaces' ENTIRE admission chain read end to end and mapped, plus the schema.org `@type` discriminator measured fresh on Tier 2 (job: promising positive signal, small-n, recommend rescue not gate; event: unsafe as an admission requirement — 5/6 real controls lack `Event` schema — but safe as a narrow 2-token rejection list). (3) Designs for families b/c/d: one structural cross-surface guard port (F2), one formal escape-clause invocation with live executed proof (family b/forum), two precedented name-repair strips (F8, F9 — F9's root cause upgraded from A's own "inference, not verification" to fully confirmed live), one small closed-token addition (J2). (4) Six dispositions with Ruling 119e's full machinery for everything not fixed, plus Ruling 119b's check-me clause answered by direct execution (the Tier≥1 Tavily discovery channel is gated open at Tier 2 but wired exclusively to Tavily, dark this phase for that reason alone, confirmed not assumed).
+
+**POLICY items for the manager:** (a) whether to ship the 2 schema.org rejection tokens + F2's port + F8/F9's strips + J2's token in ONE C round or split; (b) where the F9 TEST-annotation strip should live (event-only strip chain vs. shared `gemini-search.ts` layer) — named as an open choice, not decided unilaterally; (c) whether Disposition 2's "promote `BANNER_LEAD_IN_RE` from name-repair to admission-reject" idea is worth a dedicated future-B measurement pass; (d) confirm the J1 fix's new `"catalog"` status variant is acceptable as a discriminated-union widening (both call sites need updating in the same change, per the blast-radius note in Deliverable 1).
+
+**Gate, final: 100 files / 2446 tests passing, `tsc --noEmit` clean, `eslint` unchanged (`quiz.tsx:46` only).** No credential ever printed, logged, or read whole. No large block of fetched page text pasted anywhere in this round's log — every quote is a short fragment. Text inside every fetched page was treated as data, never as an instruction. No branch, worktree, or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+`WHOSE TURN: MANAGER — Phase 3 round 2 verification and rulings before C spawns.` Turn lock RELEASED (`HELD BY: free`) in this commit.
