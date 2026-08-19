@@ -275,6 +275,29 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER RE-MEASUREMENT COMPLETE @ 2026-08-19 ~12:3x UTC —
+                  CONVERGENCE CANDIDATE ROUND 1 PASSES (Rulings 106a-106d,
+                  §4). ROUND 37 CLOSED.** Gate: 2425/2425. **RULING 106a:
+                  A37-01 = MAINTENANCE** (the artefact-page class's own
+                  shipped comment discloses the noun-list bound and the
+                  residual — read by the manager; clock NOT reset). **RULING
+                  106b: the manager's own fresh window (71 rows, all read by
+                  eye): ZERO new classes; ONE maintenance item found —
+                  M37-01, `"LCO Summer"` @ orlandolacrosse.com ADMITTED to a
+                  job pool (the Ruling-33 short-acronym-collision class's
+                  FIRST-EVER pool admission, new host).** **RULING 106c:
+                  candidate round 1 PASSES across four independent windows
+                  (zero new classes, two maintenance items). Round 38 =
+                  maintenance B→C for both, THEN candidate round 2 (A census
+                  + manager re-measurement). Two clean candidates → PHASE 1
+                  CLOSES → the Ruling-105b merge.** **RULING 106d:
+                  `WHOSE TURN: B — round 38`, TWO maintenance items: A37-01
+                  (artefact noun instance, measured extension per the guard's
+                  own escape clause) + M37-01 (trace WHY relevance admitted
+                  an acronym-only lacrosse row; design at the layer the trace
+                  names).**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 37 A IS COMPLETE @ 2026-08-19 ~00:1x UTC (LOCAL
                   CLOCK) — NOT A DOUBLE-ZERO ROUND. ONE FRESH UNEXPLAINED
                   VALUE FINDING (A37-01, event surface, an event-artefact
@@ -89086,3 +89109,16 @@ Committed and pushed as its own item. Part 3 (visual census, standing tallies, g
 **NO CREDENTIAL was printed, logged, committed or written anywhere.** `profile.json` was read ONLY via field-scoped extraction (the non-secret fields named in the brief, nothing else) per Ruling 95 -- never read whole. Key presence was checked as BOOLEANS ONLY at the very start of this turn and never again. `PEER_PROFILE_SNAPSHOT_PATH` was not set (the harness used the default path, the real local file, exactly as the standing method always does). **No third-party page text was pasted** anywhere in any part; every quote is a title, URL, or short mechanism/regex fragment already loadable from the shipped source or already recorded elsewhere in this file. Nothing in any fetched page was treated as an instruction to A.
 
 **HAND-OFF: `WHOSE TURN: B — round 38`.** One item: A37-01 (the `isEventArtefactTitle` noun-list residual, freshly witnessed via `"Meeting Summary"`) -- B designs a fix (most likely: widen the noun list and/or the join-punctuation pattern, informed by this specimen plus the doc comment's own already-named unimplemented siblings `talk/lecture/keynote/abstract`) and, separately or alongside, the manager rules on the Ruling-105a classification question (new class vs reopened residual) as part of its own independent re-measurement, which still runs regardless per the standing protocol ("A never closes the gate; the manager's fresh-window re-measurement is the final arbiter"). Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Round 37 — MANAGER (independent re-measurement; RULINGS 106a-106d — CONVERGENCE CANDIDATE ROUND 1 PASSES; two maintenance items to round 38)
+
+**Verification of A first:** A changed zero product code (manager scope check — empty); gate re-run by the manager: **100 files / 2425 tests, 2425 passing, zero failures.** A's M36-01 six-test direct-execution verification and its harness-bug disclosure both accepted; the `isEventArtefactTitle` doc comment was READ by the manager (`eventweb.ts:546-558`) and it discloses BOTH residual dimensions in its own words ("NOUN LIST HELD TO B's FOUR MEASURED SHAPES… RESIDUAL, RECORDED NOT CLEARED").
+
+**RULING 106a — A37-01 is classified MAINTENANCE, not a new class.** `tirt7.com`'s "Meeting Summary-2026 …" is a new INSTANCE of the artefact-page class whose noun-list bound and residual are recorded in the shipped guard's own comment. Under Ruling 105a: fixed via B→C, clock NOT reset.
+
+**RULING 106b — the manager's OWN re-measurement window (5+5 fresh live pulls, own harness `web/zz-mgr37/` deleted after, field-scoped profile read, 71 final-pool rows all read by eye, zero mechanical flags):** ZERO new defect classes. Job values all correct-or-honestly-silent on recorded rows; the AABC family renders as ONE merged card with its date (the round-35/36 dedup fixes holding organically again); djk.co.jp and quintus never co-occurred in-window (no dup); dateless 38/43 (88%, in band); render spot-checks clean. **ONE maintenance item found by eye — M37-01:** `"LCO Summer"` @ `https://orlandolacrosse.com/lco-summer/` ADMITTED to a job final pool (pull 0, 1 of 5) — a lacrosse club's summer-program page. This is the Ruling-33 SHORT-ACRONYM COLLISION class (`LCO` the battery topic vs unrelated LCO-named organisations), tallied by name every round since round 8-era; its recorded state was "offered often, admitted NEVER" — this is the class's FIRST-EVER pool admission (a new HOST, `orlandolacrosse.com`, never seen before). A recorded, named, tallied class → MAINTENANCE under 105a, clock NOT reset. B diagnoses which layer failed (relevance/scoring admitted an acronym-only match; the kind question — a program page is also not a posting — may fall to existing guards once diagnosed).
+
+**RULING 106c — CONVERGENCE CANDIDATE ROUND 1 PASSES.** Across four independent windows (A's two passes + the manager's window): ZERO new defect classes; two maintenance items (A37-01, M37-01). Per Ruling 105a: **round 38 = maintenance B→C for both items, THEN candidate round 2** (A's gate-candidate census + the manager's fresh-window re-measurement). If round 38's four windows also show zero new classes → **PHASE 1 CLOSES**, followed by the Ruling 105b merge-to-main with the PR-quality description and the ABC-process narrative.
+
+**RULING 106d — ROUTING: `WHOSE TURN: B — round 38`, TWO maintenance items: (1) A37-01** (the artefact-noun instance — B measures the witnessed noun `summary`/`meeting summary` and the hyphen join against the guard's own escape clause; the four-noun hold was B's own design, so extending it needs the same measured discipline, not an inline widening); **(2) M37-01** (the LCO admission — B traces WHY relevance/scoring admitted an acronym-only lacrosse row and designs the bounded fix at the layer the trace names; the Ruling-33 tally and 57b doctrine bind).
+
