@@ -3727,3 +3727,84 @@ describe("Round 32 C, ITEM 1 — job page-kind guard (Components A, B, C; Ruling
     });
   });
 });
+
+// Phase 3 round 6 C, ITEM 6 (J7, Rulings 123f/123g item 6): TRAILING_ZIP_RE,
+// an additional OR-clause inside looksLikeBareLocation alongside the
+// existing state-code check. Corpus per Phase 3 round 5 B, IF-BUDGET-REMAINS
+// ITEMS. "Cell" (the bare-generic-word witness) stays dispositioned per A's
+// own open-class caution — not attempted here, per the brief.
+describe("J7 — the ZIP-ending location shape (Phase 3 round 6 C, ITEM 6)", () => {
+  const employerOf = (title: string, url = "https://careers.acme.test/job/44231") =>
+    webResultToRawJobItem(
+      { title, url, snippet: "We are hiring a research scientist. Apply now." },
+      ["battery", "molten salt", "electrochemistry"],
+    )?.company;
+
+  describe("must-catch", () => {
+    it("rejects the live diedremoire.com witness's ZIP-ending candidate, end to end", () => {
+      expect(
+        employerOf(
+          "Battery Materials Research Scientist - Lansing, MI, Michigan, 11021",
+          "https://diedremoire.com/Battery-Materials-Research-Scientist-Lansing-MI-1044-1-11021.html",
+        ),
+      ).toBeUndefined();
+    });
+
+    it("rejects the same candidate shape regardless of URL — the guard is title-structural, not host-specific", () => {
+      expect(
+        employerOf("Battery Scientist - Lansing, MI, Michigan, 11021"),
+      ).toBeUndefined();
+    });
+
+    it("also rejects the extended ZIP+4 form", () => {
+      expect(
+        employerOf("Battery Scientist - Lansing, MI, Michigan, 11021-4567"),
+      ).toBeUndefined();
+    });
+  });
+
+  describe("regression — TRAILING_STATE_CODE_RE's own contract is byte-unchanged", () => {
+    it("still rejects a bare state-code-ending candidate outright", () => {
+      expect(employerOf("Battery Research Scientist - Cambridge, MA")).toBeUndefined();
+    });
+
+    it("still leaves a state-code tail to the pre-existing guard when a real employer precedes it", () => {
+      expect(
+        employerOf("Battery Scientist - Acme Energy Ltd, Cambridge, MA"),
+      ).toBeUndefined();
+    });
+  });
+
+  // The nuance B checked rather than glossed over: a DIFFERENT, later-stage
+  // mechanism (clause 3, `trimEmployerAddressTail`, Ruling 49b/62d) governs
+  // an ONLY-an-address candidate that ends in a COUNTRY, not a ZIP — the two
+  // must not collide, and they don't, because neither of these strings ends
+  // in a trailing ZIP at all.
+  describe("regression — clause 3's address-tail trim is unaffected (neither case ends in a ZIP)", () => {
+    it("still trims a postal address off an otherwise correct employer", () => {
+      expect(
+        employerOf(
+          "Nuclear Engineering Internship - Summer 2027 at Kairos Power, Alameda, California, United States | Intern Insider",
+        ),
+      ).toBe("Kairos Power");
+    });
+
+    it("still leaves a candidate that is ONLY a country-ending address fully visible, not rejected to blank", () => {
+      expect(
+        employerOf("Battery Research Scientist - Alameda, California, United States"),
+      ).toBe("Alameda, California, United States");
+    });
+  });
+
+  describe("must-keep — adversarial digit-bearing and short real company names", () => {
+    it.each([
+      "3M",
+      "7-Eleven",
+      "Booking.com",
+      "23andMe",
+      "Mercor",
+    ])("keeps `%s` untouched", (company) => {
+      expect(employerOf(`Battery Scientist - ${company}`)).toBe(company);
+    });
+  });
+});

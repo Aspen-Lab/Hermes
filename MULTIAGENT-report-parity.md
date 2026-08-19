@@ -93717,3 +93717,19 @@ Continuing to ITEM 5 (F12, the forum-thread port) in the same session.
 **GATE AFTER ITEM 5: 101 files / 2512 tests, 2512 passing (2508 + 4 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `eslint` on both changed files: clean. `git status --porcelain --untracked-files=all` showed only the two intended files changed before staging.
 
 Continuing to ITEM 6 (J7, the ZIP-ending location shape) in the same session.
+
+### Phase 3 Round 6 — Agent C, ITEM 6 (J7, Rulings 123f/123g item 6): the ZIP-ending location shape
+
+**STATUS: ITEM 6 COMPLETE — ALL SIX ITEMS DONE.** Run by `LAPTOP-3CL10CG5`. Gate confirmed cold before starting: `npx vitest run` — 101 files / 2512 tests, 2512 passing (item 5's own new total); `npx tsc --noEmit` clean.
+
+**CODE.** `web/src/lib/jobs/sources/jobweb.ts`: new module-private `TRAILING_ZIP_RE = /,\s*\d{5}(?:-\d{4})?$/` placed directly above `looksLikeBareLocation`; `looksLikeBareLocation` itself changed from a single `TRAILING_STATE_CODE_RE` check to `TRAILING_STATE_CODE_RE` OR `TRAILING_ZIP_RE` (exactly B's stated design: "an additional OR-clause alongside the existing state-code check"). `TRAILING_STATE_CODE_RE` itself is untouched — the OR lives inside the function body, not a rewrite of the existing regex, so its own contract stays byte-unchanged (regression-tested). The one call site (`webResultToRawJobItem`'s candidate-guard chain, `!looksLikeBareLocation(p) &&`) needed no change — the fix is entirely inside the predicate. `"Cell"` (the bare-generic-word witness) NOT attempted, per A's own open-class caution and this item's explicit instruction.
+
+**TESTS**, `web/src/lib/jobs/sources/jobweb.test.ts`, new `describe("J7 — the ZIP-ending location shape (Phase 3 round 6 C, ITEM 6)")`, 12 new tests:
+- Must-catch (3): the live `diedremoire.com` witness end to end; the same candidate shape independent of URL (proving the guard is title-structural, not host-specific); the extended ZIP+4 form.
+- Regression — `TRAILING_STATE_CODE_RE`'s own contract (2): a bare state-code-ending candidate is still rejected outright; a state-code tail after a real employer still reaches the pre-existing guard the same way.
+- Regression — clause 3's address-tail trim, the nuance B checked explicitly (2): `trimEmployerAddressTail` (Ruling 49b/62d) still trims `"Kairos Power, Alameda, California, United States"` to `"Kairos Power"`, and still leaves an address-ONLY candidate (`"Alameda, California, United States"`, ending in a country, not a ZIP) fully visible rather than rejected to blank — proving the two mechanisms answer different questions and do not collide, since neither string ends in a trailing ZIP.
+- Must-keep adversarial (5, `it.each`): `3M`, `7-Eleven`, `Booking.com`, `23andMe`, `Mercor` — short and digit-bearing real company name shapes, none rejected.
+
+**GATE AFTER ITEM 6 (FINAL): 101 files / 2524 tests, 2524 passing (2512 + 12 new), ZERO failures.** `tsc --noEmit` clean, exit 0. `npx eslint .` across the whole `web/` tree: exactly the one standing, pre-existing `quiz.tsx:46` error, unchanged and unrelated — zero new warnings or errors anywhere across all six items' touched/new files. `git status --porcelain --untracked-files=all` showed only the two intended files changed before staging.
+
+All six commissioned items (Ruling 123g) are now complete, one commit each, each pushed immediately. Proceeding to close-out.

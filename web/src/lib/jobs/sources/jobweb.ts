@@ -913,6 +913,41 @@ const SEASON_COHORT_LABEL_RE =
 const TRAILING_STATE_CODE_RE = new RegExp(`,\\s*(${US_STATE_CODES.join("|")})$`);
 
 /**
+ * Phase 3 round 6 C, ITEM 6 (J7, Rulings 123f/123g item 6). A SECOND,
+ * STRUCTURAL (not vocabulary) location signal, alongside the state-code
+ * check above — a trailing US ZIP code. Live witness (J7, Phase 3 round 4
+ * A): `diedremoire.com/Battery-Materials-Research-Scientist-Lansing-MI-
+ * 1044-1-11021.html` renders company `"Lansing, MI, Michigan, 11021"` — this
+ * string IS location-shaped (the state code "MI" is right there) but
+ * `TRAILING_STATE_CODE_RE` above requires the candidate to END in a bare
+ * two-letter code, and this one ends in a 5-digit ZIP with "MI" sitting in
+ * the MIDDLE, so the anchored regex misses it even though a human reads
+ * this as an obvious address.
+ *
+ * A genuinely disjoint, ADDITIVE shape — not a widening of
+ * `TRAILING_STATE_CODE_RE`'s own contract, which stays byte-unchanged
+ * (regression-tested in jobweb.test.ts). n=1 live witness, shipped anyway on
+ * the same precedent as F8/F9/J2 (each shipped on exactly one live witness),
+ * because the signal is structural/numeric-shaped rather than a vocabulary
+ * guess — the same "closed by construction, not by English" reasoning
+ * `POSTING_ID_RE`'s own digit-run check and `TRAILING_STATE_CODE_RE`'s own
+ * closed code list already rely on.
+ *
+ * CHECKED AGAINST A DIFFERENT MECHANISM IN THE SAME GUARD CHAIN THAT
+ * DELIBERATELY DOES THE OPPOSITE FOR A RELATED SHAPE, so the two do not
+ * fight: `trimEmployerAddressTail` (Ruling 49b/62d, below) TRIMS a
+ * winning candidate that is ONLY a full "City, State, Country" address
+ * rather than rejecting it to blank ("Alameda, California, United States"
+ * stays visible whole — Ruling 49b, "a hidden defect is worse than a
+ * deferred one"). That case does NOT end in a ZIP, so this check is inert on
+ * it; the two mechanisms answer genuinely different questions
+ * (`trimEmployerAddressTail` only ever runs on the WINNER, after this guard
+ * chain has already rejected or passed every candidate) and neither can
+ * reach the other's own territory.
+ */
+const TRAILING_ZIP_RE = /,\s*\d{5}(?:-\d{4})?$/;
+
+/**
  * A title segment shaped like a bare US address ("Cambridge, MA") is a
  * location, not a company (B5-03/R7) — the same structural signal
  * `hasTrailingStateCode()` in structured-extract.ts already uses to keep a
@@ -921,7 +956,9 @@ const TRAILING_STATE_CODE_RE = new RegExp(`,\\s*(${US_STATE_CODES.join("|")})$`)
  */
 function looksLikeBareLocation(candidate: string): boolean {
   const match = candidate.match(TRAILING_STATE_CODE_RE);
-  return Boolean(match && match[1] === match[1].toUpperCase());
+  if (match && match[1] === match[1].toUpperCase()) return true;
+  // Phase 3 round 6 C, ITEM 6 (J7) — see TRAILING_ZIP_RE above.
+  return TRAILING_ZIP_RE.test(candidate);
 }
 
 /**
