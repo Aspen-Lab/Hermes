@@ -275,6 +275,22 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~11:2x UTC — ROUND 37 B
+                  VERIFIED INDEPENDENTLY, RULING 103 APPENDED (§4).** Gate
+                  re-run: **2418/2418, zero failures.** The structural claim
+                  re-executed by the manager: verb-only extension FALSE on
+                  the witness, the ordinal-arm regex TRUE — proven. **RULING
+                  103: design APPROVED; AGM-veto drop and path-signal
+                  decline both RATIFIED; remaining verb siblings stay named
+                  residuals. `WHOSE TURN: C — round 37` (one item: the regex
+                  + disjunct + corpus tests incl. the four AGM
+                  scholarly-society must-keeps locking the drop's reason),
+                  THEN A — round 37 GATE CANDIDATE, THEN the manager's
+                  independent re-measurement. If A measures double-zero:
+                  `WHOSE TURN: MANAGER — independent re-measurement before
+                  any close`.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 37 B IS COMPLETE @ 2026-08-19 ~04:2x UTC — M36-01
                   DESIGNED: ONE NEW, ISOLATED REGEX
                   (`PR_SETS_ORDINAL_HEADLINE_RE`) SCOPED TO THE WITNESSED
@@ -88552,4 +88568,19 @@ Read Ruling 84c in full (`:85313`): it ratified Design A (`TICKER_NEWS_PATH_RE`)
 **B CHANGED NO PRODUCT CODE.** Two commits total (turn-lock claim + this design entry), both pushed on landing. Throwaway harness (`web/zz-r37b/`, three files: `item1-design.test.ts`, `item1-corpus.test.ts`, `item1-path.test.ts`, own minimal `vitest.config.ts`) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere — no live network calls this item (pure regex/function-level design work against the real imported shipped function plus constructed/recorded title-and-URL strings, Ruling 75's live-probe option not spent, per the brief's own "optional" framing). No large page text pasted anywhere — every quote above is a title, URL, or short mechanism fragment already recorded elsewhere in this file. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or weakened (B ships no test — recommendations only, C's to write).
 
 **HAND-OFF: `WHOSE TURN: MANAGER — round 37 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Round 37 — MANAGER (independent verification of B; RULING 103; C commissioned)
+
+**Verification:** B changed zero product code (the manager's own scope check — empty); tree clean; both commits pushed. Gate re-run (full-capture): **100 files / 2418 tests, 2418 passing, ZERO failures.** **The load-bearing structural claim was re-executed by the manager directly:** adding `sets` to the EXISTING regex's verb list does NOT catch the witness (`false` — `\d+\b` cannot end inside `62nd`), and the new ordinal-arm regex DOES (`true`). The design's reason to exist is proven, not asserted.
+
+**RULING 103 — the design is APPROVED AS WRITTEN; `WHOSE TURN: C — round 37` (ONE item), THEN A — round 37, GATE CANDIDATE ROUND, THEN the manager's independent re-measurement.**
+
+- `PR_SETS_ORDINAL_HEADLINE_RE` ships as its own isolated disjunct in `isNewsArticleTitle`, immediately after `PR_ANNOUNCEMENT_HEADLINE_RE`, which stays byte-identical. 64/64 corpus (witness caught, stocktitan regression held, 19-row must-keep + ordinal adversarials + round 36 A's 33 full titles all clean).
+- **The AGM-veto DROP is ratified with approval** — four plausible scholarly-society "AGM + conference" constructions all false-drop under a standalone token veto, `isNewsArticleTitle` has no rescue clause, and the verb+ordinal fix closes the witnessed defect alone. The AGM question stays OUT of the code and ON the record.
+- **The path-signal DECLINE is ratified** — `/stock-market-news/` is a one-host witness, exactly Ruling 32's one-site-at-a-time complaint; the title shape suffices.
+- **The remaining verb siblings stay named residuals** (`announces`, `to exhibit at`, `attends`, `hosts` — unwitnessed in this shape), same discipline, same reopen condition.
+- C implements: the regex + disjunct verbatim, tests (the witness caught via `isNewsArticleTitle` AND dropped via `webResultToRawEventItem`; stocktitan regression; the four AGM scholarly-society adversarials KEPT — locking the drop decision's reason; the four ordinal adversarials; `Company sets 3 records` style non-event... per B's corpus tables). THEN A — round 37 full gate-candidate census; if double-zero, `WHOSE TURN: MANAGER — independent re-measurement before any close`.
+
+Sonnet twenty-third data point: the ordinal-arm discovery is exactly why "just add the verb" briefs must be executed rather than obeyed — B tested the obvious fix, found it structurally dead, and built the smallest thing that actually works.
 
