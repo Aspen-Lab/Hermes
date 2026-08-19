@@ -275,6 +275,24 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~08:2x UTC — ROUND 36 B
+                  VERIFIED INDEPENDENTLY, RULING 100 APPENDED (§4).** Gate
+                  re-run (full-capture): **2406/2406, zero failures.**
+                  **RULING 100: `mergeContainedEventNames` APPROVED as
+                  written** (the impossibility construction killing options
+                  i/ii is the load-bearing insight, proven by execution; the
+                  666-pair exhaustive replay merging exactly the three known
+                  same-event pairs is the strongest dedup evidence yet). The
+                  exact-prefix different-event residual joins the watch list
+                  by name. **`WHOSE TURN: C — round 36`** (one item: the
+                  function + wiring verbatim, tests incl. the seven-row floor
+                  against the FULL three-pass path, boundary adversarials,
+                  ordering invariance, the winner-chain case), **THEN A —
+                  round 36 GATE CANDIDATE. If A measures double-zero:
+                  `WHOSE TURN: MANAGER — independent re-measurement before
+                  any close`.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 36 B IS COMPLETE @ 2026-08-19 ~22:1x UTC — A35-01
                   DESIGNED: A THIRD, ADDITIVE DEDUP PASS
                   (`mergeContainedEventNames`), CONTIGUOUS-SUBSTRING
@@ -87752,3 +87770,16 @@ The FIRST version of `mergeContainedEventNames` tracked a dropped-**id** `Set`, 
 **B CHANGED NO PRODUCT CODE.** Two commits this turn (turn-lock claim + this design entry), both pushed on landing. Throwaway harness (`web/zz-r36b/`, three probe files by the end plus its own `vitest.config.ts`; four short-lived debug probes created and deleted mid-session while isolating the section 3.3 bug) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere; no live network calls (Ruling 75's optional live-probe not spent — every claim is offline execution against shipped functions plus recorded-title constructions). No large page text pasted anywhere — the longest quote above is the djk title itself, already quoted verbatim in Ruling 99b and round 35 A's own entry, well under any reproduction-risk length. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 
 **HAND-OFF: `WHOSE TURN: MANAGER — round 36 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Round 36 — MANAGER (independent verification of B; RULING 100; C commissioned)
+
+**Verification:** B changed zero product code (the manager's own scope check — empty); tree clean; both commits pushed. Gate re-run by the manager (full-capture, log retained): **100 files / 2406 tests, 2406 passing, ZERO failures, zero failure lines.** Design read in full: the §3.1 impossibility construction (the pair is set-CONTAINMENT, not scrambled set-equality — no stopword list or reordering can equalize sets of different size) is the item's load-bearing insight and it is proven by execution, not argued; the three gates are each independently required (contiguous word-boundary-safe substring — not bag-of-words; the four-token floor at exactly the target's own width, with the honest note that five would break the target case; the year bucket byte-identical to `eventDedupKey`'s rule); the winner-chain loop's finalized-index fix is disclosed with its debug trace.
+
+**RULING 100 — the design is APPROVED AS WRITTEN; `WHOSE TURN: C — round 36` (ONE item), THEN A — round 36, GATE CANDIDATE ROUND.**
+
+- `mergeContainedEventNames` ships exactly as §3.2 prints it, wired one line after `dedupScoredEvents` at the same structurally-safe post-expiry site. `eventDedupKey`/`dedupEvents`/`dedupScoredEvents` stay byte-identical — zero locked-test risk by construction.
+- The evidence base is the strongest yet for a dedup change: 2/2 must-merge (including the bonus `tradeindia.com` third family member), 7/7 must-NOT-merge floor, 4/4 boundary adversarials, two real near-vocabulary families untouched, and the exhaustive 666-pair replay of every preserved full title merging EXACTLY the three known same-event pairs.
+- **The disclosed residual is ACCEPTED AND NAMED for the watch list: an exact-prefix different-event pair (a short title that is a genuine prefix of a longer, different event's title, same year bucket) — unwitnessed, not proven impossible; reopen on organic witness with URLs captured.**
+- C implements: the function + wiring verbatim, tests in `events/dedup.test.ts` (pure additions): the A35-01 pair merges (higher-priority/score survivor asserted), the AABC pair still merges via pass 2 (regression), the seven-row floor replayed against the FULL three-pass pipeline path, the four boundary adversarials, the ordering-invariance property for non-merged rows, and the winner-chain case (a later higher-priority row winning the merged slot).
+- **If A measures double-zero next, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet twenty-first data point: the impossibility-proof-first discipline (kill the cheaper options by construction before building the new mechanism) is design work of the first rank.
+
