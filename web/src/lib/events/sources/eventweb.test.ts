@@ -3197,3 +3197,70 @@ describe("encyclopedia hosts are not events", () => {
     ).not.toBeNull();
   });
 });
+
+// Phase 3 round 3 C, ITEM 2 (F2, Ruling 120g item 2): ported
+// `isDateStructuredResearchPath` from the job surface (jobweb.ts:100-108) —
+// see the doc comment above the function in eventweb.ts for the full design
+// trace. Corpus per Phase 3 round 2 B, Deliverable 2 Part C / Deliverable 3
+// Design 1, and the exact witness URLs recorded earlier in this file's own
+// Phase 3 round 1 A log.
+describe("isDateStructuredResearchPath (F2, Phase 3 round 3 — lab blog posts are not events)", () => {
+  // A fixed instant well before every constructed date below, so the
+  // must-keep/safety-net cases below survive on their own merits and are not
+  // accidentally dropped by expiry — the same discipline the "encyclopedia
+  // hosts" block above already uses for the identical reason.
+  const NOW = Date.parse("2026-01-01T00:00:00Z");
+
+  describe("must-catch — both of B's live-verified witnesses", () => {
+    it("drops the first foundry.lbl.gov witness (F2a)", () => {
+      expect(
+        webResultToRawEventItem({
+          title:
+            "Slowing Down to Speed Up: Unveiling the Secrets of Topochemical Polymerization",
+          url: "https://foundry.lbl.gov/2025/07/11/slowing-down-to-speed-up/",
+          snippet: "A Molecular Foundry researcher describes a new technique.",
+        }, NOW),
+      ).toBeNull();
+    });
+
+    it("drops the second foundry.lbl.gov witness (F2b)", () => {
+      expect(
+        webResultToRawEventItem({
+          title:
+            "Unlocking topochemical polymerization in single crystals, polycrystals, and solution aggregates",
+          url: "https://foundry.lbl.gov/2025/04/27/unlocking-topochemical-polymerization-in-single-crystals-polycrystals-and-solution-aggregates/",
+          snippet: "A Molecular Foundry news post summarizing recent published research.",
+        }, NOW),
+      ).toBeNull();
+    });
+  });
+
+  // The safety net named in B's own design: a suspicious URL shape cannot
+  // drop a title that itself states real event vocabulary — the exact
+  // shape B's TOLERATES section names (a dated-blog-path URL announcing a
+  // real, on-topic symposium).
+  it("must-keep / safety net: rescues a real event announced at a dated-blog-shaped URL", () => {
+    expect(
+      webResultToRawEventItem({
+        title: "Battery Symposium 2026 Registration Open",
+        url: "https://example-lab.test/2026/03/15/battery-symposium-2026-registration-open",
+        snippet:
+          "Registration is now open for the Battery Symposium 2026, taking place March 15, 2026.",
+      }, NOW),
+    ).not.toBeNull();
+  });
+
+  // Must-keep control from B's own corpus (Deliverable 2 Part D; also this
+  // file's "long-standing MoSES witness", Ruling 120b) — a real control with
+  // NO dated-blog path at all, so the new guard must show zero interaction.
+  it("keeps this file's own long-standing MoSES control, unaffected by the new guard", () => {
+    expect(
+      webResultToRawEventItem({
+        title: "Molten Salt Electrochemistry Symposium (MoSES)",
+        url: "https://pyro.byu.edu/moses",
+        snippet:
+          "The Molten Salt Electrochemistry Symposium (MoSES) takes place in October 2026.",
+      }, NOW),
+    ).not.toBeNull();
+  });
+});

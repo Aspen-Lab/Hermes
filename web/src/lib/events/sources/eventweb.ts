@@ -2060,6 +2060,53 @@ export function isJobListingContentTitle(title: string): boolean {
   return !looksLikeEvent(title);
 }
 
+// Phase 3 round 3 C, ITEM 2 (F2, Ruling 120g item 2): a path-structure signal
+// for date-stamped publishing paths (`/YYYY/MM/DD/…`), PORTED STRUCTURALLY
+// from the job surface's own already-shipped, already-measured
+// `isDateStructuredResearchPath` (`jobweb.ts:100-108`) — a lab or research
+// institute's own dated news/blog post, not an event. This surface had no
+// equivalent at all before this item (Ruling 118's own witness table already
+// named the gap: "the JOB surface already refuses this exact host class...
+// The event surface has no equivalent").
+//
+// Phase 3 round 2 B verified by execution that both named witnesses'
+// paths (`/2025/07/11/...`, `/2025/04/27/...`, foundry.lbl.gov) match this
+// regex exactly, and both titles independently fail `looksLikeEvent`, so a
+// ported guard fires on both. Blast radius grepped before shipping: zero
+// `eventweb.test.ts` fixtures carry this path shape, and zero of A's 6
+// sampled correct-event control URLs do either.
+//
+// THE TITLE HALF IS NOT NEW INVENTION EITHER — same precedent this file
+// already used for `isJobListingContentTitle` immediately above
+// (round 32 C, jobweb.ts:107,1576): `looksLikeEvent(title)` is this file's
+// own existing front-door kind-signal, reused here as the exact event-side
+// mirror of the job side's `!JOB_TEXT_RE.test(title)` safety net. A
+// suspicious URL shape cannot drop a title that itself states real event
+// vocabulary — a real event genuinely announced via a dated-blog-shaped URL
+// survives unchanged, exactly as the job side's own precedent already
+// protects its equivalent must-keep case.
+//
+// PLACEMENT: a new, event-surface-OWNED copy of the pattern, not a
+// cross-file import. `DATE_STRUCTURED_PATH_RE`/`isDateStructuredResearchPath`
+// are module-private in `jobweb.ts` (no `export` keyword), and this file's
+// own convention is parallel-but-separate guards per surface (`DENY_PATH_RE`/
+// `COMMERCE_PATH_RE` vs `NON_JOB_PATH_RE`, `PAPER_PAGE_HOSTS` event-only)
+// rather than cross-importing between the job and event source files. B
+// named sharing via an export as a valid alternative without deciding
+// between them; this follows B's own stated convention-matching default —
+// the option B actually wrote up as the design, not merely named alongside it.
+const DATE_STRUCTURED_PATH_RE = /^\/\d{4}\/\d{2}\/\d{2}\//;
+function isDateStructuredResearchPath(title: string, url: string): boolean {
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return false;
+  }
+  if (!DATE_STRUCTURED_PATH_RE.test(path)) return false;
+  return !looksLikeEvent(title); // event-side mirror of the job side's own title safety net (jobweb.ts:107)
+}
+
 export function webResultToRawEventItem(
   result: WebResult,
   now: number,
@@ -2091,6 +2138,12 @@ export function webResultToRawEventItem(
   // ROUND 33 C, ITEM 1 (Ruling 89b/90a): a job-listings/vacancy content
   // page is not a scholarly event -- see isJobListingContentTitle above.
   if (isJobListingContentTitle(title)) return null;
+  // Phase 3 round 3 C, ITEM 2 (F2, Ruling 120g item 2): a lab/research
+  // institute's own dated blog post is not an event -- see
+  // isDateStructuredResearchPath above. Same layer as the other title/URL
+  // kind guards immediately above it; the job surface's own mirror sits in
+  // the identical position, right before its own topicality gate.
+  if (isDateStructuredResearchPath(title, url)) return null;
   const text = `${title} ${result.snippet ?? ""}`;
   // ROUND 29 C, ITEM 1 — **ABSENCE IS NOT EVIDENCE (family (ii)), AND THE
   // PAGE'S OWN DECLARATION OUTRANKS A KEYWORD (channel L).**

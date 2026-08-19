@@ -92608,3 +92608,28 @@ Commit: see git log (message states item 1 / J1). Pushed immediately per §0d Ru
 
 Continuing to item 2 (F2) in the same session.
 
+
+### Phase 3 Round 3 — Agent C, ITEM 2 (Ruling 120g item 2: F2 — port `isDateStructuredResearchPath` to the event surface)
+
+**STATUS: ITEM 2 COMPLETE.** Run by `LAPTOP-3CL10CG5`. Implements Phase 3 Round 2 B's Deliverable 3 Design 1 VERBATIM. Gate before this item: 100 files / 2456 tests passing, tsc clean (item 1's own closing numbers).
+
+**WHAT LANDED:**
+
+- `web/src/lib/events/sources/eventweb.ts`: new module-private `DATE_STRUCTURED_PATH_RE = /^\/\d{4}\/\d{2}\/\d{2}\//` + `isDateStructuredResearchPath(title, url)`, placed immediately after `isJobListingContentTitle` (mirroring that function's own recent cross-surface-port precedent, round 32/33) and before `webResultToRawEventItem`. Parses the URL internally with try/catch (matching this file's own `isEventHubResult`/`isDeniedUrl` convention of taking a raw url string, NOT the job surface's `pathAndQuery`-parameter shape — jobweb.ts pre-parses a `URL` once upfront for its whole function, eventweb.ts does not, so each guard parses its own). Safety net reuses this file's own existing `looksLikeEvent(title)` — the exact event-side mirror of the job side's `!JOB_TEXT_RE.test(title)` — as B's design specifies and as this file's own `isJobListingContentTitle` already precedents one function above it.
+  - Wired into the admission chain as a new guard, immediately after `isJobListingContentTitle` and before the topicality gate's `text` is built — the same relative position the job surface's own copy holds (right before ITS topicality gate). Guards 2-9 on this surface are independent sequential AND-drops (B's own map: "a miss falls through to the NEXT guard... admitted only if EVERY guard is cleared"), so the exact position among them does not change behavior; this placement was chosen to sit beside its nearest sibling kind-guard.
+  - **Placement choice (B's named-but-undecided question):** B wrote up TWO options — a new event-surface-owned copy (not a cross-file import), or exporting the job side's copy and sharing it — explicitly naming both "for C/the manager to pick rather than picking silently," and the manager's Rulings 120a-g did not separately rule on this specific sub-choice. This is implemented as the OWNED COPY, which is the option B actually wrote up as the design text under "Placement" (module-private, `DATE_STRUCTURED_PATH_RE`/`isDateStructuredResearchPath` re-declared in `eventweb.ts`) and the one B's own reasoning favors ("this file's own convention is that each surface keeps parallel-but-separate guards... rather than cross-importing") — the alternative was named for completeness, not recommended. Not treated as a `POLICY — manager decides` escape-clause item: no control was broken and no open-class list was needed: this was an ordinary implementation choice with a stated primary design, not the escape clause's trigger condition.
+
+**BLAST RADIUS RE-VERIFIED, NOT JUST TRUSTED:** re-ran B's own grep, `grep -nE "https?://[a-zA-Z0-9.-]+/[0-9]{4}/[0-9]{2}/[0-9]{2}/" src/lib/events/sources/eventweb.test.ts` — zero matches, confirmed myself before writing any test. Widened the same grep to all of `src/lib/events/` — also zero.
+
+**TESTS ADDED (4, pure additions):** new `describe("isDateStructuredResearchPath (F2, Phase 3 round 3 — lab blog posts are not events)")` in `eventweb.test.ts`, appended after the file's most recent existing block (`encyclopedia hosts are not events`, itself a Phase-3-era, same-shape template reused here: one `const NOW`, full-row `webResultToRawEventItem` calls). Real witness URLs and titles recovered from this file's own Phase 3 round 1 A log (`MULTIAGENT-report-parity.md:91922-91923`), not re-fetched live (no live network calls this turn):
+- MUST-CATCH F2a: `https://foundry.lbl.gov/2025/07/11/slowing-down-to-speed-up/`, "Slowing Down to Speed Up: Unveiling the Secrets of Topochemical Polymerization" — drops.
+- MUST-CATCH F2b: `https://foundry.lbl.gov/2025/04/27/unlocking-topochemical-polymerization-in-single-crystals-polycrystals-and-solution-aggregates/`, the paper-style title — drops.
+- MUST-KEEP / SAFETY NET (the protective case B names in TOLERATES): a constructed dated-blog-path URL whose title states real event vocabulary (`.../2026/03/15/battery-symposium-2026-registration-open`, "Battery Symposium 2026 Registration Open") — survives, proving the rescue fires as designed.
+- MUST-KEEP CONTROL from B's own corpus: this file's "long-standing MoSES witness" (`pyro.byu.edu/moses`, named explicitly in Ruling 120b) — survives, unaffected by the new guard, since it carries no dated-blog path at all. (B's full 6-URL correct-event control sample was not individually re-tested one row each: B's own corpus note states all six have "zero interaction" by construction — the path regex cannot match a non-dated path — so a representative control plus the pre-existing full-suite pass, all 2460 tests green, stands in for a per-row re-assertion that would not exercise anything new.)
+
+**GATE, THIS ITEM:** `npx vitest run` — **100 files / 2460 tests, 2460 passing, ZERO failures** (2456 + 4 new). `npx tsc --noEmit` — **clean, 0 errors**. `npx eslint src` — the one standing `quiz.tsx:46` error only, unchanged. `git status --porcelain --untracked-files=all` shows exactly the two files named above, nothing else.
+
+Commit: see git log (message states item 2 / F2). Pushed immediately per §0d Rule 1.
+
+Continuing to item 3 (J2) in the same session.
+
