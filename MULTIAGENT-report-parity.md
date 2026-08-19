@@ -91499,5 +91499,22 @@ Job pool (2 pulls): **15 unique rows** across two runs — hosts include `career
 
 ## HAND-OFF
 
-**Convergence candidate 2's A-side window is clean: zero NEW defect classes, matching round 5/8's own protocol exactly, on a harness rebuilt from scratch this round (not copied) with three self-caught harness bugs disclosed and fixed before trusting any result.** Per Ruling 105a and this round's own charter, this routes to the manager for the second candidate's own independent re-measurement. **`WHOSE TURN: MANAGER — Phase 2 FINAL re-measurement, convergence candidate 2.`** If the manager's own window is also clean, **PHASE 2 CLOSES** (two consecutive clean candidates) — the manager writes that ruling, not A. Turn lock RELEASED (`HELD BY: free`) in this commit.
+**Convergence candidate 2's A-side window is clean: zero NEW defect classes, matching round 5/8's own protocol exactly, on a harness rebuilt from scratch this round (not copied) with three self-caught harness bugs disclosed and fixed before trusting any result.** Per Ruling 105a and this round's own charter, this routes to the manager for the second candidate's own independent re-measurement. **`MANAGER FINAL RE-MEASUREMENT COMPLETE @ 2026-08-19 ~17:0x UTC - three probes green (mechanism, fresh window zero flags, live LLM substring fidelity). RULING 117 (SS4): PHASE 2 IS CLOSED; THE CAMPAIGN IS COMPLETE. WHOSE TURN: NONE - campaign complete; maintenance mode per Rulings 108/117.`** If the manager's own window is also clean, **PHASE 2 CLOSES** (two consecutive clean candidates) — the manager writes that ruling, not A. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Phase 2 Round 9 — MANAGER (THE FINAL RE-MEASUREMENT; RULING 117 — **PHASE 2 IS CLOSED. THE CAMPAIGN IS COMPLETE.**)
+
+**Verification of A:** zero product code changed; tree clean; pushed. A's correction of the manager's own round-8 §1 sync miss is accepted and owned (the same field-sync class as 78d — the §4/§1 dual-write discipline slipped once at the manager's seat; A repaired it exactly as the protocol intends). The unreplicated non-ISO date observation is a recorded-class instance at worst (the A31-02/87b/90b family), not a new class.
+
+**The manager's OWN final window (harness `web/zz-mgrp2c2/`, deleted after): THREE PROBES, ALL GREEN —** (1) F-P2-01's mechanism holds both directions by direct execution; (2) a fresh 2+2 live Tier-0 window, every final-pool row scanned: ZERO defect flags; (3) the live job LLM loop end-to-end through the production pieces: every quoted string a literal normalized substring of the fetched page, on the manager's own independent call.
+
+**RULING 117 — PHASE 2 CONVERGENCE CANDIDATE 2 PASSES. Under Ruling 105a (two consecutive clean full rounds): PHASE 2 IS CLOSED.**
+
+**The campaign ledger at close:**
+- **Phase 1** (rounds 1-38, closed at Ruling 108): Tier-0 job/event deep reports at verified parity — merged to `main` at `ca4366a`.
+- **Phase 2** (rounds 1-9, closed here): the Tier 1/2 LLM-enriched reports verified on the 109c rubric — layout conformant across all 11 Class-A/B blocks and six healed style sites; content fidelity substring-verified across three independent measurement rounds (two of A's, plus the manager's own live calls in rounds 8 and 9); zero hallucinations ever observed; the one content-correctness defect found (F-P2-01, wrong-event contamination) fixed by a one-line asymmetry repair and verified at three layers plus two fresh windows.
+- **Phase 2 named costs / maintenance:** 111a (PDF-gated and SPA-only programme pages render an empty section honestly; reopen: a static same-host programme page that still fails); 114's undetectable-chrome residual (pre-existing, named); the BF2 flogen "Coming soon" stub class (zero information lost). Phase 1's Ruling-108 maintenance list stands unchanged.
+- **Gate at close: 100 files / 2442 tests, all passing.** Suite growth across the campaign: ~1,600 → 2,442.
+
+**Post-close actions (the user's standing pattern):** the Phase 2 addendum is appended to `docs/handoff/PHASE1-REPORT-PARITY.md`'s narrative; the branch merges to `main` (second merge, carrying Phase 2's fixes); the resume clocks (session cron + cloud routine) are DISARMED — the campaign they exist to resume is complete; re-arm if a new campaign opens. `WHOSE TURN: NONE — campaign complete; maintenance mode per Rulings 108/117.`
 
