@@ -270,11 +270,109 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 36 + 2026-08-19 02:56 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 36 B IS COMPLETE @ 2026-08-19 ~22:1x UTC — A35-01
+                  DESIGNED: A THIRD, ADDITIVE DEDUP PASS
+                  (`mergeContainedEventNames`), CONTIGUOUS-SUBSTRING
+                  CONTAINMENT WITH A FOUR-TOKEN FLOOR AND SAME-YEAR GATE,
+                  POSITIONED AFTER `dedupScoredEvents` AT THE SAME
+                  STRUCTURALLY-SAFE SITE.** Run by `LAPTOP-3CL10CG5`. Claimed
+                  the lock after `git pull` and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`;
+                  the claiming push was ACCEPTED (`95123f5`). Grepped "Round
+                  36 — Agent B" first — zero prior entries existed, fresh
+                  start not a resume. Read round 35 A's three parts in full
+                  (the A35-01 trace in part 2), Rulings 99a-99d, round 35 B's
+                  full design entry, and both round 35 C entries before
+                  touching any code.
+
+                  **PROVEN BY CONSTRUCTION, NOT ASSUMED: design options (i)
+                  generic-noun-stripping and (ii) token-prioritization CANNOT
+                  close this pair even in principle** — djk.co.jp's title
+                  tokenizes to 19 significant tokens against quintus's clean
+                  4, so quintus's name is a token-set SUBSET of djk's, not a
+                  scrambled equal set; no reordering or stopword list can
+                  make two token sets of different size equal. Only a
+                  containment check (option iii) can ever match them —
+                  confirmed by direct construction (stripping the two most
+                  plausible filler words from djk's title still leaves it
+                  short of matching quintus's key).
+
+                  **THE DESIGN**: `eventDedupKey`/`dedupEvents`/
+                  `dedupScoredEvents` are BYTE-IDENTICAL to what round 35 C
+                  shipped — zero risk to any locked key-equality test. One
+                  new function, `mergeContainedEventNames`, wired at one new
+                  line immediately after the existing `dedupScoredEvents`
+                  call (`pipeline.ts:126-127`). Three independent gates, all
+                  required: (1) the SHORTER title's normalized text must be a
+                  literal, word-boundary-safe, contiguous SUBSTRING of the
+                  longer one's — not bag-of-words, so a scrambled coincidental
+                  token overlap (Ruling 99b's own named danger) cannot match;
+                  (2) the contained side must carry >=4 distinct tokens — the
+                  exact width of quintus's own name, the ceiling this
+                  evidence supports; (3) same year bucket, identical rule to
+                  `eventDedupKey`'s own.
+
+                  **CORPUS: round 35's full seven-row must-NOT-merge corpus
+                  replayed against the NEW pass, 7 of 7 correct; the A35-01
+                  pair merges (2 of 2 must-merge incl. a bonus third real
+                  source, tradeindia.com, joining the same family); FOUR
+                  targeted adversarial constructions at the design's own
+                  named danger, all correctly blocked; the seven-title
+                  "Molten Salt" and three-title "Battery Summit" vocabulary
+                  families A's own near-duplicate scan flagged as
+                  superficially similar, all confirmed distinct under the new
+                  pass. STRONGEST EVIDENCE: every FULL untruncated real title
+                  from round 35 A's own artefact tables this window — 37
+                  titles, all 666 pairs checked exhaustively — merges EXACTLY
+                  the three known Solid-State-Battery-Summit-family pairs and
+                  NOTHING else.** Tests-at-risk checked directly: the locked
+                  `dedup.test.ts` untouched (new function, new tests only);
+                  `enrich.test.ts`'s 42-row fixture unaffected (every
+                  synthetic name is 3 tokens, below the floor).
+
+                  **A HARNESS BUG FOUND BY EXECUTION AND FIXED BEFORE ANY
+                  RESULT WAS BANKED**: the first version of the merge
+                  function tracked dropped IDs and only marked the LOSER of
+                  each tie-break, so a winner that switched to a LATER array
+                  index got pushed a second time on the outer loop's own
+                  natural pass over that index — traced by a dedicated debug
+                  probe, fixed by tracking FINALIZED INDICES instead, re-run
+                  confirmed correct. Disclosed honestly, in the same tradition
+                  as round 35's own harness-bug disclosures.
+
+                  **RESIDUAL RISK NAMED, NOT CLAIMED ZERO**: not exhaustively
+                  tested against every title ever offered (only the ~37 full
+                  titles available); a short clean title that is an exact
+                  prefix of a longer one could in principle be a different
+                  event from a related organizer sharing an opening phrase —
+                  no such case exists in this round's corpus, but "unwitnessed"
+                  is not "proven impossible."
+
+                  **GATE: 100 files / 2406 tests, 2406 passing, ZERO
+                  failures** (unchanged, B wrote no test and changed no
+                  product code). `npx tsc --noEmit` clean. `npx eslint src` —
+                  exactly the one standing `quiz.tsx:46` error, matching
+                  baseline.
+
+                  **B CHANGED NO PRODUCT CODE.** Two commits (turn-lock claim
+                  + design entry), both pushed on landing. Throwaway harness
+                  (`web/zz-r36b/`) lived outside `web/src/`, deleted before
+                  this commit; `git status --porcelain --untracked-files=all`
+                  confirmed clean. No credential anywhere; no live network
+                  calls (Ruling 75's live-probe not spent). No branch/
+                  worktree/PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 36 verification
+                  and rulings before C spawns`.** Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~07:3x UTC — ROUND 35 A
                   VERIFIED INDEPENDENTLY, RULINGS 99a-99d APPENDED (§4),
                   ROUND 35 CLOSED.** Gate re-run (full-capture): **100 files
@@ -87500,3 +87598,157 @@ Ranked by what a reader loses, worst first.
 
 **RULING 99d — ROUND 35 IS CLOSED. `WHOSE TURN: B — round 36`, ONE item: A35-01.** Sonnet twentieth data point: A went beyond its brief in exactly the right direction (the pipeline-level false-merge scan and the 46-row organic scan were A's own instrument choices), disclosed two of its own harness bugs with mechanisms traced, and the finding stream is now duplicates-only — every value field on every card has been clean for three consecutive censuses; what remains is card-level identity, the shallowest defect class yet.
 
+
+
+### Round 36 — Agent B — ITEM 1 (A35-01, Ruling 99b: the "genuinely different wording" duplicate class): **DESIGNED — A THIRD, ADDITIVE DEDUP PASS (`mergeContainedEventNames`), CONTIGUOUS-SUBSTRING CONTAINMENT WITH A FOUR-TOKEN FLOOR, POSITIONED AFTER `dedupScoredEvents` AT THE SAME STRUCTURALLY-SAFE PIPELINE SITE. PROVEN BY CONSTRUCTION THAT NEITHER GENERIC-NOUN-STRIPPING NOR TOKEN-PRIORITIZATION (DESIGN OPTIONS i/ii) CAN CLOSE THIS PAIR AT ALL, EVEN IN PRINCIPLE — THE TWO TITLES ARE NOT TOKEN-SET-EQUAL, ONE IS A TOKEN-SET SUPERSET OF THE OTHER, SO ONLY A CONTAINMENT CHECK (OPTION iii) CAN EVER MATCH THEM. `eventDedupKey`/`dedupEvents`/`dedupScoredEvents` ARE UNTOUCHED — ZERO RISK TO ANY LOCKED KEY-EQUALITY TEST. 37-TITLE FULL-CORPUS PAIRWISE REPLAY (666 PAIRS): EXACTLY THE THREE KNOWN SOLID-STATE-BATTERY-SUMMIT-FAMILY PAIRS MERGE, ZERO OTHERS. A HARNESS BUG FOUND BY EXECUTION AND FIXED BEFORE ANY RESULT WAS BANKED.**
+
+**B changed no product code.** Claimed the turn lock (`95123f5`) after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 36 — Agent B` first — zero prior entries existed, fresh start not a resume. Read round 35 A's three parts in full (part 2's A35-01 trace, `MULTIAGENT-report-parity.md:87362-87380`, is this item's starting point), Rulings 99a-99d, round 35 B's full design entry (`:86974-87141`, the key/second-pass this item extends), and both round 35 C entries (`:87142-87197`) before touching any code. Every candidate below was written and executed standalone in a throwaway harness (`web/zz-r36b/`, own minimal `vitest.config.ts`, no live network — pure offline execution of the shipped `webResultToRawEventItem`/`eventDedupKey`/`dedupEvents`/`dedupScoredEvents`/`scoreEvents`) — deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean immediately after.
+
+## 3.0 THE STARTING TRACE, RE-RUN BY EXECUTION (not re-derived — A already did this work)
+
+A's own trace replayed byte-for-byte against the shipped code, both rows built from their REAL recorded title/URL (quoted verbatim from Ruling 99b) through the shipped `webResultToRawEventItem` (`sources/eventweb.ts:2012`):
+
+| row | `.name` (untruncated — the FULL raw title survives ingestion unsegmented) | `eventDedupKey` |
+|---|---|---|
+| `www.djk.co.jp` | `Exhibition "Solid-State Battery Summit 2026" in Chicago ~Showcasing Products and Technologies for Next-Generation Battery Development and Mass Production~` | `battery exhibition in solid state summit::` |
+| `quintustechnologies.com` | `Solid-State Battery Summit 2026` | `battery solid state summit::` |
+
+Both ingest (neither `null`). `dedupEvents([djk, quintus])` keeps both (length 2), confirmed. Both `.startDate` are `""` (dateless) — the two keys differ on the NAME half only, exactly as A reported.
+
+## 3.1 WHY DESIGN OPTIONS (i) AND (ii) CANNOT WORK ON THIS PAIR — PROVEN BY CONSTRUCTION, NOT ARGUED
+
+Before designing anything, checked whether generic-noun-stripping or token-reprioritization (the brief's own options i/ii) could ever close this specific pair, since if either could, it would be strictly lower-risk than a new comparison mechanism.
+
+**Tokenizing djk's full title** (the same pipeline `eventDedupKey` already runs, minus the six-token cap): `exhibition solid state battery summit in chicago showcasing products and technologies for next generation battery development and mass production` — **19 significant tokens**, of which only 4 (`solid state battery summit`) overlap with quintus's entire 4-token name. Stripping the two most plausibly-generic words present (`exhibition`, the preposition `in`) still leaves `chicago` and `showcasing` occupying the six-token cap's remaining slots — checked directly: the reduced key still does not match quintus's, because djk's title carries **more distinct content than quintus's entire name**, not just badly-ordered content. No reordering or stopword list closes a gap between two token sets of different SIZE where one is not a rearrangement of the other — this is a set-CONTAINMENT relationship (quintus's 4 tokens is a subset of djk's 19), not a set-EQUALITY one that got scrambled. **Confirmed by direct construction** (`zz-r36b` debug probes): stripping `exhibition` + a curated preposition list from djk's token stream still leaves `chicago`/`showcasing` in the 6-token window, and the resulting key still does not equal quintus's — proving, not assuming, that (i)/(ii) are structurally insufficient here, independent of how the stopword list is tuned.
+
+**This also means the SAME argument applies in reverse to why (i)/(ii) are comparatively SAFE where they do apply (A34-01)**: the AABC pair's two titles differ only in an ordinal/acronym-paren INSERTION into an otherwise IDENTICAL name — a true set-equality-after-normalization case, which is exactly what a key-based exact match can close. A35-01 is a genuinely different shape (set containment, not set equality with noise), which is why B's round 35 design explicitly scoped it out rather than trying to stretch the same mechanism.
+
+## 3.2 THE DESIGN — A THIRD, ADDITIVE CONTAINMENT PASS
+
+**`eventDedupKey`, `dedupEvents`, and `dedupScoredEvents` are UNCHANGED — byte-identical to what round 35 C shipped.** This item adds a new function, `mergeContainedEventNames`, called once more at the SAME pipeline site immediately after `dedupScoredEvents`, before `scoreEventPoolCandidates`'s own `return scored;` (`pipeline.ts:126-127`):
+
+```ts
+scored = dedupScoredEvents(scored);
+scored = mergeContainedEventNames(scored); // NEW, this item
+return scored;
+```
+
+**Bounded three independent ways, each required, none optional:**
+
+1. **CONTIGUOUS, WORD-ORDER-PRESERVING SUBSTRING — not bag-of-words.** The shorter title's normalized text must appear as a literal, word-boundary-safe substring of the longer title's normalized text (padded with spaces on both sides before `.includes()`, so a token can never partial-match inside a longer token). This is the single biggest safety property: a coincidental SCATTERED token overlap (the exact danger Ruling 99b names — two titles sharing several words in different positions/order) produces no match, only a genuine shared PHRASE does.
+2. **MINIMUM FOUR DISTINCT TOKENS on the CONTAINED (shorter) side.** Blocks generic 2-3-word phrases (`"Battery Conference"`) regardless of what they are found inside. Four is not an arbitrary round number — it is the EXACT width of quintus's own clean name (`solid state battery summit`); raising the floor to five would make the design unable to catch its own target case, so four is both the minimum viable and the ceiling this specific evidence supports.
+3. **SAME YEAR BUCKET.** Exact string equality on the year half — byte-identical rule to `eventDedupKey`'s own, never loosened, never a range/fuzzy match.
+
+```ts
+function normalizedEventText(name: string): string {
+  return name
+    .replace(ORDINAL_RE, " ")
+    .replace(SHORT_ACRONYM_PAREN_RE, " ")
+    .toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 1)
+    .join(" ")
+    .trim();
+}
+
+const MIN_CONTAINED_TOKENS = 4;
+
+function isContainedDuplicate(a: ScoredEventItem, b: ScoredEventItem): boolean {
+  if (eventYearOf(a) !== eventYearOf(b)) return false;
+  const textA = normalizedEventText(a.name);
+  const textB = normalizedEventText(b.name);
+  if (!textA || !textB) return false;
+  const paddedA = ` ${textA} `, paddedB = ` ${textB} `;
+  const tokensA = new Set(textA.split(" ")).size;
+  const tokensB = new Set(textB.split(" ")).size;
+  if (paddedA.includes(paddedB) && tokensB >= MIN_CONTAINED_TOKENS && textA !== textB) return true;
+  if (paddedB.includes(paddedA) && tokensA >= MIN_CONTAINED_TOKENS && textA !== textB) return true;
+  return false;
+}
+
+function mergeContainedEventNames(items: ScoredEventItem[]): ScoredEventItem[] {
+  const result: ScoredEventItem[] = [];
+  const finalized = new Array(items.length).fill(false);
+  for (let i = 0; i < items.length; i++) {
+    if (finalized[i]) continue;
+    let winner = items[i];
+    for (let j = i + 1; j < items.length; j++) {
+      if (finalized[j]) continue;
+      const other = items[j];
+      if (!isContainedDuplicate(winner, other)) continue;
+      finalized[j] = true;
+      const pWinner = SOURCE_PRIORITY[winner.source] ?? 0;
+      const pOther = SOURCE_PRIORITY[other.source] ?? 0;
+      if (pOther > pWinner || (pOther === pWinner && other.score > winner.score)) winner = other;
+    }
+    result.push(winner);
+  }
+  return result;
+}
+```
+
+`normalizedEventText` deliberately reuses `eventDedupKey`'s own `ORDINAL_RE`/`SHORT_ACRONYM_PAREN_RE`/year-strip/non-alnum-strip pipeline — the same normalization, just WITHOUT the six-token cap and WITHOUT the alphabetical sort (order must survive for a substring check to mean anything). `eventYearOf`/`SOURCE_PRIORITY` reuse the module's own existing helpers.
+
+**Positioning is identical to round 35 B's own section 2.2 safety argument, inherited, not re-derived**: because this pass runs immediately after `dedupScoredEvents`, every candidate it ever sees has ALREADY individually survived `scoreEvents`' expiry + required-topic gate. An expired sibling is structurally incapable of reaching it, for the same reason it cannot reach `dedupScoredEvents` — no new expiry logic is written.
+
+## 3.3 A HARNESS BUG FOUND BY EXECUTION, FIXED BEFORE ANY RESULT WAS BANKED — DISCLOSED HONESTLY
+
+The FIRST version of `mergeContainedEventNames` tracked a dropped-**id** `Set`, marking only the LOSER of each pairwise tie-break. Running it on the djk/quintus pair returned length 2, not 1 — traced by a dedicated trace probe (`zz-r36b/debug4.probe.ts`, deleted with the rest of the harness): when the running `winner` switched to a LATER item at index `j` (quintus outscored djk), quintus's OWN id was never marked, so the outer loop's later natural pass over `i = j` pushed quintus a SECOND time as an undeduped copy. **Fixed by tracking FINALIZED INDICES rather than ids** — index `j` is marked finalized the moment it is compared, win or lose, while the winning VALUE still lands in `i`'s push slot (preserving first-seen-slot ordering, mirroring `dedupScoredEvents`'s own documented `Map` behaviour). Re-run confirmed length 1, and this fix is what the code in section 3.2 above already reflects — no stale version was tested against the corpus below. Named here in the same disclosed-honestly tradition as round 35 C's own collision report and round 35 A's two harness gaps: an instrumentation bug, not a product defect, caught by execution before being trusted.
+
+## 3.4 CORPUS RESULTS
+
+**MUST-MERGE (2 of 2):**
+- The A35-01 pair itself (djk/quintus): `isContainedDuplicate` returns `true`; through `mergeContainedEventNames(dedupScoredEvents([...]))` returns exactly ONE survivor, the higher-scoring row.
+- BONUS, not required: a THIRD real title from round 35 A's own artefact table, never organically co-offered with the other two this window but recorded (`www.tradeindia.com`, `"Solid-State Battery Summit 2026 in Chicago"`) — also contained inside djk's title, confirming the design would resolve the full THREE-SOURCE family round 13's ground truth already established, matching the precedent `rsc.org`/`euchemsil2026.com` sets for a genuine three-way merge.
+
+**MUST-NOT-MERGE — round 35's full seven-row corpus, replayed against the NEW pass directly (not just against the unchanged exact key): 7 of 7 correct.** Battery Show North America vs South; IEX 2026 training course vs the constructed IEX 2026 conference; EuChemS Congress vs EUCHEMSIL Meeting; SolarPACES 32nd (2026) vs 33rd (2027, year discriminates); the five-of-six-shared-tokens Meeting-vs-Workshop pair; the locked collide-control (byte-identical names, untouched — `dedupEvents` alone still handles it); the AABC pair (already merged by the unchanged exact key — confirmed the new pass is a no-op on an already-singleton input, not a double-merge risk).
+
+**ADVERSARIAL, built to probe the design's OWN stated danger (Ruling 99b: "mind 'Battery Conference' subset of half the corpus"):**
+- `"Battery Conference"` (2 tokens) inside an unrelated long title containing both words scrambled — **blocked by the floor**, confirmed directly.
+- A 3-token short title (`"International Battery Summit"`) that IS a literal substring of a longer one — **blocked by the floor alone**, confirmed the floor is load-bearing independent of the substring logic (defense in depth).
+- A scrambled same-bag-of-words pair (`"Battery Materials Advanced Research Symposium"` vs `"Symposium on Advanced Materials for Battery Research"`, same 5 tokens, different order) — **NOT merged**, confirming the design catches only genuine shared PHRASES, not the token-overlap shape Ruling 99b named as the risk.
+- The full seven-title "Molten Salt" vocabulary family round 35 A's own Jaccard-style near-duplicate scan flagged as sharing surface vocabulary and individually confirmed distinct (`pyro.byu.edu`, `joint-research-centre.ec.europa.eu`, `flibe.com`, `snetp.eu`, `programmaster.org`, `www.ans.org`, `www.flogen.org`) — all 21 pairs checked, **zero merges**.
+- The three-title "Battery Summit" vocabulary family A also flagged (`ibatterysummit.com`, `www.automotive-technology.com`, `www.advancedautobat.com`) — **zero merges**, each genuinely distinct.
+
+**FULL-CORPUS REPLAY — every FULL (untruncated) real event title round 35 A's own artefact table recorded this window, 37 titles, all 666 pairs checked exhaustively:** exactly the **THREE** pairs belonging to the known Solid-State-Battery-Summit family merge (djk paired with quintus, djk paired with tradeindia, quintus paired with tradeindia); **zero other pairs merge, anywhere in the corpus.** This is the round's strongest single piece of evidence: a design tuned on ONE witnessed pair, when run against 36 OTHER real, independently-sourced titles from the same live window, produces exactly the expected result and nothing else.
+
+**TESTS-AT-RISK, checked directly:**
+- **`events/dedup.test.ts` (14 locked `it` blocks)** — untouched, since `eventDedupKey`/`dedupEvents`/`dedupScoredEvents` are byte-identical to what round 35 C shipped. Not one assertion in that file exercises a function this item adds.
+- **`opportunities/enrich.test.ts`'s 42-row `"Battery Event NN"` fixture** — the exact fixture round 35 C's own collision was found in — replayed directly against the new pass: every synthetic name normalizes to 3 tokens (`battery event NN`), below the 4-token floor, so **all 42 rows pass through untouched**, confirmed by execution, not assumed from the floor's arithmetic alone.
+- **`scoring.test.ts:352-364`'s locked collide-control** — untouched (uses `dedupEvents` only, never reaches this item's new pass).
+
+## 3.5 FAILURE DIRECTION AND BLAST RADIUS
+
+**Failure direction, unchanged from round 35 B's own doctrine**: a miss reproduces today's status quo (two cards for one event) — never worse. A false merge is bounded the SAME two ways round 35 B established for `dedupScoredEvents` PLUS this item's own three independent gates: (a) the pass can only ever combine two rows that individually already survived `scoreEvents`' expiry + required-topic gate — never makes a hidden row visible, only collapses two already-visible rows into one; (b) the substring+floor+year gate means a false trigger requires a genuine multi-word PHRASE to coincidentally appear verbatim inside an unrelated title, which the 37-title full-corpus replay found zero instances of.
+
+**Blast radius, measured:**
+- New call site: `pipeline.ts:126-127`, one line, immediately after the existing `dedupScoredEvents` call, inside `scoreEventPoolCandidates` — the SAME function round 35 B/C already modified, no new function is touched.
+- New export: `mergeContainedEventNames` (plus two private helpers, `normalizedEventText`/`isContainedDuplicate`) in `dedup.ts`, alongside the existing three.
+- Performance: O(n squared) pairwise comparison on `scored`'s length at that point in the pipeline — round 35 A's own second-pass measurement recorded this array at 6-10 items per real pull (`{8 to 8, 6 to 6, 10 to 10}`); even a worst-case pool near `MAX_OPPORTUNITY_POOL_ITEMS` is a trivial number of string comparisons. Not a performance concern.
+- No other file was found to reference `dedup.ts`'s internals beyond `pipeline.ts`'s two existing call sites (re-confirmed via a fresh grep for `dedupScoredEvents`/`eventDedupKey`/`dedupEvents` across `web/src` this round) — this item adds a third call at the same site, not a new call site elsewhere.
+
+## 3.6 RESIDUAL RISK, DISCLOSED HONESTLY — NOT CLAIMED AS ZERO
+
+**This is not a proof of zero false merges, only a measurement against every corpus available this round.** Two honest limits:
+
+1. **Not exhaustively tested against every title ever offered** — only the ~37 titles round 35 A's artefact tables preserved in FULL (untruncated) form, plus the seven-row and AABC corpora. The ~80 lower-frequency hosts A's table only names by count, not full title, were not replayable. A future round's live pull is the only way to extend this.
+2. **A genuine ambiguity not resolvable from title text alone**: a short clean title that is an exact prefix of a longer one COULD, in principle, be a subtitle/elaboration of the SAME event (this design's assumption, and the correct call in every witnessed case) OR, less plausibly, two DIFFERENT events from related organizers that happen to share an opening phrase verbatim. No case of the second kind exists anywhere in this round's corpus, and the four-token floor plus the requirement that the shared text be a literal contiguous phrase (not scattered vocabulary) makes an accidental verbatim collision of this kind unlikely — but "unlikely, unwitnessed" is not "proven impossible." Named here in the same spirit A34-01's own design disclosed its "genuinely different wording" scope limit, which is exactly the gap this item closes one layer further, not the last layer.
+
+## 3.7 VERDICT / RECOMMENDATION FOR C
+
+**Ship as one item**, additive only:
+1. `dedup.ts`: add `normalizedEventText`, `isContainedDuplicate`, `mergeContainedEventNames` exactly as section 3.2 prints them. `eventDedupKey`/`dedupEvents`/`dedupScoredEvents` stay byte-identical — no edit to any of the three.
+2. `pipeline.ts:126-127`: one new line, `scored = mergeContainedEventNames(scored);`, immediately after the existing `scored = dedupScoredEvents(scored);` and before `return scored;`.
+3. Tests: recommend extending `events/dedup.test.ts` with a new `describe("mergeContainedEventNames — round 36 B")` block carrying this item's must-merge case (A35-01 itself), the seven-row must-NOT-merge corpus replayed against the new pass, the three named adversarial constructions (`"Battery Conference"` floor block, the 3-token floor-boundary case, the scrambled-bag-of-words case), the expired-sibling structural case (mirroring `dedup.test.ts`'s own existing block), and a pool-ordering-invariance check (mirrors Ruling 96a's own added requirement) — all already written and green in the throwaway harness, ready to move verbatim.
+
+**A live probe (Ruling 75) was NOT spent** — every claim above is either a direct offline execution of shipped code or a construction built from real recorded titles (round 35 A's own artefact tables), consistent with round 35 B's own choice not to spend it.
+
+## THE GATE, BEFORE AND AFTER (B changed no product code, so before = after)
+
+`npx vitest run`, full-capture, first command: **100 files / 2406 tests, 2406 passing, ZERO failures** — no flake fired this run, no re-run needed. `npx tsc --noEmit` — clean, exit 0. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings, matching baseline exactly.
+
+**B CHANGED NO PRODUCT CODE.** Two commits this turn (turn-lock claim + this design entry), both pushed on landing. Throwaway harness (`web/zz-r36b/`, three probe files by the end plus its own `vitest.config.ts`; four short-lived debug probes created and deleted mid-session while isolating the section 3.3 bug) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere; no live network calls (Ruling 75's optional live-probe not spent — every claim is offline execution against shipped functions plus recorded-title constructions). No large page text pasted anywhere — the longest quote above is the djk title itself, already quoted verbatim in Ruling 99b and round 35 A's own entry, well under any reproduction-risk length. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**HAND-OFF: `WHOSE TURN: MANAGER — round 36 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
