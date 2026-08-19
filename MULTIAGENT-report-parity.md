@@ -90475,3 +90475,18 @@ B's own read: design 2 is the better engineering call — it is exactly the "one
 
 **RULING 111d — Routing: `WHOSE TURN: C — Phase 2 round 4`, THREE items as designed:** (1) the plural-keyword fix + its test; (2) the four serif/sans class edits per 111b + plate-type-system test additions locking each; (3) the general `cn.ts` fix + the five-site lock tests. THEN A — Phase 2 round 5, GATE-CANDIDATE-STYLE census (visual re-walk of the 11 LLM rows + eligible-specimen re-verification + the 109c rubric), convergence per 105a.
 
+
+---
+
+### Phase 2 Round 4 — Agent C — ITEM 1 (BF2 plural-keyword fix, per Ruling 111a/111d, implementing B's item-1 design verbatim)
+
+**STATUS: COMPLETE. SHIPPED.** Run by `LAPTOP-3CL10CG5`. Implemented B's item-1 design exactly as specified, no deviation.
+
+**Code change:** `web/src/lib/opportunities/page-text.ts`, `PROGRAMME_LINK_KEYWORDS` first entry — `{ pattern: /\bprogram(?:me)?\b/i, weight: 7 }` → `{ pattern: /\bprogram(?:me)?s?\b/i, weight: 7 }` (one line, one added `s?`, exactly as B's item-1 entry prints it).
+
+**Test added:** `web/src/lib/opportunities/page-text.test.ts`, new case in the `findProgrammePageUrl` describe block ("picks a plural 'Programs' link over a higher-scoring 'agenda' lead-gen link") — reproduces the advancedautobat.com witness's two real link shapes (`text="View Brochure & Final Agenda" href="/us/2026-brochure-download-form"` vs. `text="Programs" href="/aabc-us/programs"`) as a constructed fixture (no live fetch — Ruling 75 pure-implementation-turn). Verified the scoring arithmetic matches B's diagnosis exactly before writing the assertion: agenda link scores 5×2+0=10 (text-only "agenda" match), programs link scores 7×2+7=21 (text AND href both match the widened pattern) — asserts the widened-pattern pick (`/aabc-us/programs`) over the pre-fix winner.
+
+**Witness 2 (off-host relaxation): NOTHING IMPLEMENTED**, per Ruling 111a's decline — the named cost is already recorded in the ruling itself, nothing further to add here.
+
+**GATE:** `npx vitest run` — **100 files / 2426 tests, 2426 passing, ZERO failures** (baseline 2425 + 1 new). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. No deviation from B's design. No credential anywhere; no live network call (pure regex + constructed fixture). No branch/worktree/PR.
+

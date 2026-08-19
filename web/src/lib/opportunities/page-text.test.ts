@@ -241,6 +241,24 @@ describe("findProgrammePageUrl", () => {
     ).toBeNull();
   });
 
+  it("picks a plural 'Programs' link over a higher-scoring 'agenda' lead-gen link", () => {
+    // Round 3 B item 1 (advancedautobat.com witness): the singular-only
+    // `program(?:me)?\b` pattern could never match "Programs", so a real
+    // same-host programme page sat unscored next to a PDF-gated lead-gen
+    // form whose text says "agenda". Widening the pattern to `program(?:me)?s?\b`
+    // lets "Programs" score (7 weight, text+href both match: 7*2+7=21),
+    // beating the agenda-only link (5 weight, text only: 5*2+0=10) outright.
+    expect(
+      findProgrammePageUrl(
+        `
+          <a href="/us/2026-brochure-download-form">View Brochure &amp; Final Agenda</a>
+          <a href="/aabc-us/programs">Programs</a>
+        `,
+        "https://www.advancedautobat.com/us/",
+      ),
+    ).toBe("https://www.advancedautobat.com/aabc-us/programs");
+  });
+
   it("uses explicit href fragments but never returns a same-document link", () => {
     expect(
       findProgrammePageUrl(

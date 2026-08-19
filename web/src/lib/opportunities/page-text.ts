@@ -37,7 +37,7 @@ const PAGE_FURNITURE_NAME_RE =
 const JAVASCRIPT_PLACEHOLDER_RE =
   /^(?:(?:please\s+)?enable\s+javascript|javascript\s+(?:is\s+)?required|loading)\b[^.!?]{0,120}[.!?]*$/i;
 const PROGRAMME_LINK_KEYWORDS = [
-  { pattern: /\bprogram(?:me)?\b/i, weight: 7 },
+  { pattern: /\bprogram(?:me)?s?\b/i, weight: 7 },
   { pattern: /\bschedule\b/i, weight: 6 },
   { pattern: /\bagenda\b/i, weight: 5 },
   { pattern: /\bsessions\b/i, weight: 4 },
