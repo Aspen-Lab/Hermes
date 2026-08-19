@@ -270,12 +270,26 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent B round 5 + 2026-08-19 21:33 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       MANAGER — Phase 3 convergence candidate 1 re-measurement.
+WHOSE TURN:       B — Phase 3 round 5 (Ruling 122f's routing; this top block
+                  was stale — it still read "MANAGER — Phase 3 convergence
+                  candidate 1 re-measurement" even though the manager's own
+                  Rulings 122a-122f already did that verification, passed
+                  it (122d), and routed to B for round 5 (122f) — synced in
+                  this lock-claim commit, before touching anything else,
+                  matching the same pattern every prior round's claiming
+                  agent found and fixed. B's commission (122e, ranked): (1)
+                  resolve the F11 merge-vs-drop conflict (122c) then design
+                  F11 itself; (2) Disposition 1's fired reopen threshold
+                  (F13's live `&laquo;`); (3) the paper-surface web-discovery
+                  gap (120e) — give it a gemini branch; (4) if budget
+                  remains, the recurrences (F10/F12/J7/J8) with 119e's full
+                  disposition machinery where a design isn't warranted. J9
+                  stays UNCONFIRMED (HTTP 403), not counted.
                   A's round 4 re-census is COMPLETE — all five of Ruling
                   120g's fixes VERIFIED LIVE (J1 by a real absence-signal,
                   0/5 job pulls after a prior 5/5, plus direct execution
