@@ -270,11 +270,83 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 35 + 2026-08-19 01:24 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 35 B IS COMPLETE @ 2026-08-19 ~01:4x UTC — THE ONE
+                  COMMISSIONED ITEM (A34-01, Ruling 95b: the cross-source
+                  duplicate-event class) DESIGNED, TWO PARTS, ONE COMMIT.**
+                  Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  and after confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`c04ccc8`). Grepped `Round 35 — Agent B` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  round 34 A's three parts in full (part 2's clause-level
+                  A34-01 trace is this item's starting point) and Rulings
+                  95a-95e before touching any code.
+
+                  **DESIGN: key normalization (strip ordinals + short
+                  all-caps acronym parentheticals from the name text only,
+                  year untouched) PLUS a second `dedupEvents` pass, positioned
+                  AFTER `scoreEvents`' own post-enrichment expiry gate rather
+                  than before it.** Normalization alone measured
+                  INSUFFICIENT — the year component still diverges
+                  pre-enrichment, proven by execution, not assumed. The
+                  second pass's POSITION is the item's own safety argument:
+                  by running only on rows that already survived
+                  `scoreEvents`' expiry + required-topic gate, an expired
+                  sibling is structurally incapable of reaching the merge —
+                  proven by direct execution of the shipped `scoreEvents` on
+                  a constructed expired/live pair (the manager's own named
+                  EUCHEMSIL-shaped worry), not argued from prose. A
+                  score-aware tie-break is recommended for a `SOURCE_PRIORITY`
+                  tie, mirroring the job side's own already-shipped
+                  `beatsIncumbent` precedent (`jobs/dedup.ts:108-122`, round
+                  22, Ruling A22-05) — `dedupEvents` today has NO tie-break
+                  beyond source priority, an unexploited-by-A34-01 but real
+                  latent gap.
+
+                  **CORPUS: 7 of 7 correct** (the AABC pair merges once
+                  simulated post-enrichment; the locked
+                  `scoring.test.ts:352-364` control still collides correctly;
+                  SIX must-NOT-merge constructions all correctly stay apart —
+                  multi-edition series [year discriminates], same-series
+                  different-location, IEX 2026 training-course vs a
+                  constructed IEX 2026 conference, EUCHEMSIL vs its rsc.org
+                  twin [moot — the rsc.org row dies at ingestion, expired,
+                  before either dedup pass runs, confirmed by execution], and
+                  a same-organizer-family pair sharing an ordinal but
+                  genuinely different real events [EuChemS Congress vs
+                  EUCHEMSIL Meeting]). One positive, non-required validation:
+                  the historically-confirmed-same-event Solid-State Battery
+                  Summit pair (`cambridgeenertech.com`/`quintustechnologies.com`)
+                  WOULD merge under the candidate key, though the two are not
+                  currently co-present in any live pool. 21 `it` blocks across
+                  3 throwaway probe files, all green.
+
+                  **GATE: 99 files / 2392 tests, 2392 passing, ZERO failures**
+                  (first full-capture run surfaced the standing
+                  `benchmark.test.ts` live-search flake by name, immediate
+                  re-run green — consistent with the standing exclusion, not
+                  a regression). `npx tsc --noEmit` clean. B changed no
+                  product code, so before = after.
+
+                  **B CHANGED NO PRODUCT CODE.** Two commits (turn-lock claim
+                  + design entry), both pushed on landing. Throwaway harness
+                  (`web/zz-r35b/`) lived outside `web/src/`, deleted before
+                  the commit; `git status --porcelain --untracked-files=all`
+                  confirmed clean. No credential anywhere; no live network
+                  calls (Ruling 75's optional live-probe not spent — the pair
+                  is already recorded). No branch/worktree/PR.
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 35 verification
+                  and rulings before C spawns`.** Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~05:5x UTC — ROUND 34 A
                   VERIFIED INDEPENDENTLY, RULINGS 95a-95e APPENDED (§4),
                   ROUND 34 CLOSED.** Gate re-run (full-capture):
@@ -86582,3 +86654,152 @@ Ranked by what a reader loses, worst first.
 
 **RULING 95e — ROUND 34 IS CLOSED. `WHOSE TURN: B — round 35`, ONE item: A34-01.** Sonnet sixteenth data point: a disciplined census turn (one mid-turn stall on a detached probe, resumed cleanly on the manager's nudge; the credential slip self-caught and disclosed with precision). The finding rate holds at 1/round for the fourth consecutive round, and this round's finding is a UX-duplication defect, not a wrong value — the defect classes keep getting shallower.
 
+
+
+### Round 35 — Agent B — ITEM 1 (A34-01, Ruling 95b: the cross-source duplicate-event class): **DESIGNED, TWO-PART FIX — KEY NORMALIZATION (STRIP ORDINALS + SHORT ALL-CAPS ACRONYM PARENTHETICALS) PLUS A SECOND DEDUP PASS, POSITIONED AFTER `scoreEvents`' OWN EXPIRY GATE RATHER THAN BEFORE IT. NORMALIZATION ALONE IS MEASURED INSUFFICIENT — THE YEAR COMPONENT STILL DIVERGES PRE-ENRICHMENT. THE PASS'S POSITION IS THE ITEM'S OWN SAFETY ARGUMENT: BECAUSE IT RUNS ONLY ON ROWS THAT ALREADY SURVIVED EXPIRY FILTERING, AN EXPIRED SIBLING CANNOT STRUCTURALLY REACH THE MERGE STEP — PROVEN BY DIRECT EXECUTION OF THE SHIPPED `scoreEvents` ON A CONSTRUCTED EXPIRED/LIVE PAIR, NOT ASSUMED. SEVEN-ROW MUST-NOT-MERGE CORPUS: ZERO FALSE MERGES. THE ONE LOCKED DEDUP TEST STILL COLLIDES CORRECTLY UNDER THE CANDIDATE KEY.**
+
+**B changed no product code.** Claimed the turn lock (`c04ccc8`) after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 35 — Agent B` first — zero prior entries existed, fresh start not a resume. Read round 34 A's three parts in full (part 2's clause-level A34-01 trace, `MULTIAGENT-report-parity.md:86407-86427`, is this item's starting point) and Rulings 95a-95e in full before touching any code. Every candidate below was written and executed standalone in a throwaway harness (`web/zz-r35b/`, own minimal `vitest.config.ts`, no live network — pure offline execution of the shipped `webResultToRawEventItem`/`eventDedupKey`/`dedupEvents`/`scoreEvents`) — deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean immediately after. 21 `it` blocks across 3 probe files, all green, cited by count below.
+
+## 2.0 THE STARTING TRACE, RE-CONFIRMED BY EXECUTION (not re-derived — A already did this work)
+
+A's part-2 trace replayed directly against the shipped code, both rows built from their real recorded title/URL through `webResultToRawEventItem` (`eventweb.ts:2012-2230`):
+
+| row | derived `.name` (via `eventNameFrom`, `eventweb.ts:1830` → `bestEventTitleSegment`, `:1687`) | `.startDate` at ingestion |
+|---|---|---|
+| `events.evwire.com/events/aabc-2026`, title `"AABC 2026 - Advanced Automotive Battery Conference"` | `"Advanced Automotive Battery Conference"` (4 tokens — "AABC 2026" segment rejected as chrome) | `""` (title states no date) |
+| `www.advancedautobat.com/us`, title `"26th Advanced Automotive Battery Conference (AABC) \| December 7-10, 2026 \| San Diego, CA"` | `"26th Advanced Automotive Battery Conference (AABC)"` (6 tokens — the date/city segments rejected as non-event-titled) | `"2026-12-07T12:00:00.000Z"` |
+
+Both ingest (neither is `null`). `eventDedupKey` (`dedup.ts:13-25`) on the two: `"advanced automotive battery conference::"` vs. `"26th aabc advanced automotive battery conference::2026"` — confirmed unequal by direct execution. `dedupEvents([evwire, autobat])` (`dedup.ts:27-45`) keeps both, confirmed. **Simulating post-enrichment** (setting `evwire.startDate` to the same `2026-12-07` value A's trace says enrichment recovers, name left unchanged since A's own trace only claims the date is recovered) — the keys **still** diverge, on the token set alone (`"26th"`/`"aabc"` survive on one side, absent on the other). This is the item's own starting fact: **both components had to diverge for the row to escape dedup, and fixing only one is not sufficient** — confirmed by execution, not merely restated from A's prose (`zz-r35b/a34-01.probe.ts`, 6 `it`s, all green).
+
+## 2.1 THE DESIGN, PART 1 — KEY NORMALIZATION (closes the token-set half)
+
+```ts
+// Strips text that is LOAD-BEARING FOR NOTHING ELSE eventDedupKey reads: the
+// ordinal number word ("26th") and a SHORT ALL-CAPS acronym parenthetical
+// ("(AABC)"). Applied to the NAME TEXT ONLY, before the existing six-token
+// slice/sort/join pipeline; the YEAR half of the key is untouched, still
+// comes from item.startDate alone, and cannot be affected by this change —
+// a genuine multi-edition series (2026 vs 2027) still discriminates on year.
+const ORDINAL_RE = /\b\d+(?:st|nd|rd|th)\b/gi;
+const SHORT_ACRONYM_PAREN_RE = /\s*\([A-Z0-9]{2,8}\)/g;
+
+export function eventDedupKey(item: RawEventItem): string {
+  const year = item.startDate ? new Date(item.startDate).getUTCFullYear() : "";
+  const normalizedName = item.name
+    .replace(ORDINAL_RE, " ")
+    .replace(SHORT_ACRONYM_PAREN_RE, " ");
+  const name = normalizedName
+    .toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 1)
+    .slice(0, 6)
+    .sort()
+    .join(" ");
+  return `${name}::${year}`;
+}
+```
+
+**Deliberately narrow, not "strip every parenthetical."** The all-caps, 2-8-character shape catches the extremely common "Full Name (ACRONYM)" pattern (`"...Advanced Automotive Battery Conference (AABC)"`) while leaving a mixed-case parenthetical alone — `"Molten Salt Electrochemistry Symposium (MoSES)"` (`pyro.byu.edu`, round 34's own artefact table, `:86439`) does NOT match `[A-Z0-9]{2,8}` because of the lowercase `o`/`E`/`S` mix, so it is untouched; this was checked by inspection, not assumed. Ordinal-stripping only ever touches the NAME half, so it cannot manufacture a multi-edition collision (§2.5 below tests this directly, not just argues it).
+
+**Recommended scope: inside `eventDedupKey` itself**, so both the existing (pre-enrichment) `dedupEvents` call (`pipeline.ts:184`) and the new second pass (§2.2) share one definition — avoids two independently-drifting key formats, and is a strict recall improvement for the (currently unwitnessed but plausible) case of two web-discovered rows that both already carry a title-parseable date pre-enrichment and differ only by ordinal/acronym tokens.
+
+**Measured insufficient alone**: even with this normalization, the AABC pair's keys still differ pre-enrichment, because the year component is `""` vs `"2026"` until enrichment runs — proven directly in the harness (`zz-r35b/candidate-key.probe.ts`, the "pre-enrichment... still correctly DO NOT match" case). Normalization closes the name-token half; it cannot close the year half, because `eventDedupKey` never sees post-enrichment data on the pre-enrichment pass by construction (`pipeline.ts:184` runs on `allItems`, straight from the sources, before `enrichEventCandidates` is ever called at `:107` inside `scoreEventPoolCandidates`).
+
+## 2.2 THE DESIGN, PART 2 — A SECOND DEDUP PASS, POSITIONED AFTER `scoreEvents`' OWN EXPIRY GATE
+
+**Where it goes, and why there specifically.** `scoreEventPoolCandidates` (`pipeline.ts:91-116`) today: `scored = scoreEvents(deduped, ...)` (stage 1, line 97) -> enrich the stage-1 survivors (`enrichEventCandidates`, line 107) -> `scored = scoreEvents(deduped.map(item => enrichedById.get(item.id) ?? item), ...)` (stage 2, lines 109-114) -> `return scored`. **The recommended insertion point is immediately after stage 2 returns, before the function's own `return scored;` (line 116)** — i.e. dedupe the `ScoredEventItem[]` stage 2 already produced, not the raw pre-score corpus.
+
+```ts
+scored = dedupScoredEvents(scored); // NEW, after stage 2, before returning
+return scored;
+```
+
+**Why not before stage 2 (operating on `deduped.map(item => enrichedById.get(item.id) ?? item)` instead)?** This was the first candidate built and it was REJECTED. `scoreEvents`' own per-item expiry gate (`scoring.ts:206-222`: `if (hasParsedDate && !hasFuture) continue;`) has not run yet at that point, so a merge tie-break would have to independently decide whether either candidate is expired — hand-rolling that logic risks drifting from `scoring.ts`'s own definition of "expired" (day-level vs. month-granularity end, the bare-year escape, etc. — `scoring.ts:206-222` and `eventweb.ts:2149-2213` between them encode several non-obvious rules). **Positioned after stage 2 instead, this risk is closed by construction rather than by a second implementation of the same predicate**: every candidate the second pass ever sees has ALREADY individually passed `scoreEvents`' expiry + required-topic gate, so an expired sibling is structurally incapable of reaching the merge — there is no tie-break branch that could ever pick it, because it was never a candidate in the first place.
+
+**Proven directly, not just argued** (`zz-r35b/second-pass.probe.ts`, "positioning proof" describe, 2 `it`s): ran the real, unmodified `scoreEvents` on a constructed pair sharing one key — one row dated in the past (simulating the manager's own named worry, an "EUCHEMSIL-vs-rsc.org-shaped" expired/live twin), one dateless and web-discovered. `scoreEvents` returns only the live row; the expired one is already gone before any dedup-design code would ever touch it. A second construction — both rows dated in the future (the actual A34-01 shape, post-enrichment) — confirms `scoreEvents` keeps BOTH, each carrying a real `.score`, which is exactly the state the second pass is meant to operate on.
+
+**The EUCHEMSIL/rsc.org pair itself is moot for this design, checked directly rather than assumed**: `webResultToRawEventItem` on `rsc.org`'s own recorded EUCHEMSIL title+date (`"31 July 2026"`, evaluated at `now = 2026-08-19`) returns `null` — the row dies at INGESTION (`eventweb.ts:2158`'s `if (anchor.length > 0 && Math.max(...anchor) < now) return null;`), before EITHER dedup pass ever runs, confirmed by execution (`zz-r35b/candidate-key.probe.ts`, "the rsc.org copy never reaches dedup at all" case). The manager's named worry — "would a post-enrichment merge resurrect it?" — cannot happen to THIS pair because it is never a `RawEventItem` at all by the time any dedup code sees it; the general risk class it points at (an expired sibling winning a tie-break) is what the positioning argument above closes for every pair, not just this one.
+
+## 2.3 TIE-BREAK — SCORE-AWARE, MIRRORING THE JOBS-SIDE PRECEDENT
+
+`dedupEvents` today (`dedup.ts:40-42`) has NO tie-break beyond `SOURCE_PRIORITY` — when two candidates at the same key tie on priority, the FIRST-SEEN one wins (arrival order), because `if (pNew > pOld) byKey.set(key, item);` never fires on a tie. Both AABC rows are `source: "eventweb"` (`SOURCE_PRIORITY.eventweb = 1` for both, `dedup.ts:10`), so today's tie-break is arrival order — the same latent flaw the JOB side's own dedup already found and fixed (`jobs/dedup.ts:108-122`, `beatsIncumbent`, round 22, Ruling A22-05: "the tie-break is not optional... between two jobweb rows the survivor was decided by ARRIVAL ORDER... merging them without this rule would have traded two cards for one WORSE card").
+
+**Recommended for the second pass**: since every candidate reaching it already carries a `.score` (it operates on `ScoredEventItem[]`, not raw items — §2.2), prefer the higher `.score` on a `SOURCE_PRIORITY` tie, rather than inventing a new richness heuristic — the scorer already weighs keyword match, TF-IDF, urgency, venue rank, location fit and source weight (`scoring.ts:276-282`), which is a more informed signal than a hand-rolled field-count would be.
+
+```ts
+function dedupScoredEvents(items: ScoredEventItem[]): ScoredEventItem[] {
+  const byKey = new Map<string, ScoredEventItem>();
+  const passthrough: ScoredEventItem[] = [];
+  for (const item of items) {
+    const key = eventDedupKey(item);
+    if (!key || key === "::") { passthrough.push(item); continue; }
+    const existing = byKey.get(key);
+    if (!existing) { byKey.set(key, item); continue; }
+    const pNew = SOURCE_PRIORITY[item.source] ?? 0;
+    const pOld = SOURCE_PRIORITY[existing.source] ?? 0;
+    if (pNew > pOld) { byKey.set(key, item); continue; }
+    if (pNew === pOld && item.score > existing.score) byKey.set(key, item);
+  }
+  return [...byKey.values(), ...passthrough];
+}
+```
+
+Tested standalone (`zz-r35b/second-pass.probe.ts`, "candidate second pass" describe, 3 `it`s): merges the A34-01 pair (simulated post-enrichment) to exactly ONE surviving card, never zero; on the EUCHEMSIL-shaped expired/live construction only one candidate ever reaches this function (the other was already removed by `scoreEvents`, §2.2), so it is a no-op on that pair rather than a resurrection risk; an unrelated control row with no duplicate passes through unchanged.
+
+## 2.4 MUST-MERGE — the pair itself, plus one positive validation from the recorded corpus
+
+**The A34-01 pair, simulated post-enrichment** (both rows carrying the same December 2026 date, names as ingested — A's own trace claims only the date is recovered by enrichment, not the name): the two-part candidate key (§2.1) MATCHES — `"advanced automotive battery conference::2026"` on both sides, confirmed by execution.
+
+**Positive validation, not required but corroborating**: round 13-era ground truth (`MULTIAGENT-report-parity.md:63152`) confirms `cambridgeenertech.com`'s own "Solid-State Battery Summit" page and `quintustechnologies.com`'s "Solid-State Battery Summit 2026 | Quintus Technologies" page are **the same real 11-12 August 2026 event**. The candidate key merges them (`"battery solid state summit::2026"` on both sides, checked by execution). **They are not co-present in any recorded pool** — round 34's own artefact table (`:86444`) shows `cambridgeenertech.com` at `ingested 0/12` this window (excluded upstream by the index-page guard, `isEventIndexResult`/`isEventHubResult`, `eventweb.ts:2024-2028` — a different, older fix), and by round 34's own measurement window (2026-08-19) the 11-12 August date is already past for either row that did carry it — so this is a design-correctness check on a historically-confirmed pair, not a live regression test the current corpus can exercise.
+
+## 2.5 MUST-NOT-MERGE — SEVEN CONSTRUCTIONS, ZERO FALSE MERGES
+
+All executed directly against the candidate key (`zz-r35b/candidate-key.probe.ts`), real recorded titles where the corpus has them, adversarial constructions where it does not (named as such):
+
+| construction | source | result |
+|---|---|---|
+| Multi-edition series, same base name, consecutive years (`"32nd SolarPACES Conference"` 2026 vs `"33rd SolarPACES Conference"` 2027 — real title from `:31671`, adjacent year constructed) | year discriminates | **NOT merged** |
+| Same series, different location, same year (`"The Battery Show North America"` vs `"The Battery Show South"`, both real recorded titles) | location tokens untouched by ordinal/paren stripping | **NOT merged** |
+| `"IEX 2026 technical training introductory course"` (real, `rsc.org`/`soci.org`, `:86436-86438`) vs a constructed `"45th IEX 2026 International Conference on Ion Exchange"` — the exact "training course vs. conference" shape the brief named | remaining tokens (`training`/`course` vs `international`/`conference`/`ion`/`exchange`) diverge | **NOT merged** |
+| EUCHEMSIL (`euchemsil2026.com`) vs its `rsc.org` twin | the `rsc.org` copy dies at ingestion (expired), never reaches either dedup pass — §2.2 | **N/A, moot by construction** |
+| `"10th EuChemS Chemistry Congress"` (real, `:41866`, Dublin) vs `"EUCHEMSIL 2026: 30th EUCHEMS Meeting"` (real, `:84828`) — same organizer-family root, BOTH carry an ordinal, genuinely different real events | remaining tokens diverge (`chemistry`/`congress` vs `euchemsil`/`meeting`) | **NOT merged** |
+| Two constructed titles sharing 5 of 6 remaining tokens, differing only in the trailing word (`"...Association Meeting"` vs `"...Association Workshop"`) | 6th token differs | **NOT merged** (a pre-existing property of the shipped 6-token slice, unrelated to this item — recorded to show the candidate key does not widen the existing coincidence-collision surface) |
+| The one LOCKED test (`scoring.test.ts:352-364`) — `ccfddl` "Machine Learning Conf 2026" vs `eventweb` same name/date | plain byte-identical name, no ordinal/paren present | **STILL merges correctly**, `ccfddl` still wins on `SOURCE_PRIORITY` |
+
+**7 of 7 correct** (6 must-not-merge + 1 locked must-merge control), 21 `it` blocks total across the three probe files, all green.
+
+## 2.6 FAILURE DIRECTION AND BLAST RADIUS
+
+**Failure direction**: a miss (the design ships imperfectly, or a differently-shaped divergent pair is not covered) reproduces TODAY's status quo — two cards for one event, the defect A34-01 already names — never worse. **A false merge is prevented two independent ways, not one**: (a) the normalization is narrow and tested against 6 must-not-merge constructions with zero collisions; (b) the second pass can only ever combine two rows that INDIVIDUALLY already survived `scoreEvents`' own expiry + required-topic gate (§2.2's positioning argument) — it can never make a previously-hidden row visible, only collapse two already-visible rows into one, so the worst case of a wrong merge is "one correct card carries slightly less information than two would have," never "a wrong or expired event appears," and never "a valid future event disappears" (both candidates were already individually valid before the pass ever runs).
+
+**Blast radius, measured not assumed:**
+- **`eventDedupKey`** (`dedup.ts:13-25`) — the only production call sites are `dedup.ts:30` (inside `dedupEvents` itself) and the recommended new call inside the second pass; both would use the SAME normalized definition (§2.1). Confirmed by `grep -rn "eventDedupKey"` across `web/src`: `dedup.ts` (definition + one internal call) and `pipeline.ts` is NOT a direct caller (it calls `dedupEvents`, not the key function, at `:184`) — so the only edit site for §2.1 is `dedup.ts` itself.
+- **`dedupEvents`** (`dedup.ts:27-45`) — called once today, `pipeline.ts:184`. The recommended second pass (§2.2/§2.3) is a NEW, second call site inside `scoreEventPoolCandidates` (`pipeline.ts:91-116`), not a change to the existing one.
+- **The ONE existing locked test** — `scoring.test.ts:352-364`'s `describe("dedupEvents", ...)` — replayed directly against the candidate key and still passes (§2.5's last row).
+- **No dedicated `events/dedup.test.ts` exists** — unlike the job side, which has one (`jobs/dedup.test.ts`, 16 `it`s across 4 `describe` blocks: `jobDedupKey`, `jobSlugTokens`, `slugsIdentifySamePosting`, `dedupJobs`). This is an asymmetry worth naming for C: a natural home for this item's tests (key normalization, the second pass, the tie-break) is a NEW `events/dedup.test.ts` mirroring that structure, rather than growing `scoring.test.ts`'s single existing block.
+- **Other event-side tests that could be sensitive to a second dedup pass** — searched directly (`grep -rln "buildEventPool|buildDailyEventPool|scoreEventPoolCandidates|afterDedup|beforeDedup" --include="*.test.ts"`): `benchmark.test.ts` (live-search, no fixed-count assertions relevant here), `opportunities/daily-pool-cache.test.ts` and `opportunities/daily-search-budget.test.ts` (both use single-item mock sources, `toHaveLength(1)`-style assertions — no duplicate pair is ever constructed in either file, so a second pass is a no-op on their fixtures, checked by reading both directly), `opportunities/enrich.test.ts` (tests `enrichEventCandidates` in isolation, never touches dedup). `app/api/events/report/route.test.ts` — grepped for `toHaveLength`/`.pool.`/`dedup`, zero hits.
+- **`afterDedup`/`beforeDedup` diagnostics** (`pipeline.ts:198-199`) reflect the FIRST dedup pass only, by explicit scope choice — the second pass is an internal refinement without its own separate counter. Named as a deliberate scope decision, not an oversight; a corresponding counter would be cheap to add if C or the manager wants the extra observability, but nothing in this item's own must-fix list requires it.
+- **`diversifyByType`'s type-cap ordering** (`scoring.ts:143-160`, called inside `scoreEvents` before either pass could touch its output) was checked as a possible interaction and found to be a NON-ISSUE: it returns `[...kept, ...overflow]` — every row is retained, only reordered — so removing a duplicate from the array BEFORE the final `MAX_OPPORTUNITY_POOL_ITEMS`/`topN` slice (`pipeline.ts:191`, `:299`) simply lets the slice reach one further row, never leaves an unfillable gap.
+
+## 2.7 VERDICT / RECOMMENDATION FOR C
+
+**Ship both parts together, as one coherent item** — this is B's own judgement call, surfaced rather than silently decided: normalization alone is measured insufficient (§2.1's own admission), and the second pass alone (without normalization) would only catch EXACT-token-match same-event pairs, missing the ordinal/acronym-paren shape A34-01 actually witnessed. Splitting them across two rounds would ship a half-fix that cannot close A34-01 either way.
+
+1. **`dedup.ts`**: replace `eventDedupKey` with §2.1's version (ordinal + short-all-caps-paren stripping on the name text only, year computation untouched).
+2. **`dedup.ts` or `pipeline.ts`**: add §2.3's `dedupScoredEvents` (score-aware tie-break on a `SOURCE_PRIORITY` tie, mirroring `jobs/dedup.ts:117-122`'s already-shipped `beatsIncumbent` precedent).
+3. **`pipeline.ts:91-116`**: call it once, positioned exactly at §2.2 — after stage 2's `scoreEvents` returns, before `scoreEventPoolCandidates`'s own `return scored;` (line 116). **Not before stage 2** — that position was built, measured, and REJECTED (§2.2) for needing a second, independently-drifting expiry check.
+4. **Tests**: recommend a new `events/dedup.test.ts` (§2.6's asymmetry note) carrying §2.4's must-merge cases (the AABC pair, simulated post-enrichment; the Solid-State Battery Summit positive validation) and §2.5's six must-not-merge constructions, plus the existing `scoring.test.ts:352-364` control replayed to confirm it still passes under the new key (it does, §2.5's last row) — C's own call whether to move that block or leave it and add the new file alongside it.
+
+**Not claimed as covered, named as residual**: any same-event pair whose divergence is NOT shaped like "ordinal/acronym-paren token mismatch + pre/post-enrichment date gap" — e.g., two sources using genuinely different wording for the same event's name — remains uncaught by this design, consistent with this loop's history of narrow, evidenced guards over broad heuristic ones (the job-side precedent this item mirrors, `jobs/dedup.ts`, itself only closed the SPECIFIC shapes it measured, not "similar titles" in general).
+
+**A live probe (Ruling 75) was NOT spent** — optional per the brief, the pair is already recorded, and every claim above is either a direct offline execution of shipped code or a construction built from real recorded titles.
+
+## THE GATE, BEFORE AND AFTER (B changed no product code, so before = after)
+
+`npx vitest run`, full-capture, first command: **1 failed / 2391 passed on the first run — identified by name, `src/lib/events/benchmark.test.ts`, the standing live-search flake this file already excludes by name.** Immediate full-capture re-run: **99 files / 2392 tests, 2392 passing, ZERO failures.** `npx tsc --noEmit` — clean, exit 0. No `eslint` re-run needed (B touched zero files under `web/src/`); no product-code diff exists for it to lint.
+
+**B CHANGED NO PRODUCT CODE.** One commit (this log entry, plus the turn-lock claim commit before it — two commits total, both pushed on landing). Throwaway harness (`web/zz-r35b/`, 3 probe files, 21 `it` blocks, own minimal `vitest.config.ts`) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere; no live network calls (pure offline execution against shipped functions plus constructed/recorded-title test data — Ruling 75's live-probe option was not spent, per the brief's own "optional" framing). No large page text pasted anywhere — every quote above is a title, URL, or short mechanism fragment. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**HAND-OFF: `WHOSE TURN: MANAGER — round 35 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
