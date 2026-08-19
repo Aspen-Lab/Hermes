@@ -86196,3 +86196,90 @@ www.lco.cl | Jobs - Las Campanas Observatory | x1 | ingested 0/1 | not in final 
 Named-row sanity checks against this table: hyetlithium.com re-confirmed ADMITTED with silent company (A29-03 stays ADDRESSED, unregressed). postdocjobs.com's sibling was offered but did NOT reach the final pool this window (topic-floor variance, the ordinary kind already named for psi.ch/BALDER -- the ingestion-stage fix is intact either way, confirmed by its own ingested: true). stemgateway.nasa.gov still not pooled -- unchanged, still NAMED NOT COUNTED. talents.vaia.com/American Battery is a FRESH 57b witness line (round 33's talents.vaia.com offer named a different employer, Solid Power -- the site's own title/company varies by posting, both correct, both silent-company-free, no collision). pire.illinois.edu did not reach the final pool this window so its company value was not re-derived live, but the ingestion-stage acronym-collision shape is unchanged, verified by direct execution.
 
 Committed and pushed as its own item, per the write-as-you-go discipline. Part 2 (event surface census, A33-01 verification, the round-33 must-catch/must-keep regression check, and the fresh finding) follows.
+
+### Round 34 — Agent A (part 2: THE EVENT SURFACE VALUE CENSUS. A33-01 VERIFICATION: ORGANICALLY RE-WITNESSED AND DROPPED LIVE, PLUS CONFIRMED BY DIRECT EXECUTION. ROUND 33's FOUR MUST-CATCHES AND ALL SEVEN FAIRS: ZERO REGRESSION. ZERO COLLATERAL FROM THE NEW GUARD ON REAL TRAFFIC. ONE FRESH FINDING -- A34-01, A CROSS-SOURCE DUPLICATE EVENT NOT MERGED BY DEDUP.)
+
+STATUS: PARTIAL BY DESIGN, continuing part 1's method (same profile, same fuse, same no-op cache, same spy-on-searchGemini instrument). Same single window, five independent live pulls, run as part of the same background job as part 1's job pulls. No gate verdict is set here.
+
+## A33-01 VERIFICATION -- THE SPECIMEN
+
+**Organically RE-OFFERED, 1 of 5 pulls (pull index 3, 0-based), DROPPED AT INGESTION -- VERIFIED FIXED LIVE.**
+
+> "Job Postings Archive - Ion Exchange" @ https://ionexchangeglobal.com/job_posting/ -- offered pull 3, ingested: false, confirmed by direct execution of the shipped webResultToRawEventItem on the exact captured row.
+
+**DIRECT EXECUTION CHECK, REGARDLESS OF WINDOW (the round's own commissioned duty)** -- ran the shipped, exported isJobListingContentTitle on the specimen title verbatim: **true (drops)**. Also ran webResultToRawEventItem on the specimen's exact title+URL pair independent of this window's own capture: **returns null (drops)**. Both checks agree with the organic live witness above -- three independent forms of evidence (organic offer this window, direct predicate execution, direct full-mapping execution) all agree the specimen now drops.
+
+**48b COLLATERAL SCAN (round-34-specific, proving zero collateral from the new guard, not assuming it):** scanned all 701 offered rows (both surfaces) against the new alternative's own trigger shape (`job\s+(?:postings?|listings?)\s+(?:archive|board|directory)`, case-insensitive) -- **exactly ONE match anywhere in either offered corpus this window: the specimen itself**, correctly dropped. Zero collateral false drops from the round-34 guard on real traffic.
+
+## ROUND 33's FOUR MUST-CATCHES -- DIRECT-EXECUTION REGRESSION CHECK (round-34-specific duty)
+
+| title | isJobListingContentTitle |
+|---|---|
+| "Ion Exchange Mumbai Job Openings Check here" | **true (drops)**, unaffected |
+| "Ion Exchange Jobs,Jobs for Ion Exchange, -:JobItUs" | **true (drops)**, unaffected |
+| "Executive Jobs in All-India - 12,878 Executive Job Vacancies in All-India - Aug 2026" | **true (drops)**, unaffected |
+| "Ion Exchange India Careers, Ion Exchange India Jobs, August 2026 Company Page - iimjobs.com" | **true (drops)**, unaffected |
+
+**4 of 4, zero regression.** None of round 33's own witnessed shapes were organically re-offered this window (0 of 5 each, checked directly against the recorded corpus) -- absence, not silently treated as a pass; the direct-execution check above is what the round commissioned regardless of organic witness.
+
+## THE SEVEN MUST-KEEP JOB/CAREER-FAIR ROWS -- DIRECT-EXECUTION REGRESSION CHECK, PLUS FRESH ORGANIC WITNESSES
+
+Direct execution, all seven, this round: **7 of 7 KEPT** (isJobListingContentTitle returns false on every one, including the brief's own required adversarial construction "Job Postings Fair 2026" which is a distinct eighth check, also KEPT).
+
+**Three of seven organically re-witnessed this window, all correctly ADMITTED:**
+
+> "Nuclear Career Fair - S&T Women in Nuclear" @ win.mst.edu -- offered 3 of 5, ingested: true every time.
+> "Nittany Lion Careers" @ pennstate-csm.symplicity.com -- offered 3 of 5, ingested: true every time.
+> "Nuclear job fair" @ www.sckcen.be -- offered 2 of 5, ingested: true every time. **A FRESH organic witness -- round 33 A's own measurement found this exact title NOT organically offered that window; this window it appears and is correctly kept**, confirming the safety net holds on a title round 33 could only test synthetically.
+
+**The other four** ("2026 Job Fair & Hiring Event Calendar - JobFairX", "Career Expo & Job Fair", "2026 MSE-NE Career Fair", "Clean Energy Job Fairs - RE+ Events") **were NOT organically offered this window** -- checked directly, zero appearances in the offered corpus. Absence, not a failure.
+
+**Topic-floor note, not a defect:** none of the three organically-witnessed fairs reached this window's final SCORED pool (buildDailyEventPool's own scored items) -- their titles are nuclear/general-career-worded, not close enough to this profile's own required topics (LCO, topochemical, ion exchange, molten salt, battery) to clear scoreEvents' own required-topic gate this window. This is the same topic-floor/relevance variance already named for psi.ch/BALDER in rounds 32-33 -- the ingestion-stage guard is proven correct (ingested: true, not wrongly dropped) independent of whether a given window's topic competition lets it through to the scored pool.
+
+## TIMEOUT-FLAKE RATE, EVENT SIDE (83b re-measure duty)
+
+**0 of 5 event pulls lost the eventweb source to the 25000ms timeout this round (0%)** -- errors: {} on all 5 pulls, confirmed directly in the recorded JSON. Combined with part 1's job-side rate (1 of 5, 20%), this round's combined flake rate is **1 of 10 (10%)** -- lower than round 33's 2 of 10, reported honestly as measured. No code touching either source's fetch/timeout path changed this round; read as ordinary network variance on a hard fuse, not a regression.
+
+## MIRROR CHECKS (round 33 B's own technique, re-run this window)
+
+**Job/career-worded rows in the EVENT offered corpus, this window: 9 distinct rows** (by URL), checked individually by direct execution:
+
+```
+ionexchangeglobal.com  | Early Career Archives - Ion Exchange       | ingested: true  (NOT a job-listing/archive shape by the new guard's own vocabulary -- "Early Career Archives" has no "job postings/listings" phrase and no repeated "job" mention; correctly admitted at ingestion, same host as the specimen but a genuinely different page/shape)
+ionexchangeglobal.com  | Careers - Ion Exchange                     | ingested: false (isEventHubResult, careers path)
+ionenviromgt.net       | CAREER | Ion Exchange                      | ingested: false (isEventHubResult, careers path)
+win.mst.edu             | Nuclear Career Fair - S&T Women in Nuclear | ingested: true  -- must-keep fair, correct (above)
+pennstate-csm.symplicity.com | Nittany Lion Careers                 | ingested: true  -- must-keep fair, correct (above)
+www.sckcen.be            | Nuclear job fair                         | ingested: true  -- must-keep fair, correct, fresh witness (above)
+www.moltensaltsolutions.com | Careers | Molten Salt Solution        | ingested: false (isEventHubResult, careers path)
+ionexchangeglobal.com  | Job Postings Archive - Ion Exchange        | ingested: false -- A33-01 specimen, VERIFIED FIXED (above)
+www.naturaresources.com | Careers                                   | ingested: false (isEventHubResult, careers path)
+```
+
+**Eight of nine are correctly handled** (four by the pre-existing isEventHubResult careers-path guard, three are the correctly-admitted must-keep fairs, one is A33-01's own specimen, now correctly dropped). **ionexchangeglobal.com's "Early Career Archives" row is a NINTH distinct URL from the specimen** (`/job_experience/early-career/`, not `/job_posting/`) -- correctly admitted, a genuinely different page (early-career program info, not a job-listing archive), not a guard miss.
+
+**Mirror-image check, event-vocabulary titles wrongly admitted to the JOB pool: ZERO matches**, checked directly across all job-ingested rows this window -- consistent with rounds 32-33's own zero.
+
+**WRONGLY-KEPT check on the EVENT final scored pool (48b, the other half):** scanned every URL that reached `pool.items` this window for job/career vocabulary in its own offered title -- **zero matches**. No job-content-shaped row reached the final scored pool this window, on either the new guard's own trigger or the broader job/career word family.
+
+## ONE FRESH FINDING THIS ROUND -- A34-01 (event surface, cross-source duplicate not merged by dedup)
+
+**Witnessed 1 of 5 pulls (pull index 1), BOTH rows present TOGETHER in that pull's own final scored pool (9 items total):**
+
+> "AABC 2026 - Advanced Automotive Battery Conference" @ https://events.evwire.com/events/aabc-2026
+> "26th Advanced Automotive Battery Conference (AABC) | December 7-10, 2026 | San Diego, CA" @ https://www.advancedautobat.com/us (also independently reached the pool in pull 3, without the evwire.com sibling that time)
+
+**Both describe the identical real-world conference** (the 26th Advanced Automotive Battery Conference, San Diego, Dec 7-10 2026) from two different source pages, both ingested: true, both reaching `pool.items` in the same pull -- a reader opening that day's report would see two separate cards for one event.
+
+**Traced to the exact mechanism by direct execution, offline, no live network needed for this trace:** `dedupEvents` (eventDedupKey, eventweb dedup.ts) keys on the item's own derived `name` (first six non-trivial words, alphabetically sorted) plus the `startDate`'s year, computed BEFORE enrichment runs (`pipeline.ts`'s own stage order: sources -> **dedup** -> scoring -> enrichment -> re-score). Running `webResultToRawEventItem` on both rows' exact captured title/URL/snippet, offline:
+
+| row | derived `.name` | `.startDate` at dedup time | `eventDedupKey` |
+|---|---|---|---|
+| evwire.com | "Advanced Automotive Battery Conference" | "" (title carries no parsable date) | `advanced automotive battery conference::` |
+| advancedautobat.com | "26th Advanced Automotive Battery Conference (AABC)" | "2026-12-07T12:00:00.000Z" (title's own "December 7-10, 2026" parses at ingestion) | `26th aabc advanced automotive battery conference::2026` |
+
+**The two keys differ on BOTH components** -- the six-word token set (advancedautobat.com's name keeps "26th" and "(AABC)" as separate tokens the evwire.com title never carries) AND the year (advancedautobat.com's title states its own date, evwire.com's does not, so evwire.com computes an empty year at dedup time even though its page later gets enriched with the SAME December 2026 date -- enrichment runs after dedup already decided these are unrelated). **dedupEvents therefore keeps both rows**, confirmed directly, not assumed -- this is the exact mechanism the file's own dedup.ts comment says the function exists to prevent ("the same conference shows up in ccfddl, confs.tech, and web discovery -- dedup on normalized name"), and it correctly handles that case when both titles carry a parseable date or similarly-tokenized names, but misses it here because one source's TITLE (not its full page) never states a date and its name tokens diverge enough from the other's.
+
+**A does not diagnose a fix or judge severity beyond what was measured** (not A's role) -- the finding is: this exact defect class (same real event, two source pages, dedup keys differ because pre-enrichment date/name-token extraction diverges) has not been named in this file before by grep of "cross-source duplicate"/"same underlying event"/`evwire.com` (zero prior hits; `advancedautobat.com` has ~20 prior appearances across this file, always alone, never previously co-occurring with a sibling source for the same event). Ranked below.
+
+Committed and pushed as its own item. Part 3 (event artefact table, visual census, standing tallies, residual watch list, ranked list, and the gate verdict) follows.
