@@ -275,6 +275,27 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~04:3x UTC — ROUND 33 A
+                  VERIFIED INDEPENDENTLY, RULINGS 92a-92e APPENDED (§4),
+                  ROUND 33 CLOSED.** THE GATE FLAKE HUNTED: five consecutive
+                  full-capture manager runs, **2386/2386 green five times —
+                  the flake did not reproduce; identity still unknown; no
+                  further dedicated hunting.** Sharpened standing rule: the
+                  FIRST command of any gate run is the full-capture form
+                  (tee to a log), never a tail. **RULING 92a: A32-01 VERIFIED
+                  FIXED LIVE** (one organic drop witness + all four by
+                  execution; two fairs kept; zero collateral proven by
+                  full-corpus scan). **RULING 92b: A33-01 → B round 34 as the
+                  SINGLE item** (fifth job-content shape, title drift on
+                  `ionexchangeglobal.com/job_posting/`; A's clause-level
+                  trace + round-25 history are B's starting point;
+                  ingestion-stage only, never witnessed rendering). **RULING
+                  92c: dateless third window 93% — inside the named band,
+                  doctrine final, 62b zero held a third time.** **RULING 92d:
+                  timeout flake 2/10, within band.** **RULING 92e: ROUND 33
+                  CLOSED. `WHOSE TURN: B — round 34`, one item.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 33 A IS COMPLETE @ 2026-08-19 ~01:3x UTC — THE
                   GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. ONE FRESH
                   UNEXPLAINED VALUE FINDING (A33-01, event surface,
@@ -85756,3 +85777,21 @@ Ranked by what a reader loses, worst first.
 | re-run 2, full capture | 99 files / 2386 tests, 2386 passing, ZERO failures |
 
 **Verdict: GREEN ON REPEAT (two consecutive clean full runs), with one unidentified single-run flake on the books** — the same posture the round-32 manager's own close reached, for the same reason (a capture mistake, not a reproducible failure). This is NOT `benchmark.test.ts` (the loop's already-known credential-gated live flake, excluded from the gate) — that file was not touched or referenced in the truncated fragment seen; the failure was somewhere else in the deterministic suite, and its exact identity cannot be honestly claimed. **A does not paper over this**: the gate verdict in part 3 (GATE NOT MET, hand-off to B) is unchanged by this addendum — no code was touched between any of these runs, and two clean full-capture repeats is the same evidentiary bar round 32's own manager used to call GREEN. Forward instruction A repeats for the next agent to touch this gate: **use full-file capture (`> file.log 2>&1`, not `| tail -N`) on every gate run**, so a real regression is never confused with a capture artifact, and a capture artifact is never confused with a real regression.
+
+### Round 33 — MANAGER (independent verification of A; RULINGS 92a-92e; round 33 CLOSED — B round 34 commissioned)
+
+**Verification, run before any ruling:**
+
+- **A changed zero product code** (the manager's own scope check — empty); tree clean; all seven commits pushed.
+- **THE GATE FLAKE, HUNTED:** the manager ran FIVE consecutive full-capture gate runs (logs retained per run) — **2386/2386 green, five times in a row; the flake did not reproduce.** Historical tally: two single-run reds across ~11 untracked runs (round-32 manager, round-33 A), both identities lost to tail-capture, both green on immediate re-run. **Identity still unknown; the hunt cost five runs and caught nothing — no further dedicated hunting is commissioned.** The discipline that WILL catch it stands sharpened: **the first command of any gate run is the full-capture form (tee to a log), never a tail** — A's round-33 slip was the same instrumentation mistake the manager made in round 32, owned honestly both times, but twice is a pattern: the instruction now names the exact command shape, not just the principle. When the flake next fires under full capture, its identity lands and the manager rules on it then.
+
+**RULING 92a — A32-01 is VERIFIED FIXED LIVE, ratified.** One of four shapes organically re-offered and dropped through the real pipeline (`iimjobs.com`); all four confirmed by direct execution; two of seven must-keep fairs organically re-witnessed and kept; zero collateral false drops proven by scanning the full offered corpus against the guard's trigger, not assumed.
+
+**RULING 92b — A33-01 routes to B, round 34, as the SINGLE work item.** A fifth job-content shape (`"Job Postings Archive - Ion Exchange"` @ `ionexchangeglobal.com/job_posting/`) falls through all seven guards — `hasRepeatedJobsMention` needs two "job" mentions (this has one), `JOB_LISTING_CONTENT_RE` lacks the "job postings" phrase, and the hub-path list lacks a `job_posting` segment shape. A's trace already names every missing clause and the round-25 history (TITLE DRIFT on the source page, not a code regression — the old guard's regex never matched this wording). B reads that trace and the history FIRST, then designs the bounded extension; the must-keep corpus is round 33's own 19 rows plus the seven fairs; ingestion-stage-only status noted (never witnessed rendering — the psi.ch/BALDER precedent applies to how A re-measures it after the fix).
+
+**RULING 92c — the dateless rate's third independent window (38/41, 93%) sits inside the registry's named 87-97% band; 62b's zero held across the full pool for a third time.** The doctrine is final (90b); recorded as confirmation, not re-litigation.
+
+**RULING 92d — the timeout-flake rate this window: 2/10 combined (job 2/5).** Within the historical band (1/10–4/15). Named cost unchanged; every future A re-measures.
+
+**RULING 92e — ROUND 33 IS CLOSED. `WHOSE TURN: B — round 34`, ONE item: A33-01.** Sonnet thirteenth data point: A's turn was honest under its own instrumentation slip (owned in the log unprompted, exactly as the manager's own round-32 entry models), the A33-01 trace is complete down to the clause level with its own history dug out of the file, and the psi.ch-precedent distinction (ingested vs rendered) was applied precisely. The loop's finding rate is now: 3 → 2 → 1 → 1 per round, with this round's single finding never witnessed rendering.
+
