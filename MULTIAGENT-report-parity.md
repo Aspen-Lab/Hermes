@@ -270,29 +270,22 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent A round 1 + 2026-08-19 18:04 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       A — Phase 3 round 1 (the first Tier-2 census). Phase 2 is
-                  CLOSED (Ruling 117) and Phase 3 is now open (Ruling 118,
-                  §4 end of file): the Tier-2 pool (`aiTier: 2`,
-                  LLM-written search queries via `query-gen.ts`) has never
-                  been censused by any prior round — Phases 1 and 2 both ran
-                  `aiTier: 0`. **CORRECTED STALE §1 (same class as round 9
-                  A's own fix): this top block still read round 9's
-                  MANAGER/Phase-2 hand-off even though Ruling 118d (§4, end
-                  of file) had already opened Phase 3 and handed the round to
-                  A — the manager's Phase-3-opening commit updated §4 but not
-                  this block. Synced here in the same commit that claims the
-                  lock, per §0's own rule that §1 must always be true.** See
-                  §4 `### RULING 118` (manager) for the opening brief: A runs
-                  the standard census protocol against `aiTier: 2` for BOTH
-                  the event and job surfaces (5 pulls each), classifies every
-                  admitted row, traces each finding's guard-clause path, and
-                  confirms gemini serves all three surfaces (papers/jobs/
-                  events) now that Tavily is rate-limited (Ruling 118c).
+WHOSE TURN:       MANAGER — Phase 3 round 1 verification and rulings before
+                  B spawns. A's Tier-2 census (both surfaces, 5 pulls each)
+                  is complete: 15 ranked findings plus one seam question,
+                  Ruling 118's six witnesses confirmed/refuted/extended with
+                  URLs, gemini-carries-Tavily measured (TRUE for events/jobs,
+                  FALSE by design for papers under the real request shape),
+                  and one new gate-level fact (a pre-existing type error in
+                  the wikipedia-fix's own test file, behaviour unaffected).
+                  See §4 `### Phase 3 Round 1 — Agent A, PART 3` for the full
+                  ranked list, gate numbers and hand-off. A does not rule on
+                  its own findings or route to B — that is the manager's job.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
@@ -332,6 +325,129 @@ reference):
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 3 ROUND 1 A IS COMPLETE @ 2026-08-19 ~13:5x local
+                  (~18:5x UTC). THE FIRST TIER-2 CENSUS, BOTH SURFACES, 5
+                  LIVE PULLS EACH, ZERO SHORTCUTS.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git branch
+                  --show-current` reads `feature/summary-report-revamp`
+                  (claiming push ACCEPTED at `dfd9a4e`). Grepped `Phase 3
+                  Round 1` first — zero prior entries, fresh start not a
+                  resume. Read §0 (incl. §0d), §1's first ~450 lines, and
+                  Ruling 118 (118a-118d) in full before touching anything.
+                  **Found and fixed the same class of protocol gap round 9 A
+                  found: §1's top block still read round 9's MANAGER/Phase-2
+                  hand-off even though Ruling 118d had already opened Phase 3
+                  — synced in the same commit that claimed the lock.**
+
+                  **GATE, COLD FIRST: 100 files / 2446 tests, 2446 passing,
+                  ZERO failures**, matching the brief's own stated baseline.
+
+                  **PART 1 — DUTY 1, EVENT CENSUS.** Harness `web/zz-p3a1/`
+                  (fresh no-op `PoolCache` every pull, `aiTier: 2`,
+                  `searchConnectors: gemini` only, Tavily explicitly
+                  disabled). Zero timeouts across 5 pulls. **9 findings,
+                  ranked**, worst first: F1 repository/bibliography pages
+                  for a 27-month-stale workshop (`osti.gov/biblio/2439124` +
+                  `inl.elsevierpure.com`, 4/5 pulls); F2 a national-lab
+                  research blog (`foundry.lbl.gov`, 3/5, CORRECTING the
+                  manager's "paper title" call — verified live, it is a
+                  second lab blog post, same class as F2's first witness);
+                  F3 a discussion-forum website (`batteries-forum.com`,
+                  2/5); F4 a standing org's homepage (`itmsf.org`); F5 a
+                  generic site homepage (`moltensalt.org`, "Welcome to...");
+                  F6 a blog tag/archive page (`electrochem.org`); F7 a
+                  41-month-stale seminar admitted dateless
+                  (`engineering.purdue.edu`); F8 two "applications open"
+                  headline-substitutions (2/5); F9 one real event renamed
+                  with a spurious "TEST" suffix (single witness, mechanism
+                  not fully traced). **`events.ornl.gov` (4/5) and Wikipedia
+                  (0/5, fix HOLDS live) both CONFIRMED EXPLAINED, not
+                  filed.** The `&mdash;` seam Ruling 118 commissioned was
+                  TRACED TO ROOT CAUSE: `cleanDisplayText` is called
+                  ZERO times anywhere in the events pipeline (only in
+                  `event-roster.ts`, a different field), and `titleSegments`'
+                  own separator regex cannot recognise the literal entity
+                  text as a chrome boundary either — one root cause, two
+                  symptoms (the undecoded entity, and unstripped
+                  `EVENTS INL` site-chrome glued to the name).
+
+                  **PART 2 — DUTY 2, JOB CENSUS, same protocol.** 1 flake
+                  (jobweb source-timeout, pull 4 of 5). **6 findings,
+                  ranked**: J1 `company: "name"` literally rendered on TWO
+                  real postings, **5 of 5 pulls — the round's single
+                  highest-frequency finding on either surface**, traced to
+                  `resolveEmployerIdentity`/`directDeclarations`
+                  (`employer-identity.ts`) at the code level, exact upstream
+                  trigger text not reproduced live after two fetch attempts,
+                  disclosed honestly; J2 a product-catalogue page
+                  (`neicorporation.com/products/...`) admitted as a
+                  posting — **the shipped `NON_JOB_PATH_RE`'s own doc
+                  comment already named this exact gap as unwitnessed**
+                  ("no live case in this pull"), this census supplies it;
+                  J3 a SCHOOL-STUDENTS' educational career-exploration page
+                  (`developingexperts.com`) admitted as "Battery Scientist";
+                  J4 the Zintellect platform's bare brand name rendered as
+                  the job TITLE (structural echo of F5 — no guard on either
+                  surface covers a title that is pure site identity with
+                  nothing else); J5 two Faraday Institution listing pages,
+                  two different `LISTING_TITLE_RE` near-misses (wrong noun
+                  vs missing leading count); J6 a cohort label in the
+                  company slot, not fully traced. Ruling 33: zero. Ruling
+                  45a (`euagenda.eu`): zero, both surfaces.
+
+                  **PART 3 — DUTY 3 (gemini-carries-Tavily) + DUTY 4
+                  (tallies) + ranked list + gate + close-out.** **Events and
+                  jobs: gemini serves both non-trivially** (100% of event
+                  final-pool rows; the majority of every succeeding job
+                  pull). **Papers: MEASURED ZERO web rows under the
+                  DEFAULT/reader-observed request shape** (`fetched` carries
+                  no `web` key at all — `defaultSources()` never included
+                  `"web"`, for EITHER provider, a pre-existing structural
+                  fact, not a Ruling-118-caused gap). A CONSTRUCTED
+                  follow-up (labeled as such, `sources` forcing `"web"` in)
+                  confirmed gemini's adapter DOES return 24 raw rows when
+                  actually invoked — the mechanism works — but ZERO survived
+                  into the returned top 10, losing to the five structured
+                  academic sources. **Stated plainly per the brief's own
+                  instruction: papers gets zero web rows a reader would ever
+                  see, independent of which provider is configured.**
+                  Timeout-flake rate: 1 of 10 total pulls (10%), Ruling
+                  83b-shaped, not a new class.
+
+                  **A NEW GATE-LEVEL FINDING, NOT REVIEWER-CAUSED:**
+                  `npx tsc --noEmit` is no longer clean — 3 errors in
+                  `eventweb.test.ts` (`TS2554`, lines 3159/3170/3181),
+                  traced to commit `2fde9f4` (the wikipedia fix this round
+                  verified) calling `webResultToRawEventItem` with only 1 of
+                  its 2 required arguments. **Confirmed pre-existing**
+                  (reproduces identically with this round's own harness
+                  fully absent; `git log` shows `2fde9f4` as the file's most
+                  recent change, before this round began). **The fix's own
+                  BEHAVIOUR is unaffected and independently confirmed
+                  twice** — the 3 tests still pass at runtime (JS does not
+                  enforce arity), and this round's own live census found
+                  zero `wikipedia.org` rows across 5 pulls. `npx eslint src`
+                  unchanged (`quiz.tsx:46` only).
+
+                  **GATE, FINAL (harness deleted, three times over — once
+                  per part): 100 files / 2446 tests, 2446 passing, ZERO
+                  failures.** `git status --porcelain --untracked-files=all`
+                  clean before all three commits. No credential ever
+                  printed, logged, committed or read whole
+                  (field-scoped `node -e` extraction feeding a pre-scoped
+                  snapshot file throughout).
+
+                  **FULL RANKED LIST (16 items, both surfaces) in §4 `###
+                  Phase 3 Round 1 — Agent A, PART 3`.** Commits:
+                  `dfd9a4e` (lock claim), `b5b7787` (part 1),
+                  `7516185` (part 2), and this commit (part 3 + close-out).
+                  `WHOSE TURN: MANAGER — Phase 3 round 1 verification and
+                  rulings before B spawns.` A does not rule on its own
+                  findings. Turn lock RELEASED (`HELD BY: free`) in this
+                  commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 9 A IS COMPLETE @ 2026-08-19 ~04:5x local
                   (~09:5x UTC). CONVERGENCE CANDIDATE 2 — THE FULL ROUND-5/8
                   CENSUS PROTOCOL, RE-BUILT FROM SCRATCH (NOT COPIED),
@@ -91759,3 +91875,92 @@ Both are index pages listing MANY studentship/PhD opportunities, not one posting
 ---
 
 **PART 2 (DUTY 2, the job census) is COMPLETE.** Harness deleted before this commit (`git status --porcelain --untracked-files=all` confirmed clean). Continuing to PART 3 (DUTY 3: gemini-carries-Tavily across all three surfaces; DUTY 4: standing tallies; close-out) in the same session.
+
+
+---
+
+### Phase 3 Round 1 — Agent A, PART 3 (DUTY 3: gemini-carries-Tavily verification; DUTY 4: standing tallies; ranked list; gate; close-out)
+
+**STATUS: PART 3 COMPLETE. ROUND 1 A IS COMPLETE.** Harness rebuilt a third time in `web/zz-p3a1/` (same `vitest.config.ts` content) for the papers-surface measurement, deleted before this commit.
+
+---
+
+## DUTY 3 — GEMINI-CARRIES-TAVILY, MEASURED ON ALL THREE SURFACES
+
+**Method:** `web/zz-p3a1/pull-papers.test.ts`, two calls to the shipped, exported `runFeedPipeline` (the papers-surface equivalent of `buildDailyEventPool`/`buildDailyJobPool`), same profile snapshot, same `aiTier: 2`, same `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }`.
+
+**EVENTS (from Duty 1):** `fetched.eventweb` = 31-39 every pull; **100% of final-pool rows across all 5 pulls came from eventweb.** Zero web rows: **NO.**
+
+**JOBS (from Duty 2):** `fetched.jobweb` = 13, 21, 25, 26 on four pulls (0 on the fifth, a timeout — see Duty 4); jobweb rows are the majority of every succeeding pull's final pool. Zero web rows: **NO** (except the one flaked pull, a live-network variance, not a structural zero).
+
+**PAPERS — two calls, clearly labeled, and this is where the answer is not simply "yes":**
+
+1. **DEFAULT sources (reader-observed — matches every production call site: `/api/feed`, `dispatch-digests`, `test-digest` all omit `sources`, confirmed by `grep` before writing this harness).** `fetched: { openalex: 48, semantic_scholar: 0, arxiv: 49, dblp: 23, pubmed: 14 }` — **no `web` key at all.** `defaultSources()` (`web/src/lib/feed/pipeline.ts:40-42`) returns only the five academic sources; `"web"` has never been in it, for either provider. **This is a pre-existing, structural fact about the papers pipeline's default wiring, unrelated to which grounding provider is configured** — it was equally true when Tavily worked. Not a Ruling-118-caused gap; a gap this duty's own "record every surface" mandate is the first to have actually measured.
+
+2. **CONSTRUCTED (labeled as such — not what a reader sees today): `sources` explicitly includes `"web"`.** `fetched: { ...same five..., web: 24 }` — **gemini's adapter DOES return 24 raw rows when actually invoked**, confirming the underlying mechanism (`web-search.ts`'s `fetchGemini`, Ruling 75's own "gemini branch of the paper surface's fan-out") works fine for papers too. **But `webRows: []` in the RETURNED top-10** — zero of those 24 web-sourced candidates survived scoring against the five structured academic sources' combined 138-row corpus. Even forced in, no reader would see a web-discovered result in this specific profile's top 10 today.
+
+**A SEPARATE, NARROWER FACT, from static reading, not re-measured live this round (unambiguous from the code alone so a live re-check would add nothing):** the papers surface's "discovery query-boost" side-channel (`web/src/lib/feed/tavily-discovery.ts`, `canRunTavilyDiscovery`) has **no gemini branch at all** — its only gate is `req.searchConnectors?.tavily?.enabled`. This is distinct from the "web" SOURCE point above (that mechanism never adds pool rows itself, only nudges other sources' queries) and was already dark with Tavily disabled, regardless of gemini.
+
+**STATED PLAINLY, PER THE BRIEF'S OWN INSTRUCTION: the papers surface gets ZERO web rows under the request shape every real reader actually triggers.** This is true independent of gemini vs Tavily — it is not a case of "gemini fails to carry Tavily's role," because papers' `sources` default has never included `"web"` for any provider. Events and jobs both get non-zero, materially significant gemini contribution; papers' web-discovery mechanisms (both the row-source and the query-boost side-channel) are simply not wired into the request shape any reader's pull actually uses.
+
+---
+
+## DUTY 4 — STANDING TALLIES, RESTATED
+
+- **Ruling 33 (short-acronym collision, job surface):** **0 of 22 unique job rows this round.** Every LCO-adjacent hit was a genuine chemistry match.
+- **Named cost 79a (`The Battery Saloon` @ `batteryinnovationsummit.com`):** **NOT OBSERVED this round, 0 of 5 event pulls.** Stated as absence, not non-existence — a different, real Battery Innovation Summit (on `garysguide.com`, verified live, unrelated host) DID appear; the two are not the same specimen.
+- **Named cost 83a (the dateless-branch doctrine — "a genuinely finished page mentioning a later year survives dateless"):** the GENERAL dateless phenomenon is pervasive this round (most event rows carry `startDate: ""`), consistent with the accepted-cost doctrine and not re-litigated. The SPECIFIC EUCHEMSIL specimen was not re-drawn this round (a different profile's topics from the rounds that witnessed it); absence stated, not treated as resolution.
+- **Named cost 84b(1) (`events.ornl.gov` honest-host fallback):** **CONFIRMED, 4 of 5 event pulls** (Duty 1).
+- **Exclusion 45a (`euagenda.eu`):** **0 appearances across both surfaces' combined 10-pull corpus** (48 event rows + 41 job rows), checked by direct scan.
+- **Exclusion 41c (job surface's three named hosts):** not independently hunted by name this round — out of this duty's mandate; the standing exclusion-visibility record is undisturbed.
+- **Ruling 108's Phase 1 maintenance list:** NOT re-filed, per instruction.
+- **TIMEOUT-FLAKE RATE: 1 of 10 total pulls (10%).** Zero flakes across all 5 event pulls. **One flake on job pull 4**: `jobweb` lost its entire contribution to a 25000ms `withSourceTimeout` — `Error: [jobweb] source-timeout after 25000ms`, `fetched.jobweb: 0`, pool collapsed to 2 rows (both Tier-0 himalayas rows). Same shape as Ruling 83b's own named, measured cost of the provider switch ("3 of 10 job pulls, 1 of 5 event pulls lost the WHOLE gemini contribution to the 25000ms budget") — reconfirmed present under Tier 2, at a lower rate than 83b's own window, not a new class.
+
+---
+
+## A GATE-LEVEL FINDING, DISCOVERED DURING THE FINAL VERIFICATION PASS — NOT A READER-FACING DEFECT
+
+**`npx tsc --noEmit` is NO LONGER CLEAN.** Three errors, all in `web/src/lib/events/sources/eventweb.test.ts`, all the same shape:
+
+```
+src/lib/events/sources/eventweb.test.ts(3159,7): error TS2554: Expected 2 arguments, but got 1.
+src/lib/events/sources/eventweb.test.ts(3170,7): error TS2554: Expected 2 arguments, but got 1.
+src/lib/events/sources/eventweb.test.ts(3181,7): error TS2554: Expected 2 arguments, but got 1.
+```
+
+**Traced to root cause: commit `2fde9f4` (the wikipedia fix Ruling 118 asked this round to verify) added three `webResultToRawEventItem({title, url, snippet})` calls, each passing only ONE argument.** The function's shipped signature is `webResultToRawEventItem(result: WebResult, now: number): RawEventItem | null` (`eventweb.ts:2063-2066`) — `now` is required, no default. **This is confirmed pre-existing and NOT caused by this round**: `git status` was clean before this agent touched anything, the error reproduces identically with this round's own throwaway harness fully absent, and `git log` shows `2fde9f4` as the file's own most recent change, authored before this round began.
+
+**The WIKIPEDIA FIX'S OWN BEHAVIOUR IS NOT IN QUESTION — it is independently confirmed working, twice over:** (1) all three of these tests still PASS at runtime (`npx vitest run`: 100 files / 2446 tests, 2446 passing) — JavaScript does not enforce parameter arity, so the omitted `now` becomes `undefined` and the tests execute anyway; (2) this round's own live 5-pull event census (Duty 1) found **zero** `wikipedia.org` rows. **What is newly true is narrower and purely type-level: the test file that locks the fix no longer typechecks**, and — noted for whoever picks this up, not chased further this round — the missing `now` also means the THIRD test's date-expiry code path (`"keeps a real conference..."`, which claims to lock a future-dated row surviving) never actually exercises real expiry arithmetic, since every comparison against `now` becomes `undefined`-typed and structurally cannot fire either the drop branch or the future-date `startDate` assignment. The test's assertion still passes, but not for the reason its own name states. **`npx eslint src` is unaffected — still exactly the one standing `quiz.tsx:46` error.**
+
+---
+
+## THE FULL RANKED FINDING LIST, BOTH SURFACES, WORST FIRST
+
+1. **Events F1** — repository/bibliography pages for a 27-month-stale workshop admitted as the event itself, **4 of 5 pulls** (`osti.gov/biblio/2439124` + `inl.elsevierpure.com`).
+2. **Jobs J1** — `company: "name"` on two real postings, **5 of 5 pulls**, the single highest-frequency finding either surface produced.
+3. **Events F2** — a national lab's own research-highlight blog admitted as an event, **3 of 5 pulls (host-level)**, correcting the manager's "paper title" characterisation (`foundry.lbl.gov`).
+4. **Events F3** — an internet discussion-forum website admitted as an event, **2 of 5 pulls** (`batteries-forum.com`).
+5. **Jobs J2** — a chemical company's product-catalogue page admitted as a posting, **1 of 5 pulls**, exactly the gap the shipped code's own comment predicted in advance (`neicorporation.com`).
+6. **Jobs J3** — a school-students' educational career-exploration page admitted as a posting, **1 of 5 pulls** (`developingexperts.com`).
+7. **Events F4** — a standing organisation's homepage admitted as an event, **1 of 5 pulls** (`itmsf.org`).
+8. **Jobs J5** — two Faraday Institution listing pages, two different `LISTING_TITLE_RE` near-misses, **2 of 5 pulls combined**.
+9. **Events F5** — a generic "Welcome to our website" homepage admitted as an event, **1 of 5 pulls** (`moltensalt.org`).
+10. **Jobs J4** — the Zintellect platform's bare brand name rendered as the job title, **1 of 5 pulls** — structural echo of #9.
+11. **Events F6** — a blog tag/archive index page admitted as an event, **1 of 5 pulls** (`electrochem.org`).
+12. **Events F7** — a 41-month-stale seminar admitted dateless, **1 of 5 pulls** (`engineering.purdue.edu`).
+13. **Jobs J6** — a cohort/team label in the company slot, **1 of 5 pulls**, not fully traced.
+14. **Events F8** — two real events, name replaced by an "applications open" announcement headline (one also a duplicate row), **2 of 5 pulls**.
+15. **Events F9** — one real, correctly-linked event, name replaced by a mismatched string with a spurious "TEST" suffix, **1 of 5 pulls**, single witness, mechanism not fully traced.
+16. **The `&mdash;` seam** (Ruling 118's own commissioned question) — one real event, undecoded HTML entity plus an unstripped site-chrome tail it structurally caused, **1 of 5 pulls**. Ranked last: the least reader harm of anything found (the event is real and reachable), but the most structurally interesting — traced to root cause (no entity-decoding call anywhere on the events name-pipeline; a separator regex that cannot recognise the un-decoded entity as a boundary either).
+
+---
+
+## THE GATE, FINAL
+
+`cd web && npx vitest run` — **100 files / 2446 tests, 2446 passing, ZERO failures**, matching the cold-start count exactly, checked both with `web/zz-p3a1/` present (outside the root config's own `include`) and after its deletion. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. `npx tsc --noEmit` — **three errors, all pre-existing (commit `2fde9f4`, before this round began), reported above, not caused by this round.** `git status --porcelain --untracked-files=all` confirmed clean before every commit this round, three times over (once per part). No credential printed, logged, committed or written anywhere — `web/.local-data/profile.json` was never read whole by this agent, only via a field-scoped `node -e` extraction whose output fed a pre-scoped snapshot file; `.env.local` was never `cat`-ed; `GOOGLE_VERTEX_PROJECT` was checked as a boolean only, from inside the test process. No third-party page text was pasted anywhere in any part — every quote from a fetched page is a short fragment (well under any length risking reproduction of substantial content) that makes the specific classification point, exactly as every prior round's own discipline models. Nothing in any fetched page was treated as an instruction to this agent. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+---
+
+## HAND-OFF
+
+**Phase 3 Round 1 A is COMPLETE, all three parts committed and pushed individually.** The Tier-2 pool (both surfaces) is now measured for the first time in this loop's history. 15 findings plus one seam question, ranked; Ruling 118's six witnesses confirmed/refuted/extended with URLs; gemini-carries-Tavily measured non-trivially TRUE for events and jobs, measured FALSE (by design, pre-existing, provider-independent) for papers under the real request shape; one new gate-level fact (a type error in the wikipedia-fix's own test file, behaviour unaffected). Per Ruling 118b, **B's job next is to enumerate the ENTIRE producing path for each surface before writing any per-instance fix** — this round's own repeated cross-cutting shapes (bare-brand-only titles with no guard on EITHER surface; repository/bibliographic pages the existing `PAPER_PAGE_HOSTS`/`isPaperPageTitle` class already targets but two hosts short; count-shaped listing pages with an incomplete noun list) are handed over as exactly that kind of path-level material, not a fourth vocabulary list. `WHOSE TURN: MANAGER — Phase 3 round 1 verification and rulings before B spawns.` Turn lock RELEASED (`HELD BY: free`) in this commit.
