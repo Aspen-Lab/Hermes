@@ -348,10 +348,7 @@ STOPPED BECAUSE:  **PHASE 2 ROUND 2 A IS COMPLETE @ 2026-08-19 ~02:0x UTC.
                   detail, tables, and file:line citations in §4
                   `### Phase 2 Round 2 — Agent A (LLM-section visual census +
                   specimen-diverse BF1-BF3 confirmation)`.
-                  `WHOSE TURN: MANAGER — Phase 2 round 2 verification. If
-                  findings agreed: BF2 + V-P2-01/V-P2-02 → B next round, in
-                  that priority order; V-P2-03 → manager/user design call;
-                  BF1/BF3 need no further action.`
+                  `MANAGER verified @ 2026-08-19 ~15:2x UTC (gate 2425/2425; V-P2-01 read-confirmed at :1154 vs :1456), RULING 110 appended (SS4): BF1/BF3 DISSOLVE, BF2 CONFIRMED (two root causes), V-P2-03 resolved by doctrine (Peer's voice = sans, correct). WHOSE TURN: B — Phase 2 round 3 (THREE items: BF2's two programme-page causes; V-P2-01 serif restoration + Class-B sweep; V-P2-02 cn-trap fix)`
                   ---
                   Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 1 A (BASELINE) IS COMPLETE @ 2026-08-19
@@ -90138,4 +90135,16 @@ Of the 10 pooled events, exactly 1 (`thebatteryshow.com`) carried a roster with 
 ## HAND-OFF
 
 `WHOSE TURN: MANAGER — Phase 2 round 2 verification.` Per Ruling 109b's own charter this round MEASURED ONLY — nothing shipped. If the manager agrees with the findings above: BF2 (the mechanical `findProgrammePageUrl` gap) and V-P2-01/V-P2-02 (the two visual regressions) are B-facing design items for the next round, in that priority order; V-P2-03 is a design question for the manager or the user, not a B commission by default; BF1/BF3 need no further action (dissolved, correct behaviour). If the manager finds gaps in this round's own method (the 3+3 pull deviation, the single-specimen-per-BF sampling), that is exactly what independent verification is for. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Phase 2 Round 2 — MANAGER (verification; RULING 110 — three items to B, one finding resolved by doctrine)
+
+**Verification:** A changed zero product code (manager scope check — empty); tree clean; pushed. Gate re-run (full-capture): **100 files / 2425 tests, 2425 passing, ZERO failures.** **V-P2-01 verified by the manager's own read:** the Tier-0 path's blockquote (`jobs/[id]/page.tsx:1154`) carries `font-reading` under V26-J02's own recorded rule ("serif because it is the POSTING's prose"), and the Class-B enriched path (`:1456`) renders the SAME `visaEvidence` text without it — a real regression against the plate's established rule. The 3+3 window deviation (from 5+5, after a monolithic-call timeout) was disclosed and is accepted — bounded foreground recovery is the standing pattern.
+
+**RULING 110:**
+
+- **110a — BF1 and BF3 DISSOLVE as the baseline suspected:** on eligible specimens both populate correctly with fidelity verified against the live pages. Recorded; not findings. **BF2 is CONFIRMED as Phase 2's first real work item** with TWO distinct root causes in `findProgrammePageUrl`: (i) a PDF-gated lead-gen form fools the programme-page pick; (ii) the same-host-only filter structurally blocks a real agenda on a third-party ticketing subdomain. Both go to B.
+- **110b — V-P2-01 (the serif regression) and V-P2-02 (the documented `cn()` tailwind-merge trap firing on the roster reason paragraph, pre-existing) go to B** alongside BF2 — three items total for Phase 2 round 3.
+- **110c — V-P2-03 is RESOLVED BY DOCTRINE, not a defect:** V26-J02's own recorded distinction is source-prose (serif) vs Peer's voice (sans). Class-A LLM content IS Peer's voice, so sans is CORRECT; only direct quotes from the fetched page inside LLM sections would take `font-reading` (none exist today). Recorded so no future round re-litigates; if the user ever wants a different visual voice for LLM prose, that is a product decision, not a parity defect.
+- **110d — Routing: `WHOSE TURN: B — Phase 2 round 3`, THREE items: (1) BF2's two programme-page root causes** (mind: the same-host filter is a scope/safety boundary — B measures a bounded relaxation, e.g. known ticketing-platform allowance, against the one-site-at-a-time complaint and the fetch-scope doctrine); **(2) V-P2-01** (restore `font-reading` on the enriched blockquote; sweep every Class-B site for the same missed convention); **(3) V-P2-02** (design per the trap's own documentation at `report-section.tsx:142-158`).
 
