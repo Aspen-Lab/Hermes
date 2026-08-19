@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { classifyEventType, scoredEventToEvent } from "./mapper";
+import {
+  classifyEventType,
+  cleanEventDescription,
+  scoredEventToEvent,
+} from "./mapper";
 import type { ScoredEventItem } from "./types";
 
 const rankedEvent: ScoredEventItem = {
@@ -46,6 +50,28 @@ describe("scoredEventToEvent", () => {
       matchedTerms: undefined,
       locationFit: undefined,
     });
+  });
+
+  it("carries only explicitly tagged report evidence while preserving discovery text", () => {
+    const proved = scoredEventToEvent({
+      ...rankedEvent,
+      reportSummary: { text: "Source-owned summary.", authority: "source-record" },
+    });
+    expect(proved.shortDescription).toBe(rankedEvent.description);
+    expect(proved.reportSummary).toEqual({ text: "Source-owned summary.", authority: "source-record" });
+    expect(scoredEventToEvent(rankedEvent).reportSummary).toBeUndefined();
+  });
+
+  it("starts the measured description on a sentence and ends on a word boundary", () => {
+    const measuredDescription =
+      "than a quarter of a century. It will review the criteria necessary to achieve such extended life in commercially manufactured Li-ion cells. [...] This work presents an in situ diagnosis system of large capacity lithium-ion battery based on a sponge-type battery swelling sensor, w";
+    const description = cleanEventDescription(measuredDescription);
+
+    expect(description).toMatch(/^It will review/);
+    expect(description).not.toContain("[...]");
+    expect(description).not.toMatch(/\bw$/);
+    expect(description).toMatch(/\u2026$/);
+    expect(description.length).toBeLessThanOrEqual(280);
   });
 
   it("computes location fit when preferences are provided", () => {

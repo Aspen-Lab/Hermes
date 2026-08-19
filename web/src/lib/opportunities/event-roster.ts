@@ -25,6 +25,12 @@ const PEOPLE_HEADING_RE =
 const PROGRAMME_HEADING_RE = /\b(?:program(?:me)?|schedule|agenda)\b/i;
 const CTA_HEADING_RE =
   /\b(?:become|opportunit(?:y|ies)|packages?|prospectus|apply)\b/i;
+const PAGE_FURNITURE_ROLE_RE =
+  /\b(?:navigation|banner|contentinfo|complementary)\b/i;
+const PAGE_FURNITURE_NAME_RE =
+  /\b(?:nav|navigation|navbar|header|masthead|footer|sidebar|menu|breadcrumb)\b/i;
+const ROSTER_STOP_LABEL_RE =
+  /^(?:download\s+(?:the\s+)?brochure|companies?\s+[a-z]\s*(?:-|to)\s*[a-z]|executive\s+team|mailing\s+list|request\s+(?:more\s+)?information|privacy\s+policy|contact\s+us|terms(?:\s+(?:of\s+(?:use|service)|and\s+conditions))?|site\s*map)$/i;
 
 const ORGANISATION_CARD_RE =
   /\b(?:sponsor|exhibitor|partner|supporter|organi[sz]ation)\b.*\b(?:card|item|entry|profile)\b|\b(?:card|item|entry|profile)\b.*\b(?:sponsor|exhibitor|partner|supporter|organi[sz]ation)\b/i;
@@ -183,6 +189,38 @@ function findElementBody(
   return undefined;
 }
 
+function isPageFurniture(tag: string, attributes: string): boolean {
+  if (["nav", "header", "footer", "aside"].includes(tag)) return true;
+  const role = attributes.match(
+    /\brole\s*=\s*(?:"([^"]*)"|'([^']*)')/i,
+  );
+  if (PAGE_FURNITURE_ROLE_RE.test(role?.[1] ?? role?.[2] ?? "")) return true;
+  return PAGE_FURNITURE_NAME_RE.test(semanticValues(attributes).join(" "));
+}
+
+function withoutPageFurniture(html: string): string {
+  const ranges: Array<{ start: number; end: number }> = [];
+  const opening = /<(nav|header|footer|aside|div|section)\b([^>]*)>/gi;
+  for (let match = opening.exec(html); match; match = opening.exec(html)) {
+    const tag = match[1].toLowerCase();
+    const attributes = match[2] ?? "";
+    if (!isPageFurniture(tag, attributes)) continue;
+    const found = findElementBody(html, tag, opening.lastIndex);
+    if (!found) continue;
+    ranges.push({ start: match.index, end: found.end });
+    opening.lastIndex = found.end;
+  }
+  if (ranges.length === 0) return html;
+
+  let cursor = 0;
+  let visible = "";
+  for (const range of ranges) {
+    visible += `${html.slice(cursor, range.start)} `;
+    cursor = range.end;
+  }
+  return visible + html.slice(cursor);
+}
+
 function taggedElements(
   html: string,
   accepts: (tag: string, attributes: string, semantics: string[]) => boolean,
@@ -258,9 +296,39 @@ function normalizedKey(value: string): string {
     .trim();
 }
 
+function isRosterStopLabel(value: string): boolean {
+  return ROSTER_STOP_LABEL_RE.test(value.replace(/\s+/g, " ").trim());
+}
+
+// Sponsor walls are grids of logo images, and their alt text is very often the
+// asset filename. The North American Membrane Society page yielded a roster of
+// "NSFlogo.png", "gmbh.png", "Untitled.png", "generon logo.png" and a raw UUID
+// — none of which the earlier digit and punctuation checks reject. A name that
+// ends in an asset extension is a file reference, never an organisation.
+const ASSET_FILENAME_RE =
+  /\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico|tiff?|pdf)$/i;
+const OPAQUE_IDENTIFIER_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isAssetReference(value: string): boolean {
+  const name = value.replace(/\s+/g, " ").trim();
+  return (
+    ASSET_FILENAME_RE.test(name) ||
+    OPAQUE_IDENTIFIER_RE.test(name.replace(ASSET_FILENAME_RE, ""))
+  );
+}
+
 function looksLikePersonName(value: string): boolean {
   const name = value.replace(/\s+/g, " ").trim();
-  if (!name || name.length > 100 || /[@/:]|\d/.test(name)) return false;
+  if (
+    !name ||
+    name.length > 100 ||
+    /[@/:]|\d/.test(name) ||
+    isRosterStopLabel(name) ||
+    isAssetReference(name)
+  ) {
+    return false;
+  }
   if (
     /\b(?:university|institute|laborator(?:y|ies)|company|corporation|society|association|department|session|workshop)\b/i.test(
       name,
@@ -289,7 +357,15 @@ function looksLikePersonName(value: string): boolean {
 
 function looksLikeOrganisationName(value: string): boolean {
   const name = value.replace(/\s+/g, " ").trim();
-  if (!name || name.length > 140 || /https?:|@/.test(name)) return false;
+  if (
+    !name ||
+    name.length > 140 ||
+    /https?:|@/.test(name) ||
+    isRosterStopLabel(name) ||
+    isAssetReference(name)
+  ) {
+    return false;
+  }
   if (
     /^(?:logo|sponsor|sponsors|partner|partners|exhibitor|exhibitors|supporter|supporters|gold|silver|bronze|platinum|diamond)$/i.test(
       name,
@@ -429,7 +505,7 @@ function mergePeople(items: readonly EventPerson[]): EventPerson[] {
 }
 
 export function extractEventRoster(html: string): EventRosterDetails {
-  const visibleHtml = withoutHiddenContent(html);
+  const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));
   const sections = headingSections(visibleHtml);
   const organisations = mergeOrganisations(
     sections.organisations.flatMap((section) => {

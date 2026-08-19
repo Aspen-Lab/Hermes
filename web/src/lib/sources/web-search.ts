@@ -1,5 +1,11 @@
 import type { SourceAdapter, SourceQuery, RawItem } from "./types";
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
+import {
+  geminiSearchDeadline,
+  isGeminiSearchAvailable,
+  resolveWebSearchProvider,
+  searchGemini,
+} from "./gemini-search";
 
 interface BraveResult {
   title?: string;
@@ -35,7 +41,9 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   const braveKey = process.env.BRAVE_SEARCH_API_KEY;
   const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
   const tavilyKey = requestTavilyKey || process.env.TAVILY_API_KEY;
-  if (!braveKey && !tavilyKey) return [];
+  // RULING 75 — the key gate now admits the gemini provider too. Without this
+  // the paper surface returned `[]` here the moment Tavily was disabled.
+  if (!braveKey && !tavilyKey && !isGeminiSearchAvailable()) return [];
 
   const perQuery = Math.max(3, Math.ceil(Math.min(limit, 20) / searchQueries.length));
   const all: RawItem[] = [];
@@ -45,6 +53,7 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
     requestTavilyKeyPresent: Boolean(requestTavilyKey),
   });
   if (!provider) return [];
+  const deadlineAt = geminiSearchDeadline();
 
   // Fan the per-query fetches out concurrently (like the other source
   // adapters) instead of awaiting them one at a time. Promise.allSettled
@@ -54,6 +63,7 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   const settled = await Promise.allSettled(
     searchQueries.map((searchQuery) => {
       const paperQuery = `${searchQuery} paper OR preprint OR arxiv`;
+      if (provider === "gemini") return fetchGemini(paperQuery, limit, deadlineAt, query.webSearch);
       return provider === "brave"
         ? fetchBrave(paperQuery, perQuery, braveKey!)
         : fetchTavily(paperQuery, perQuery, tavilyKey, query.webSearch);
@@ -130,6 +140,31 @@ async function fetchTavily(
   }
 }
 
+/**
+ * RULING 75 — the gemini branch of the paper surface's fan-out.
+ *
+ * `searchGemini` returns the same `{title, url, snippet}` contract Tavily and
+ * Brave are normalised to, so the only work here is the surface's own mapping.
+ * `venue` is `"Web"` — the same string the Tavily branch uses, because a
+ * grounded row carries no publisher name either. Brave's `profile.name` has no
+ * analogue in grounding metadata and is NOT faked from the hostname.
+ */
+async function fetchGemini(
+  query: string,
+  limit: number,
+  deadlineAt: number,
+  options: SourceQuery["webSearch"],
+): Promise<RawItem[]> {
+  const results = await searchGemini(query, {
+    excludeDomains: options?.excludeDomains,
+    maxResults: limit,
+    deadlineAt,
+  });
+  return results
+    .map((result) => tavilyToRawItem({ title: result.title, url: result.url, content: result.snippet }))
+    .filter((item): item is RawItem => item !== null);
+}
+
 function braveToRawItem(result: BraveResult): RawItem | null {
   const title = cleanDisplayText(result.title);
   const url = cleanDisplayText(result.url);
@@ -171,6 +206,9 @@ function buildSearchQueries(query: SourceQuery): string[] {
   return Array.from(new Set(source.map((q) => q.trim()).filter(Boolean))).slice(0, 4);
 }
 
+// RULING 75 — the order now lives in `gemini-search.ts` so all three surfaces
+// share one implementation instead of three copies that can drift. With Vertex
+// absent this returns exactly what the previous local version returned.
 function resolveProvider(
   query: SourceQuery,
   availability: {
@@ -178,18 +216,11 @@ function resolveProvider(
     tavilyKeyPresent: boolean;
     requestTavilyKeyPresent: boolean;
   },
-): "brave" | "tavily" | null {
-  const preferred = query.webSearch?.provider ?? "auto";
-  if (preferred === "brave") {
-    return availability.braveKeyPresent ? "brave" : null;
-  }
-  if (preferred === "tavily") {
-    return availability.tavilyKeyPresent ? "tavily" : null;
-  }
-  if (availability.requestTavilyKeyPresent) return "tavily";
-  if (availability.braveKeyPresent) return "brave";
-  if (availability.tavilyKeyPresent) return "tavily";
-  return null;
+): "brave" | "tavily" | "gemini" | null {
+  return resolveWebSearchProvider(query.webSearch?.provider, {
+    geminiAvailable: isGeminiSearchAvailable(),
+    ...availability,
+  });
 }
 
 function uniqueById(items: RawItem[]): RawItem[] {

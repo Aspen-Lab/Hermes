@@ -95,7 +95,11 @@ export function adzunaJobToRawItem(job: AdzunaJob, country: string): RawJobItem 
     id: `adzuna:${routeSafeId(String(job.id))}`,
     source: "adzuna",
     title: stripHtml(title),
-    company: job.company?.display_name?.trim() || "Unknown company",
+    // B8-03 (round 8): was "|| Unknown company" - a fabricated placeholder
+    // Ruling 26 already rejected in jobweb.ts, copy-pasted here unaudited.
+    // `company` is already optional; absence is honest, a made-up string
+    // is not.
+    company: job.company?.display_name?.trim() || undefined,
     location,
     place:
       extractedPlace || countryName

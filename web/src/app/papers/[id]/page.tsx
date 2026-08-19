@@ -2,6 +2,7 @@
 
 import { use, useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Paper } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { formatAgeInWords, formatDayAge, formatMatchPct } from "@/lib/format";
@@ -41,6 +42,7 @@ import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { ScrambleText } from "@/components/scramble-text";
+import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
 import {
   streamPaperReport,
   type StageId,
@@ -554,6 +556,7 @@ export default function PaperDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const { id: rawId } = use(params);
   const id = (() => {
     try {
@@ -923,15 +926,15 @@ export default function PaperDetailPage({
     if (isFetchingById) {
       return (
         <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
-          <Link
-            href="/"
+          <BackToFeedLink
+            onBack={() => router.back()}
             className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
           >
             <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
               ←
             </span>
             Back
-          </Link>
+          </BackToFeedLink>
           <BriefingSkeleton />
         </PageContainer>
       );
@@ -939,9 +942,12 @@ export default function PaperDetailPage({
     return (
       <PageContainer width="narrow" className="px-6 py-20 animate-fade-in-up">
         <p className="text-text-muted italic">Paper not found.</p>
-        <Link href="/" className="text-link text-body mt-3 inline-block">
+        <BackToFeedLink
+          onBack={() => router.back()}
+          className="text-link text-body mt-3 inline-block"
+        >
           ← Back to feed
-        </Link>
+        </BackToFeedLink>
       </PageContainer>
     );
   }
@@ -1015,15 +1021,15 @@ export default function PaperDetailPage({
       <PageContainer width="detail" className="px-4 sm:px-6 py-10 sm:py-14">
 
         {/* ── Back ── */}
-        <Link
-          href="/"
+        <BackToFeedLink
+          onBack={() => router.back()}
           className="group inline-flex items-center gap-1 text-body-sm text-text-faint hover:text-link transition-all duration-200 ease-out active:scale-95"
         >
           <span className="transition-transform duration-200 ease-out group-hover:-translate-x-[2px]">
             ←
           </span>
           Back
-        </Link>
+        </BackToFeedLink>
 
         {/* ── Title & Authors ── */}
         <header
@@ -1138,65 +1144,6 @@ export default function PaperDetailPage({
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
             </svg>
             Deep report — read from {report.sourceKind === "pdf" ? "PDF" : "full-text HTML"}
-          </div>
-        )}
-
-        {/* ════════════════════════════════════════
-            SECTION 0 — WHY IT FITS YOU (lead section)
-            ════════════════════════════════════════ */}
-        <SectionTitle icon={<IconStar />} index={1}>
-          Why it fits you
-        </SectionTitle>
-
-        <div className="rounded-2xl bg-accent-dim px-5 py-4">
-          <p
-            className="text-caption font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
-          >
-            <IconBullseye />
-            Relevance
-          </p>
-          {showBuildup && activeBuildup ? (
-            <div role="status" aria-live="polite" aria-busy="true">
-              <p className="text-body-lg font-medium text-heading">
-                {activeBuildup.label}
-              </p>
-              <p className="mt-1 text-body text-text-muted leading-relaxed">
-                Peer is building the report from the paper and your profile.
-              </p>
-            </div>
-          ) : showReportSkeletons ? (
-            <div className="space-y-2.5" aria-busy="true">
-              <ShimmerBar width="90%" />
-              <ShimmerBar width="76%" />
-              <ShimmerBar width="82%" />
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
-                <li
-                  key={i}
-                  className="flex gap-2.5 text-body-lg text-text leading-[1.65] font-reading"
-                >
-                  <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
-                  <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Keywords that correlate to the user's profile */}
-        {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
-          paper.summaryExperimentKeywords.length > 0) && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {(report?.whyItFitsYou.keywords.length
-              ? report.whyItFitsYou.keywords
-              : paper.summaryExperimentKeywords
-            ).slice(0, 8).map((kw) => (
-              <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
-                {kw}
-              </Tag>
-            ))}
           </div>
         )}
 
@@ -1436,6 +1383,65 @@ export default function PaperDetailPage({
             </div>
           </>
         ))}
+
+        {/* ════════════════════════════════════════
+            SECTION 3 - WHY IT FITS YOU
+            ════════════════════════════════════════ */}
+        <SectionTitle icon={<IconStar />} index={7}>
+          Why it fits you
+        </SectionTitle>
+
+        <div className="rounded-2xl bg-accent-dim px-5 py-4">
+          <p
+            className="text-caption font-semibold uppercase tracking-[0.16em] text-accent mb-3 flex items-center gap-1.5"
+          >
+            <IconBullseye />
+            Relevance
+          </p>
+          {showBuildup && activeBuildup ? (
+            <div role="status" aria-live="polite" aria-busy="true">
+              <p className="text-body-lg font-medium text-heading">
+                {activeBuildup.label}
+              </p>
+              <p className="mt-1 text-body text-text-muted leading-relaxed">
+                Peer is building the report from the paper and your profile.
+              </p>
+            </div>
+          ) : showReportSkeletons ? (
+            <div className="space-y-2.5" aria-busy="true">
+              <ShimmerBar width="90%" />
+              <ShimmerBar width="76%" />
+              <ShimmerBar width="82%" />
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {(report?.whyItFitsYou.reasons ?? [paper.relevanceReason]).filter(Boolean).map((reason, i) => (
+                <li
+                  key={i}
+                  className="flex gap-2.5 text-body-lg text-text leading-[1.65] font-reading"
+                >
+                  <span className="mt-[5px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent/60" aria-hidden />
+                  <span>{highlightKeywords(reason, profile.researchTopics, profile.softTopics ?? [])}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Keywords that correlate to the user's profile */}
+        {!reportLoading && ((report?.whyItFitsYou.keywords.length ?? 0) > 0 ||
+          paper.summaryExperimentKeywords.length > 0) && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(report?.whyItFitsYou.keywords.length
+              ? report.whyItFitsYou.keywords
+              : paper.summaryExperimentKeywords
+            ).slice(0, 8).map((kw) => (
+              <Tag key={kw} href={`/?q=${encodeURIComponent(kw)}`}>
+                {kw}
+              </Tag>
+            ))}
+          </div>
+        )}
 
         {/* ── Quick signals ── */}
         <SectionTitle icon={<IconCheck strokeWidth={2} />} index={8}>

@@ -10,6 +10,13 @@ const proseFixture = readFileSync(
   new URL("./__fixtures__/prose-event-roster.html", import.meta.url),
   "utf8",
 );
+const aabcPageFurnitureFixture = readFileSync(
+  new URL(
+    "./__fixtures__/aabc-roster-page-furniture.html",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 describe("extractEventRoster", () => {
   it("returns every structured organisation and full speaker triple", () => {
@@ -89,8 +96,75 @@ describe("extractEventRoster", () => {
     ).toEqual({});
   });
 
+  it("drops conference navigation, footer, aside, and stop-list furniture", () => {
+    const roster = extractEventRoster(aabcPageFurnitureFixture);
+    const names = [
+      ...(roster.organisations ?? []).map(({ name }) => name),
+      ...(roster.people ?? []).map(({ name }) => name),
+    ];
+
+    expect(roster).toEqual({
+      organisations: [
+        { name: "Battery Power Online" },
+        { name: "Lithium Battery Power" },
+        { name: "Battery Safety" },
+      ],
+    });
+    for (const furniture of [
+      "Download Brochure",
+      "Companies A-K",
+      "Executive Team",
+      "Mailing List",
+      "Request Information",
+      "Privacy Policy",
+      "Contact Us",
+      "Terms",
+      "Sitemap",
+    ]) {
+      expect(names).not.toContain(furniture);
+    }
+  });
+
   it("returns an empty object for malformed or unrelated pages", () => {
     expect(extractEventRoster("")).toEqual({});
     expect(extractEventRoster("<h1>About the conference")).toEqual({});
+  });
+});
+
+describe("sponsor logo walls", () => {
+  // The North American Membrane Society page produced a roster made entirely of
+  // image filenames, because a logo grid's alt text is usually the asset name.
+  // None of the earlier checks rejected them: no digits, no @ or slash.
+  const logoWall = `
+    <main>
+      <h2>Sponsors</h2>
+      <div class="sponsor-grid">
+        <div class="sponsor-card"><strong>NSFlogo.png</strong></div>
+        <div class="sponsor-card"><strong>gmbh.png</strong></div>
+        <div class="sponsor-card"><strong>Untitled.png</strong></div>
+        <div class="sponsor-card"><strong>generon logo.png</strong></div>
+        <div class="sponsor-card"><strong>ChevronLogo.svg.png</strong></div>
+        <div class="sponsor-card"><strong>227ad51b-ab12-4d7f-989f-74e93304b1ea.png</strong></div>
+        <div class="sponsor-card"><strong>Air Products</strong></div>
+        <div class="sponsor-card"><strong>Eurodia Group</strong></div>
+      </div>
+    </main>`;
+
+  it("keeps the real sponsors and drops every asset filename", () => {
+    const names = (extractEventRoster(logoWall).organisations ?? []).map(
+      (org) => org.name,
+    );
+    expect(names).toContain("Air Products");
+    expect(names).toContain("Eurodia Group");
+    for (const filename of [
+      "NSFlogo.png",
+      "gmbh.png",
+      "Untitled.png",
+      "generon logo.png",
+      "ChevronLogo.svg.png",
+      "227ad51b-ab12-4d7f-989f-74e93304b1ea.png",
+    ]) {
+      expect(names).not.toContain(filename);
+    }
   });
 });

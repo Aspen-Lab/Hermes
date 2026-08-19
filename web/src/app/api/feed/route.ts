@@ -61,14 +61,26 @@ function parseSearchConnectors(input: unknown): SearchConnectors | undefined {
   const enabled =
     typeof tavilyRaw.enabled === "boolean" ? tavilyRaw.enabled : undefined;
   const apiKey = cleanOptionalString(tavilyRaw.apiKey);
-  if (enabled === undefined && apiKey === undefined) return undefined;
+  const tavily =
+    enabled === undefined && apiKey === undefined
+      ? undefined
+      : { enabled, apiKey };
 
-  return {
-    tavily: {
-      enabled,
-      apiKey,
-    },
-  };
+  // RULING 75 — the gemini connector carries no key (the credential is the
+  // server's own Vertex project) and only ever expresses an OPT-OUT. An absent
+  // connector means "use it when Vertex is present and Tavily is not enabled".
+  const gemini = parseGeminiConnector(maybeObject.gemini);
+
+  if (!tavily && !gemini) return undefined;
+  return { ...(tavily ? { tavily } : {}), ...(gemini ? { gemini } : {}) };
+}
+
+function parseGeminiConnector(
+  input: unknown,
+): { enabled: boolean } | undefined {
+  if (!input || typeof input !== "object") return undefined;
+  const enabled = (input as Record<string, unknown>).enabled;
+  return typeof enabled === "boolean" ? { enabled } : undefined;
 }
 
 function parseLlmOverride(input: unknown): ProviderOverrideConfig | undefined {

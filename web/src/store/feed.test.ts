@@ -180,7 +180,8 @@ describe("feed lane loading", () => {
       recentlyShownIds: {},
       pendingDismissal: null,
       paperFeedback: {},
-      oppFeedback: {},
+      eventFeedback: {},
+      jobFeedback: {},
     });
   });
 

@@ -84,7 +84,9 @@ export function JobCard({
         <h3 className="text-title-lg font-semibold leading-snug tracking-[-0.01em] text-heading">
           {job.roleTitle}
         </h3>
-        <p className="mt-1 text-body-sm text-text-muted">{job.companyOrLab}</p>
+        {job.companyOrLab && (
+          <p className="mt-1 text-body-sm text-text-muted">{job.companyOrLab}</p>
+        )}
       </div>
 
       <FactsStrip

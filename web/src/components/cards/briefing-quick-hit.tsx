@@ -5,6 +5,7 @@ import type { Paper, Event, Job } from "@/types";
 import { Relevance } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { useFeedStore } from "@/store/feed";
+import { isOnlineOnly } from "@/lib/opportunities/facets";
 
 export type QuickHitItem =
   | { kind: "paper"; data: Paper }
@@ -45,8 +46,11 @@ export function BriefingQuickHit({ item }: { item: QuickHitItem }) {
     item.kind === "paper"
       ? item.data.venue
       : item.kind === "event"
-        ? `${formatDate(item.data.date, "short")} · ${item.data.isOnline ? "Online" : item.data.location}`
-        : `${item.data.companyOrLab}${item.data.isRemote ? " · Remote" : ""}`;
+        ? // B20-01, render site 6 of 6.
+          `${formatDate(item.data.date, "short")} · ${isOnlineOnly(item.data) ? "Online" : item.data.location}`
+        : [item.data.companyOrLab, item.data.isRemote ? "Remote" : undefined]
+            .filter(Boolean)
+            .join(" · ");
 
   return (
     <Link

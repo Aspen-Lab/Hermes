@@ -148,6 +148,9 @@ export function ccfConfToRawItem(conf: CcfConf, now: number): RawEventItem | nul
       isOnline,
       deadline: futureDeadlines[0],
       description: conf.description?.trim() ?? title,
+      ...(conf.description?.trim()
+        ? { reportSummary: { text: conf.description.trim(), authority: "source-record" as const } }
+        : {}),
       url: edition.link?.trim() ?? "",
       rank: rank || undefined,
       tags: [conf.sub ?? "", ...(SUB_KEYWORDS[conf.sub ?? ""] ?? [])].filter(Boolean),

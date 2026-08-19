@@ -174,6 +174,22 @@ function compactAmount(value: number): string {
   return `${decimal.format(value / 1_000)}k`;
 }
 
+/**
+ * B2-02. Plate 02's SALARY tile value — "$95k – $120k": no period suffix (the
+ * tile's own sub-line already states "per year"), a spaced en dash, and the
+ * currency symbol repeated on the upper bound. This is deliberately a
+ * separate function rather than a flag on `formatSalary`: `formatSalary`'s
+ * compact, period-suffixed form ("$150k–230k / yr") is still what the feed
+ * and job cards want, and must not change.
+ */
+export function formatSalaryRange(salary: NormalizedSalary): string {
+  const symbol = CURRENCY_SYMBOLS[salary.currency.toUpperCase()];
+  const prefix = symbol ?? `${salary.currency.toUpperCase()} `;
+  return salary.min === salary.max
+    ? `${prefix}${compactAmount(salary.min)}`
+    : `${prefix}${compactAmount(salary.min)} – ${prefix}${compactAmount(salary.max)}`;
+}
+
 export function formatSalary(salary: NormalizedSalary): string {
   const symbol = CURRENCY_SYMBOLS[salary.currency.toUpperCase()];
   const prefix = symbol ?? `${salary.currency.toUpperCase()} `;

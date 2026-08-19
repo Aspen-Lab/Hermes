@@ -7,6 +7,48 @@ import { locationFit } from "@/lib/opportunities/shared";
 import type { ScoredEventItem } from "./types";
 
 const MAX_SIGNALS = 8;
+const MAX_DESCRIPTION_LENGTH = 280;
+
+export function cleanEventDescription(description: string): string {
+  let text = description
+    .replace(/\[(?:\.{3}|\u2026)\]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return "";
+
+  const firstLetter = text.match(/[A-Za-z]/)?.[0];
+  if (firstLetter && firstLetter === firstLetter.toLowerCase()) {
+    const nextSentence = text.match(/[.!?](?:["')\]]*)\s+(?=[A-Z0-9])/);
+    if (!nextSentence || nextSentence.index === undefined) return "";
+    text = text.slice(nextSentence.index + nextSentence[0].length).trim();
+  }
+
+  let needsEllipsis = false;
+  const clippedTail = text.match(/(?:,\s*|\s+)[A-Za-z]{1,2}$/);
+  if (clippedTail?.index !== undefined) {
+    text = text.slice(0, clippedTail.index).replace(/[,:;\s]+$/g, "");
+    needsEllipsis = true;
+  }
+
+  if (text.length > MAX_DESCRIPTION_LENGTH) {
+    const boundary = text
+      .slice(0, MAX_DESCRIPTION_LENGTH + 1)
+      .replace(/\s+\S*$/, "")
+      .replace(/[,:;\s]+$/g, "");
+    text = boundary || text.slice(0, MAX_DESCRIPTION_LENGTH).trimEnd();
+    needsEllipsis = true;
+  }
+
+  return `${text}${needsEllipsis ? "\u2026" : ""}`;
+}
+
+/** An owned summary must still be complete enough to state as a report fact. */
+export function cleanOwnedEventReportSummary(description: string): string | undefined {
+  const cleaned = cleanEventDescription(description);
+  return cleaned && !cleaned.endsWith("…") && /[.!?](?:["')\]]*)$/.test(cleaned)
+    ? cleaned
+    : undefined;
+}
 
 function eventKindIn(text: string): EventType | undefined {
   if (/\b(?:career|student|graduate|campus) (?:fair|expo)\b/i.test(text)) {
@@ -102,7 +144,9 @@ export function scoredEventToEvent(item: ScoredEventItem, locationPreferences?: 
     people: item.people,
     travelGrant: item.travelGrant,
     invitationLetter: item.invitationLetter,
-    shortDescription: item.description.slice(0, 280),
+    expectedSize: item.expectedSize,
+    shortDescription: cleanEventDescription(item.description),
+    reportSummary: item.reportSummary,
     relevanceReason: item.relevanceReason,
     facetPreferenceReason: item.facetPreferenceReason,
     linkOfficial: item.url,

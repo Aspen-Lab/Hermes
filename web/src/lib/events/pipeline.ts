@@ -5,6 +5,10 @@
 // available, with LLM-refined queries when a provider resolves.
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
+import {
+  GEMINI_SOURCE_TIMEOUT_MS,
+  geminiWebSearchOptions,
+} from "@/lib/sources/gemini-search";
 import { enrichEventCandidates } from "@/lib/opportunities/enrich";
 import {
   derivePoolCacheKey,
@@ -27,7 +31,7 @@ import {
   templateEventQueries,
 } from "@/lib/opportunities/query-gen";
 import { eventSources } from "./sources";
-import { dedupEvents } from "./dedup";
+import { dedupEvents, dedupScoredEvents, mergeContainedEventNames } from "./dedup";
 import { MIN_SCORE, scoreEvents } from "./scoring";
 import type { EventScoringProfile } from "./scoring";
 import { scoredEventToEvent } from "./mapper";
@@ -108,6 +112,26 @@ export async function scoreEventPoolCandidates(
     now,
     { applyFloor: false },
   );
+  // A34-01 part 2 (round 35 B §2.2, Ruling 96a; wired round 35 C per Ruling
+  // 97 after the withheld/POLICY interval): a cross-source duplicate (e.g.
+  // one row's title states a parseable date, another's doesn't) can still
+  // carry two different pre-enrichment `eventDedupKey`s that the FIRST dedup
+  // pass (`dedupEvents`, called on the raw pool before this function ever
+  // runs) cannot catch, because enrichment — which can recover the missing
+  // date — has not happened yet at that point. Running the second pass HERE,
+  // after stage 2 above, means every candidate it sees has ALREADY
+  // individually survived `scoreEvents`' own expiry + required-topic gate,
+  // so an expired sibling cannot structurally reach the merge — no
+  // hand-rolled expiry predicate is needed, and none is written.
+  scored = dedupScoredEvents(scored);
+  // Round 36 B §3.2 / Ruling 100 (A35-01, Ruling 99b's "genuinely different
+  // wording" duplicate class): a THIRD, additive pass at this same
+  // structurally-safe site — contiguous-substring name containment with a
+  // four-token floor and same-year gate, catching a cross-source pair whose
+  // titles are not token-set-equal (so the key-based passes above can never
+  // match them) but where one title's text is a genuine literal substring
+  // of the other's. See dedup.ts for the full construction.
+  scored = mergeContainedEventNames(scored);
   return scored;
 }
 
@@ -134,14 +158,32 @@ async function buildEventPool(
     topics: req.topics,
     queries,
     limit: req.perSourceLimit ?? DEFAULT_PER_SOURCE_LIMIT,
+    // RULING 75 — the Tavily branch is exactly as it shipped; the gemini branch
+    // is what turns this surface back on. Before it, `webSearch` was built ONLY
+    // under `tavily.enabled`, so with Tavily disabled the query carried no
+    // `webSearch`, `eventweb.enabled()` returned false, and the web surface was
+    // entirely dark.
     webSearch: req.searchConnectors?.tavily?.enabled
       ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
-      : undefined,
+      : geminiWebSearchOptions(req.searchConnectors),
   };
 
   const active = eventSources.filter((source) => source.enabled(query));
   const results = await Promise.allSettled(
-    active.map((source) => withSourceTimeout(source.id, source.fetch(query))),
+    active.map((source) =>
+      withSourceTimeout(
+        source.id,
+        source.fetch(query),
+        // RULING 76a — the 25 s budget is a PER-SOURCE override for the one
+        // source that needs it, never a global default change. A grounded call
+        // alone measured 10012 ms against the shipped 8000 ms wall, so at the
+        // default this surface provably returns nothing. Every other source
+        // keeps the 8 s it has always had.
+        source.id === "eventweb" && query.webSearch?.provider === "gemini"
+          ? GEMINI_SOURCE_TIMEOUT_MS
+          : undefined,
+      ),
+    ),
   );
 
   const fetched: Partial<Record<EventSourceId, number>> = {};

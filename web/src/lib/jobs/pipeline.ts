@@ -4,6 +4,10 @@
 // keyed sources and LLM query generation enable themselves via env/BYOK.
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
+import {
+  GEMINI_SOURCE_TIMEOUT_MS,
+  geminiWebSearchOptions,
+} from "@/lib/sources/gemini-search";
 import { enrichJobCandidates } from "@/lib/opportunities/enrich";
 import {
   derivePoolCacheKey,
@@ -27,6 +31,7 @@ import { dedupJobs } from "./dedup";
 import { MIN_SCORE, scoreJobs } from "./scoring";
 import type { JobScoringProfile } from "./scoring";
 import { scoredJobToJob } from "./mapper";
+import { withRenderedRemote } from "./remote-claim";
 import type {
   JobsFeedRequest,
   JobsFeedResponse,
@@ -132,15 +137,27 @@ async function buildJobPool(
     careerStage: req.careerStage,
     industryPreference: req.industryVsAcademia,
     limit: req.perSourceLimit ?? DEFAULT_PER_SOURCE_LIMIT,
+    // RULING 75 — see the matching comment in `events/pipeline.ts`. The Tavily
+    // branch is untouched; the gemini branch is what turns this surface back on.
     webSearch: req.searchConnectors?.tavily?.enabled
       ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
-      : undefined,
+      : geminiWebSearchOptions(req.searchConnectors),
     apiKeys: req.apiKeys,
   };
 
   const active = jobSources.filter((source) => source.enabled(query));
   const results = await Promise.allSettled(
-    active.map((source) => withSourceTimeout(source.id, source.fetch(query))),
+    active.map((source) =>
+      withSourceTimeout(
+        source.id,
+        source.fetch(query),
+        // RULING 76a — per-source override for `jobweb` on the gemini provider
+        // only. Never a global default change.
+        source.id === "jobweb" && query.webSearch?.provider === "gemini"
+          ? GEMINI_SOURCE_TIMEOUT_MS
+          : undefined,
+      ),
+    ),
   );
 
   const fetched: Partial<Record<JobSourceId, number>> = {};
@@ -169,7 +186,14 @@ async function buildJobPool(
 
   return {
     items,
-    facetCounts: countOpportunityFacets("jobs", items),
+    // RULING 68b (round 26 B priced, round 26 C landed). The server used to
+    // count facets from the RAW `isRemote`, while the client counted from the
+    // GATED one — so the same row was `online` here and `in-person` there, and
+    // `opportunityFormat` could not tell, because its parameter type carries no
+    // `source`. Counting through the shared predicate makes the two sides agree
+    // byte-identically. THE `Online` COUNT DROPS AND THAT IS THE FIX (Ruling
+    // 72c): today clicking `Online` returns a row that does not look online.
+    facetCounts: countOpportunityFacets("jobs", items.map(withRenderedRemote)),
     fetched,
     errors,
     beforeDedup,
@@ -230,7 +254,10 @@ export async function buildDailyJobPool(
 
   return {
     items: rescored,
-    facetCounts: countOpportunityFacets("jobs", rescored),
+    // RULING 68b. The cached-pool twin of the site above; both returns feed the
+    // same facet panel, so converting one and not the other would make a pool
+    // disagree with its own cache.
+    facetCounts: countOpportunityFacets("jobs", rescored.map(withRenderedRemote)),
     fetched: freshDiagnostics?.fetched ?? {},
     errors: freshDiagnostics?.errors ?? {},
     beforeDedup:
@@ -251,11 +278,23 @@ export async function runJobsPipeline(
   const topN = req.topN ?? DEFAULT_OPPORTUNITY_TOP_N;
   const pool = await buildDailyJobPool(req, options);
   const scored = pool.items;
-  const facetFiltered = filterOpportunitiesByFacets(
-    "jobs",
-    scored,
-    req.facets,
+  // RULING 68b — AND THE ONE TRAP IN THE ITEM, WHICH B NAMED BEFORE C WROTE
+  // IT. This call's return value is the row list that goes on to the scoring
+  // floor and top-N, so it MUST return the ORIGINAL objects. A naive
+  // `.map()` here would hand every downstream reader a rewritten `isRemote`
+  // and corrupt the three DELIBERATE raw readers A22-03(b) protects — a real
+  // regression wearing a tidy-up's clothes.
+  //
+  // So: filter on a PROJECTION, then re-select the originals by `id`. The
+  // projection is thrown away the moment the id set is built.
+  const facetFilteredIds = new Set(
+    filterOpportunitiesByFacets(
+      "jobs",
+      scored.map(withRenderedRemote),
+      req.facets,
+    ).map((item) => item.id),
   );
+  const facetFiltered = scored.filter((item) => facetFilteredIds.has(item.id));
   const beforeScoreFloor = facetFiltered.length;
   const aboveScoreFloor = hasActiveOpportunityFacets(req.facets)
     ? facetFiltered

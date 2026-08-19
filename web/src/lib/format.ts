@@ -16,10 +16,51 @@ const DAY_MS = 86_400_000;
 export function parseDate(iso: string | null | undefined): Date | null {
   if (!iso) return null;
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  const d = dateOnly
-    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+  if (dateOnly) {
+    const d = new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  // A23-02 / Ruling 62b. A MONTH-GRANULARITY claim ("2026-08"): the month is
+  // evidenced, the day is not. Built as a LOCAL date for the same reason the
+  // date-only branch above is — `new Date("2026-08")` is UTC midnight, which
+  // renders as the PREVIOUS MONTH in western timezones.
+  const monthOnly = MONTH_GRANULARITY_RE.exec(iso.trim());
+  const d = monthOnly
+    ? new Date(Number(monthOnly[1]), Number(monthOnly[2]) - 1, 1)
     : new Date(iso);
   return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * A23-02 / Ruling 62b. A date the page evidenced only to the MONTH — the shape
+ * a listing title's `(Aug 2026)` supports and nothing finer.
+ */
+export const MONTH_GRANULARITY_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
+
+export function isMonthGranularity(iso: string | null | undefined): boolean {
+  return Boolean(iso && MONTH_GRANULARITY_RE.test(iso.trim()));
+}
+
+/**
+ * A23-02 / Ruling 62b. THE LAST INSTANT AT WHICH A DATE CLAIM CAN STILL BE
+ * TRUE, which is what every expiry test actually wants.
+ *
+ * For a day-level date this is just `Date.parse`. For a month-granularity one
+ * it is the END of that month, and the difference is the whole point of the
+ * ruling: `Date.parse("2026-08")` is 1 August, so an expiry test reading it
+ * directly would retire an August event on the FIRST of August — expiring a
+ * live row wrongly early, which is worse than the late expiry it replaces.
+ * A month-granularity value expires ONLY when its month has fully passed.
+ */
+export function dateClaimEndMs(iso: string | null | undefined): number {
+  if (!iso) return NaN;
+  const trimmed = iso.trim();
+  const monthOnly = MONTH_GRANULARITY_RE.exec(trimmed);
+  if (monthOnly) {
+    // First instant of the NEXT month, minus one — local, matching parseDate.
+    return new Date(Number(monthOnly[1]), Number(monthOnly[2]), 1).getTime() - 1;
+  }
+  return Date.parse(trimmed);
 }
 
 export type DateStyle = "full" | "medium" | "short" | "monthYear";
@@ -31,14 +72,90 @@ const DATE_STYLE_OPTS: Record<DateStyle, Intl.DateTimeFormatOptions> = {
   monthYear: { month: "short", year: "numeric" },
 };
 
-/** Absolute date — "Sunday, July 19, 2026" / "Jul 19, 2026" / "Jul 19" / "Jul 2026". */
+/**
+ * Absolute date — "Sunday, July 19, 2026" / "Jul 19, 2026" / "Jul 19" / "Jul 2026".
+ *
+ * A24-02 / Ruling 62b. A MONTH-GRANULARITY claim ("2026-08") renders at the
+ * granularity the page evidenced, whatever style the caller asked for.
+ * `parseDate` deliberately materialises such a claim as the FIRST of the month
+ * — that anchor is what every consumer needs and it does not move — but
+ * PRINTING that anchor's day states a fact the page never made.
+ *
+ * Three properties this override must keep, each with its own test:
+ *  - it keys on `MONTH_GRANULARITY_RE`, the shipped predicate, NEVER on "the
+ *    date is the 1st" — a real event starting on 1 August still prints
+ *    "Aug 1, 2026";
+ *  - it is ONE-DIRECTIONAL, widening only: a day-level value asked for
+ *    "monthYear" still gets "monthYear", and no day-level value moves a byte;
+ *  - it FILLS nothing — an unparseable value still returns `null`.
+ *
+ * Before round 24 this branch lived privately inside the event card
+ * (`lib/events/card.ts`). Five other render sites did not have it and printed
+ * an invented day; the branch lives here now so there is exactly one copy,
+ * which is what this module's header has demanded from the start.
+ */
 export function formatDate(
   iso: string | null | undefined,
   style: DateStyle = "medium",
 ): string | null {
   const d = parseDate(iso);
   if (!d) return null;
-  return d.toLocaleDateString("en-US", DATE_STYLE_OPTS[style]);
+  const effective: DateStyle = isMonthGranularity(iso) ? "monthYear" : style;
+  return d.toLocaleDateString("en-US", DATE_STYLE_OPTS[effective]);
+}
+
+/**
+ * B-05. Compact date range for an event's DATES tile — "Mar 8 – 11, 2027",
+ * "Mar 30 – Apr 2, 2027", "Dec 30, 2026 – Jan 2, 2027". Collapses whatever the
+ * two ends share. The event report used to print the start in "full" style and
+ * the end in "medium", joined by a dot: "Monday, March 8, 2027 · Mar 11, 2027".
+ */
+export function formatDateRange(
+  startIso: string | null | undefined,
+  endIso: string | null | undefined,
+): string | null {
+  const start = parseDate(startIso);
+  if (!start) return null;
+  // A24-02 / Ruling 62b. A month-granularity start has no day to range FROM,
+  // so there is no range to print — it renders its own month and IGNORES the
+  // end. Both ends month-granularity in DIFFERENT months is deliberately NOT
+  // built: no live row has that shape, and inventing "Aug – Sep 2026" on no
+  // witness is an unearned clause. Such a row renders the START's month,
+  // which is true.
+  if (isMonthGranularity(startIso)) return formatDate(startIso);
+  const end = parseDate(endIso);
+  if (!end || end.getTime() <= start.getTime()) return formatDate(startIso);
+
+  const monthDay = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (start.getFullYear() !== end.getFullYear()) {
+    return `${formatDate(startIso)} – ${formatDate(endIso)}`;
+  }
+  const head =
+    start.getMonth() === end.getMonth()
+      ? `${monthDay(start)} – ${end.getDate()}`
+      : `${monthDay(start)} – ${monthDay(end)}`;
+  return `${head}, ${end.getFullYear()}`;
+}
+
+/** B-05. Weekday span beneath a date range — "Mon – Thu", or "Mon" for a day. */
+export function formatWeekdayRange(
+  startIso: string | null | undefined,
+  endIso: string | null | undefined,
+): string | null {
+  const start = parseDate(startIso);
+  if (!start) return null;
+  // A24-02 / Ruling 62b. A MONTH has no weekday. `null` is what the report
+  // tile's `detail: … ?? undefined` already consumes, so the sub-line
+  // DISAPPEARS rather than printing the weekday of a first-of-the-month
+  // anchor the page never stated. The card said "Aug 2026" while plate 03
+  // said "Aug 1, 2026 / Sat" — a day of month AND a day of week, both invented.
+  if (isMonthGranularity(startIso)) return null;
+  const weekday = (d: Date) =>
+    d.toLocaleDateString("en-US", { weekday: "short" });
+  const end = parseDate(endIso);
+  if (!end || end.getTime() <= start.getTime()) return weekday(start);
+  return `${weekday(start)} – ${weekday(end)}`;
 }
 
 /**
@@ -102,6 +219,27 @@ export function formatDayDistance(days: number): string {
   if (days <= -60 && days > -365) return `${Math.floor(Math.abs(days) / 30)} months ago`;
   if (days >= 365) return `in ${Math.floor(days / 365)} years`;
   return `${Math.floor(Math.abs(days) / 365)} years ago`;
+}
+
+/**
+ * B2-01. Report-only countdown vocabulary. Plate 02 and 03 always read
+ * "N days left" / "N days ago" — never bucketed into weeks or months, and
+ * never abbreviated to "Nd". `formatDayDistance` / `formatDayAge` above keep
+ * serving the feed, the papers view and job cards exactly as before; those
+ * surfaces have their own established relative-time vocabulary and are not
+ * part of this loop. These two exist only so the job and event reports stop
+ * needing to hand-roll a fourth vocabulary inline — the exact drift this
+ * module's header comment warns about.
+ */
+export function formatDaysLeft(days: number): string {
+  if (days <= 0) return "due today";
+  return `${days} day${days === 1 ? "" : "s"} left`;
+}
+
+/** B2-01. The past-tense half of the pair above — "8 days ago", not "8d ago". */
+export function formatDaysAgo(days: number): string {
+  if (days <= 0) return "today";
+  return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
 /**

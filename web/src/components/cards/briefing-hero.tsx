@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/format";
 import { PaperFigure } from "@/components/paper-figure";
 import { cardShell } from "@/components/ui/card-shell";
 import { cn } from "@/lib/cn";
+import { isOnlineOnly } from "@/lib/opportunities/facets";
 
 export type HeroItem =
   | { kind: "paper"; data: Paper }
@@ -110,7 +111,9 @@ export function BriefingHero({ item }: { item: HeroItem }) {
           <p
             className="text-body text-text-muted mt-3"
           >
-            {formatDate(item.data.date)} · {item.data.isOnline ? "Online" : item.data.location}
+            {/* B20-01, render site 5 of 6. */}
+            {formatDate(item.data.date)} ·{" "}
+            {isOnlineOnly(item.data) ? "Online" : item.data.location}
           </p>
           <div className="flex items-center flex-wrap gap-2 mt-4">
             <Tag>Event</Tag>
@@ -130,7 +133,9 @@ export function BriefingHero({ item }: { item: HeroItem }) {
           <p
             className="text-body text-text-muted mt-3"
           >
-            {item.data.companyOrLab} · {item.data.isRemote ? "Remote" : item.data.location}
+            {[item.data.companyOrLab, item.data.isRemote ? "Remote" : item.data.location]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
           <div className="flex items-center flex-wrap gap-2 mt-4">
             <Tag>Role</Tag>

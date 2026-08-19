@@ -15,11 +15,13 @@ import {
   scorePreferenceMatch,
 } from "@/lib/preferences/ledger";
 import {
+  isOwnerNameTopicCollision,
   locationFit,
   passesRequiredGate,
   toScoringItem,
 } from "@/lib/opportunities/shared";
 import { OPPORTUNITY_MIN_SCORE } from "@/lib/opportunities/facets";
+import { dateClaimEndMs } from "@/lib/format";
 import type { RawItem } from "@/lib/sources/types";
 import type { EventType, PreferenceLedger } from "@/types";
 import type { EventSourceId, RawEventItem, ScoredEventItem } from "./types";
@@ -98,6 +100,20 @@ export function scoreRank(rank: string | undefined): number {
   return 0.6;
 }
 
+/**
+ * B2-08 / Ruling 12. Plate 03's "Why Peer sent this to you" reads as one
+ * flowing sentence, same as the job report's twin. Ordinary sentence
+ * conjunction instead of a " · " join — one clause stands alone, two join
+ * with "and", three or more become an Oxford-comma list ending "and <last>".
+ * No trailing punctuation: the render layer appends the facet-preference
+ * clause and closes the sentence itself.
+ */
+function joinReasonClauses(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
 function reasonFor(item: RawEventItem, matched: string[], now: number): string {
   const parts: string[] = [];
   if (matched.length > 0) {
@@ -116,7 +132,7 @@ function reasonFor(item: RawEventItem, matched: string[], now: number): string {
       item.source === "eventweb" ? "Matched by web search" : "Meets your event filters",
     );
   }
-  const sentence = parts.join(" · ");
+  const sentence = joinReasonClauses(parts);
   return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
 
@@ -190,9 +206,13 @@ export function scoreEvents(
     // Skip events that are entirely over. Web items often carry no parseable
     // date (shown as "date TBA"); trust the dated-future search query rather
     // than dropping them.
-    const startMs = item.startDate ? Date.parse(item.startDate) : NaN;
+    // A23-02 / Ruling 62b. `dateClaimEndMs`, not `Date.parse`: a
+    // month-granularity start ("2026-08") is only over when its MONTH is over,
+    // and reading it as a day-level date would drop a live August row on
+    // 1 August. Identical to `Date.parse` for every day-level value.
+    const startMs = item.startDate ? dateClaimEndMs(item.startDate) : NaN;
     const deadlineMs = item.deadline ? Date.parse(item.deadline) : NaN;
-    const endMs = item.endDate ? Date.parse(item.endDate) : startMs;
+    const endMs = item.endDate ? dateClaimEndMs(item.endDate) : startMs;
     const hasParsedDate =
       Number.isFinite(endMs) || Number.isFinite(deadlineMs);
     const hasFuture =
@@ -207,6 +227,23 @@ export function scoreEvents(
     });
     const requiredAnywhere = scoreKeyword(facade, profile.topics);
     if (!passesRequiredGate(profile.topics, requiredScoped, requiredAnywhere)) {
+      continue;
+    }
+    // Ruling 57b (round 21, item 5): the gate opened only because the
+    // ORGANISER'S OWN NAME contains a topic word. Ships on this surface
+    // DESIGNED BUT ORGANICALLY UNWITNESSED — round 21 A's event-side count was
+    // 1 instance, 0 admitted, and no event pull has ever caught this shape.
+    // Round 22 A's line.
+    if (
+      isOwnerNameTopicCollision(
+        {
+          ownerName: item.organisations?.[0]?.name,
+          title: item.name,
+          description: item.description,
+        },
+        profile.topics,
+      )
+    ) {
       continue;
     }
 

@@ -11,6 +11,7 @@ import type {
 } from "@/types";
 import type { SearchConnectors } from "@/lib/feed/types";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
+import type { WebSearchProvider } from "@/lib/sources/types";
 
 export type EventSourceId =
   | "ccfddl"
@@ -40,7 +41,11 @@ export interface RawEventItem {
   people?: Event["people"];
   travelGrant?: Event["travelGrant"];
   invitationLetter?: Event["invitationLetter"];
+  /** B4-10. The SCALE tile's field — genuinely never populated before. */
+  expectedSize?: Event["expectedSize"];
   description: string;
+  /** Kept separate from discovery text: only this value may reach a report. */
+  reportSummary?: Event["reportSummary"];
   url: string;
   registrationUrl?: string;
   /** Venue prestige, e.g. "CCF A" / "CORE A*". */
@@ -54,6 +59,9 @@ export interface EventsQuery {
   queries: string[];
   limit: number;
   webSearch?: {
+    // RULING 75 — this surface never read a provider preference before; the
+    // ruling's "all three surfaces uniform" requires it to start.
+    provider?: WebSearchProvider;
     tavilyApiKey?: string;
   };
 }

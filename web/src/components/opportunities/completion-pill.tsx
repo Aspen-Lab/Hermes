@@ -5,11 +5,22 @@ import { cn } from "@/lib/cn";
 
 export function CompletionPill({
   label,
+  controlKey,
   checked,
   onChange,
   className,
 }: {
   label: string;
+  /**
+   * The stable name of the control, independent of what it says on screen.
+   *
+   * This used to be derived as `label.toLowerCase()`, which quietly coupled
+   * every test hook and stylesheet selector to display copy: relabelling
+   * "Applied" to "Mark as applied" silently renamed the hook to
+   * "mark as applied" and broke a passing test with no code near it changing.
+   * Copy is expected to change; the identity of the control is not.
+   */
+  controlKey?: string;
   checked: boolean;
   onChange: (next: boolean) => void;
   className?: string;
@@ -24,7 +35,7 @@ export function CompletionPill({
     <button
       type="button"
       aria-pressed={checked}
-      data-completion-control={label.toLowerCase()}
+      data-completion-control={controlKey ?? label.toLowerCase()}
       onClick={handleClick}
       className={cn(
         "inline-flex h-8 items-center gap-2 rounded-full px-3 text-meta font-medium",

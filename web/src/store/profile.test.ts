@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { StateStorage } from "zustand/middleware";
 import { defaultProfile, type UserProfile } from "@/types";
 import {
+  exportProfileDocument,
   migrateProfileStore,
+  parseExportedProfile,
+  PROFILE_EXPORT_FORMAT,
   promoteSearchInputs,
   useProfileStore,
 } from "./profile";
@@ -355,5 +358,62 @@ describe("work authorisation persistence", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("profile export and import", () => {
+  // A signed-out profile lives in one browser's localStorage and nowhere else.
+  // Clearing site data or opening a different browser loses it with no warning,
+  // so a local tester needs a way to carry settings across without an account.
+  it("round-trips a profile through an exported document", () => {
+    const original: UserProfile = {
+      ...defaultProfile,
+      displayName: "Peter",
+      researchTopics: ["LCO", "molten salt"],
+      careerStage: "PhD Year 3",
+    };
+
+    const document = exportProfileDocument(original);
+    expect(document.format).toBe(PROFILE_EXPORT_FORMAT);
+
+    const restored = parseExportedProfile(
+      JSON.parse(JSON.stringify(document)) as unknown,
+    );
+    expect(restored?.displayName).toBe("Peter");
+    expect(restored?.researchTopics).toEqual(["LCO", "molten salt"]);
+    expect(restored?.careerStage).toBe("PhD Year 3");
+  });
+
+  it("refuses anything that is not an exported profile", () => {
+    for (const bad of [
+      null,
+      undefined,
+      "not json",
+      42,
+      [],
+      {},
+      { format: "something/else", profile: { displayName: "X" } },
+      { format: PROFILE_EXPORT_FORMAT },
+      { format: PROFILE_EXPORT_FORMAT, profile: null },
+      { format: PROFILE_EXPORT_FORMAT, profile: [] },
+    ]) {
+      expect(parseExportedProfile(bad)).toBeNull();
+    }
+  });
+
+  it("ignores unknown keys rather than writing them into the profile", () => {
+    const restored = parseExportedProfile({
+      format: PROFILE_EXPORT_FORMAT,
+      profile: { displayName: "Peter", somethingInvented: "should not survive" },
+    });
+    expect(restored).toEqual({ displayName: "Peter" });
+  });
+
+  it("leaves the existing profile untouched when the import is malformed", () => {
+    const before = useProfileStore.getState().profile;
+    expect(useProfileStore.getState().importProfile({ nonsense: true })).toBe(
+      false,
+    );
+    expect(useProfileStore.getState().profile).toEqual(before);
   });
 });

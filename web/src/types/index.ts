@@ -84,6 +84,21 @@ export type EventType =
   | "expo"
   | "hackathon";
 
+// B2-09. Kept beside the union like `careerStages` / `industryPreferences`
+// below — the event report needs the actual runtime values to tell a real
+// EventType apart from prose that merely looks like one.
+export const eventTypes: EventType[] = [
+  "conference",
+  "workshop",
+  "seminar",
+  "meetup",
+  "job-fair",
+  "career-fair",
+  "summit",
+  "expo",
+  "hackathon",
+];
+
 export interface OpportunityPlace {
   city?: string;
   region?: string;
@@ -124,6 +139,15 @@ export interface EventPerson {
   name: string;
   role?: string;
   institution?: string;
+  /**
+   * B2-16 / Ruling 13. The short "why glance at this one" line —
+   * `EventOrg.descriptor`'s equivalent. Plate 03's examples ("2 papers in
+   * your feed", "Matches a topic you typed") are both Tier 0, computed
+   * locally in `events/[id]/page.tsx` alongside `relevance`; this field lets
+   * a future extraction source it directly the same way org descriptors are,
+   * without a render-layer change.
+   */
+  descriptor?: string;
   relevance?: string;
   speaking?: string;
 }
@@ -147,6 +171,11 @@ export interface Event {
   invitationLetter?: boolean;
   expectedSize?: number;
   shortDescription: string;
+  /** A source-owned summary that may be stated in an event report. */
+  reportSummary?: {
+    text: string;
+    authority: "source-record" | "page-owned";
+  };
   relevanceReason: string;
   /** Shown separately when weak facet history materially changed rank. */
   facetPreferenceReason?: string;
@@ -175,10 +204,19 @@ export type RoleKind =
 export interface Job {
   id: string;
   roleTitle: string;
-  companyOrLab: string;
+  companyOrLab?: string;
   location: string;
   place?: OpportunityPlace;
   isRemote: boolean;
+  /**
+   * B2-06. Plate 02 needs a three-state work mode (LOCATION tile's sub-line,
+   * subtitle's third segment); `isRemote` alone cannot express "hybrid".
+   * Additive beside `isRemote` — every existing reader of `isRemote` (feed,
+   * filters, scoring) is unchanged. Only ever set from a signal the posting
+   * actually gives (an explicit "hybrid" / "on-site" mention, or `isRemote`
+   * itself); `undefined` when the posting states neither, never a guess.
+   */
+  workMode?: "on-site" | "hybrid" | "remote";
   keyRequirements: string[];
   matchReason: string;
   /** Shown separately when weak facet history materially changed rank. */
@@ -187,8 +225,28 @@ export interface Job {
   postedDate?: string;
   applicationDeadline?: string;
   startDate?: string;
+  /**
+   * B3-06 / Ruling 20. Plate 02's STARTS tile sub-line ("flexible") --
+   * whether the posting itself says the start date can move. Additive;
+   * `undefined` unless the posting states it explicitly, never inferred
+   * from silence, exactly like `workMode` (B2-06).
+   */
+  startDateFlexible?: boolean;
   contractLength?: string;
   applicationMaterials?: string[];
+  /**
+   * V26-J06 / Ruling 74. Plate 02's `ELIGIBILITY` row — the posting's own
+   * clause about who may apply. Never derived from `keyRequirements` (Peer's
+   * own skills list) and never from LLM enrichment.
+   */
+  eligibility?: string;
+  /**
+   * V26-J06 / Ruling 74. Plate 02's `TEAM` row, NAME HALF ONLY. The plate
+   * also carries a headcount (`, 14 researchers`); no honest source for it
+   * exists on the no-LLM path, so its absence is an ACCEPTED, NAMED COST
+   * under Ruling 74 and must not be "fixed" by inventing a number.
+   */
+  team?: string;
   roleKind?: RoleKind;
   visa?: {
     state: "sponsors" | "not-stated" | "wont-sponsor";

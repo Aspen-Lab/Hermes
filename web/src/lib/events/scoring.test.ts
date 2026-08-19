@@ -8,11 +8,14 @@ import {
 } from "./scoring";
 import { dedupEvents } from "./dedup";
 import { ccfConfToRawItem, parseCcfDateRange, parseCcfDeadline } from "./sources/ccfddl";
+import { confsTechConfToRawItem } from "./sources/confstech";
+import { rsTalkToRawItem } from "./sources/researchseminars";
 import {
   DENY_HOSTS,
   DENY_PATH_RE,
   eventNameFrom,
   isEventIndexPage,
+  isEventIndexResult,
   isNewsArticleTitle,
   extractDeadline,
   extractEventDate,
@@ -67,6 +70,16 @@ describe("scoreRank", () => {
 });
 
 describe("scoreEvents", () => {
+  it("keeps report evidence out of discovery scoring and ranking", () => {
+    const base = event({ id: "evidence-invariant", description: "Battery research conference." });
+    const plain = scoreEvents([base], { topics: ["battery"] }, NOW);
+    const proved = scoreEvents([
+      { ...base, reportSummary: { text: "Source-owned summary.", authority: "source-record" } },
+    ], { topics: ["battery"] }, NOW);
+    expect(proved.map(({ id, score }) => ({ id, score }))).toEqual(
+      plain.map(({ id, score }) => ({ id, score })),
+    );
+  });
   it("drops fully-past events and keyword-gates the rest", () => {
     const past = event({ id: "a", startDate: iso(-30), deadline: undefined });
     const unrelated = event({
@@ -118,6 +131,25 @@ describe("scoreEvents", () => {
     expect(scored).toHaveLength(1);
     expect(scored[0].relevanceReason.toLowerCase()).toContain("battery");
     expect(scored[0].relevanceReason).not.toContain("Upcoming in your field");
+  });
+
+  it("joins multiple match reasons as one sentence, not dot-separated fragments", () => {
+    // B2-08 / Ruling 12. Plate 03's "Why Peer sent this to you" reads as one
+    // flowing sentence. Adding a rank onto a matched-topic event produces two
+    // clauses — enough to prove they join with "and", not the old " · ".
+    const ranked = event({
+      id: "eventweb:battery-ranked",
+      source: "eventweb",
+      name: "Solid-State Battery Summit",
+      startDate: "",
+      description: "An industry conference in Chicago.",
+      tags: [],
+      rank: "CCF-B",
+    });
+    const scored = scoreEvents([ranked], { topics: ["battery"] });
+    expect(scored).toHaveLength(1);
+    expect(scored[0].relevanceReason.toLowerCase()).toContain("focus and ccf-b");
+    expect(scored[0].relevanceReason).not.toContain(" · ");
   });
 
   it("requires two distinct full-text matches when title and summary do not match", () => {
@@ -248,6 +280,34 @@ describe("scoreEvents", () => {
         (item) => item.facetPreferenceReason === undefined,
       ),
     ).toBe(true);
+  });
+});
+
+describe("event source report-summary authority", () => {
+  it("tags only an explicit CCF description, never its title fallback", () => {
+    const common = { title: "MLConf", confs: [{ id: "mlconf-26", year: 2026, date: "October 1, 2026" }] };
+    expect(ccfConfToRawItem({ ...common, description: "Source record." }, NOW)?.reportSummary).toEqual(
+      { text: "Source record.", authority: "source-record" },
+    );
+    expect(ccfConfToRawItem(common, NOW)?.reportSummary).toBeUndefined();
+  });
+
+  it("tags a ResearchSeminars abstract but not its assembled speaker discovery text", () => {
+    const common = { title: "Battery talk", seminar_id: "series", seminar_ctr: 1, start_time: "2026-09-01 10:00:00", speaker: "A Speaker" };
+    expect(rsTalkToRawItem({ ...common, abstract: "Direct abstract." })?.reportSummary).toEqual(
+      { text: "Direct abstract.", authority: "source-record" },
+    );
+    expect(rsTalkToRawItem(common)?.reportSummary).toBeUndefined();
+  });
+
+  it("keeps a confs.tech synthesized description untagged", () => {
+    const item = confsTechConfToRawItem(
+      { name: "Battery Summit", url: "https://example.test", startDate: "2026-10-01" },
+      "battery",
+      NOW,
+    );
+    expect(item?.description).toContain("battery conference");
+    expect(item?.reportSummary).toBeUndefined();
   });
 });
 
@@ -514,8 +574,17 @@ describe("event name extraction", () => {
     );
   });
 
-  it("falls back to the raw title when nothing better exists", () => {
-    expect(eventNameFrom("Home", "Nothing useful here")).toBe("Home");
+  // B9-04 Fix 1 (round 9, Ruling 32): this used to assert "Home" — the same
+  // bare title `isGenericPageTitle` had already rejected as chrome a few
+  // lines earlier inside `bestEventTitleSegment`, reinstated verbatim by
+  // the old `segments[0] ?? title.trim()` absolute last resort. Found while
+  // landing B9-04 Fix 1 — not in B's own tests-at-risk list, which named
+  // only `eventweb.test.ts` — the same defect shape reached from a second
+  // test file exercising the same line. With no URL to read an honest host
+  // from, the new last resort is a literal placeholder, never the same
+  // rejected string looked at twice.
+  it("falls back to a literal placeholder when the title is chrome and the snippet has nothing usable", () => {
+    expect(eventNameFrom("Home", "Nothing useful here")).toBe("Untitled event");
   });
 });
 
@@ -539,6 +608,91 @@ describe("event index and org pages", () => {
     "EMEA2026: Workshop on Ion Exchange Membranes for Energy Applications",
   ])("keeps a real event: %s", (title) => {
     expect(isEventIndexPage(title)).toBe(false);
+  });
+
+  // A24-01 / RULING 64b. THE SINGULAR ARM OF THE BROWSE ALTERNATIVE IS GONE.
+  // "All-solid-state battery" is a core term in this corpus — the pool's own
+  // headline row is a Solid-State Battery Summit — so a single event named
+  // `All Solid State Battery Workshop` was being dropped as if it were an
+  // index. The HYPHENATED spelling escaped only because a hyphen is not `\s`.
+  it("keeps a single event whose name starts with a browse word and ends singular", () => {
+    // Before the narrowing this was `true` — a real event dropped by name.
+    expect(isEventIndexPage("All Solid State Battery Workshop")).toBe(false);
+    // Already kept, by accident of spelling. Now kept for a reason.
+    expect(isEventIndexPage("All-Solid-State Battery Workshop")).toBe(false);
+    // The PLURAL still drops. An index lists many.
+    expect(isEventIndexPage("Upcoming Energy Storage Conferences")).toBe(true);
+    expect(isEventIndexPage("All Battery Workshops")).toBe(true);
+    expect(isEventIndexPage("Browse Battery Events")).toBe(true);
+  });
+});
+
+// A24-01. ROW ADMISSION vs the raw predicate. `isEventIndexPage`'s own contract
+// above is UNCHANGED and its table stays green; `isEventIndexResult` is what
+// `webResultToRawEventItem` calls, and it feeds the title's FIRST SEGMENT in as
+// a second derived input.
+//
+// This is a STRING table on purpose. A24-01 is INTERMITTENT — the provider's
+// title for `cambridgeenertech.com/cet/conferences` varies between windows, and
+// round 24 B's own five live pulls could not reproduce the pool row at all. The
+// mechanism is deterministic even when the row is not, so the regression test
+// replays the recorded STRING and never a live pull.
+describe("A24-01: index-page admission reads the first title segment", () => {
+  it.each([
+    // The row A24-01 was filed on, in the exact string A's window recorded.
+    "Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech",
+    // Same page, same URL, the title B's five pulls saw. Already dropped by the
+    // shipped guard — this arm must not be given up.
+    "Upcoming Energy Storage Conferences",
+    // The ONE new drop across 150 live offered titles: a genuine events hub.
+    "Events - Gateway for Accelerated Innovation in Nuclear",
+  ])("drops the index page: %s", (title) => {
+    expect(isEventIndexResult(title)).toBe(true);
+  });
+
+  it.each([
+    // THE CONTROL THAT KILLED THE `any segment` VARIANT: a real event whose
+    // site chrome names the organiser's own events hub. `any segment` drops it.
+    "Battery Safety Summit 2026 | Upcoming Conferences",
+    // A real, live, correctly-kept pool row whose FIRST segment is the bare
+    // generic noun "Conference".
+    "Conference Overview | The Battery Show South",
+    // Sibling sessions, tracks and co-located workshops on one event's own page
+    // — the class the brief named. None of them moves.
+    "Sessions and Tracks | Advanced Battery Conference 2026",
+    "Programme | 32nd SolarPACES Conference",
+    "Co-located Workshops | The Battery Show North America",
+    "Battery Workshops 2026",
+    "Upcoming Battery Technology Conference 2026 | Chicago, IL",
+    "All-Solid-State Battery Symposium 2026 | Tokyo",
+    "26th Advanced Automotive Battery Conference (AABC) | December 7-10, 2026 | San Diego, CA",
+    "Battery Safety Summit | August 12-13, 2026 | Chicago, IL",
+    "Solid-State Battery Summit | August 11-12, 2026",
+    "Turkey Battery Technologies Summit 2026 – October 21-22, 2026",
+    "Solid-State Battery Summit (Aug 2026), Chicago USA",
+    // Ruling 64b's own witness, and the chrome-tailed form the first-segment
+    // input would otherwise have EXTENDED the old over-reach to.
+    "All Solid State Battery Workshop",
+    "All Solid State Battery Workshop | Tokyo 2026",
+  ])("admits the real event page: %s", (title) => {
+    expect(isEventIndexResult(title)).toBe(false);
+  });
+
+  it("leaves the raw predicate's own contract alone", () => {
+    // The first-segment input lives at ROW ADMISSION only. `isChromeSegment`
+    // still asks `isEventIndexPage` about whole segments, so nothing widens in
+    // name selection — the blast radius round 24 B priced.
+    expect(
+      isEventIndexPage("Upcoming Energy Storage Conferences | Provided by Cambridge EnerTech"),
+    ).toBe(false);
+    expect(isEventIndexPage("Events - Gateway for Accelerated Innovation in Nuclear")).toBe(false);
+  });
+
+  it("keeps dropping SIPS-shaped org tails, which alternative 4 owns unanchored", () => {
+    // Pre-existing and NOT touched here. Recorded because `flogen.org` renders
+    // `SIPS 2026` as a correct, kept pool row, and a title of this shape loses
+    // it — a cost that exists before and after this item, unchanged.
+    expect(isEventIndexResult("SIPS 2026 - Department of Materials")).toBe(true);
   });
 });
 
@@ -593,5 +747,125 @@ describe("commerce and news pages", () => {
     "International Meeting on Lithium Batteries",
   ])("keeps a real event title: %s", (title) => {
     expect(isNewsArticleTitle(title)).toBe(false);
+  });
+
+  // B12-03 gap B (round 12): adt.media rendered a conference name for a page
+  // that is an ARTICLE ABOUT the conference. B established the filter's
+  // vocabulary is not missing anything — its INPUT was wrong. It only ever saw
+  // the search provider's title, and on this page the tell is in the <h1> and
+  // the URL, not the title. So the URL path became a second input.
+  describe("news article detected from the URL path (B12-03 gap B)", () => {
+    // adt.media's live repro. The title alone carries no tell at all.
+    it("drops an article whose path begins with a listicle headline", () => {
+      const title = "Automotive Battery Conference 2026: key topics and speakers";
+      expect(isNewsArticleTitle(title)).toBe(false);
+      expect(
+        isNewsArticleTitle(
+          title,
+          "https://adt.media/what-to-expect-at-the-automotive-battery-conference-2026",
+        ),
+      ).toBe(true);
+    });
+
+    // THE must-survive case, and the reason the path check uses ONLY the
+    // anchored headline forms and never NEWS_TITLE_RE whole. That regex's last
+    // alternative (`news|press release|blog post|newsletter`) is UNANCHORED, so
+    // on a path it matches "news call for abstracts" — which is
+    // battery2030.eu's own URL, the other host on this very item. A page under
+    // /news/ on an organiser's own site is routinely a real announcement.
+    it("keeps a real event page that merely lives under a /news/ path", () => {
+      expect(
+        isNewsArticleTitle(
+          "Call for Abstracts for the Battery 2030+ Annual Conference 2026",
+          "https://battery2030.eu/news/call-for-abstracts",
+        ),
+      ).toBe(false);
+    });
+
+    // The path check must not fire on an ordinary event path either.
+    it("keeps a real event page whose path is its own name", () => {
+      expect(
+        isNewsArticleTitle(
+          "Advanced Battery Power Conference 2026",
+          "https://example.org/events/advanced-battery-power-conference-2026",
+        ),
+      ).toBe(false);
+    });
+
+    // Every existing caller passes one argument; the second is optional and a
+    // malformed URL must be treated as "no path", not as a match.
+    it("behaves exactly as before with no URL, or with a malformed one", () => {
+      expect(isNewsArticleTitle("Solid-State Battery Summit")).toBe(false);
+      expect(isNewsArticleTitle("Solid-State Battery Summit", "not a url")).toBe(false);
+      expect(isNewsArticleTitle("The Year Ahead: Key Events at the IAEA in 2026", "not a url")).toBe(
+        true,
+      );
+    });
+  });
+});
+
+// RULING 57b (round 21, item 5): THE WIRING, ASSERTED END TO END ON THE EVENT
+// SURFACE. Ruling 57b requires the guard on BOTH surfaces. It ships here
+// DESIGNED BUT ORGANICALLY UNWITNESSED: round 21 A's event-side count was 1
+// instance / 0 admitted, and no event pull has ever caught this shape, so
+// these rows are CONSTRUCTED and are labelled as such rather than presented as
+// evidence the defect occurs on events. Round 22 A's line.
+describe("owner-name topic collisions leave the event pool (Ruling 57b)", () => {
+  const PE_BODY =
+    "Battery is a private equity and venture capital firm with over 40 years of heritage investing in category-leading technology companies.";
+
+  it("drops an event whose ORGANISER's name is the only reason it matched", () => {
+    const collision = event({
+      id: "pe",
+      name: "2027 Summer Investment Showcase",
+      organisations: [{ name: "Battery Ventures" }],
+      description: PE_BODY,
+      tags: [],
+    });
+    const real = event({
+      id: "real",
+      name: "International Battery Materials Symposium",
+      description: "Three days on battery cathode chemistry.",
+      tags: [],
+    });
+    const scored = scoreEvents([collision, real], { topics: ["battery"] }, NOW);
+    expect(scored.map((s) => s.id)).toEqual(["real"]);
+  });
+
+  it("keeps an on-topic organiser whose name legitimately contains the topic", () => {
+    const operating = event({
+      id: "op",
+      name: "Water Treatment Technical Day",
+      organisations: [{ name: "Ion Exchange Global" }],
+      description: "A day on ion exchange resin manufacturing.",
+      tags: [],
+    });
+    const scored = scoreEvents([operating], { topics: ["ion exchange"] }, NOW);
+    expect(scored.map((s) => s.id)).toEqual(["op"]);
+  });
+});
+
+// A23-02 / Ruling 62b. The scoring pass's own expiry gate must read a
+// month-granularity start at MONTH granularity. Reading `2026-08` as a
+// day-level date puts it at 1 August, so a live August row would be dropped
+// from the pool on the first of its own month — expiring it wrongly EARLY,
+// which is the failure the ruling names.
+describe("month-granularity expiry in the scoring pass", () => {
+  it("keeps a month-granularity row mid-month", () => {
+    const row = event({ id: "m", startDate: "2026-08", endDate: undefined, deadline: undefined });
+    const scored = scoreEvents([row], { topics: ["machine learning"] }, Date.parse("2026-08-15T00:00:00Z"));
+    expect(scored.map((s) => s.id)).toEqual(["m"]);
+  });
+
+  it("keeps it on the first of the month", () => {
+    const row = event({ id: "m", startDate: "2026-08", endDate: undefined, deadline: undefined });
+    const scored = scoreEvents([row], { topics: ["machine learning"] }, Date.parse("2026-08-01T12:00:00Z"));
+    expect(scored.map((s) => s.id)).toEqual(["m"]);
+  });
+
+  it("drops it once the month has fully passed", () => {
+    const row = event({ id: "m", startDate: "2026-08", endDate: undefined, deadline: undefined });
+    const scored = scoreEvents([row], { topics: ["machine learning"] }, Date.parse("2026-09-02T00:00:00Z"));
+    expect(scored).toHaveLength(0);
   });
 });

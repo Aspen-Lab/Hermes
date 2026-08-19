@@ -1,6 +1,8 @@
 import type { EventFee } from "@/types";
 import { normalizeJobDate } from "./job-details";
-import { stripHtml } from "./shared";
+import { looksLikeEventTitle } from "@/lib/events/sources/eventweb";
+import { extractPageText } from "./page-text";
+import { DATE_TOKEN_PATTERN, stripHtml } from "./shared";
 
 export interface EventPageDetails {
   registrationDeadline?: string;
@@ -8,13 +10,33 @@ export interface EventPageDetails {
   activities?: string[];
   travelGrant?: string;
   invitationLetter?: boolean;
+  expectedSize?: number;
 }
 
-const MONTH_PATTERN =
-  "(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)";
-const DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
-const DATE_TOKEN_PATTERN =
-  `(?:\\d{4}-\\d{2}-\\d{2}|${MONTH_PATTERN}\\.?\\s+${DAY_PATTERN}(?:,?\\s+\\d{4})?|${DAY_PATTERN}\\s+${MONTH_PATTERN}\\.?(?:,?\\s+\\d{4})?)`;
+const DECLARED_EVENT_NAME_RE =
+  /(?:^|\bthe\s+)([\p{L}\p{N}][\p{L}\p{N}&'’().,:/\-\s]{0,140}?\b(?:conference|symposium|workshop|congress|summit|meeting|forum|colloquium)\b)\s+(?:will\s+(?:take\s+place|be\s+held|convene)|takes\s+place|is\s+scheduled\s+to\s+be\s+held)\b/iu;
+
+/**
+ * Returns a page-body event identity only when one current-event declaration
+ * owns it. Headings and metadata are deliberately not evidence here.
+ */
+export function extractDeclaredEventName(html: string): string | undefined {
+  const text = extractPageText(html) ?? stripHtml(html);
+  const candidates = new Map<string, string>();
+  for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
+    const raw = sentence.match(DECLARED_EVENT_NAME_RE)?.[1];
+    if (!raw) continue;
+    const candidate = raw.replace(/^the\s+/i, "").replace(/\s+/g, " ").trim();
+    if (!looksLikeEventTitle(candidate) || candidate.length > 160) continue;
+    candidates.set(candidate.toLocaleLowerCase(), candidate);
+  }
+  return candidates.size === 1 ? [...candidates.values()][0] : undefined;
+}
+
+// MONTH_PATTERN/DAY_PATTERN/DATE_TOKEN_PATTERN moved to shared.ts this round
+// (B9-04) so eventweb.ts can reuse DATE_TOKEN_PATTERN too, without a
+// circular import between this file and eventweb.ts (this file already
+// imports looksLikeEventTitle FROM eventweb.ts). Values unchanged.
 const REGISTRATION_LABEL_PATTERN =
   "(?:registration\\s+deadline|registrations?\\s+close(?:s)?|register\\s+by|last\\s+day\\s+to\\s+register)";
 
@@ -30,25 +52,95 @@ const ACTIVITY_PATTERNS: readonly {
 }[] = [
   { label: "poster session", pattern: /\bposter\s+sessions?\b/gi },
   { label: "workshop", pattern: /\bworkshops?\b/gi },
-  { label: "tutorial", pattern: /\btutorials?\b/gi },
+  {
+    label: "tutorial",
+    pattern: /\b(?:tutorials|tutorial\s+sessions?)\b/gi,
+  },
   {
     label: "panel",
-    pattern: /\bpanels?(?:\s+(?:discussion|session))?\b/gi,
-    rejectContext: /\b(?:data|dataset|regression|survey)\s+panel\b/i,
+    pattern:
+      /\b(?:panel\s+(?:discussions?|sessions?)|expert\s+panels?)\b|(?:^|\n)\s*panels\s*(?=\n|$)/gi,
+    rejectContext:
+      /\b(?:(?:data|dataset|regression|survey|solar|control)\s+panels?|flat[- ]panels?(?:\s+displays?)?|panels?\s+data)\b/i,
   },
   { label: "career fair", pattern: /\bcareer\s+fairs?\b/gi },
   { label: "job fair", pattern: /\bjob\s+fairs?\b/gi },
-  { label: "exhibition", pattern: /\bexhibitions?\b/gi },
-  { label: "networking", pattern: /\bnetworking\b/gi },
+  {
+    label: "exhibition",
+    pattern: /\b(?:exhibitions?|exhibitors?|exhibit\s+halls?)\b/gi,
+  },
+  {
+    label: "networking",
+    pattern:
+      /\bnetworking\s+(?:events?|sessions?|breaks?|lunch(?:es)?|receptions?|opportunit(?:y|ies))\b/gi,
+  },
   { label: "hackathon", pattern: /\bhackathons?\b/gi },
   {
-    label: "mixer",
-    pattern: /\bmixers?\b/gi,
-    rejectContext: /\b(?:frequency|circuit|signal|audio|rf)\s+mixers?\b/i,
+    label: "symposium",
+    pattern:
+      /(?:^|\n)\s*(?:symposiums|symposia)\s*(?=\n|$)|\b(?:symposium|symposia)\s+sessions?\b|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\b(?:symposiums?|symposia)\b/gi,
   },
-  { label: "symposium", pattern: /\b(?:symposiums?|symposia)\b/gi },
   { label: "keynote", pattern: /\bkeynotes?\b/gi },
+  { label: "plenary", pattern: /\bplenar(?:y|ies)\b/gi },
+  {
+    label: "awards ceremony",
+    pattern: /\bawards?\s+ceremon(?:y|ies)\b/gi,
+  },
+  {
+    label: "competition",
+    // The bare word can never be matched: "competition between phases" and
+    // "market competition" are ordinary research prose. Match it as a heading,
+    // near a programme word, or in one of the named contest forms the 53-site
+    // study actually found — a student paper competition in running text was
+    // being missed entirely.
+    pattern:
+      /(?:^|\n)\s*competitions?\s*(?=\n|$)|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\bcompetitions?\b|\bcompetitions?\s+(?:sessions?|tracks?)\b|\b(?:student|paper|poster|design|robot|robotics|startup|start-up|pitch|programming|benchmark|innovation)\s+(?:\w+\s+)?competitions?\b/gi,
+  },
+  { label: "short course", pattern: /\bshort\s+courses?\b/gi },
+  { label: "demo session", pattern: /\bdemos?\b/gi },
+  {
+    label: "doctoral consortium",
+    pattern: /\bdoctoral\s+consorti(?:um|a)\b/gi,
+  },
+  {
+    label: "banquet",
+    pattern: /\b(?:banquets?|gala\s+dinners?)\b/gi,
+  },
+  { label: "social event", pattern: /\bsocial\s+events?\b/gi },
+  {
+    label: "lightning talk",
+    pattern: /\b(?:lightning|flash|short)\s+talks?\b/gi,
+  },
+  {
+    label: "field trip",
+    pattern:
+      /\b(?:field\s+trips?|technical\s+tours?)\b|(?:^|\n)\s*excursions?\s*(?=\n|$)|\b(?:programme|program|schedule|agenda)\b[^\n.!?]{0,120}\bexcursions?\b/gi,
+  },
+  {
+    label: "school",
+    pattern: /\b(?:summer|winter|methods|doctoral)\s+schools?\b/gi,
+  },
+  { label: "town hall", pattern: /\btown(?:\s+)?halls?\b/gi },
+  {
+    label: "meet the expert",
+    pattern: /\bmeet\s+the\s+experts?\b/gi,
+  },
+  {
+    label: "hands-on session",
+    pattern: /\bhands-on\s+sessions?\b/gi,
+  },
 ];
+
+/**
+ * B2-09. The event report used to guess whether an activity string was
+ * vocabulary or prose from its shape (short, lowercase, few words) — a test
+ * ordinary prose passes just as easily as a real label does. The report needs
+ * the actual fixed list to tell the two apart, so it is exported rather than
+ * re-derived.
+ */
+export const ACTIVITY_LABELS: readonly string[] = ACTIVITY_PATTERNS.map(
+  (activity) => activity.label,
+);
 
 function textSegments(html: string): string[] {
   return stripHtml(html)
@@ -256,7 +348,10 @@ function extractActivities(text: string): string[] {
     const pattern = new RegExp(activity.pattern.source, activity.pattern.flags);
     for (const match of text.matchAll(pattern)) {
       const index = match.index ?? Number.MAX_SAFE_INTEGER;
-      const context = text.slice(Math.max(0, index - 24), index + match[0].length);
+      const context = text.slice(
+        Math.max(0, index - 24),
+        index + match[0].length + 24,
+      );
       if (activity.rejectContext?.test(context)) continue;
       matches.push({ label: activity.label, index });
       break;
@@ -306,6 +401,87 @@ function extractInvitationLetter(
   return undefined;
 }
 
+/**
+ * B4-10. `event.expectedSize` (the SCALE tile) was declared on the type
+ * with no producer anywhere — genuinely never attempted, not a half-built
+ * mechanism. Three phrasings, in the same spirit as
+ * `extractTravelGrant`/`extractRegistrationDeadline`: a labelled figure
+ * ("expected attendance: 2,400"), a bare count next to the word itself
+ * ("2,400 attendees"), or a past edition's own figure ("previous edition
+ * drew 1,800 attendees") — parsed to a number, never guessed when the page
+ * is silent about size.
+ */
+const EXPECTED_SIZE_LABEL_RE =
+  /\b(?:expected|anticipated)\s+(?:attendance|turnout|audience)\b[^.\n]{0,20}?(\d[\d,]{2,7})\b/i;
+const EXPECTED_SIZE_COUNT_RE =
+  /\b(\d[\d,]{2,7})\+?\s+(?:expected\s+)?(?:attendees|participants|delegates|registrants)\b/i;
+const EXPECTED_SIZE_HISTORY_RE =
+  /\b(?:past|previous)\s+edition[s]?\s+(?:drew|attracted|welcomed|had)\b[^.\n]{0,20}?(\d[\d,]{2,7})\b/i;
+
+/**
+ * B5-01 (round 5). `EXPECTED_SIZE_COUNT_RE` alone cannot tell a real
+ * headcount ("2,400 attendees") from a cohort/programme year that happens
+ * to sit next to the same trigger word ("...Spring 2025 Participants
+ * Acme Robotics...", a section heading introducing a company list, not a
+ * crowd-size sentence). Two independent, additive checks, applied only to
+ * this one pattern's match — reject and let the loop fall through to the
+ * next pattern rather than accept a plausible-looking wrong number:
+ *
+ * 1. The matched number is immediately preceded by a season/cohort word
+ *    ("Spring 2025", "Class of 2025", "Cohort 12 2025") — reuses the
+ *    concept `SEASON_COHORT_LABEL_RE` (`jobs/sources/jobweb.ts`) already
+ *    established for the same shape of false signal in a different field.
+ * 2. The trigger word is immediately followed by another capitalised (or
+ *    digit-led) token with nothing lower-case or sentence-ending in
+ *    between — a genuine crowd-size sentence almost always continues in
+ *    lower case ("attendees are expected", "delegates from 40
+ *    countries") or ends there; a list heading continues straight into
+ *    the next capitalised entry.
+ */
+const SEASON_COHORT_BEFORE_RE =
+  /\b(?:spring|summer|fall|autumn|winter)\s+$|\bclass\s+of\s+$|\bcohort\s+(?:\d+\s+)?$/i;
+const SENTENCE_CONTINUES_AFTER_RE = /^(?:\s*$|\s*[a-z]|\s*[.,;:!?])/;
+
+function looksLikeCohortOrListHeading(
+  text: string,
+  match: RegExpMatchArray,
+): boolean {
+  const index = match.index;
+  if (index === undefined) return false;
+
+  const before = text.slice(Math.max(0, index - 20), index);
+  if (SEASON_COHORT_BEFORE_RE.test(before)) return true;
+
+  const after = text.slice(index + match[0].length, index + match[0].length + 30);
+  return !SENTENCE_CONTINUES_AFTER_RE.test(after);
+}
+
+function parseAttendanceCount(token: string): number | undefined {
+  const value = Number(token.replace(/,/g, ""));
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function extractExpectedSize(text: string): number | undefined {
+  for (const pattern of [
+    EXPECTED_SIZE_LABEL_RE,
+    EXPECTED_SIZE_COUNT_RE,
+    EXPECTED_SIZE_HISTORY_RE,
+  ]) {
+    const match = text.match(pattern);
+    const token = match?.[1];
+    if (!token) continue;
+    if (
+      pattern === EXPECTED_SIZE_COUNT_RE &&
+      looksLikeCohortOrListHeading(text, match)
+    ) {
+      continue;
+    }
+    const size = parseAttendanceCount(token);
+    if (size) return size;
+  }
+  return undefined;
+}
+
 export function extractEventDetails(
   html: string,
   now = new Date(),
@@ -320,6 +496,7 @@ export function extractEventDetails(
   const activities = extractActivities(visibleText);
   const travelGrant = extractTravelGrant(segments);
   const invitationLetter = extractInvitationLetter(segments);
+  const expectedSize = extractExpectedSize(visibleText);
 
   return {
     ...(registrationDeadline ? { registrationDeadline } : {}),
@@ -327,5 +504,6 @@ export function extractEventDetails(
     ...(activities.length > 0 ? { activities } : {}),
     ...(travelGrant ? { travelGrant } : {}),
     ...(invitationLetter !== undefined ? { invitationLetter } : {}),
+    ...(expectedSize !== undefined ? { expectedSize } : {}),
   };
 }

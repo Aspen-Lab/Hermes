@@ -2,6 +2,7 @@ import { sourceFetch } from "@/lib/sources/_fetch";
 import { routeSafeId, stripHtml, truncateText } from "@/lib/opportunities/shared";
 import { parseStructuredLocation } from "@/lib/opportunities/structured-extract";
 import { normalizeSalary } from "@/lib/opportunities/salary";
+import { resolveEmployerIdentity } from "@/lib/opportunities/employer-identity";
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 
 // Himalayas free remote-jobs API (no auth). The keyword param is not honored
@@ -44,15 +45,44 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
     currency: job.currency,
     period: job.salaryPeriod,
   });
+  const description = truncateText(stripHtml(job.description || job.excerpt));
+  // An API excerpt is display/scoring copy, not proof that it belongs to this
+  // selected record's employer identity. Only the full record description is.
+  const ownedEmployerDescription = job.description
+    ? truncateText(stripHtml(job.description))
+    : undefined;
+  // B8-04 (round 8): pass the listing's own host so a declared candidate
+  // that is itself the page's site brand gets rejected. Himalayas has no
+  // structured tier (no JSON-LD here), so this only guards ownedTexts, but
+  // it keeps both resolveEmployerIdentity call sites consistent.
+  let host: string | undefined;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    host = undefined;
+  }
+  const employer = resolveEmployerIdentity({
+    catalogLabel: job.companyName,
+    ownedTexts: ownedEmployerDescription ? [ownedEmployerDescription] : [],
+    host,
+  });
   return {
     id: `himalayas:${routeSafeId(url)}`,
     source: "himalayas",
     title,
-    company: job.companyName?.trim() || "Unknown company",
+    // B8-03 (round 8): the "none" branch was "|| Unknown company" - a
+    // fabricated placeholder Ruling 26 already rejected in jobweb.ts, copy-
+    // pasted here unaudited. `company` is already optional; absence is
+    // honest, a made-up string is not.
+    company: employer.status === "ambiguous"
+      ? undefined
+      : employer.status === "none"
+        ? job.companyName?.trim() || undefined
+        : employer.company,
     location,
     place: parseStructuredLocation(locations.join(", ")),
     isRemote: true,
-    description: truncateText(stripHtml(job.description || job.excerpt)),
+    description,
     url,
     postedAt:
       typeof job.pubDate === "number"
