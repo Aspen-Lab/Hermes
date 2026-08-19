@@ -3150,6 +3150,12 @@ describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84
 // surface already refuses this host class (`isNonJobHost`, Ruling 87a
 // Component A); these lock the same refusal on the event surface.
 describe("encyclopedia hosts are not events", () => {
+  // `webResultToRawEventItem` takes the clock as its second argument; every
+  // other describe block in this file declares its own. A fixed instant keeps
+  // these cases deterministic — the rows below are refused on HOST, before any
+  // date reasoning, so the value only has to be stable, not meaningful.
+  const NOW = Date.parse("2026-08-19T00:00:00Z");
+
   it("lists wikipedia.org in DENY_HOSTS", () => {
     expect(DENY_HOSTS).toContain("wikipedia.org");
   });
@@ -3161,7 +3167,7 @@ describe("encyclopedia hosts are not events", () => {
         url: "https://en.wikipedia.org/wiki/Topochemical_polymerization",
         snippet:
           "Topochemical polymerization is a solid-state reaction in which monomer molecules...",
-      }),
+      }, NOW),
     ).toBeNull();
   });
 
@@ -3171,7 +3177,7 @@ describe("encyclopedia hosts are not events", () => {
         title: "Festkörperchemie Symposium",
         url: "https://de.wikipedia.org/wiki/Topochemische_Polymerisation",
         snippet: "Ein Symposium über Festkörperchemie.",
-      }),
+      }, NOW),
     ).toBeNull();
   });
 
@@ -3181,9 +3187,13 @@ describe("encyclopedia hosts are not events", () => {
       webResultToRawEventItem({
         title: "Molten Salt Chemistry Conference 2026",
         url: "https://wikiconferences.org/events/molten-salt-2026",
+        // The date must be FUTURE relative to NOW or the row leaves on expiry
+        // and proves nothing about host matching — the first draft used March
+        // 2026 against an August NOW and failed for that reason, not because
+        // the host rule was wrong.
         snippet:
-          "The Molten Salt Chemistry Conference 2026 will be held in Chicago on March 3-5, 2026. Registration is open.",
-      }),
+          "The Molten Salt Chemistry Conference 2026 will be held in Chicago on December 3-5, 2026. Registration is open.",
+      }, NOW),
     ).not.toBeNull();
   });
 });
