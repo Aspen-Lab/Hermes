@@ -270,17 +270,19 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent A round 9 + 2026-08-19 09:21 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       MANAGER — Phase 2 convergence candidate 1 re-measurement.
-                  A's round 8 window is clean (zero NEW-CLASS findings); per
-                  Ruling 105a the manager now independently re-measures before
-                  this counts as candidate round 1. A does NOT declare Phase 2
-                  complete — a second clean candidate round is still required.
-                  See §4 `### Phase 2 Round 8 — Agent A` for the full census.
+WHOSE TURN:       A — Phase 2 round 9, CONVERGENCE CANDIDATE 2 (the full
+                  round-5/8 census protocol). Per Ruling 116, candidate 1
+                  PASSED (A's round 8 window + the manager's independent
+                  re-measurement, both clean). This is the second candidate
+                  round required by Ruling 105a to close Phase 2 — A measures
+                  only, never closes; a clean round hands off to the manager
+                  for the final re-measurement. See §4 `### Phase 2 Round 8 —
+                  MANAGER` (Ruling 116) for the candidate-1 record.
 PHASE 2 MEASUREMENT PROFILE:
                   (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
                   baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
