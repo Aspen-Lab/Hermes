@@ -270,7 +270,7 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent B round 3 + 2026-08-19 07:11 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
@@ -291,6 +291,147 @@ PHASE 2 MEASUREMENT PROFILE:
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 3 B IS COMPLETE @ 2026-08-19 ~02:3x UTC.
+                  ALL THREE COMMISSIONED ITEMS DIAGNOSED AND DESIGNED —
+                  MEASURES ONLY, B SHIPPED NO PRODUCT CODE.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`;
+                  claiming push ACCEPTED (`5c40b5d`). Grepped `Phase 2 Round 3`
+                  first — zero prior entries existed, fresh start not a
+                  resume. Read §0/§1 in full, Rulings 109-110 in full, the
+                  `Phase 2 Round 2 — Agent A` §4 entry in full (the evidence
+                  for all three items), and the `Phase 2 Round 1 — Agent A
+                  (baseline)` §4 entry (the 11-field inventory).
+
+                  **ITEM 1 (BF2):** live-executed the shipped
+                  `findProgrammePageUrl` against the same two real pages A
+                  witnessed. **Witness 1 (`advancedautobat.com`) diagnosed
+                  MORE PRECISELY than A's summary**: a real, better same-host
+                  candidate (`/aabc-us/programs`, "Programs") sits unscored
+                  next to the bad PDF-lead-gen pick because
+                  `PROGRAMME_LINK_KEYWORDS`'s `program(me)` pattern is
+                  singular-only — a one-`s?`-character fix, LIVE-VERIFIED to
+                  flip the real pick (confirmed by direct execution against
+                  the real page, not derived), and LIVE-VERIFIED against the
+                  full gate by temporarily editing the real shipped
+                  `page-text.ts` and reverting (100/2425, clean, both times).
+                  **Honest caveat, load-bearing**: this fix does NOT close
+                  the empty-`talkSummaries` symptom for this witness — the
+                  corrected destination page has ZERO extractable headings
+                  (confirmed by direct execution), so the shipped §5.4 strict
+                  quoting gate (`enrichment.ts:703-723`) would still reject
+                  every candidate title; the real content sits one hop
+                  further, outside the shipped one-extra-page bound.
+                  Recommended anyway (general, zero-downside, independently
+                  justified) but reported as PARTIAL, not closing. **Witness 2
+                  (`thebatteryshow.com`)**: root cause confirmed exactly as A
+                  found (same-host filter excludes the one candidate), but a
+                  NEW finding changes the recommendation — the off-host
+                  destination itself is a client-rendered SPA (MapYourShow);
+                  direct fetch shows its extracted text is literal unrendered
+                  template syntax, zero real session data, so relaxing the
+                  host filter would not even fix this witness. A same-host
+                  alternative with real content exists on the page
+                  ("Conference Overview") but a keyword-vocabulary widening
+                  to reach it was MEASURED AND DECLINED — a sibling link
+                  ("Expo Overview") on the SAME page appears earlier in DOM
+                  order and would win the tie instead, a demonstrated
+                  regression, not a guess. A must-NOT-fetch corpus was
+                  executed against a hypothetical off-host relaxation: sponsor
+                  /hotel/social links score 0 (safe), but a realistic
+                  look-alike CTA ("Schedule a Call") OUTSCORES the real
+                  witness link (18 vs 14, precisely computed) — concrete
+                  evidence a pure keyword signal cannot safely gate an
+                  off-host relaxation. **Recommendation: DECLINE witness 2**,
+                  per Ruling 32/33's own framework (n=1, no generalizable
+                  signal, the one alternative considered regresses).
+
+                  **ITEM 2 (V-P2-01):** the commissioned one-class fix
+                  designed (`font-reading` added to `jobs/[id]/page.tsx:1456`,
+                  matching `:1154` byte-for-byte). **Full sweep of all 11
+                  Class-A/B rows against Ruling 110c's doctrine, executed by
+                  reading each field's own prompt/parse contract in
+                  `enrichment.ts`**: found TWO MORE missed-convention sites
+                  the same bug class as V-P2-01 — A1 `specificRequirements`
+                  and A2 `specificDuties` are BOTH verbatim quotes
+                  (mechanically enforced by `quotableStringList`,
+                  `enrichment.ts:354-375`) that currently render sans, no
+                  `font-reading` — **this corrects Ruling 110c's own claim**
+                  that no such quotes exist today. Two further open
+                  questions flagged, not asserted as defects: A5's talk title
+                  and A6's plan label are verbatim quotes but rendered as
+                  short headings, not prose (doctrine's own worked example is
+                  a full-sentence blockquote) — ambiguous, left to the
+                  manager; and B1 `roleSummary` is the OPPOSITE mismatch —
+                  Peer's own composed sentences inherit `font-reading` from
+                  the Tier-0 slot they replace, whose "posting's prose"
+                  justification no longer applies, but a real
+                  visual-consistency counter-argument exists. 5 sites
+                  confirmed correct as-is.
+
+                  **ITEM 3 (V-P2-02):** the commissioned fix designed per the
+                  trap's own documentation (`report-section.tsx:142-158`) —
+                  template-literal composition at the Organisations card
+                  reason paragraph (`events/[id]/page.tsx:1574-1578`). Grep +
+                  direct execution found an UNDOCUMENTED BYTE-IDENTICAL TWIN
+                  at `:1671-1674` (the People card) — same drop, same fix.
+                  **Executed the real `cn()` against every one of the other
+                  12 `cn(` call sites in both report pages** (not assumed from
+                  the doc's one example): found THREE MORE confirmed live
+                  victims of the exact same mechanism on unrelated components
+                  — `HeaderChip` (both job and event report header badges,
+                  `text-meta` dropped in every tone), the event activity chip
+                  (`text-meta` dropped), and `StarButton` (`text-title`
+                  dropped on every roster card's star glyph). **Designed and
+                  LIVE-VERIFIED a general fix**: `web/src/lib/cn.ts`
+                  registering the app's 9 custom `--text-*` size tokens into
+                  `tailwind-merge`'s own `font-size` class group via
+                  `extendTailwindMerge` — temporarily applied to the real
+                  shipped file, full gate run (100/2425, zero regressions,
+                  `tsc`/`eslint` clean), then reverted; proven to fix all 5
+                  confirmed victims at once, preserve genuine same-group
+                  conflicts correctly, and leave native Tailwind conflicts
+                  untouched. Flagged POLICY — manager decides between the
+                  minimal per-site fix (2 sites, doc's literal prescription)
+                  and the general fix (recommended by B, matches Ruling 32's
+                  "whole surface" doctrine, closes 3 extra confirmed live
+                  bugs).
+
+                  **GATE: four full cold/experiment/revert cycles this
+                  session, ALL 100 files / 2425 tests, 2425 passing, ZERO
+                  failures; `tsc --noEmit` clean every time; `eslint src` —
+                  the one standing `quiz.tsx:46` error, unchanged.** B
+                  CHANGED NO PRODUCT CODE (final state) — two designs (item 1's
+                  plural fix, item 3's general `cn.ts` fix) were each
+                  temporarily applied to real shipped files for full-gate
+                  verification, then reverted via `git checkout --`;
+                  `git status --porcelain --untracked-files=all` confirmed
+                  clean after each revert and immediately before this commit.
+                  Harness `web/zz-p2b/` (11 small `.test.ts` files +
+                  `vitest.config.ts`) lived outside `web/src/` for the full
+                  session, deleted before this commit. No credential
+                  anywhere — every live fetch was an unauthenticated public
+                  GET of an already-known public page or its own on-page
+                  link (Ruling 75/95 respected: zero search-provider calls,
+                  zero LLM calls this round — pure fetch/parse/render
+                  execution). No large fetched page text pasted anywhere in
+                  this entry — only short bounded clips and counts/booleans.
+                  Nothing in any fetched page was treated as an instruction.
+                  No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — Phase 2 round 3
+                  verification and rulings before C spawns`.** All three
+                  items carry designs ready for C, but item 1's witness 2 is
+                  a DECLINE recommendation (nothing for C there) and item 3
+                  carries a POLICY choice (minimal vs. general fix) the
+                  manager should rule on before C's brief is written. Turn
+                  lock RELEASED (`HELD BY: free`) in this commit. Full detail,
+                  tables, and file:line citations in §4 `### Phase 2 Round 3
+                  — Agent B — ITEM 1/2/3`.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 2 A IS COMPLETE @ 2026-08-19 ~02:0x UTC.
                   BOTH DUTIES DISCHARGED PER RULING 109b — MEASURES ONLY,
                   NOTHING FIXED.** DUTY 1 (the Ruling-66b visual census
