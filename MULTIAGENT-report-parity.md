@@ -270,29 +270,124 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent A round 33 + 2026-08-19 00:04 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~03:4x UTC — ROUND 33 C
-                  VERIFIED INDEPENDENTLY, RULING 91 APPENDED (§4).** Gate
-                  re-run cold by the manager (full-capture): **99 files /
-                  2386 tests, 2386 passing, ZERO failures.** Code read
-                  directly — byte-faithful, wired at `eventweb.ts:2015`
-                  exactly as designed; C's truncated-titles judgment call
-                  ACCEPTED (matches the suite's own precedent; the vocabulary
-                  triggers sit in the visible prefixes). **RULING 91: C
-                  accepted; hand-off STANDS — `WHOSE TURN: A — round 33,
-                  GATE CANDIDATE ROUND (value + visual, searchProvider:
-                  gemini, artefact duty, pool-count re-measure, watch list,
-                  flake-identity-first gate discipline)`.** A's targets:
-                  A32-01's four witnessed shapes must DROP at ingestion if
-                  offered; the seven job/career-FAIR must-keeps must still
-                  ADMIT; the standing duty list otherwise. **If A measures
-                  double-zero, hand off `WHOSE TURN: MANAGER — independent
-                  re-measurement before any close`. A never closes the
-                  gate.**
+STOPPED BECAUSE:  **ROUND 33 A IS COMPLETE @ 2026-08-19 ~01:3x UTC — THE
+                  GATE-CANDIDATE CENSUS DOES NOT REACH DOUBLE-ZERO. ONE FRESH
+                  UNEXPLAINED VALUE FINDING (A33-01, event surface,
+                  ingestion-stage only, not yet witnessed rendering), ZERO
+                  UNEXPLAINED VISUAL. A32-01 VERIFIED FIXED.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
+                  after confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`8a7c624`). Grepped `Round 33 — Agent A` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Rulings 90a-90d and 91, both Round 33 Agent B entries, the
+                  Round 33 Agent C entry, and round 32 A's three parts in full
+                  before any live pull.
+
+                  **GATE, COLD: 99 files / 2386 tests, 2386 passing, ZERO
+                  failures**, matching Ruling 91's expected baseline exactly.
+                  `npx tsc --noEmit` clean.
+
+                  **A32-01 VERIFIED FIXED.** One of the four witnessed shapes
+                  (`iimjobs.com`) organically re-offered this window and
+                  DROPPED at ingestion through the complete live pipeline; the
+                  other three (`industrialguide.co.in`, `jobitus.com`,
+                  `shine.com`) were not organically offered this window
+                  (absence, reported as absence) but **all four return `true`
+                  on the shipped, exported `isJobListingContentTitle` when
+                  executed directly**, the round's own commissioned execution
+                  check. **Two of the seven must-keep job/career-FAIR rows**
+                  (`Nuclear Career Fair - S&T Women in Nuclear`, `Nittany Lion
+                  Careers`) were organically re-offered and correctly
+                  ADMITTED. **Zero collateral false drops from the new guard
+                  on real traffic**, proven by a full scan of the event
+                  offered corpus against the guard's own trigger regex (only
+                  one row matched anywhere — the `iimjobs.com` witness itself,
+                  correctly dropped).
+
+                  **POOL-COUNT/57b RE-MEASURE, POST-GUARD: ZERO collisions
+                  across all 10 pulls.** **TIMEOUT-FLAKE RATE: job 2 of 5
+                  (40%), event 0 of 5 (0%), combined 2 of 10 (20%)** — higher
+                  than round 32's 1/10, reported honestly, not attributable to
+                  any code change this round (job pipeline untouched).
+
+                  **ONE FRESH, UNEXPLAINED FINDING — A33-01 (event, 2 of 5,
+                  ingestion-stage only)**: `"Job Postings Archive - Ion
+                  Exchange"` @ `ionexchangeglobal.com/job_posting/` —
+                  `ingested: true` both offers, confirmed by direct execution
+                  of the shipped `webResultToRawEventItem`. A fifth job-content
+                  shape the round-33 guard does not cover (a single "Job"
+                  mention, no "openings/vacancy/company page" phrase;
+                  `isEventHubResult`'s path word list has `jobs` but not
+                  `job_posting`). **This exact host/path was previously caught
+                  by a DIFFERENT guard (`isEventIndexResult`) as recently as
+                  round 25**, under a title the live source page has since
+                  drifted away from — not a code regression, a source-title
+                  drift that now falls through every guard including this
+                  round's new one. **NOT witnessed reaching the final scored
+                  pool in either window measured (this round's or round 25's
+                  own era)** — an ingestion-stage gap, real and
+                  execution-confirmed, distinct from a confirmed-rendered
+                  anomaly like A32-01 itself.
+
+                  **VISUAL: ZERO on both plates** — the structural argument
+                  (`17de80e..HEAD`, zero rendering-layer files, re-derived
+                  through this round's own commits) plus a spot-check render
+                  using this round's own live-captured data (one real job
+                  with silent company, one real dated event, one real
+                  dateless event — all three render clean, no leaked
+                  `undefined`).
+
+                  **GATE FLAKE AT CLOSE, OWNED HONESTLY**: one close-of-turn
+                  gate run returned 1 failed / 2385 passed; A's own capture
+                  used `tail -10` and the failing test's IDENTITY WAS LOST —
+                  the same instrumentation-class mistake the round-32 manager
+                  already named and owned once. Two immediate FULL-CAPTURE
+                  re-runs both came back 99/99, 2386/2386, GREEN. Verdict:
+                  green on repeat, one unidentified single-run flake on the
+                  books, gate verdict unchanged. Forward instruction: capture
+                  gate runs to a full file, never `tail`, so a real regression
+                  is never confused with a capture artifact.
+
+                  **Round-33-specific duties, all discharged**: A32-01
+                  verification (above, both halves); pool-count/57b
+                  re-measure (above); timeout-flake re-measure (above); the
+                  artefact duty (two compact host-level tables, 93 + 131
+                  unique hosts); the residual watch list re-measured item by
+                  item including the round-33 fresh addition
+                  (`ionexchangeglobal.com/job_posting/`); the standing tallies
+                  restated, with two fields (event-side `isOnline`,
+                  event-side `organisations`) newly RE-DERIVED this round
+                  (0/41 both) rather than carried forward unmeasured. One
+                  self-caught arithmetic slip in part 1's job artefact table
+                  ("66 further hosts" corrected to "63") fixed in a same-round
+                  follow-up commit before part 3 was written.
+
+                  **A CHANGED NO PRODUCT CODE.** Five commits, each pushed on
+                  landing (turn-lock claim, part 1, part 2, the arithmetic
+                  self-correction, part 3 + this close-out). Throwaway harness
+                  (`web/zz-r33a/`) lived outside `web/src/`, deleted before
+                  every commit, `git status --porcelain
+                  --untracked-files=all` confirmed clean each time. No
+                  credential anywhere; boolean presence only; `.env.local`
+                  never `cat`-ed; no `PEER_PROFILE_SNAPSHOT_PATH`.
+
+                  **HAND-OFF: `WHOSE TURN: B — round 34`** (work item: A33-01,
+                  a fifth job-content shape the round-33 event-side guard does
+                  not cover — widen `JOB_LISTING_CONTENT_RE`/
+                  `hasRepeatedJobsMention`'s own threshold, or extend
+                  `isEventHubResult`'s path word list to cover `job_posting`,
+                  B's own design call; the standing watch list carried
+                  forward unchanged, now including this round's own residual
+                  by name). **Because one thing remains unexplained, A does
+                  not hand to the manager** (Ruling 30 / this round's own
+                  instruction). Turn lock RELEASED (`HELD BY: free`) in this
+                  commit.
                   ---
                   Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 33 C IS COMPLETE @ 2026-08-18 ~23:5x UTC — THE ONE
