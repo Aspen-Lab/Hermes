@@ -270,11 +270,119 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 37 + 2026-08-19 04:14 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 37 B IS COMPLETE @ 2026-08-19 ~04:2x UTC — M36-01
+                  DESIGNED: ONE NEW, ISOLATED REGEX
+                  (`PR_SETS_ORDINAL_HEADLINE_RE`) SCOPED TO THE WITNESSED
+                  VERB `sets` + ORDINAL-DIGIT SHAPE. THE STANDALONE AGM-TOKEN
+                  SIGNAL WAS MEASURED AND DROPPED; THE `/stock-market-news/`
+                  PATH SIGNAL WAS MEASURED AND DECLINED.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`01df16c`). Grepped `Round 37 — Agent B` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Rulings 102a-102d, round 31 B's item 3 entry (the
+                  PR-headline design incl. its own residual note), and round
+                  33 B item 1 + round 34 B entries (the job-listing guard
+                  family) before touching any code.
+
+                  **CONFIRMED BY EXECUTION, NOT TRUSTED**: the shipped
+                  `isNewsArticleTitle` misses the exact recorded specimen
+                  (`scanx.trade`'s "Ion Exchange sets 62nd AGM…"), traced
+                  clause by clause to four separate, specific reasons — the
+                  verb "sets" is not in `PR_ANNOUNCEMENT_HEADLINE_RE`'s
+                  `plans/schedules` alternation, AND (a fact checked before
+                  designing, per the brief's own instruction) that regex's
+                  trailing `\d+\b` digit arm is structurally incapable of
+                  matching an ORDINAL like "62nd" even if `sets` were simply
+                  added to the verb list — `\d+\b` requires a word-boundary
+                  immediately after the digit run, which an ordinal's
+                  trailing letters never leave. `isTickerNewsPath` also
+                  confirmed to miss the `/stock-market-news/` path
+                  structurally (no `/news/` substring).
+
+                  **THE DESIGN**: a NEW, separate, additive const
+                  (`PR_SETS_ORDINAL_HEADLINE_RE`) requiring subject + literal
+                  lowercase `sets` + an ordinal digit (`\d+(?:st|nd|rd|th)\b`)
+                  — kept isolated from the existing `PR_ANNOUNCEMENT_HEADLINE_RE`
+                  so that regex's own tested plans/schedules+bare-digit
+                  contract stays byte-unchanged, zero re-derivation risk.
+                  Only `sets` is added — `announces`/`to exhibit at`/
+                  `attends`/`hosts` remain unwitnessed in this shape and are
+                  NOT added blind, per round 31 B's own precedent on this
+                  exact guard.
+
+                  **64 OF 64 ADVERSARIAL/CORPUS CASES PASS**: the witnessed
+                  specimen (caught, both standalone and through the full
+                  `isNewsArticleTitle` composition); round 31's
+                  `stocktitan.net` regression (still caught, unaffected);
+                  round 33 B item 1's 19-row must-keep corpus (0 false
+                  positives); round 31 B item 3's own 4-title ordinal
+                  adversarial set (0 false positives — the exact set that
+                  motivated the ordinal check); round 36 A's full untruncated
+                  final-pool titles AND its offered >=4x-threshold title
+                  heads, window 2 (33 titles combined, 0 false positives).
+
+                  **THE AGM-TOKEN SIGNAL WAS MEASURED AND DROPPED, NOT
+                  SHIPPED.** Zero hits for "AGM"/"Annual General Meeting"
+                  anywhere in the recorded corpora, but the brief's own
+                  instruction to construct the adversarial case (not trust a
+                  silent corpus) surfaced real risk: four constructed,
+                  plausible real scholarly/professional-society titles
+                  ("Royal Society of Chemistry Annual General Meeting and
+                  Conference 2026" and three siblings) ALL trigger a
+                  standalone AGM veto — the token alone cannot distinguish a
+                  corporate-shareholders' AGM from a genuine scholarly
+                  society's own AGM-plus-conference page, and
+                  `isNewsArticleTitle` has no rescue clause (unlike
+                  `isJobListingContentTitle`'s `looksLikeEvent` safety net)
+                  to protect against it. DROPPED because it is also
+                  unnecessary — the verb+ordinal fix alone already closes
+                  M36-01.
+
+                  **THE `/stock-market-news/` PATH SIGNAL WAS MEASURED AND
+                  DECLINED** — a single-host witness (scanx.trade only),
+                  not shown to be a shared cross-site convention the way the
+                  ticker-in-path shape (Ruling 84c's Design A) demonstrably
+                  is; adding it would be exactly the one-host-enumeration
+                  pattern Ruling 32 warned against, and it is unnecessary
+                  since the title-shape fix alone catches the specimen.
+
+                  **FAILURE DIRECTION UNCHANGED**: a match can only cause
+                  `webResultToRawEventItem` to return `null` where it
+                  previously admitted a row — never edits a value. Blast
+                  radius: one new const, one new disjunct line inside
+                  `isNewsArticleTitle`; every existing regex in the file
+                  byte-unchanged. Zero tests at risk (grepped the 2900+-line
+                  `eventweb.test.ts` for `sets`/`AGM`/"Annual General
+                  Meeting" — zero hits).
+
+                  **GATE, COLD, BEFORE AND AFTER (B changed no product
+                  code)**: 100 files / 2418 tests, 2418 passing, ZERO
+                  failures — matching round 36's close exactly. No
+                  tsc/eslint re-run needed (zero files under `web/src/`
+                  touched).
+
+                  **B CHANGED NO PRODUCT CODE.** Two commits (turn-lock claim
+                  + design entry), both pushed on landing. Throwaway harness
+                  (`web/zz-r37b/`) lived outside `web/src/`, deleted before
+                  this commit; `git status --porcelain --untracked-files=all`
+                  confirmed clean. No credential anywhere; no live network
+                  calls (pure regex/function-level design work, Ruling 75's
+                  live-probe option not spent). No large page text pasted.
+                  No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 37 verification
+                  and rulings before C spawns`.** Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER INDEPENDENT RE-MEASUREMENT COMPLETE @ 2026-08-19
                   ~10:3x UTC — THE GATE DOES NOT CLOSE. RULINGS 102a-102d
                   APPENDED (§4), ROUND 36 CLOSED.** The manager ran its OWN
@@ -88316,4 +88424,132 @@ Committed and pushed as its own item. Part 3 (visual census, standing tallies, g
 **RULING 102c — one OBSERVATION recorded, deliberately NOT a gate item:** `database.enen.eu/index.php/2023/01/24/phd-opportunity-in-molten-salt-reactor/` renders a correct title and correct organisation, but its URL carries a 2023 date segment — the posting may be years old. NO recorded standard governs job-posting AGE anywhere in 36 rounds (event staleness has rules; job staleness has none), every rendered VALUE on the row is correct, and the page's liveness cannot be judged from the URL alone. Filed as a NAMED BACKLOG QUESTION for the user (should the job surface carry a posting-age mechanism at all? — a product-scope decision, not a parity defect), disclosed in the user report, not counted against the gate.
 
 **RULING 102d — round 36 CLOSES with the manager's finding routed.** The score at close: A's two windows double-zero + the manager's window 1 value / 0 visual. Phase 1 does not close this round; it is one bounded design item away, and the item's design surface already exists (round 31 B's own residual note is the spec's first line).
+
+### Round 37 — Agent B — ITEM 1 (M36-01, Ruling 102b: the Ruling-93-named PR-headline verb-sibling residual — reopen trigger fired, verb `sets` organically witnessed by the manager's own window): **DESIGNED, ONE NEW ADDITIVE, ISOLATED REGEX (`PR_SETS_ORDINAL_HEADLINE_RE`) SCOPED EXACTLY TO THE WITNESSED VERB+ORDINAL SHAPE — THE EXISTING `PR_ANNOUNCEMENT_HEADLINE_RE` IS NOT TOUCHED, BYTE-IDENTICAL. THE STANDALONE AGM-TOKEN SIGNAL WAS MEASURED AND DROPPED — ADVERSARIALLY UNSAFE AGAINST A PLAUSIBLE REAL SCHOLARLY-SOCIETY AGM+CONFERENCE TITLE. THE `/stock-market-news/` PATH SIGNAL WAS MEASURED AND DECLINED — A SINGLE-HOST WITNESS, NOT A PROVEN STRUCTURAL CONVENTION, AND UNNECESSARY SINCE THE TITLE-SHAPE FIX ALONE CLOSES THE GAP.**
+
+**B changed no product code.** Claimed the turn lock (`01df16c`) after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 37 — Agent B` first — zero prior entries existed, fresh start not a resume. Read Rulings 102a-102d in full, round 31 B's item 3 entry (`MULTIAGENT-report-parity.md:85220-85300`, the PR-headline design, incl. its own residual note at `eventweb.ts:452-456`), and round 33 B item 1 + round 34 B entries (the job-listing guard family, `:86209-86307`, `:86775-86881`) before touching any code. Every candidate below was written and adversarially tested standalone in a throwaway harness (`web/zz-r37b/`, own minimal `vitest.config.ts`, no live network — pure regex/function-level design work against the real, imported, shipped `isNewsArticleTitle`) — deleted before this commit, `git status --porcelain --untracked-files=all` confirmed clean immediately after.
+
+## 1.0 CONFIRMED BY EXECUTION, NOT TAKEN ON TRUST — THE SHIPPED GUARD MISSES THE SPECIMEN, AND WHY
+
+Ran the SHIPPED, exported `isNewsArticleTitle` (`eventweb.ts:465-472`) directly on the exact recorded title/URL:
+
+```
+isNewsArticleTitle(
+  "Ion Exchange sets 62nd AGM for September 11, 2026",
+  "https://scanx.trade/stock-market-news/companies/ion-exchange-sets-62nd-agm-september-11-2026/48600650",
+) === false
+```
+
+Confirmed exactly as Ruling 102b found. Traced clause by clause: `NEWS_TITLE_RE` (`:238`) — none of its eight start-anchored phrases match, the title doesn't lead with any of them, and the unanchored news-word alternative only reads URL text via `urlPathPhrase`, not the title. `PR_ANNOUNCEMENT_HEADLINE_RE` (`:458-459`) — the verb group is `(?:plans?|schedules?)` only; "sets" is not in it, so the whole alternation fails at the verb position regardless of anything after it. `isTickerNewsPath` (`:432-439`, reading `TICKER_NEWS_PATH_RE` at `:430`) — confirmed directly against the raw path `/stock-market-news/companies/ion-exchange-sets-62nd-agm-september-11-2026/48600650`: the regex requires the literal substring `/news/` (a `/` immediately before "news"); the path has "news" preceded by a hyphen (`...market-news/...`), never a `/`, so no match — the ticker-path guard misses this shape structurally, not by a near-miss. `NEWS_HEADLINE_PATH_RE` (`:397`) — none of its eight phrases open the URL-path-as-words rendering of this path either. **All four clauses miss for a different, specific, confirmed reason each — not one shared gap.**
+
+## 1.1 THE ORDINAL-BLOCKING FACT, MEASURED — READ BEFORE ASSUMING "JUST ADD sets TO THE VERB LIST" WORKS
+
+**Even if `sets` were added directly into the existing verb alternation, the specimen would STILL miss**, because `PR_ANNOUNCEMENT_HEADLINE_RE`'s trailing digit arm is `\d+\b` — a bare digit run immediately followed by a word boundary. `\b` requires a transition between a `\w` character and a non-`\w` character (or a string edge). In `"62nd"`, every character (`6`,`2`,`n`,`d`) is `\w`, so there is no boundary anywhere inside or immediately after the digit run — `\d+\b` cannot match `"62nd"` at all, confirmed directly: `/\d+\b/.test("62nd") === false`, while `/\d+\b/.test("4 water") === true` (the shape the regex was actually built for — round 31's own `"Birchtech plans 4 water conference stops"` specimen, a bare count, not an ordinal). **The witness's digit is an ORDINAL (`62nd AGM`), not a bare count** — the brief's own instruction to check this before designing is confirmed correct and load-bearing: a verb-only extension would ship a fix that still doesn't catch its own named witness.
+
+## 1.2 THE DESIGN — ONE NEW, ISOLATED REGEX, NOT A CHANGE TO THE EXISTING ONE
+
+```ts
+// ROUND 37 B (Ruling 102b, M36-01): the Ruling-93-named PR-headline
+// verb-sibling residual's reopen trigger fired -- the manager's own
+// independent re-measurement window organically witnessed the verb `sets`
+// in exactly the shape this file's own round-31 doc comment named as
+// residual-watched: `scanx.trade`'s "Ion Exchange sets 62nd AGM for
+// September 11, 2026" (a stock-news site's corporate-shareholders'-AGM
+// announcement, not a scholarly event), admitted and rendered as an event
+// card with a real date.
+//
+// KEPT AS A SEPARATE CONST, NOT MERGED INTO PR_ANNOUNCEMENT_HEADLINE_RE
+// ABOVE, on purpose: the witnessed shape's digit is an ORDINAL ("62nd"),
+// not the bare count PR_ANNOUNCEMENT_HEADLINE_RE's own `\d+\b` arm was
+// built for and is *structurally incapable* of matching (`\d+\b` requires
+// a word-boundary immediately after the digit run; an ordinal's trailing
+// letters leave no such boundary -- measured directly, see the round log).
+// Isolating the new shape in its own regex means the existing, already-
+// tested plans/schedules+bare-digit contract stays byte-unchanged --
+// zero re-derivation risk on it, confirmed by the unmodified regression
+// test below.
+//
+// Only `sets` is included, not the fuller unwitnessed PR-verb family
+// (`announces`, `to exhibit at`, `attends`, `hosts`) -- those remain
+// UNWITNESSED in this shape and are NOT added blind, per this loop's own
+// "land what is confirmed" practice (round 31 B's own precedent on this
+// exact guard). Still residual-watched by name below.
+const PR_SETS_ORDINAL_HEADLINE_RE =
+  /^\s*[A-Z][\w&.,'-]*(?:\s+[A-Z]?[\w&.,'-]*){0,4}\s+sets\s+\d+(?:st|nd|rd|th)\b/;
+```
+
+**Recommended wiring**: one new disjunct line inside `isNewsArticleTitle` (`eventweb.ts:465-472`), immediately after the existing `PR_ANNOUNCEMENT_HEADLINE_RE` check (`:468`) and before the `isTickerNewsPath` check (`:469`) — same family, same failure direction, same placement pattern every disjunct in this function already uses:
+
+```ts
+if (PR_ANNOUNCEMENT_HEADLINE_RE.test(trimmedTitle)) return true;
+if (PR_SETS_ORDINAL_HEADLINE_RE.test(trimmedTitle)) return true;  // NEW
+if (isTickerNewsPath(url)) return true;
+```
+
+No change to `PR_ANNOUNCEMENT_HEADLINE_RE`, `TICKER_NEWS_PATH_RE`, `isTickerNewsPath`, `NEWS_TITLE_RE`, or `NEWS_HEADLINE_PATH_RE` — all four byte-identical.
+
+## 1.3 ADVERSARIALLY TESTED, EXECUTED — 64 CASES ACROSS SIX GROUPS, ZERO FAILURES
+
+| group | corpus (count) | result |
+|---|---|---|
+| MUST CATCH | the witnessed specimen, standalone regex AND through the full `isNewsArticleTitle` composition | **caught, both ways** |
+| REGRESSION | round 31's `stocktitan.net` specimen (title-only and URL-only forms) | **still caught — unaffected, separate arm** |
+| must NOT (still-unwitnessed siblings) | `"Acme Corp announces 3rd annual gala"` | **not caught — unchanged residual status, confirmed not silently widened** |
+| MUST KEEP — round 33 B item 1's 19-row corpus (7 fairs + 12 admitted artefact rows, `MULTIAGENT-report-parity.md:86290-86292`) | 19 titles | **0 of 19 false positives** |
+| MUST KEEP — round 31 B item 3's own numbered/ordinal adversarial set (`5th Battery Gigafactory Summit USA`, `2026 ANS Annual Conference`, `27th International Conference on Ion Exchange`, `The 250th ECS Meeting`) | 4 titles | **0 of 4 false positives** — the exact set that motivated §1.1's ordinal check in the first place |
+| MUST KEEP — round 36 A part 2's full untruncated final-pool event titles, window 2 (`:88146-88218`) | 14 unique titles | **0 of 14 false positives** |
+| MUST KEEP — round 36 A part 2's OFFERED host-level title heads, threshold >=4x, window 2 (`:88101-88144`) — the guard runs at ingestion on every OFFERED row, not just final-pool survivors, so this corpus matters as much as the final-pool one | 19 titles | **0 of 19 false positives** |
+
+**64 of 64 pass** (`web/zz-r37b/item1-corpus.test.ts` + `item1-design.test.ts` + `item1-path.test.ts`, all deleted before this commit).
+
+## 1.4 THE BOUNDED CORPORATE-MEETING/AGM SIGNAL — MEASURED, AND DROPPED, NOT SHIPPED
+
+Candidate measured: a standalone veto on the bare token `AGM` or the phrase `Annual General Meeting` (`/\bAGM\b|\bAnnual General Meeting\b/i`).
+
+**Corpus check first**: grepped the ENTIRE state file (`grep -in "AGM\|Annual General Meeting"`) — the only hits anywhere in 88,000+ lines are the manager's own M36-01 write-up and this round's brief. **Zero hits in any recorded must-keep corpus** (round 33's 19 rows, round 36 A's tables, the manager's own 102a corpus). But a silent corpus is not the same as a safe signal — round 34 B's own precedent (§2.3, constructing the `"Event Archive"` collateral case OUTSIDE the locked suites specifically because the suites' silence didn't prove safety) is the discipline the brief's own instruction points at here, so the corpus's silence was not treated as sufficient.
+
+**Adversarial construction, per the brief's own instruction**: professional and learned societies routinely hold their Annual General Meeting *alongside* their real scientific/technical conference, as one combined, genuinely-scholarly event with its own real event page — this is an ordinary real-world shape, not a contrived edge case. Four constructed, plausible titles:
+
+```
+"Royal Society of Chemistry Annual General Meeting and Conference 2026"
+"British Ecological Society AGM and Scientific Meeting"
+"Institution of Chemical Engineers -- Annual General Meeting & Symposium 2026"
+"American Nuclear Society Section AGM and Technical Conference"
+```
+
+**All four trigger the standalone AGM-token veto** (confirmed by execution) — a standalone signal cannot distinguish a corporate-shareholders' AGM press release from a scholarly society's own genuine AGM-plus-conference page; the token itself carries no information about WHICH kind of organisation is meeting. Unlike `isJobListingContentTitle`'s job-vocabulary guard (which has a `looksLikeEvent` rescue clause protecting exactly this class of "suspicious word + real event vocabulary" title), `isNewsArticleTitle` has no such rescue anywhere in its four existing clauses (confirmed by reading `:465-472` — every clause is a bare OR, no rescue), and building one for this single, unwitnessed signal is new machinery this item was not commissioned to add and has no live witness to test it against.
+
+**VERDICT: DROPPED, not shipped, in either standalone or gated form.** The witnessed defect (M36-01) is already fully closed by §1.2's verb+ordinal fix without any AGM-token signal at all — the AGM veto is not load-bearing for anything this round confirmed, and shipping it would trade one already-closed miss for a new, adversarially-demonstrated false-positive risk against a real, plausible event class. Recorded as a measured-and-declined lead, not a residual to revisit unless a corporate-AGM shape is ever witnessed that the verb+ordinal fix does NOT also catch.
+
+## 1.5 THE `/stock-market-news/` PATH SIGNAL — MEASURED, AND DECLINED
+
+Read Ruling 84c in full (`:85313`): it ratified Design A (`TICKER_NEWS_PATH_RE`) specifically because the all-caps ticker-slug-after-`/news/` shape is a **known, broadly-recognised financial-newswire URL convention** — evidenced across the loop's own two independent witnesses (`stocktitan.net`, round 30/31) using the identical `/news/[TICKER]/` shape, which is why Design A "generalises across every ticker-convention newswire without naming one," answering Ruling 32's "stop fixing it one site at a time" complaint from the recorded doctrine, not by assumption.
+
+**`/stock-market-news/companies/...` does not have that property.** It is ONE witness, from ONE host (`scanx.trade`), and nothing in this round's evidence shows it is a shared convention across other financial-newswire or stock-news sites the way the ticker-in-path shape demonstrably is — literal-string-matching `/stock-market-news/` would be exactly the one-host-enumeration-in-path-clothing pattern Ruling 32 warned against, not a structural generalisation. **It is also unnecessary**: §1.2's title-shape fix already catches the specimen without any path signal at all (confirmed in §1.3's MUST CATCH row — the standalone `PR_SETS_ORDINAL_HEADLINE_RE` fires on the title alone). **DECLINED**: not enough evidence to call it structural, and nothing left for it to catch once §1.2 ships.
+
+## 1.6 FAILURE DIRECTION AND BLAST RADIUS
+
+**MEASURES**: the regex tests title text only (no URL needed, matching `PR_ANNOUNCEMENT_HEADLINE_RE`'s own contract) for a leading proper-noun-shaped subject (1-5 words) immediately followed by the literal lowercase verb `sets` immediately followed by an ordinal digit token.
+
+**ASSERTS**: same failure direction as every existing disjunct in `isNewsArticleTitle` (Ruling 32's standing doctrine) — a match can only cause `isNewsArticleTitle` to return `true` where it previously returned `false`, which can only cause `webResultToRawEventItem` to return `null` where it previously returned a value. It never edits a rendered value, never promotes a different candidate, and a miss falls to admission (the status quo).
+
+**TOLERATES**: the three still-unwitnessed verb siblings (`announces`, `to exhibit at`, `attends`) plus the newly-named `hosts` — none organically witnessed in this shape, none added; a hypothetical real event whose own title happens to read "`<Org> sets <ordinal> <noun>`" (e.g. a genuine "`Society sets 5th annual symposium`"-shaped headline) is unwitnessed and would be wrongly dropped if it ever appeared — the same class of accepted, disclosed residual risk round 31 B's own plans/schedules+digit design already carries and ships with, not a new risk class this item introduces. The dropped AGM-token signal (§1.4) and the declined path signal (§1.5) are both TOLERATED misses by design — not shipped, not silently claimed as covered.
+
+**Blast radius, measured not assumed**: one new const, one new disjunct line inside `isNewsArticleTitle` (`:465-472`). `PR_ANNOUNCEMENT_HEADLINE_RE`, `TICKER_NEWS_PATH_RE`, `isTickerNewsPath`, `NEWS_TITLE_RE`, `NEWS_HEADLINE_PATH_RE`, and `urlPathPhrase` are all byte-unchanged. Single call site — `grep -rn "PR_SETS_ORDINAL_HEADLINE_RE"` inside the design harness shows exactly one definition and one proposed call site; nothing else in `web/src` would reference it.
+
+## 1.7 TESTS AT RISK, GREPPED
+
+**Grepped the shipped 2900+-line `eventweb.test.ts`** for `\bsets\b` and for `\bAGM\b|Annual General Meeting` (case-insensitive) — **zero hits either way**. The existing `describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84c)", ...)` block (`eventweb.test.ts:2789-2891`) — including its round-33/34 continuation for `isJobListingContentTitle` further down the same file — is the natural home for a new nested block or additional `it.each` rows; nothing in it references the shapes this item adds. **Zero tests at risk.**
+
+## 1.8 VERDICT
+
+**SHIP `PR_SETS_ORDINAL_HEADLINE_RE`** (§1.2), C's implementation item — one new const, one new disjunct, wired exactly as printed. **The AGM-token signal is DROPPED** (§1.4) — measured, adversarially unsafe against a real, plausible scholarly-society event shape, and not needed since the verb+ordinal fix alone closes M36-01. **The `/stock-market-news/` path signal is DECLINED** (§1.5) — single-host witness, not proven structural, and unnecessary. Recommended C's test additions: the must-catch specimen (title+URL, title-only), the stocktitan.net regression (unaffected), round 31's four ordinal adversarials (0 false positives — the reason the ordinal fix exists), and a representative slice of round 33/36's must-keep corpus already asserted elsewhere in the file (avoid duplicating the full 19+14+19 list verbatim if an existing `describe` block can be extended instead).
+
+## THE GATE, BEFORE AND AFTER (B changed no product code, so before = after)
+
+`npx vitest run`, full-capture, cold: **100 files / 2418 tests, 2418 passing, ZERO failures** — matching round 36's close exactly (Ruling 102's own recorded baseline). No `tsc`/`eslint` re-run needed — B touched zero files under `web/src/` (round 34 B's own precedent for this exact situation).
+
+**B CHANGED NO PRODUCT CODE.** Two commits total (turn-lock claim + this design entry), both pushed on landing. Throwaway harness (`web/zz-r37b/`, three files: `item1-design.test.ts`, `item1-corpus.test.ts`, `item1-path.test.ts`, own minimal `vitest.config.ts`) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere — no live network calls this item (pure regex/function-level design work against the real imported shipped function plus constructed/recorded title-and-URL strings, Ruling 75's live-probe option not spent, per the brief's own "optional" framing). No large page text pasted anywhere — every quote above is a title, URL, or short mechanism fragment already recorded elsewhere in this file. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or weakened (B ships no test — recommendations only, C's to write).
+
+**HAND-OFF: `WHOSE TURN: MANAGER — round 37 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
 
