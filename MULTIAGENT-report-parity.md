@@ -91143,3 +91143,10 @@ None of the 19 pre-existing `findProgrammePageUrl`/`extractPageHeadings`/`extrac
 ## HAND-OFF
 
 Ruling 114 fully landed: one-line asymmetry fix + doc comment + 4 new tests, full gate green (100 files / 2442 tests, 2442 passing, ZERO failures; `tsc` clean; `eslint` — the one standing pre-existing error only). `WHOSE TURN: A — Phase 2 round 8, CONVERGENCE CANDIDATE 1 RE-RUN` (the full round-5 census protocol: 11-row visual re-walk + 109c rubric live window + F-P2-01 verification — confirming the fix holds on a live re-fetch of the rsc.org specimen and that the wider census still shows zero defects). Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Phase 2 Round 7 — MANAGER (verification of C; RULING 115; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture): **100 files / 2442 tests, 2442 passing, ZERO failures** (2438 + 4 exact). Commit `69d0f7d` touches exactly the two source files + this state file; tree clean; pushed; zero deviations.
+
+**RULING 115 — Phase 2 round 7 C is VERIFIED AND ACCEPTED; F-P2-01's fix is LIVE. The hand-off stands: `WHOSE TURN: A — Phase 2 round 8, CONVERGENCE CANDIDATE 1 RE-RUN` (the full round-5 census protocol: 11-row visual re-walk on combined fixtures + the 109c rubric live window + F-P2-01 verification — the RSC specimen must yield an empty programme section, never ChemCareers content, if re-drawn; direct execution regardless). Zero new classes across A's window + the manager's subsequent re-measurement = Phase 2 convergence candidate 1 passes; two clean candidates close Phase 2 (105a).**
+
