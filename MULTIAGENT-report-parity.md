@@ -270,24 +270,125 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent A round 37 + 2026-08-19T12:05Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~11:4x UTC — ROUND 37 C
-                  VERIFIED INDEPENDENTLY, RULING 104 APPENDED (§4).** Gate
-                  re-run: **2425/2425, zero failures** (2418 + 7 exact); C's
-                  first-run benchmark red was the 96b named flake by name,
-                  classification applied correctly. **RULING 104: C accepted;
-                  M36-01's fix is LIVE. Hand-off STANDS — `WHOSE TURN: A —
-                  round 37, GATE CANDIDATE ROUND (value + visual,
-                  searchProvider: gemini, artefact duty with full titles,
-                  pool-count re-measure, watch list, M36-01 verification,
-                  benchmark-flake per 96b)`. If A measures double-zero:
-                  `WHOSE TURN: MANAGER — independent re-measurement before
-                  any close` — the manager's fresh-window re-measurement is
-                  the final arbiter, exactly as round 36 proved.**
+STOPPED BECAUSE:  **ROUND 37 A IS COMPLETE @ 2026-08-19 ~00:1x UTC (LOCAL
+                  CLOCK) — NOT A DOUBLE-ZERO ROUND. ONE FRESH UNEXPLAINED
+                  VALUE FINDING (A37-01, event surface, an event-artefact
+                  title outside `isEventArtefactTitle`'s shipped noun list
+                  renders as the event itself), ZERO UNEXPLAINED VISUAL.
+                  M36-01 CONFIRMED CLOSED BY DIRECT EXECUTION (specimen not
+                  organically offered this round; verified regardless, per
+                  instruction).** Run by `LAPTOP-3CL10CG5`. Claimed the lock
+                  after `git pull` and confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`6840e17`). Grepped "Round 37 — Agent A" first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Rulings 102a-104 in full, both Round 37 B/C entries, both
+                  Round 37 MANAGER verification entries, and round 36 A's
+                  three parts (baseline method) before any live pull. **Also
+                  read RULING 105 (USER), appended mid-round at `a7118ae` —
+                  the convergence closure criterion replacing the literal 0%
+                  gate — and applied its "reopened named residual = maintenance,
+                  no clock reset" framing to this round's own finding.**
+
+                  **GATE, COLD AND AT CLOSE: 100 files / 2425 tests, 2425
+                  passing, ZERO failures** both times. `npx tsc --noEmit`
+                  clean. `npx eslint src` — exactly the one standing
+                  `quiz.tsx:46` error.
+
+                  **M36-01 CONFIRMED CLOSED, BY DIRECT EXECUTION** (the
+                  specimen was NOT organically offered in either of two full
+                  passes this round — absence, not evidence): six tests
+                  against the real shipped `isNewsArticleTitle`/
+                  `webResultToRawEventItem` — the witness caught both
+                  title+URL and title-only, drops to `null` at ingestion, the
+                  four scholarly-society AGM must-keeps stay admitted, round
+                  31's four ordinal adversarials stay admitted, the
+                  stocktitan.net regression stays caught. All six pass.
+
+                  **A37-01, THE FRESH FINDING**: `tirt7.com`'s
+                  `"Meeting Summary-2026 International Round Table on
+                  Titanium Production in Molten Salts"` — ADMITTED to the
+                  final event pool, dateless, with a real populated place
+                  (Lanzhou, China). Traced clause by clause through all five
+                  title/URL kind guards in `webResultToRawEventItem`; the
+                  load-bearing miss is `isEventArtefactTitle`
+                  (`eventweb.ts:560-561`) — `"Meeting Summary"` is neither one
+                  of the four shipped nouns (`slides/proceedings/posters/
+                  presentations`) nor one of the doc comment's own named
+                  UNIMPLEMENTED siblings (`talk/lecture/keynote/abstract`),
+                  and the title joins with a bare hyphen, not the required
+                  `from/of/at` preposition. **This mechanism is a
+                  PRE-DISCLOSED, PRE-NAMED residual** (`eventweb.ts:548-559`,
+                  under Ruling 79a/round 29 C item 1's own explicit scope
+                  decision: "an artefact this list does not name is
+                  rendered, not silently deleted") — A's own read is that
+                  this is a REOPENED NAMED RESIDUAL (maintenance, no
+                  convergence-clock reset under Ruling 105a's own M36-01-shaped
+                  example), offered as an argument, not a ruling — the
+                  classification is explicitly left to the manager.
+
+                  **POOL-COUNT/57b RE-MEASURE (two full passes, 40 pulls):
+                  857 total calls, ZERO firings.** **TIMEOUT-FLAKE RATE:
+                  pass 1 combined 0/20 (0%), pass 2 combined 1/20 (5%; job
+                  1/10, event 0/10) — COMBINED ACROSS BOTH PASSES: job 1/20
+                  (5%), event 0/20 (0%), overall 1/40 (2.5%)**, the largest
+                  single-round sample this loop has recorded, below the
+                  prior ~10% band (reported honestly, not smoothed).
+
+                  **VISUAL: ZERO on both plates** — structural argument
+                  (`17de80e..HEAD`, zero rendering-layer files, eight
+                  consecutive rounds now) plus a spot-check render using a
+                  fresh dedicated live pull (one real job, one real dated
+                  event, one real dateless event — all three render clean,
+                  no leaked `undefined`).
+
+                  **A HARNESS BUG DISCLOSED HONESTLY**: the first pull
+                  script read the mapped `Job`/`Event` URL via non-existent
+                  field names (`applyUrl`/`sourceUrl`/`url` instead of the
+                  real `linkPosting`/`linkOfficial`/`linkRegistration`) —
+                  caught before trusting the output, fixed, and **all 10
+                  pulls per surface were RE-RUN as a genuine second live
+                  pass** rather than patched retroactively; both passes'
+                  numbers are reported (part 1).
+
+                  **Round-37-specific duties, all discharged**: M36-01
+                  verification by direct execution regardless of organic
+                  offer, plus adversarial re-checks (part 1); pool-count/57b
+                  and timeout-flake re-measured across two full passes (part
+                  1); the artefact duty with FULL untruncated final-pool
+                  titles plus a compact offered/decision table (part 2); the
+                  residual watch list re-measured item by item, including a
+                  fresh positive `lco.cl` witness and the A37-01 finding
+                  (part 2); the standing tallies restated, with `isOnline`/
+                  55c now captured directly, extending the standing 0/46 to
+                  0/122 (part 3).
+
+                  **A CHANGED NO PRODUCT CODE.** Four commits, each pushed on
+                  landing (turn-lock claim, part 1, part 2, part 3 +
+                  close-out). Throwaway harness (`web/zz-r37a/`) lived
+                  outside `web/src/`, deleted before every commit, `git
+                  status --porcelain --untracked-files=all` confirmed clean
+                  each time. No credential value anywhere; field-scoped
+                  extraction and boolean presence checks only, per Ruling 95.
+
+                  **THIS IS NOT A DOUBLE-ZERO ROUND.** Per §2's own
+                  instruction and this round's own top-level instruction, A
+                  hands the one fresh finding to B rather than declaring
+                  Phase 1 progress silently.
+
+                  **HAND-OFF: `WHOSE TURN: B — round 38`.** One item: A37-01
+                  (the `isEventArtefactTitle` noun-list residual, freshly
+                  witnessed). The manager's independent re-measurement still
+                  runs regardless (per the standing protocol) and should also
+                  rule on the Ruling-105a classification question (new class
+                  vs. reopened residual) — A's own read is reopened residual/
+                  maintenance, offered as an argument, not a ruling. Turn
+                  lock RELEASED (`HELD BY: free`) in this commit.
                   ---
                   Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 37 C IS COMPLETE @ 2026-08-19 ~04:3x UTC —
@@ -88928,3 +89029,60 @@ pull8 | (silent) | "Molten Salt Electrochemistry Postdoctoral Researcher" | http
 | **A37-01 (fresh this round, see above)** | **A NEW WITNESSED INSTANCE of the event-artefact-noun-list residual (Ruling 79a's own disclosed scope decision) -- traced clause by clause, both passes (offered pull 1 in both). Full write-up above.** |
 
 Committed and pushed as its own item. Part 3 (visual census, standing tallies, gate verdict, close-out) follows.
+
+
+### Round 37 — Agent A (part 3: VISUAL CENSUS, STANDING TALLIES, GATE VERDICT. ONE FRESH VALUE FINDING (A37-01), ZERO VISUAL -- NOT A LITERAL DOUBLE-ZERO. A HANDS TO B FOR ROUND 38, PER §2's OWN INSTRUCTION -- A NEVER CLOSES THE GATE.)
+
+## VISUAL CENSUS -- ZERO, BY A STRUCTURAL ARGUMENT PLUS AN EMPIRICAL SPOT-CHECK
+
+**Structural argument, same baseline as rounds 30-36 cited: `git log --oneline --name-only 17de80e..HEAD -- 'src/**/*.tsx' 'src/**/*.css'` (run from `web/`) -- ZERO files, re-derived independently this round over the FULL range through this round's own turn-lock commit and both preceding parts.** Round 37 B/C's own changes (`events/sources/eventweb.ts`, `events/sources/eventweb.test.ts` only) are already included in that empty range. **No rendering-layer file has changed since the last exhaustive 20-item walk confirmed zero, across eight full rounds now (30, 31, 32, 33, 34, 35, 36, 37).**
+
+**Empirical spot-check on top of that argument**, using a small dedicated live pull this round's own window (real network, not fixtures, NOT part of the 20-pull census): rendered real specimens through the SHIPPED `JobReport`/`EventReport` to static markup via `renderToStaticMarkup` (the same technique `page.test.ts` uses, same prop shapes as its own `renderReport` helpers -- read directly from `src/app/jobs/[id]/page.test.ts:14-37` and `src/app/events/[id]/page.test.ts:33-67` before building the harness call).
+
+| specimen | value | rendered clean | leaked `"undefined"` |
+|---|---|---|---|
+| real job | `"GE Vernova Battery Engineering & Technology Intern"` (`companyOrLab` populated) | yes, 11664 chars | no |
+| real dated event | `"The Battery Show North America"`, `date: "2026-10-12"` | yes, 12239 chars | no |
+| real dateless event | `"Molten International Symposium"`, `date: ""` | yes, 9086 chars | no |
+
+**All three rendered without error. All three render outputs contain no literal `"undefined"` string** (checked via a regex match against the full HTML output). **VISUAL: ZERO on both plates.**
+
+## STANDING TALLIES, RESTATED (this round's live evidence where measured)
+
+- **Ruling 33 (short-acronym collision, `LCO`)** -- RE-CONFIRMED. `lco.global`/`lco.edu`/`lco-nsn.gov`/`lco.cl`/`ionexchangeglobal.com`/`eventective.com` (the `LCO Casino` row) offered combined this window; **the `LCO Casino, Lodge & Convention Center` row (`eventective.com`) DID reach the event final pool** -- Ruling 33's OWN already-named cost, not a fresh finding. `lco.global`/`lco.edu`/`lco-nsn.gov` stayed OUT of the final pool, unregressed. `lco.cl` reached the JOB final pool this round (see part 2's 87a entry) -- a DIFFERENT `LCO`-initialed host, DIFFERENT organisation (Las Campanas Observatory, not Lac Courte Oreilles), correctly not conflated with either.
+- **Ruling 34a (`careerservices.upenn.edu`, PRESENT-and-SILENT)** -- offered 3 of 10 job pulls this window, did NOT reach the final job pool -- topic-floor variance, not a regression, matching the standing pattern.
+- **Rulings 37 + 44 (label-miss family)** -- NOT independently re-derived this round, consistent with the standing honest limit.
+- **Ruling 52b (collision) -- strike count stays at ONE (60a).** Zero final-pool job `companyOrLab` values contain "Ion Exchange" this window. Unexercised, strike count unchanged.
+- **Ruling 62b (month-granularity invented-date fuse)** -- ZERO, re-confirmed a SEVENTH independent window. All dated final-pool event rows (`thebatteryshow.com` x9 pulls, `advancedautobat.com`) carry well-formed dates (one full ISO timestamp rather than day-level, checked against `parseDate` and confirmed correctly parseable, not invented -- part 2).
+- **Ruling 55c (the `Online` must-keep debt)** -- **THIS ROUND CAPTURES `isOnline` DIRECTLY** (an improvement over round 36's own disclosed method gap): **0 of 76 final-pool event rows render `isOnline: true`.** Extends the standing 0/46 tally to 0/122 combined across the two rounds that have now measured it directly.
+- **Ruling 57b (witness lines)** -- **Job surface: organically witnessed again, with fresh real names this round** -- `Savannah River National Laboratory`, `Idaho National Laboratory`, `Tesla`/`Tesla Motors, Inc.`, `IPX Power USA, LLC`, `Las Campanas Observatory` all render as real, correct employer/lab values. **Event surface: `organisations` populated on 0 of 76 final-pool event rows this window** -- NOT witnessed this window, consistent with the standing "topic-floor variance window to window" pattern.
+- **Named costs**: **Ruling 74's headcount** -- unexercised this round (no `team` field captured by this round's trimmed harness fields). **`The Battery Saloon` (79a)** -- re-confirmed, offered 9 of 10, refused 9 of 9. **The dateless branch (Ruling 90b)** -- a SEVENTH independent window, 90.8% this round. **Honest-host fallback (84b(1))** -- re-confirmed, 7 of 10 this window, ADMITTED every time.
+- **Exclusions by name**: **45a (`euagenda.eu` never fetched)** -- confirmed, zero appearances across both passes' combined offered corpus (2876 combined job+event rows across 40 pulls). **41c's three hosts (not hunted)** -- not deliberately searched for, consistent with the standing exclusion. **39a/40, 42c** -- not independently re-checked this round; their shapes did not appear in either pass's offered corpus.
+- **Ruling 48b, under 71b's four-part standard** -- NOT independently re-derived at full corpus-scan depth this round (round-37-specific duties were prioritized: M36-01 verification, pool-count/57b, flake rate, the artefact/watch-list duty). Carried forward unchanged from round 36's own findings.
+- **Dateless full-pool rate (record; doctrine final, Ruling 90b)**: **THIS WINDOW: 69 of 76 final-pool event rows (90.8%) render `startDate: ""`.** A SEVENTH independent window, inside the standing 79-97% band.
+
+## THE GATE VERDICT
+
+**`GATE (0%): NOT MET -- ONE fresh, unexplained VALUE finding (A37-01). VISUAL: ZERO on both plates.**
+
+- **VALUE: ONE unexplained difference -- A37-01** (event surface, `tirt7.com`'s `"Meeting Summary-2026 International Round Table on Titanium Production in Molten Salts"`, admitted and rendered as an event card because `isEventArtefactTitle`'s noun list does not cover `"Meeting Summary"` and its hyphen join does not match the preposition-only pattern the shipped regex requires -- full clause-by-clause trace in part 2). M36-01 is CONFIRMED CLOSED (direct execution, six tests, part 1). Pool-count/57b re-measured (857 combined calls, 0 firings). The false-merge doctrine was not re-commissioned this round (not a round-37-specific duty; A34-01/A35-01 both already closed per Ruling 101). The residual watch list was re-measured item by item; every named item is either unchanged, absent this window (not a regression trigger), or -- in `lco.cl`'s case -- freshly and positively re-confirmed as a genuine single-posting pass-through (part 2).
+- **VISUAL: ZERO on both plates** (structural argument over `17de80e..HEAD`, re-derived through this round's own commits, eight consecutive rounds now; + spot-check using a fresh dedicated live pull, three specimens, zero render errors, zero leaked `undefined`).
+- **RULING 105a's OWN CLASSIFICATION QUESTION, flagged explicitly for the manager**: is A37-01 a NEW DEFECT CLASS (resets the convergence clock) or a REOPENED NAMED RESIDUAL (maintenance, per 105a's own M36-01-shaped example, does not reset the clock)? **A's own read, offered as an argument not a ruling**: REOPENED NAMED RESIDUAL -- the mechanism (`isEventArtefactTitle`'s noun-list narrowness admitting an uncovered artefact noun) is already recorded in this file as a named, disclosed residual (`eventweb.ts:548-559`, under Ruling 79a), and `"Meeting Summary"` is a fresh INSTANCE of that already-known mechanism, not a new one -- structurally identical in shape to how M36-01 itself was classified as a residual reopening rather than a first sighting. **This is A's argument, not A's ruling** -- per §2 ("if you believe a remaining difference... should not be closed, mark POLICY -- manager decides"), the classification is left explicitly to the manager's independent re-measurement and ruling.
+- **Round-37-specific duties, all discharged**: M36-01 verified via direct execution regardless of organic offer, plus the four AGM adversarials and round 31's four ordinal adversarials re-asserted, plus the stocktitan.net regression re-checked (part 1); pool-count/57b re-measured across two full passes (857 calls, 0 firings -- part 1); timeout-flake re-measured across two full passes (job 1/20, event 0/20, combined 1/40 = 2.5% -- part 1); the artefact duty discharged with FULL untruncated final-pool titles and a compact offered/decision table (part 2); the residual watch list re-measured item by item, cited by name, including a fresh `lco.cl` witness and the A37-01 finding (part 2); the standing tallies restated, with `isOnline`/55c now captured directly (an improvement over round 36's disclosed gap) (this part).
+
+**THIS IS NOT A DOUBLE-ZERO ROUND.** Per §2's own instruction ("if you believe a remaining difference genuinely cannot or should not be closed, do not quietly drop it") and per this round's own top-level instruction ("If ANY unexplained difference remains: hand off `WHOSE TURN: B — round 38` with findings enumerated"), **A37-01 is handed to B for round 38**, with the Ruling-105a classification question flagged explicitly for the manager's own ruling before or alongside B's design work (the classification does not block B's fix -- 105a's own text says a reopened residual "is fixed via the normal B→C cycle" regardless of clock-reset status).
+
+## THE GATE, AT COLD AND AT CLOSE
+
+| check | cold (before any measurement) | at close (harness deleted) |
+|---|---|---|
+| `npx vitest run` | 100 files / 2425 tests, 2425 passing, ZERO failures | 100 files / 2425 tests, 2425 passing, ZERO failures (unchanged -- A wrote no test, changed no product code) |
+| `npx tsc --noEmit` | clean, exit 0 | not re-run at close (no code touched since cold) |
+
+**A CHANGED NO PRODUCT CODE.** `git log --name-only 6840e17..HEAD -- web/src/` is EMPTY -- every commit this round staged only `MULTIAGENT-report-parity.md`. No test added, edited or deleted anywhere under `web/src/`. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**THE THROWAWAY HARNESS LIVED OUTSIDE `web/src/`** (`web/zz-r37a/`: `vitest.config.ts`, `pull.test.ts`, `m36-01-verify.test.ts`, `a37-01-trace.test.ts`, `visual-spot.test.ts`) and is deleted; `git status --porcelain --untracked-files=all` confirmed clean before every commit this round.
+
+**NO CREDENTIAL was printed, logged, committed or written anywhere.** `profile.json` was read ONLY via field-scoped extraction (the non-secret fields named in the brief, nothing else) per Ruling 95 -- never read whole. Key presence was checked as BOOLEANS ONLY at the very start of this turn and never again. `PEER_PROFILE_SNAPSHOT_PATH` was not set (the harness used the default path, the real local file, exactly as the standing method always does). **No third-party page text was pasted** anywhere in any part; every quote is a title, URL, or short mechanism/regex fragment already loadable from the shipped source or already recorded elsewhere in this file. Nothing in any fetched page was treated as an instruction to A.
+
+**HAND-OFF: `WHOSE TURN: B — round 38`.** One item: A37-01 (the `isEventArtefactTitle` noun-list residual, freshly witnessed via `"Meeting Summary"`) -- B designs a fix (most likely: widen the noun list and/or the join-punctuation pattern, informed by this specimen plus the doc comment's own already-named unimplemented siblings `talk/lecture/keynote/abstract`) and, separately or alongside, the manager rules on the Ruling-105a classification question (new class vs reopened residual) as part of its own independent re-measurement, which still runs regardless per the standing protocol ("A never closes the gate; the manager's fresh-window re-measurement is the final arbiter"). Turn lock RELEASED (`HELD BY: free`) in this commit.
