@@ -270,34 +270,33 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent C round 3 + 2026-08-19 19:58 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       C — Phase 3 round 3 (Ruling 120g). §1's top block synced
-                  in this lock-claim commit — same class of stale-block gap
-                  round 1 A, round 9 A, and round 2 B each found and fixed
-                  before it; the manager's Rulings 120a-120g (end of §4)
-                  already ratified B's round-2 work and routed here. Five
-                  items commissioned, one commit each, B's designs
-                  implemented VERBATIM: (1) J1 — route `catalogLabel`
-                  through `resolveEmployerIdentity`'s own validation, gated
-                  by a new closed placeholder-token predicate (measured
-                  member: `name`); new `"catalog"` status variant approved
-                  (Ruling 120d(4)) as a discriminated-union widening, one
-                  existing test's assertion REWRITTEN not deleted; (2) F2 —
-                  port the job surface's `isDateStructuredResearchPath` to
-                  the event surface (foundry.lbl.gov witnesses); (3) J2 —
-                  add `products` to `NON_JOB_PATH_RE`; (4) F8 — name-repair
-                  strip for a trailing "applications open" clause; (5) F9 —
-                  TEST-suffix strip, EVENT-ONLY per Ruling 120d(2), not the
-                  shared `gemini-search.ts`. Escape clause pre-authorised
-                  (Ruling 120g): if an approved design breaks a recorded
-                  control or needs an open-class list, STOP that item, file
-                  `POLICY — manager decides`, move on. See §4 `### Phase 3
-                  Round 2 — Agent B` (4 parts) and `### Phase 3 Round 2 —
-                  MANAGER` (Rulings 120a-120g) for full detail.
+WHOSE TURN:       A — Phase 3 round 4. C's round 3 is COMPLETE — all five
+                  of Ruling 120g's items shipped, one commit each: (1) J1
+                  — `catalogLabel` now a validated tier inside
+                  `resolveEmployerIdentity`, gated by a closed
+                  placeholder-token predicate (measured member: `name`
+                  only); (2) F2 — the job surface's
+                  `isDateStructuredResearchPath` ported to the event
+                  surface; (3) J2 — `products` added to `NON_JOB_PATH_RE`;
+                  (4) F8 — the "applications open" name-repair strip; (5)
+                  F9 — the TEST-suffix strip, EVENT-ONLY per Ruling
+                  120d(2). A's job: a fresh Tier-2 census (same PHASE 3
+                  MEASUREMENT PROFILE below) that VERIFIES all five fixes
+                  live — J1 on a fresh Himalayas pull (does "name" still
+                  render, does a real company still render), F2/F8/F9 on
+                  fresh event pulls (do the foundry.lbl.gov/Cvent-shaped
+                  classes still misrender, do real controls still render
+                  correctly), J2 on a fresh job pull — plus the standing
+                  duties (pool composition tallies, the ranked finding
+                  list, the gate). See §4 `### Phase 3 Round 2 — Agent B`
+                  (4 parts), `### Phase 3 Round 2 — MANAGER` (Rulings
+                  120a-120g) and `### Phase 3 Round 3 — Agent C` (5 items)
+                  for full detail.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
@@ -337,6 +336,140 @@ reference):
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 3 ROUND 3 C IS COMPLETE @ 2026-08-19 ~20:1x UTC.
+                  ALL FIVE COMMISSIONED ITEMS (RULING 120g) DONE, ONE
+                  COMMIT EACH, PUSHED INDIVIDUALLY.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp` (claiming push ACCEPTED
+                  at `b4fe09e`). Grepped `Phase 3 Round 3` first — zero
+                  prior entries, fresh start not a resume. **Found and
+                  fixed the same class of protocol gap round 1 A, round 9
+                  A, and round 2 B each found before it: §1's top block
+                  still read "MANAGER — Phase 3 round 2 verification..."
+                  even though the manager's own Rulings 120a-120g had
+                  already done that verification and routed to C round 3
+                  — synced in the lock-claim commit, before touching
+                  anything else.**
+
+                  **GATE, COLD FIRST: 100 files / 2446 tests, 2446
+                  passing, ZERO failures**, `tsc --noEmit` clean, matching
+                  the brief's stated baseline exactly. Implemented all
+                  five of B's designs VERBATIM — no redesign, no scope
+                  judgment calls beyond the two named below, both decided
+                  by B's own stated reasoning rather than improvised.
+
+                  **ITEM 1 (J1) — `catalogLabel` routing + closed
+                  placeholder-token predicate. Commit `f4f4407`.**
+                  `web/src/lib/opportunities/employer-identity.ts`:
+                  `EmployerIdentityResolution` gains `{status: "catalog"}`
+                  (line 4-9, Ruling 120d(4) discriminated-union widening);
+                  `PLACEHOLDER_IDENTITY_VALUES = new Set(["name"])` +
+                  `isPlaceholderIdentityValue` (lines 77-80) — ONLY the
+                  measured token, B's unmeasured siblings explicitly not
+                  added per this round's commission; `resolveEmployerIdentity`
+                  (line 112) gains the catalog tier at line 134, reached
+                  only when `structured`/`declared` are both empty.
+                  `web/src/lib/jobs/sources/himalayas.ts:84`: caller's own
+                  raw-fallback ternary deleted — the exact bypass that let
+                  "name" through. `web/src/lib/opportunities/enrich.ts:472`:
+                  identical collapse at the second call site; traced the
+                  non-obvious consequence that the shortcut-return guard at
+                  `enrich.ts:491` now does real work instead of being
+                  vacuously true. Ruling 120d(4)'s required contract-change
+                  rewrite done (never deleted, comment names this item).
+                  Must-keep control `companyName: "mercor"` (a REAL company
+                  from the same 200-row corpus) shipped as an explicit
+                  test, per this round's commission. 10 new tests.
+
+                  **ITEM 2 (F2) — port `isDateStructuredResearchPath` to
+                  the event surface. Commit `aa49691`.**
+                  `web/src/lib/events/sources/eventweb.ts`: new module-
+                  private `DATE_STRUCTURED_PATH_RE`/
+                  `isDateStructuredResearchPath` (lines 2230-2239), wired
+                  into `webResultToRawEventItem` at line 2278, same
+                  relative position (right before the topicality gate) the
+                  job surface's own copy holds. Placement: the OWNED-COPY
+                  option B actually wrote up as the design (not the
+                  cross-file-export alternative B merely named for
+                  completeness) — not treated as an escape-clause item,
+                  since no control was broken and no open-class list was
+                  needed. Fires on both live foundry.lbl.gov witnesses;
+                  zero fixture collision (re-grepped, not just trusted). 4
+                  new tests incl. the must-keep MoSES control and the
+                  named safety-net rescue case.
+
+                  **ITEM 3 (J2) — add `products` to `NON_JOB_PATH_RE`.
+                  Commit `1947e4c`.** `web/src/lib/jobs/sources/jobweb.ts:95`:
+                  alternation gains `products` only; doc comment quotes
+                  the shipped code's own advance prediction verbatim, as
+                  the brief required. **Found and fixed a contract-change
+                  collision B's own blast-radius note did not name**: an
+                  existing consolidated regex-lock test asserted
+                  `/products/` was NOT matched — rewritten (never
+                  deleted), sibling `shop` assertion untouched. Must-keep
+                  verified myself against A's 14-row correct-job list, not
+                  inherited from B's claim. 2 net-new tests + 1 rewrite.
+
+                  **ITEM 4 (F8) — the "applications open" name-repair
+                  strip. Commit `0756020`.** `eventweb.ts`:
+                  `APPLICATION_STATUS_TAIL_RE`/`stripApplicationStatusTail`
+                  (lines 1638-1649, B's exact regex), composed as the new
+                  outermost strip at the `selectEventTitleSegment` chain
+                  (~line 1991-2001 before item 5 added to it). Deliberately
+                  THREE vetoes, not `stripBannerLeadIn`'s extra
+                  corroboration one — B's own stated design, recorded
+                  explicitly rather than left implicit. **Caught and fixed
+                  my own hand-trace error before shipping**: a first
+                  three-strip constructed composition test did not
+                  reproduce on execution; rewrote to a verified two-way
+                  case. 5 new tests incl. a real paired must-keep control
+                  (same bootcamp, clean row in the same pull).
+
+                  **ITEM 5 (F9) — TEST-suffix strip, EVENT-ONLY. Commit
+                  `5483580`.** `eventweb.ts`: `DRAFT_ANNOTATION_TAIL_RE`
+                  (line 1701, case-sensitive) /
+                  `stripDraftAnnotationTail` (line 1703), composed as the
+                  new outermost strip at line 1996. **Placement question B
+                  left open is now settled: EVENT-ONLY per Ruling 120d(2)**
+                  — `gemini-search.ts` untouched, confirmed by `git status`
+                  not just stated. Doc comment records the named promotion
+                  threshold verbatim (a same-shape witness on a second
+                  surface promotes to the shared seam). **Caught and fixed
+                  a SECOND hand-trace error before shipping** (same
+                  discipline as item 4, not assumed safe the second time
+                  either): a constructed composition test had `TEST`
+                  trailing AFTER the application-status clause, which put
+                  that clause outside its own end-anchor and left it
+                  unstripped on execution — reordered, re-traced,
+                  confirmed. 5 new tests incl. the load-bearing case-
+                  sensitivity protective case.
+
+                  **FINAL GATE, BOTH REQUIRED CHECKS, RE-CONFIRMED AFTER
+                  THE LAST ITEM: `npx vitest run` — 100 files / 2471
+                  tests, 2471 passing, ZERO failures** (2446 baseline + 25
+                  net-new across all five items). **`npx tsc --noEmit` —
+                  clean, 0 errors.** `npx eslint src` — the one standing
+                  `quiz.tsx:46` error only, unchanged throughout. No
+                  `POLICY — manager decides` items filed this round — the
+                  escape clause was not invoked; both named implementation
+                  choices (F2's owned-copy-vs-export placement, and
+                  re-verifying F9's event-only ruling was actually
+                  followed) were resolved by B's or the manager's own
+                  stated reasoning, not improvised. No credential ever
+                  printed, logged, or read whole. No large block of
+                  fetched page text pasted anywhere — every witness quote
+                  is a short fragment already present in this file's own
+                  prior rounds, not freshly fetched. No branch, worktree,
+                  or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched. Pure implementation turn, no live network
+                  calls made.
+
+                  `WHOSE TURN: A — Phase 3 round 4 (re-census: verify all
+                  five fixes live under aiTier 2, plus the standing
+                  duties).` Turn lock RELEASED (`HELD BY: free`) in this
+                  commit.
 STOPPED BECAUSE:  **PHASE 3 ROUND 2 B IS COMPLETE @ 2026-08-19 ~19:5x UTC.
                   ALL FOUR COMMISSIONED DELIVERABLES DONE, ONE COMMIT EACH,
                   PUSHED INDIVIDUALLY.** Run by `LAPTOP-3CL10CG5`. Claimed
