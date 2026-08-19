@@ -270,11 +270,111 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent A round 36 + 2026-08-19 03:35 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 36 A IS COMPLETE @ 2026-08-19 ~04:0x UTC — THE
+                  GATE-CANDIDATE CENSUS REACHES DOUBLE-ZERO. ZERO UNEXPLAINED
+                  VALUE DIFFERENCES, ZERO UNEXPLAINED VISUAL DIFFERENCES.
+                  A35-01 CONFIRMED FIXED LIVE (ORGANIC WITNESS + DIRECT
+                  EXECUTION + INDEPENDENT CORPUS REPLAY); A34-01
+                  RE-VERIFIED UNREGRESSED VIA DIRECT EXECUTION WITH REAL
+                  LIVE ENRICHMENT.** Run by `LAPTOP-3CL10CG5`. Claimed the
+                  lock after `git pull` and confirming `git
+                  branch --show-current` reads
+                  `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`8afc28c`). Grepped "Round 36 — Agent A" first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Rulings 100-101, both Round 36 B/C entries, both Round 36
+                  MANAGER verification entries, and round 35 A's three parts
+                  (baseline tallies) before any live pull.
+
+                  **GATE, COLD AND AT CLOSE: 100 files / 2418 tests, 2418
+                  passing, ZERO failures** both times. `npx tsc --noEmit`
+                  clean. `npx eslint src` — exactly the one standing
+                  `quiz.tsx:46` error, zero warnings.
+
+                  **A35-01 CONFIRMED FIXED LIVE, THREE INDEPENDENT WAYS**:
+                  (1) ORGANIC WITNESS — window 1 pull 2 organically offered
+                  both `djk.co.jp` and `quintustechnologies.com` together
+                  (real traffic, first time this pair has ever been
+                  co-offered in this loop's history); only ONE (djk.co.jp)
+                  reached the final pool — the shipped
+                  `mergeContainedEventNames` merged them live. (2) DIRECT
+                  EXECUTION — the verbatim pair replayed offline through the
+                  full `webResultToRawEventItem` -> `dedupEvents` ->
+                  `scoreEvents` -> `dedupScoredEvents` ->
+                  `mergeContainedEventNames` chain confirms the merge, both
+                  input orderings, matching the organic winner (djk, higher
+                  score: 0.5287 vs 0.4910). (3) INDEPENDENT CORPUS REPLAY —
+                  16 distinct full untruncated titles from this round's own
+                  two live windows (a corpus B/C never saw), 120 pairs
+                  checked directly against the shipped function: exactly the
+                  one expected merge, zero others.
+
+                  **A34-01 RE-VERIFIED UNREGRESSED**: direct execution
+                  through the REAL shipped `scoreEventPoolCandidates` with
+                  GENUINE LIVE PAGE ENRICHMENT (no mock, a strengthening over
+                  round 35's mocked-date approach) — the AABC pair (evwire +
+                  advancedautobat, this round's own live specimen) merges to
+                  exactly 1 survivor.
+
+                  **FALSE-MERGE SCAN (the must-NOT-merge doctrine): ZERO
+                  false merges found anywhere** — across all 10 event-surface
+                  final pools (both windows, Jaccard-flagged near-vocabulary
+                  families all confirmed still separate cards) AND the
+                  independent 120-pair corpus replay above.
+
+                  **POOL-COUNT/57b RE-MEASURE (strengthened — firings now
+                  tracked, not just calls): 208 total calls, ZERO firings**,
+                  window 2, both surfaces. **TIMEOUT-FLAKE RATE: job 2 of 10
+                  (20%), event 0 of 10 (0%), combined 2 of 20 (10%)** across
+                  TWO full independent windows this round — stable at the
+                  same ~10% combined rate rounds 34 and 35 also measured.
+
+                  **VISUAL: ZERO on both plates** — structural argument
+                  (`17de80e..HEAD`, zero rendering-layer files, seven
+                  consecutive rounds now) plus a spot-check render using a
+                  fresh dedicated live pull (one real job, one real dated
+                  event, one real dateless event — all three render clean,
+                  no leaked `undefined`).
+
+                  **Round-36-specific duties, all discharged**: A35-01
+                  verification (organic + direct execution, part 1); A34-01
+                  regression-check by execution with real enrichment (part
+                  1); the false-merge scan on the live corpus AND an
+                  independent replay (part 1); pool-count/57b re-measure with
+                  firings now tracked (part 1); timeout-flake re-measure
+                  across two windows (part 1); the artefact duty with FULL
+                  untruncated final-pool titles for every row (part 2); the
+                  residual watch list re-measured item by item incl. the
+                  exact-prefix residual (unwitnessed, part 2); the standing
+                  tallies restated (part 3), with one honest method
+                  limitation disclosed (`isOnline`/55c not captured in this
+                  round's trimmed harness fields, not re-derived).
+
+                  **A CHANGED NO PRODUCT CODE.** Four commits, each pushed on
+                  landing (turn-lock claim, part 1, part 2, part 3 + this
+                  close-out). Throwaway harness (`web/zz-r36a/`) lived
+                  outside `web/src/`, deleted before every commit, `git
+                  status --porcelain --untracked-files=all` confirmed clean
+                  each time. No credential value anywhere; boolean/
+                  field-scoped presence only; `.env.local` never `cat`-ed
+                  for values, key NAMES only.
+
+                  **THIS IS A DOUBLE-ZERO ROUND. Per this round's own
+                  instruction, A does NOT declare Phase 1 complete.**
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — independent
+                  re-measurement before any close`.** Every number above is
+                  A's own measurement, offered as raw evidence for the
+                  manager to re-derive independently — the manager verifies,
+                  A does not close the gate (Ruling 30). Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~09:2x UTC — ROUND 36 C
                   VERIFIED INDEPENDENTLY, RULING 101 APPENDED (§4).** Gate
                   re-run (full-capture): **2418/2418, zero failures.** Both
@@ -88119,3 +88219,63 @@ pull4 | electrochem.org | "molten salts Archives" | https://www.electrochem.org/
 | **A35-01 (FIXED this round — round 36 B/C's `mergeContainedEventNames`, Ruling 100/101)** | **CONFIRMED LIVE at the strongest level yet: organically witnessed merging on real traffic (window 1 pull 2, both rows offered together, only one survives) PLUS direct execution (both orderings) PLUS an independent 120-pair corpus replay. This item is now CLOSED as a live, verified fix — not merely a code-level claim.** |
 
 Committed and pushed as its own item. Part 3 (visual census, standing tallies, gate verdict, close-out) follows.
+
+
+### Round 36 — Agent A (part 3: VISUAL CENSUS, STANDING TALLIES, GATE VERDICT. DOUBLE-ZERO REACHED -- VALUE ZERO, VISUAL ZERO. A HANDS TO THE MANAGER FOR INDEPENDENT RE-MEASUREMENT, PER THIS ROUND'S OWN INSTRUCTION -- A NEVER CLOSES THE GATE.)
+
+## VISUAL CENSUS — ZERO, BY A STRUCTURAL ARGUMENT PLUS AN EMPIRICAL SPOT-CHECK
+
+**Structural argument, same baseline as rounds 30-35 cited: `git log --oneline --name-only 17de80e..HEAD -- 'web/src/**/*.tsx' 'web/src/**/*.css'` — ZERO files, re-derived independently this round over the FULL range through this round's own turn-lock commit and both preceding parts.** Round 36 B/C's own changes (`events/dedup.ts`, `events/pipeline.ts`, `events/dedup.test.ts` only) are already included in that empty range — confirmed directly, not assumed. **No rendering-layer file has changed since the last exhaustive 20-item walk confirmed zero, across seven full rounds now (30, 31, 32, 33, 34, 35, 36).**
+
+**Empirical spot-check on top of that argument**, using a small dedicated live pull this round's own window (real network, not fixtures, NOT part of the 10-pull census — round 30-35 A's own precedent): rendered real specimens through the SHIPPED `JobReport`/`EventReport` to static markup via `renderToStaticMarkup` (the same technique `page.test.ts` uses, same prop shapes as its own `renderReport` helpers).
+
+| specimen | value | rendered clean | leaked `"undefined"` |
+|---|---|---|---|
+| real job | first survivor of a fresh live job pull (`roleTitle` populated, `companyOrLab` absent for this specimen) | yes, 7773 chars | no |
+| real dated event | `The Battery Show North America`, `date: "2026-10-12"` | yes, 12239 chars | no |
+| real dateless event | `Molten International Symposium`, `date: ""` | yes, 9086 chars | no |
+
+**All three rendered without error. All three render outputs contain no literal `"undefined"` string** (checked both via a substring match and a regex match against the full HTML output, not merely eyeballed). **VISUAL: ZERO on both plates.**
+
+**A harness bug in this check disclosed honestly**: the console diagnostic line for the job specimen printed `job.title` / `job.company`, which are not the `Job` type's actual field names (`roleTitle`/`companyOrLab` — confirmed by reading `web/src/types/index.ts:204-207`) — so the diagnostic printed the literal string `"undefined"` for MY OWN print statement, while the actual rendered HTML (the thing being tested) correctly excludes it, confirmed by the `expect(html).not.toMatch(/undefined/)` assertion which passed. A harness-script bug, not a product defect — caught by noticing the printed line looked wrong, verified the underlying assertion was unaffected.
+
+## STANDING TALLIES, RESTATED (this round's live evidence where measured)
+
+- **Ruling 33 (short-acronym collision, `LCO`)** — RE-CONFIRMED. `lco.global`/`lco.edu`/`lco-nsn.gov`/`ionexchangeglobal.com`/`eventective.com` (the `LCO Casino` row) offered combined across both surfaces this window; **the `LCO Casino, Lodge & Convention Center` row (`eventective.com`) DID reach the event final pool** (window 2 pull 2) — this is Ruling 33's OWN already-named cost (confirmed against the state file, `MULTIAGENT-report-parity.md:81801/82109`), not a fresh finding. `lco.global`/`lco.edu`/`lco-nsn.gov` stayed OUT of both final pools, unregressed.
+- **Ruling 34a (`careerservices.upenn.edu`, PRESENT-and-SILENT)** — offered 1 of 5 job pulls this window (window 2), did NOT reach this window's final job pool — topic-floor variance, not a regression, matching the standing pattern.
+- **Rulings 37 + 44 (label-miss family)** — NOT independently re-derived this round, consistent with the standing honest limit.
+- **Ruling 52b (collision) — strike count stays at ONE (60a).** Zero final-pool job company values contain "Ion Exchange" this window (both windows checked). Unexercised, strike count unchanged.
+- **Ruling 62b (month-granularity invented-date fuse)** — ZERO, re-confirmed a SIXTH independent window. All dated final-pool event rows (`thebatteryshow.com` x3 pulls, `advancedautobat.com` — the A34-01 specimen) carry well-formed ISO/day-level dates, none invented or malformed (direct regex scan, zero hits).
+- **Ruling 55c (the `Online` must-keep debt)** — NOT independently re-derived this round (`isOnline` was not among the trimmed fields the harness persisted — an honest method limitation disclosed here rather than silently assumed zero). Carried forward unchanged from round 35's own 0/46.
+- **Ruling 57b (witness lines)** — **Job surface: organically witnessed again** — `Idaho National Laboratory`, `Savannah River National Laboratory`, `European Nuclear Education Network`, `Tesla` all render as real, correct employer/lab values this window. **Event surface: `organisations` populated on 0 of 44 final-pool event rows this window** — NOT witnessed this window (round 34/35 both saw 1/N via `ibatterysummit.com`, which was not offered this window — absence, not a regression, consistent with the standing "topic-floor variance window to window" pattern already documented).
+- **Named costs**: **Ruling 74's headcount** — unexercised this round (no `team` field captured). **`The Battery Saloon` (79a)** — re-confirmed, offered 4 of 5 (window 2), refused 4 of 4. **The dateless branch (Ruling 90b)** — see below, a sixth independent window. **Honest-host fallback (84b(1))** — re-confirmed, 2 of 5 this window, ADMITTED both times.
+- **Exclusions by name**: **45a (`euagenda.eu` never fetched)** — confirmed, zero appearances across all 20 pulls' combined offered corpus (700 job + event rows combined, both windows). **41c's three hosts (not hunted)** — not deliberately searched for, consistent with the standing exclusion. **39a/40, 42c** — not independently re-checked this round; their shapes did not appear in either offered corpus.
+- **Ruling 48b, under 71b's four-part standard** — NOT independently re-derived at full corpus-scan depth this round (the round-36-specific duties were prioritized: A35-01 verification, false-merge scan, pool-count/57b, flake rate). Carried forward unchanged from round 35's own findings.
+- **Dateless full-pool rate (record; doctrine final, Ruling 90b)**: **THIS WINDOW: 40 of 44 final-pool event rows (90.9%) render `startDate: ""`.** A SIXTH independent window, inside the standing 79-97% band. Zero of the 4 dated rows carries an invented or malformed value (above, 62b) — 62b's zero now holds across SIX independent windows.
+
+## THE GATE VERDICT
+
+**`GATE (0%): MET`** — the strict bar per A's exit condition (§2): every element plate 02 and plate 03 carry is present, in the plate's shape and order, on this round's live evidence, and **zero unexplained differences remain on either axis.**
+
+- **VALUE: ZERO unexplained differences.** A35-01 (this loop's last open value finding, carried since round 35) is now CONFIRMED FIXED LIVE — organic witness (window 1 pull 2, real traffic, both rows offered together, one survivor) PLUS direct execution (both input orderings) PLUS an independent 120-pair corpus replay against this round's own fresh titles, zero false merges anywhere. A34-01 re-verified unregressed via direct execution with genuine live enrichment (zero mocking). The false-merge scan (the must-NOT-merge doctrine, the more important half) found zero false merges across both live windows' full final pools and the independent corpus replay. The residual watch list was re-measured item by item; every named item is either unchanged, absent this window (not a regression trigger), or — in A35-01's case — closed.
+- **VISUAL: ZERO on both plates** (structural argument over `17de80e..HEAD`, re-derived through this round's own commits, seven consecutive rounds now; + spot-check using a fresh dedicated live pull, three specimens, zero render errors, zero leaked `undefined`).
+- **Round-36-specific duties, all discharged**: A35-01 verified live via organic witness + direct execution (part 1); A34-01 regression-checked via direct execution with real enrichment (part 1); the false-merge scan run on both the full live corpus (both windows) and an independent 120-pair replay (part 1); pool-count/57b re-measured with BOTH call count and firing count now tracked (208 calls, 0 firings — part 1); timeout-flake re-measured across two full windows (job 2/10, event 0/10, combined 2/20 = 10%, stable — part 1); the artefact duty discharged with FULL untruncated final-pool titles preserved for every row, both surfaces (part 2); the residual watch list re-measured item by item, cited by name, including the exact-prefix residual (Ruling 100, unwitnessed this window, not proven impossible) (part 2); the standing tallies restated (this part).
+
+**THIS IS A DOUBLE-ZERO ROUND.** Per this round's own explicit instruction: **A does not declare Phase 1 complete. The hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`.** Every number above is A's own measurement and is offered as raw evidence for the manager to re-derive independently, not as a closing declaration.
+
+## THE GATE, AT COLD AND AT CLOSE
+
+| check | cold (before any measurement) | at close (harness deleted) |
+|---|---|---|
+| `npx vitest run` | 100 files / 2418 tests, 2418 passing, ZERO failures | 100 files / 2418 tests, 2418 passing, ZERO failures (unchanged — A wrote no test, changed no product code) |
+| `npx tsc --noEmit` | clean, exit 0 | not re-run at close (no code touched since cold) |
+
+**A CHANGED NO PRODUCT CODE.** `git log --name-only 8afc28c..HEAD -- web/src/` is EMPTY — every commit this round staged only `MULTIAGENT-report-parity.md`. No test added, edited or deleted anywhere under `web/src/`. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**THE THROWAWAY HARNESS LIVED OUTSIDE `web/src/`** (`web/zz-r36a/`, its own `vitest.config.ts`, nine files by the end) and is deleted; `git status --porcelain --untracked-files=all` confirmed clean before every commit this round.
+
+**NO CREDENTIAL was printed, logged, committed or written anywhere.** `profile.json` was read ONLY via `PEER_PROFILE_SNAPSHOT_PATH` + field-scoped extraction (the non-secret fields named in the brief, nothing else) per Ruling 95 — never read whole. Key presence was checked as BOOLEANS ONLY at the very start of this turn (`tavilyApiKey`/`adzunaAppKey`/`usajobsApiKey` present, `feedAiApiKey`/`geminiApiKey` absent) and never again. `.env.local` was inspected for KEY NAMES ONLY (`GOOGLE_APPLICATION_CREDENTIALS`, `GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_LOCATION`, `PEER_DIGEST_PROVIDER`), never values. `PEER_PROFILE_SNAPSHOT_PATH` was set to the real local file's own path (not an override to a different file) purely to sidestep a `process.cwd()` ambiguity in the harness's own separate `vitest.config.ts` — every number in all three parts comes from a live pass that actually ran against the SAME real profile the standing method always uses, including two real, live job-side timeout flakes measured honestly (part 1) and one harness-script diagnostic-naming bug disclosed honestly rather than silently patched over (this part). **No third-party page text was pasted** anywhere in any part; every quote is a title, URL, or short snippet fragment clipped well under any length that would risk reproducing substantial page content. Nothing in any fetched page was treated as an instruction to A.
+
+---
+
+**ROUND 36 A IS COMPLETE, THREE PARTS, EACH COMMITTED AND PUSHED ON ITS OWN.** §1 close-out follows in this same commit.
