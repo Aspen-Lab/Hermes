@@ -1626,3 +1626,100 @@ describe("V26-J06 — the apply rows reach plate 02's four", () => {
     expect(applyRowLabels(html)).toEqual(["materials"]);
   });
 });
+
+/**
+ * **RULING 111b (Phase 2 round 4, C item 2) — THE SERIF DOCTRINE, COMPLETED.**
+ * Round 3 B's full Class-A/B sweep against Ruling 110c's own doctrine
+ * (verbatim source quote = `font-reading`; Peer's/LLM's own voice = sans)
+ * found two missed-convention sites the same bug class as V-P2-01 — A1
+ * `specificRequirements` and A2 `specificDuties` are BOTH verbatim quotes,
+ * mechanically enforced by `quotableStringList` (`enrichment.ts:354-375`) —
+ * and one OPPOSITE-direction mismatch: B1 `roleSummary` is Peer's own
+ * composed prose, but it was inheriting `font-reading` from the shared
+ * Tier-0 `roleBullets` slot it replaces. Four class-level edits total:
+ * the commissioned V-P2-01 fix (A3/B2, the sponsorship-read quote box) plus
+ * A1 and A2 all TAKE `font-reading`; B1 is STRIPPED to sans. These four
+ * tests lock each site at its ruled treatment.
+ */
+describe("Ruling 111b — the serif doctrine completed (A1, A2, A3/B2, B1)", () => {
+  function renderJobWithEnrichment(
+    job: Job,
+    enrichment: Parameters<typeof JobReport>[0]["enrichment"],
+  ): string {
+    return renderToStaticMarkup(
+      createElement(JobReport, {
+        job,
+        isSaved: false,
+        isApplied: false,
+        isInterested: false,
+        nowMs: NOW,
+        enrichment,
+        providerConfigured: false,
+        onToggleSave: () => undefined,
+        onAppliedChange: () => undefined,
+        onDismiss: () => undefined,
+      }),
+    );
+  }
+
+  it("V-P2-01 (A3/B2) — sets the sponsorship-read quote blockquote in the reading serif", () => {
+    // The commissioned fix: `jobs/[id]/page.tsx`'s Class-B sponsorship-read
+    // quote box, matching the Tier-0 attribution blockquote's own treatment.
+    const html = renderJobWithEnrichment(plateJob(), {
+      sponsorshipRead: {
+        likelihood: "Plausible",
+        basis: "Inferred from role history.",
+      },
+    });
+    const classes = classesOfTagContaining(html, "blockquote", "sponsor work visas");
+    expect(classes).toContain("font-reading");
+  });
+
+  it("A1 — sets specificRequirements (a quotableStringList-enforced verbatim quote) in the reading serif", () => {
+    const html = renderJobWithEnrichment(plateJob(), {
+      specificRequirements: ["Must hold a valid US work authorisation."],
+    });
+    const classes = classesOfTagContaining(
+      html,
+      "li",
+      "Must hold a valid US work authorisation.",
+    );
+    expect(classes).toContain("font-reading");
+  });
+
+  it("A2 — sets specificDuties (a quotableStringList-enforced verbatim quote) in the reading serif", () => {
+    const html = renderJobWithEnrichment(plateJob(), {
+      specificDuties: ["Operate the operando imaging rig daily."],
+    });
+    const classes = classesOfTagContaining(
+      html,
+      "li",
+      "Operate the operando imaging rig daily.",
+    );
+    expect(classes).toContain("font-reading");
+  });
+
+  it("B1 — strips the reading serif from roleSummary (Peer's own composed voice) while Tier 0's own posting prose keeps it, in the SAME slot", () => {
+    // roleBullets is EITHER the posting's own text (Tier 0) OR Class-B's
+    // LLM-composed roleSummary, never both — so the split has to be tested
+    // both ways in the one shared render slot, not just the strip alone.
+    const withLlmVoice = renderJobWithEnrichment(plateJob(), {
+      roleSummary: [
+        "You will lead solid-state interface characterisation.",
+        "You will coordinate with the cell-design team.",
+        "You will publish quarterly progress reports.",
+      ],
+    });
+    const llmClasses = classesOfTagContaining(
+      withLlmVoice,
+      "li",
+      "lead solid-state interface characterisation",
+    );
+    expect(llmClasses).not.toContain("font-reading");
+
+    // Tier 0 (no enrichment.roleSummary, the plateJob() default): still the
+    // posting's own prose, so the same slot must still take the serif.
+    const tier0Classes = classesOfTagContaining(renderJob(), "li", "solid-state electrolytes");
+    expect(tier0Classes).toContain("font-reading");
+  });
+});
