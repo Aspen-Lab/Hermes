@@ -270,11 +270,79 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 33 + 2026-08-18 23:54 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 33 C IS COMPLETE @ 2026-08-18 ~23:5x UTC — THE ONE
+                  COMMISSIONED ITEM SHIPPED, ONE COMMIT (`e89f338`), PUSHED ON
+                  LANDING.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after
+                  `git pull` and after confirming `git branch --show-current`
+                  reads `feature/summary-report-revamp`; the claiming push was
+                  ACCEPTED (`98e627c`). Grepped `Round 33 — Agent C` first —
+                  zero prior entries existed, fresh start not a resume. Read
+                  Round 33 B's ITEM 1 entry and Rulings 90a-90d in full before
+                  writing any code.
+
+                  **Implemented `isJobListingContentTitle` per §1.2 VERBATIM**
+                  in `web/src/lib/events/sources/eventweb.ts`:
+                  `JOB_LISTING_CONTENT_RE`, `hasRepeatedJobsMention` (≥2
+                  mentions of "job"/"jobs"), and the exported function itself,
+                  gated by the file's own existing `looksLikeEvent` safety net
+                  — placed immediately before `webResultToRawEventItem`, the
+                  same near-call-site pattern `isBrandOnlySearchResultsPage`
+                  uses on the job side. Doc comments preserve B's reasoning in
+                  substance (six existing guards carry no job vocabulary; the
+                  live trace widened the must-catch class from one witness to
+                  four; the path-shape signal was measured and rejected; the
+                  safety net mirrors Ruling 87a Components B/C). **Wired as the
+                  7th additive kind guard**, one line immediately after
+                  `isEarningsCallPage(title, url)` and before `const text =
+                  ...`, exactly the cited insertion point.
+
+                  **TESTS: B's §1.3 30-case corpus, verbatim, one new
+                  `describe` block, 5 `it`s in `eventweb.test.ts`** (4
+                  must-catch; 7 must-keep job/career-fair rows; 12 must-keep
+                  ADMITTED rows from round 32 A's own event artefact table,
+                  incl. the two honest-host-fallback titles `"Home"`/
+                  `"Homepage"`; 7 adversarial constructions each in their
+                  stated direction). The other 10 of the 12 ADMITTED-row
+                  titles used round 32 A's own table strings verbatim,
+                  including that table's own `...` truncation (`<=55 chars`
+                  by its own stated format) — the true full titles are not
+                  recoverable from the log, and this test file already has
+                  precedent for testing truncated real titles this way (the
+                  pre-existing "round 30 A's own nine ADMITTED" test).
+
+                  **GATE, AFTER THE ITEM: `npx vitest run` — 99 files / 2386
+                  tests, 2386 passing, ZERO failures** (2381 baseline + 5 new
+                  `it` blocks, exact; full output retained, no red appeared so
+                  no identity-first re-run was triggered). `npx tsc --noEmit`
+                  clean. `npx eslint src` — exactly the one standing
+                  `quiz.tsx:46` error, unchanged.
+
+                  **C CHANGED CODE, AS COMMISSIONED.** One commit (`e89f338`,
+                  code + tests + §4 log entry together), pushed on landing.
+                  `git status --porcelain --untracked-files=all` showed only
+                  the two intended source files modified before commit — no
+                  throwaway scaffold was created (the corpus was hand-traced
+                  against the shipped regex before writing assertions, then
+                  confirmed by execution). No credential anywhere; boolean
+                  presence only; `.env.local` never `cat`-ed; no
+                  `PEER_PROFILE_SNAPSHOT_PATH`. No live network calls (pure
+                  implementation turn, Ruling 75). No branch/worktree/PR.
+                  **Nothing broke a recorded control or locked test — no
+                  `POLICY — manager decides` entry needed.**
+
+                  **HAND-OFF: `WHOSE TURN: A — round 33, GATE CANDIDATE
+                  ROUND`** (value + visual, `searchProvider: gemini`, artefact
+                  duty, pool-count re-measure, the standing watch list,
+                  flake-identity-first gate discipline — per Ruling 90c).
+                  Turn lock RELEASED (`HELD BY: free`) in this close-out
+                  commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~03:1x UTC — ROUND 33 B
                   VERIFIED INDEPENDENTLY, RULINGS 90a-90d APPENDED (§4).**
                   Gate re-run with the full-capture discipline: **99 files /
