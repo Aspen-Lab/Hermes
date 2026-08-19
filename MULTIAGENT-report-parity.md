@@ -89122,3 +89122,77 @@ Committed and pushed as its own item. Part 3 (visual census, standing tallies, g
 
 **RULING 106d — ROUTING: `WHOSE TURN: B — round 38`, TWO maintenance items: (1) A37-01** (the artefact-noun instance — B measures the witnessed noun `summary`/`meeting summary` and the hyphen join against the guard's own escape clause; the four-noun hold was B's own design, so extending it needs the same measured discipline, not an inline widening); **(2) M37-01** (the LCO admission — B traces WHY relevance/scoring admitted an acronym-only lacrosse row and designs the bounded fix at the layer the trace names; the Ruling-33 tally and 57b doctrine bind).
 
+
+
+### Round 38 — Agent B — ITEM 1 (A37-01): the "Meeting Summary" noun-list extension. **DISPROVEN BY DIRECT EXECUTION — SHIPPING THE ASKED-FOR EXTENSION WOULD DELETE A REAL, PREVIOUSLY-VERIFIED MUST-KEEP EVENT. NO CODE CHANGE RECOMMENDED. A37-01 IS RECLASSIFIED.**
+
+**B changed no product code.** Throwaway harness `web/zz-r38b/` (own minimal `vitest.config.ts`, pure function-level tests, no live search call — no `GOOGLE_` env load needed), deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean. No credential touched anywhere. No third-party page text pasted (only short title/regex fragments, all already recorded elsewhere in this file or read directly from shipped source).
+
+## 1.0 WHAT THE BRIEF ASKED FOR, READ FIRST
+
+Ruling 106d: extend `isEventArtefactTitle` (`eventweb.ts:560-565`, `EVENT_ARTEFACT_HEAD_RE`) to cover the witnessed noun `summary`/`meeting summary` and the hyphen join the `tirt7.com` specimen uses, so the row **drops** (matches the A29-07 "an artefact produced at an event is not the event" class, Ruling 79a). The doc comment at `eventweb.ts:546-559` explicitly permits bounded widening by a future round with fresh evidence, and forbids inline widening without it — B is that mechanism.
+
+## 1.1 THE ASKED-FOR EXTENSION, CONSTRUCTED AND MEASURED AGAINST ITS OWN TARGET
+
+A bounded extension built exactly to the brief's own spec — optional one-word modifier (reusing the existing regex's own generic `[a-z][a-z-]*\s+` slot) + the witnessed noun `summary` + the witnessed bare-hyphen join (no preposition) — was constructed in the harness (never shipped) and run against the **exact witnessed specimen**:
+
+```
+PROPOSED_SUMMARY_HEAD_RE = /^(?:[a-z][a-z-]*\s+)?summary-\S/i
+PROPOSED_SUMMARY_HEAD_RE.test("Meeting Summary-2026 International Round Table on Titanium Production in Molten Salts") === true
+```
+
+**This is not a hypothetical adversarial case. It is the specimen A37-01 itself.** Any extension shaped to catch "the witnessed noun and the hyphen join" necessarily catches the row it was built from — there is no narrower version that closes A37-01 without also matching A37-01's own title.
+
+## 1.2 `tirt7.com` IS AN ESTABLISHED, NAMED, MULTI-ROUND MUST-KEEP — NOT AN ARTEFACT PAGE
+
+Checked directly against this file's own prior rounds, not assumed:
+
+- **Round 4-era real-data pass** (`MULTIAGENT-report-parity.md:25483-25517`): `tirt7.com/Summary.html` is named **"Real event 1 — Titanium Round Table"**, described as **"a workshop-style summary page, not a conference site with a roster or cost table"** — i.e. the event's *own* primary info page for that edition (TiRT7, Lanzhou), not a repository record deposited elsewhere about a past event (contrast A29-07's `scholarsarchive.byu.edu` slide deck, which carries `bepress_citation_title` institutional-repository meta — `tirt7.com` carries no such marker, confirmed by the structural probe below).
+- Same passage names **"a `Meeting Summary-` lead-in (the page's own section label) survives" as an already-open, DIFFERENT residual — R13, "event-name quality as a class"** (line 25490), separate from the A29-07 artefact-kind class from the start.
+- **Round 32 A's own live census** (`:86414`): `tirt7.com | Meeting Summary-2026 International Round Table on Tita... | x1 | ADMITTED (pool)` — organically witnessed and correctly admitted five+ rounds before A37-01.
+- **Round 33 B item 1's own must-keep corpus** (`:86597`), built while designing `isJobListingContentTitle`: *"must-keep — round 32 A's full event artefact table, every ADMITTED row"* explicitly lists **`tirt7.com`** by name among 12 rows, scored **"0 of 12 false positives."** This is a prior B agent, in an earlier round of this same loop, formally certifying this exact row as protected.
+- **Round 37 A's own trace** (`:88836-89026`) never checked this history before framing A37-01 as an A29-07-shaped admission defect — the manager's Ruling 106a repeats the framing without checking it either. This is the gap B exists to catch (§0b: "the next role has found something the previous one got wrong... assume there are more").
+
+**DIRECT EXECUTION, confirming the mechanism, not assuming it** (harness, all pass):
+1. `webResultToRawEventItem({title: A37_01_TITLE, url: A37_01_URL, snippet: ""}, now)` → **not null** (baseline: currently admitted, matching A's own trace).
+2. `item.name === "Meeting Summary-2026 International Round Table on Titanium Production in Molten Salts"` verbatim — the `Meeting Summary-` lead-in **survives today**, confirming R13's residual is still open, 30+ rounds later.
+3. `isEventArtefactTitle(A37_01_TITLE) === false` today (matches A's trace exactly).
+4. The proposed extension (§1.1) flips this to `true` → `webResultToRawEventItem` would return `null` at `eventweb.ts:2079` (`if (isEventArtefactTitle(title)) return null;`) — **the real, must-keep row would be DELETED, not fixed.**
+
+## 1.3 WHY THE LEAD-IN SURVIVES — A DIFFERENT, ALREADY-NAMED MECHANISM (R13), NOT A NEW ONE
+
+`eventNameFrom`'s own round-12 regression fixture (`eventweb.test.ts:892-899`, B12-01, "the Round Table regression") is **the same real event** — it calls `eventNameFrom("Meeting Summary", "2026 International Round Table on Titanium Production in Molten Salts. Registration is open.")` and asserts the recovered name is `"2026 International Round Table on Titanium Production in Molten Salts."`. This is the codebase's own certification, since round 12, that this exact page is a genuine event whose generic page-chrome title ("Meeting Summary") should be seen through — round 13 A then measured "R13 event names: 0 of 14 confirmed wrong (0%)" (`:43336`), a **closure claim**.
+
+**Direct execution shows that closure does not reach today's real shape.** Round 12's fixture passes `title` and `body` as **two separate arguments** — the OLD (pre-Ruling-75, pre-gemini) adapter's title/snippet split. The **live gemini-era offer** glues them into **one combined title string** (`"Meeting Summary-2026 International Round Table..."`), confirmed directly:
+
+```
+eventNameFrom(A37_01_TITLE, "", A37_01_URL) === "Meeting Summary-2026 International Round Table on Titanium Production in Molten Salts"
+```
+
+`eventNameFrom`'s exact-generic-title short-circuit (round 12's own fix) only fires when the title **equals** a chrome label like `"Meeting Summary"`; it cannot fire on a combined string that merely **starts with** one. **This is R13 reopening in a NEW adapter-shape variant** (a provider-migration side effect, exactly the kind of corpus break round 29 A itself named as a method fact rather than drift) — not the A29-07 artefact-kind class at all, and not a new mechanism under Ruling 105a either way.
+
+## 1.4 MEASURES / ASSERTS / TOLERATES
+
+- **MEASURES**: whether the brief's proposed noun-list extension, applied exactly as specified, regresses the round-32/33 must-keep corpus. It does — on the worst possible row, the specimen itself.
+- **ASSERTS**: `tirt7.com` stays ADMITTED (unchanged); the round-32/33 must-keep status (12 of 12 rows, `:86597`) is not disturbed because nothing is shipped.
+- **TOLERATES**: the `Meeting Summary-` lead-in continues to survive in the rendered name — a cosmetic, already 30+-round-old, previously-declared-closed-then-silently-reopened residual (R13), not a wrong-admission or invented-value defect. Failure direction of doing nothing: status quo (a real event, findable, with an untidy name prefix) — never a deleted row.
+
+## 1.5 THE MUST-KEEP CORPUS THE BRIEF NAMED, CHECKED FOR COMPLETENESS
+
+`EUCHEMSIL 2026: 30th EUCHEMS Meeting` (head word `EUCHEMSIL`) and `Molten International Symposium` (head word `Molten`) — neither begins with a `[modifier] summary` head, so neither is at risk from any conceivable extension of this shape (the head-anchor, per the guard's own doc comment, "is the whole rule"). This is not the live risk; **the live risk is the specimen itself**, per §1.2/§1.3 above — a broader/more central finding than the brief anticipated.
+
+## 1.6 BLAST RADIUS / TESTS AT RISK
+
+Zero — no product code changed. Had the extension shipped: `eventweb.test.ts:2636-2680` (the existing four-noun A29-07 corpus) would have stayed green (untouched regex), but a **new, silent regression** with no test to catch it would have shipped — `tirt7.com` is not currently name-checked in any `eventweb.test.ts` assertion (grepped: zero hits for `tirt7`), only in this state file's own artefact tables. **This is itself a residual worth naming**: the must-keep corpus this loop keeps by convention in `MULTIAGENT-report-parity.md` is not enforced by any executable test, so a future round could still make this mistake without a red test to stop it. Flagged, not fixed — outside this item's scope.
+
+## 1.7 RECOMMENDATION AND CLASSIFICATION, FLAGGED **POLICY — MANAGER DECIDES**
+
+**Recommend AGAINST shipping any extension to `EVENT_ARTEFACT_HEAD_RE`/`isEventArtefactTitle` for the `summary`/`meeting summary` noun.** The four-noun hold (`slides/proceedings/posters/presentations`) stays exactly as round 29 C shipped it — untouched, zero risk.
+
+**Recommend RECLASSIFYING A37-01**: not an A29-07-shaped kind-admission defect. The row is CORRECTLY admitted. The only live, confirmed defect is R13's reopened lead-in-survival shape (§1.3) — cosmetic, pre-existing, unrelated to admission. Under Ruling 105a this is at most a reopened named residual (R13, not A29-07) — **does not reset the convergence clock either way**, matching Ruling 106a's bottom line even though its stated mechanism was wrong.
+
+**POLICY — MANAGER DECIDES**: (a) whether to accept this reclassification; (b) whether an R13-shaped name-quality fix (stripping a `[modifier] noun-` lead-in when the adapter glues it onto the rest as one combined title) is worth commissioning in a future round — sketched here only as an OPTIONAL follow-on, not designed or corpus-tested this round, since it was not this item's charter and a half-designed fix is worse than a clearly-flagged option: any such fix would need to run in `eventNameFrom`'s NAME layer, never in the KIND-guard layer, and would need its own multi-row corpus (this round found exactly one live instance, `tirt7.com`) before shipping, per this loop's own "land what is confirmed" discipline; (c) since round 38's routing (Ruling 106c) only requires "zero new classes" across this round's four windows to reach candidate-round-2, and this finding is a reclassification of an EXISTING item rather than a fresh class, it should not by itself block that routing — but the manager should confirm this reading independently rather than take B's word for it, per standing practice.
+
+**GATE**: 100 files / 2425 tests, 2425 passing, ZERO failures (unchanged — B wrote no test, changed no product code). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, matching baseline.
+
+Committed and pushed as its own item. Item 2 (M37-01) follows.
