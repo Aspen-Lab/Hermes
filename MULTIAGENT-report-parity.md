@@ -275,6 +275,22 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~09:2x UTC — ROUND 36 C
+                  VERIFIED INDEPENDENTLY, RULING 101 APPENDED (§4).** Gate
+                  re-run (full-capture): **2418/2418, zero failures.** Both
+                  of C's disclosures verified correct (the `eventYearOf`
+                  fill-in is byte-identical to the key's inline expression;
+                  the floor re-dating fixes the harness, not the assertion).
+                  **RULING 101: C accepted; A35-01's containment pass is
+                  LIVE. Hand-off STANDS — `WHOSE TURN: A — round 36, GATE
+                  CANDIDATE ROUND (value + visual, searchProvider: gemini,
+                  artefact duty, pool-count re-measure, watch list incl. the
+                  exact-prefix residual, A35-01 verification + false-merge
+                  scan, benchmark-flake per 96b)`. If A measures double-zero:
+                  `WHOSE TURN: MANAGER — independent re-measurement before
+                  any close`. A never closes the gate.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 36 C IS COMPLETE @ 2026-08-19 ~09:1x UTC —
                   `mergeContainedEventNames` SHIPPED, WIRED, TESTED, VERBATIM
                   PER RULING 100.** Run by `LAPTOP-3CL10CG5`. Gate
@@ -87835,4 +87851,11 @@ Claimed the turn lock (`5babee0`) after `git pull` (already up to date) and conf
 **C CHANGED CODE.** One commit this turn for the work (code + tests + this §4 entry + the §1 update below), pushed on landing; a separate prior commit claimed the turn lock. `git status --porcelain --untracked-files=all` showed exactly the three intended files (`dedup.ts`, `pipeline.ts`, `dedup.test.ts`) — the throwaway debug harness (`web/src/lib/events/zzdebug.test.ts`) was deleted before this commit. No credential anywhere; no live network calls (Ruling 75). No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. No test deleted or weakened.
 
 **HAND-OFF: `WHOSE TURN: A — round 36, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list incl. the exact-prefix residual, A35-01 verification, benchmark-flake classification per Ruling 96b)`.** If A measures double-zero: `WHOSE TURN: MANAGER — independent re-measurement before any close`. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Round 36 — MANAGER (independent verification of C; RULING 101; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture, log retained): **100 files / 2418 tests, 2418 passing, ZERO failures, zero failure lines** (2406 + 12 exact). Commit `1c2ce6f` touches exactly the three event-side files + this state file; tree clean; pushed. Code read directly: the containment pass is byte-faithful to B's §3.2; `eventYearOf` (`dedup.ts:141-143`) duplicates `eventDedupKey`'s own inline year expression (`:31`) byte-identically — C's fill-in deviation is VERIFIED CORRECT and was exactly what gate 3's "byte-identical rule" spec required (B's prose assumed a helper that never existed; C built the smallest possible one). The second disclosure (the harness's own expiry-collision on three floor pairs' stale May-July dates, traced and re-dated to September same-year) is the right fix for the right reason — the floor rows must SURVIVE the unrelated expiry gate to prove the dedup passes leave them alone.
+
+**RULING 101 — round 36 C is VERIFIED AND ACCEPTED; A35-01's containment pass is LIVE. The hand-off stands: `WHOSE TURN: A — round 36, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty, pool-count re-measure, watch list incl. the exact-prefix residual, A35-01 verification — the djk/quintus pair must merge if re-offered and by direct execution regardless, plus the false-merge scan, benchmark-flake classification per Ruling 96b)`.** **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.** Sonnet twenty-second data point: two disclosures, both correct calls, both with their evidence trails — the seat discipline is uniform across all three agents at this point.
 
