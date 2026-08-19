@@ -87919,3 +87919,203 @@ Both tests green, both committed to the throwaway harness then deleted with the 
 **Window 1: job 1 of 5 (20%, pull 0, "Error: [jobweb] source-timeout after 25000ms"), event 0 of 5 (0%). Window 2: job 1 of 5 (20%, pull 2, byte-identical error message), event 0 of 5 (0%).** **Combined across both windows: job 2 of 10 (20%), event 0 of 10 (0%), overall 2 of 20 (10%)** — identical to rounds 34 and 35's own combined 1/10 (10%), stable across three consecutive independent measurements now. Not attributable to any code change this round (round 36 B/C touched only `events/dedup.ts`/`events/pipeline.ts`/`events/dedup.test.ts`, none of which touch the fetch/timeout path).
 
 Committed and pushed as its own item, per write-as-you-go. Part 2 (job/event value census artefact tables, full untruncated final-pool titles, residual watch list) follows.
+
+
+### Round 36 — Agent A (part 2: THE JOB AND EVENT SURFACE VALUE CENSUS ARTEFACT TABLES [window 2, full untruncated final-pool titles preserved per instruction] AND THE RESIDUAL WATCH LIST, RE-MEASURED ITEM BY ITEM.)
+
+STATUS: PARTIAL BY DESIGN, continuing part 1's method (same profile, same fuse, same no-op cache). Window 2 (5 job + 5 event pulls) is reported below as the canonical window; window 1 is cited only where named explicitly (part 1's A35-01 organic witness).
+
+## JOB SURFACE ARTEFACT TABLE (Ruling 79e) — WINDOW 2, 5 PULLS
+
+89 unique hosts across 5 pulls (275 offered rows). Format: host | first-seen title (<=60 chars) | offer-count | final-pool status.
+
+```
+lco.global | Internships | x20 | not in final pool
+acu.edu | NEXT Lab Internships | Abilene Christian University | x11 | not in final pool
+ionexchangeglobal.com | Early Career Archives - Ion Exchange | x11 | not in final pool
+grad.wisc.edu | PhD Student Internship Opportunities at Thermo Fisher Scient | x10 | not in final pool
+psi.ch | Summer Student Projects PSI Center for Nuclear Engineering a | x10 | not in final pool
+sites.utexas.edu | Opportunities | x9 | not in final pool
+researchersjob.com | Research Update: 19 August 2026 -- Career options with Rese | x7 | not in final pool
+stemgateway.nasa.gov | STEM Gateway | x7 | not in final pool
+energy.sandia.gov | Energy Internship Programs | x7 | not in final pool
+ertel-ionstream.com | Jobs | Ertel IonStream GmbH | x7 | not in final pool
+energy.gov | Internships & Fellowships | x6 | not in final pool
+extern.com | Best Summer 2027 Internships | 100+ Programs & Deadlines | x6 | not in final pool
+jobs.thermofisher.com | Interns | Thermo Fisher Scientific | x6 | not in final pool
+science.osti.gov | Science Undergraduate Laboratory... | U.S. DOE Office of S | x5 | not in final pool
+jobs.ethz.ch | Stellenangebote der ETH Zuerich | x5 | not in final pool
+career.eoss.asu.edu | GE Vernova Battery Engineering & Technology Intern - Summe | x5 | IN final pool
+careers.gevernova.com | GE Vernova Battery Engineering & Technology Intern - Summe | x5 | IN final pool
+imr.osu.edu | BATTERI Internships | Ohio State | x5 | not in final pool
+hyetlithium.com | Careers Open application - Internship battery R&D - HyET L | x5 | IN final pool (silent company, A29-03, re-confirmed)
+faraday.ac.uk | PhD Internships | x4 | not in final pool (81b residual, re-confirmed unchanged)
+lco.edu | Internship Opportunities - Education for college students | x4 | not in final pool
+pls.llnl.gov | Computational Chemistry and Materials Science (CCMS) Summe | x4 | not in final pool
+notify.careers | Notify | x4 | not in final pool
+job-boards.greenhouse.io | Nuclear Engineering Internship - Summer 2027 | x4 | not in final pool
+nlr.gov | Graduate Internships | NLR | x4 | not in final pool
+dnn-consortium.ornl.gov | Graduate Research Summer Internships - DNN R&D University | x4 | not in final pool
+nrel.wd5.myworkdayjobs.com | Graduate Intern - Focused Ion Beam, Electron Microscopy | x4 | not in final pool
+careers.abbvie.com | 2026 Electrochemical Reaction Engineering Intern (PhD) | x4 | not in final pool
+ionenviromgt.net | CAREER | Ion Exchange | x4 | not in final pool (CSE/collision-class host, zero net rendered cost, re-confirmed)
+pire.illinois.edu | xFU(s)ION Internship Applicant Call | PIRE at CSE - Univ | x3 | not in final pool (CSE-class residual, re-confirmed)
+ev.careers | Internship, Materials Engineer, Cell Engineering (Spring 20 | x3 | IN final pool (company: Tesla, 57b witness re-confirmed)
+postdocjobs.com | Postdoctoral Appointee | x1 (this window) | IN final pool (silent company, A29-03/latent-sibling residual, re-confirmed)
+careerservices.upenn.edu | (Ruling 34a specimen) | x1 | not in final pool (present-and-silent, topic-floor variance, re-confirmed)
+database.enen.eu | PhD Opportunity in Molten Salt Reactor | x2 | IN final pool (company: European Nuclear Education Network, 57b witness re-confirmed)
+climatechangejobs.com | Molten Salt Electrochemistry Postdoctoral Researcher at Id | x2 | IN final pool (company: Idaho National Laboratory, 57b witness re-confirmed)
+cefracor.org | AN OPEN POSTDOCTORAL RESEARCHER POSITION | x1 | IN final pool
+talents.vaia.com | Actinide Chemistry/Ion Exchange Postdoc Research Associate | x2 | IN final pool (company: Savannah River National Laboratory, fresh 57b witness)
+bebee.com | Trainee R&D: Resins Development & Applications | x2 | IN final pool
+(remaining ~65 hosts offered 1-3 times each, all "not in final pool" except where named above)
+```
+
+**52b collision check: ZERO** — no final-pool `company` value this window contains "Ion Exchange"; strike count stays at ONE (60a), unregressed.
+
+## EVENT SURFACE ARTEFACT TABLE (Ruling 79e) — WINDOW 2, 5 PULLS
+
+115 unique hosts across 5 pulls (425 offered rows). Threshold: hosts offered >=4 times, plus every named watch-list host regardless of count.
+
+```
+rsc.org | EUCHEMSIL 2026 | x27 | IN final pool (merges with euchemsil2026.com)
+euchemsil2026.com | EUCHEMSIL 2026: 30th EUCHEMS Meeting | x18 | IN final pool (dateless -- Ruling 90b named cost, re-confirmed)
+onlinelearningconsortium.org | Present - Online Learning Consortium | x18 | not in final pool
+pyro.byu.edu | Molten Salt Electrochemistry Symposium (MoSES) | x16 | IN final pool
+joint-research-centre.ec.europa.eu | Molten salt reactor technology (EUROMOST) | x15 | not in final pool
+cambridgeenertech.com | Solid-State Battery Summit | Chicago | x13 | not in final pool (excluded upstream, index-page guard, re-confirmed)
+event.fourwaves.com | Twenty-Seventh Congress and General Assembly | x12 | not in final pool
+snetp.eu | EUROMOST 2026 - SNETP | x12 | not in final pool
+soci.org | IEX 2026 technical training introductory course | x12 | not in final pool
+orcities.org | League of Oregon Cities:: Conferences | x12 | not in final pool
+programmaster.org | Materials and Chemistry for Molten Salt Systems | x11 | not in final pool
+ans.org | Challenges of Developing a Molten Salt Reactor Workforce | x11 | IN final pool
+lco.global | Call for Proposals 2026A | x10 | not in final pool
+flibe.com | Thorium and Molten Salt Recognition: EUROMOST 2026 | x9 | IN final pool
+lco-nsn.gov | Calendar - Lac Courte Oreilles | x9 | not in final pool
+sophion.com | ICMS Cambridge UK 2026 - Sophion | x8 | not in final pool
+ionexchangeglobal.com | Careers - Ion Exchange | x8 | not in final pool
+jobs.ethz.ch | Stellenangebote der ETH Zuerich | x6 | not in final pool
+flogen.org | Molten International Symposium - SIPS 2026 | x5 | IN final pool
+conferences.iaea.org | Workshop on the Current Status of Structural Material | x5 | not in final pool
+innovatrix.eu | 5th Battery Gigafactory Summit USA | x5 | not in final pool
+ionenviromgt.net | CAREER | Ion Exchange | x5 | not in final pool
+aquabattery.com | Become Our Next ION Exchange Membrane Expert | x5 | not in final pool
+win.mst.edu | Nuclear Career Fair - S&T Women in Nuclear | x5 | not in final pool (must-keep fair, topic-floor variance)
+nucnet.org | European Conference Calls For Coordinated Action On Molten | x4 | IN final pool
+batteryinnovationsummit.com | The Battery Saloon | x4 | not in final pool (79a named cost, re-confirmed refused 4/4)
+pennstate-csm.symplicity.com | Nittany Lion Careers | x4 | not in final pool
+event.dlr.de | EMEA2026: Workshop on Ion Exchange Membranes for Energy | x4 | not in final pool
+electrochem.org | Homepage | 250th ECS Meeting | x4 | IN final pool
+quintustechnologies.com | Solid-State Battery Summit 2026 | x3 | IN final pool -- see A35-01, part 1
+thebatteryshow.com | The Battery Show North America | x3 | IN final pool, dated (2026-10-12)
+storageusa.solarenergyevents.com | Home page - Energy Storage Summit USA 2026 | x3 | not in final pool
+batterysummit.solarenergyevents.com | (homepage, title = URL) | x2 | IN final pool, honest-host fallback -- 84b(1) named cost, re-confirmed
+automotive-technology.com | Automotive Battery Tech Summit 2026 | x1 | IN final pool, dated -- confirmed genuinely DISTINCT from AABC and from the A35-01 pair (Munich vs San Diego vs Chicago)
+advancedautobat.com | 26th Advanced Automotive Battery Conference (AABC) | x1 | IN final pool, dated -- A34-01 pair, sibling not organically co-offered this window (see part 1)
+eventective.com | LCO Casino, Lodge & Convention Center | x1 | IN final pool -- Ruling 33's named cost, re-confirmed (not a fresh finding)
+djk.co.jp | (see part 1, window 1 only) | -- | see A35-01
+(remaining ~80 hosts offered 1-3 times each, all "not in final pool" except where named above)
+```
+
+## ALL FINAL-POOL ROWS, WINDOW 2, FULL UNTRUNCATED TITLES (artefact duty — kept exhaustive per instruction for future rounds' replay)
+
+**JOB (19 rows across 5 pulls):**
+```
+pull0 | hyetlithium.com | "Careers Open application" | https://hyetlithium.com/careers/internship-battery-research/
+pull0 | career.eoss.asu.edu | "GE Vernova Battery Engineering & Technology Intern" | https://career.eoss.asu.edu/jobs/ge-vernova-ge-vernova-battery-engineering-technology-intern-summer-2027/
+pull0 | career.csbsju.edu | "Molten Salt Electrochemistry Postdoctoral Researcher" | https://career.csbsju.edu/jobs/idaho-national-laboratory-molten-salt-electrochemistry-postdoctoral-researcher/
+pull1 | bebee.com | "Trainee R&D: Resins Development & Applications" | https://bebee.com/in/jobs/trainee-rd-resins-development-applications-ion-exchange-hyderabad--theirstack-732062098
+pull1 | careers.gevernova.com | "GE Vernova Battery Engineering & Technology Intern" | https://careers.gevernova.com/ge-vernova-battery-engineering-technology-intern-summer-2027/job/R5049890
+pull1 | hyetlithium.com | "Careers Open application" | https://hyetlithium.com/careers/internship-battery-research/
+pull1 | database.enen.eu | "PhD Opportunity in Molten Salt Reactor" | https://database.enen.eu/index.php/2023/01/24/phd-opportunity-in-molten-salt-reactor/
+pull1 | climatechangejobs.com | "Molten Salt Electrochemistry Postdoctoral Researcher at Idaho National Laboratory" | https://climatechangejobs.com/jobs/594760664-molten-salt-electrochemistry-postdoctoral-researcher
+pull2 | (jobweb timed out this pull -- see part 1's flake measurement, zero jobweb-sourced final rows)
+pull3 | postdocjobs.com | "Postdoctoral Appointee" | https://www.postdocjobs.com/posting/7317952
+pull3 | careers.gevernova.com | "GE Vernova Battery Engineering & Technology Intern" | https://careers.gevernova.com/ge-vernova-battery-engineering-technology-intern-summer-2027/job/R5049890
+pull3 | hyetlithium.com | "Careers Open application" | https://hyetlithium.com/careers/internship-battery-research/
+pull3 | ev.careers | "Internship, Battery Engineering (Summer 2026) at Tesla" | https://ev.careers/jobs/352307911-internship-battery-engineering-summer-2026
+pull3 | talents.vaia.com | "Actinide Chemistry/Ion Exchange Postdoc Research Associate in Columbia at Savannah River National Laboratory" | https://talents.vaia.com/companies/savannah-river-national-laboratory/columbia/actinide-chemistry-ion-exchange-postdoc-research-associate-143916441/
+pull3 | cefracor.org | "AN OPEN POSTDOCTORAL RESEARCHER POSITION" | https://www.cefracor.org/en/open-postdoctoral-researcher-position
+pull4 | careers.gevernova.com | "GE Vernova Battery Engineering & Technology Intern" | https://careers.gevernova.com/ge-vernova-battery-engineering-technology-intern-summer-2027/job/R5049890
+pull4 | hyetlithium.com | "Careers Open application" | https://hyetlithium.com/careers/internship-battery-research/
+pull4 | bebee.com | "Internship, Battery Materials, Battery Engineering (Winter/Spring 2027)" | https://bebee.com/us/jobs/internship-battery-materials-battery-engineering-winter-spring-2027-tesla-palo-alto--fj-2292758148
+pull4 | database.enen.eu | "PhD Opportunity in Molten Salt Reactor" | https://database.enen.eu/index.php/2023/01/24/phd-opportunity-in-molten-salt-reactor/
+pull4 | climatechangejobs.com | "Molten Salt Electrochemistry Postdoctoral Researcher at Idaho National Laboratory" | https://climatechangejobs.com/jobs/594760664-molten-salt-electrochemistry-postdoctoral-researcher
+```
+
+**EVENT (44 rows across 5 pulls):**
+```
+pull0 | flogen.org | "Molten International Symposium" | https://www.flogen.org/sips2026/summit.php?id=13
+pull0 | rsc.org | "IEX 2026 technical training introductory course: Introduction to ion exchange design and operation for industrial water treatment" | https://www.rsc.org/events/find-an-event/iex-2026-technical-training-introductory-course-introduction-to-ion-exchange-design-and-operation
+pull0 | euchemsil2026.com | "EUCHEMSIL 2026: 30th EUCHEMS Meeting" | https://www.euchemsil2026.com/
+pull0 | pyro.byu.edu | "Molten Salt Electrochemistry Symposium (MoSES)" | https://pyro.byu.edu/moses
+pull0 | nucnet.org | "European Conference Calls For Coordinated Action On Molten Salt Reactors" | https://www.nucnet.org/news/european-conference-calls-for-coordinated-action-on-molten-salt-reactors-6-3-2026
+pull0 | quintustechnologies.com | "Solid-State Battery Summit 2026" | https://quintustechnologies.com/events/solid-state-batteries-summit-2026/
+pull0 | batterysummit.solarenergyevents.com | (title = homepage URL) | https://batterysummit.solarenergyevents.com/
+pull0 | flibe.com | "Thorium and Molten Salt Recognition: EUROMOST 2026 and the Nuclear Innovation Alliance" | https://flibe.com/news/thorium-msr-recognition-euromost-nuclear-innovation-alliance/
+pull0 | thebatteryshow.com | "The Battery Show North America", date=2026-10-12 | https://www.thebatteryshow.com/
+pull0 | advancedautobat.com | "26th Advanced Automotive Battery Conference (AABC)", date=2026-12-07 | https://www.advancedautobat.com/us
+pull1 | flogen.org | "Molten International Symposium" | https://www.flogen.org/sips2026/summit.php?id=13
+pull1 | rsc.org | "IEX 2026 technical training introductory course..." | https://www.rsc.org/events/find-an-event/iex-2026-technical-training-introductory-course-introduction-to-ion-exchange-design-and-operation
+pull1 | euchemsil2026.com | "EUCHEMSIL 2026: 30th EUCHEMS Meeting" | https://www.euchemsil2026.com/
+pull1 | ans.org | "Molten Salt Fuel Chemistry" | https://www.ans.org/meetings/ac2026/session/view-3813/
+pull1 | nucnet.org | "European Conference Calls For Coordinated Action On Molten Salt Reactors" | https://www.nucnet.org/news/european-conference-calls-for-coordinated-action-on-molten-salt-reactors-6-3-2026
+pull1 | quintustechnologies.com | "Solid-State Battery Summit 2026" | https://quintustechnologies.com/events/solid-state-batteries-summit-2026/
+pull1 | batterysummit.solarenergyevents.com | (title = homepage URL) | https://batterysummit.solarenergyevents.com/
+pull1 | pyro.byu.edu | "Molten Salt Electrochemistry Symposium (MoSES)" | https://pyro.byu.edu/moses
+pull1 | flibe.com | "Thorium and Molten Salt Recognition: EUROMOST 2026 and the Nuclear Innovation Alliance" | https://flibe.com/news/thorium-msr-recognition-euromost-nuclear-innovation-alliance/
+pull1 | thebatteryshow.com | "The Battery Show North America", date=2026-10-12 | https://www.thebatteryshow.com/
+pull2 | flogen.org | "Molten International Symposium" | https://www.flogen.org/sips2026/summit.php?id=13
+pull2 | rsc.org | "IEX 2026 technical training introductory course..." | https://www.rsc.org/events/find-an-event/iex-2026-technical-training-introductory-course-introduction-to-ion-exchange-design-and-operation
+pull2 | euchemsil2026.com | "EUCHEMSIL 2026: 30th EUCHEMS Meeting" | https://www.euchemsil2026.com/
+pull2 | ans.org | "Molten Salt Fuel Chemistry" | https://www.ans.org/meetings/ac2026/session/view-3813/
+pull2 | pyro.byu.edu | "Molten Salt Electrochemistry Symposium (MoSES)" | https://pyro.byu.edu/moses
+pull2 | quintustechnologies.com | "Solid-State Battery Summit 2026" | https://quintustechnologies.com/events/solid-state-batteries-summit-2026/
+pull2 | automotive-technology.com | "Automotive Battery Tech Summit 2026" | https://www.automotive-technology.com/events/automotive-battery-tech-summit-2026
+pull2 | nucnet.org | "European Conference Calls For Coordinated Action On Molten Salt Reactors" | https://www.nucnet.org/news/european-conference-calls-for-coordinated-action-on-molten-salt-reactors-6-3-2026
+pull2 | flibe.com | "Thorium and Molten Salt Recognition: EUROMOST 2026 and the Nuclear Innovation Alliance" | https://flibe.com/news/thorium-msr-recognition-euromost-nuclear-innovation-alliance/
+pull2 | eventective.com | "LCO Casino, Lodge & Convention Center" | https://www.eventective.com/hayward-wi/lco-casino-lodge-convention-center-59608.html (Ruling 33's named cost, re-confirmed)
+pull2 | thebatteryshow.com | "The Battery Show North America", date=2026-10-12 | https://www.thebatteryshow.com/
+pull3 | flogen.org | "Molten International Symposium" | https://www.flogen.org/sips2026/summit.php?id=13
+pull3 | rsc.org | "IEX 2026 technical training introductory course..." | https://www.rsc.org/events/find-an-event/iex-2026-technical-training-introductory-course-introduction-to-ion-exchange-design-and-operation
+pull3 | euchemsil2026.com | "EUCHEMSIL 2026: 30th EUCHEMS Meeting" | https://www.euchemsil2026.com/
+pull3 | pyro.byu.edu | "Molten Salt Electrochemistry Symposium (MoSES)" | https://pyro.byu.edu/moses
+pull3 | flibe.com | "Thorium and Molten Salt Recognition: EUROMOST 2026 and the Nuclear Innovation Alliance" | https://flibe.com/news/thorium-msr-recognition-euromost-nuclear-innovation-alliance/
+pull4 | flogen.org | "Molten International Symposium" | https://www.flogen.org/sips2026/summit.php?id=13
+pull4 | rsc.org | "IEX 2026 technical training introductory course..." | https://www.rsc.org/events/find-an-event/iex-2026-technical-training-introductory-course-introduction-to-ion-exchange-design-and-operation
+pull4 | euchemsil2026.com | "EUCHEMSIL 2026: 30th EUCHEMS Meeting" | https://www.euchemsil2026.com/
+pull4 | ans.org | "Molten Salt Fuel Chemistry" | https://www.ans.org/meetings/ac2026/session/view-3813/
+pull4 | nucnet.org | "European Conference Calls For Coordinated Action On Molten Salt Reactors" | https://www.nucnet.org/news/european-conference-calls-for-coordinated-action-on-molten-salt-reactors-6-3-2026
+pull4 | pyro.byu.edu | "Molten Salt Electrochemistry Symposium (MoSES)" | https://pyro.byu.edu/moses
+pull4 | flibe.com | "Thorium and Molten Salt Recognition: EUROMOST 2026 and the Nuclear Innovation Alliance" | https://flibe.com/news/thorium-msr-recognition-euromost-nuclear-innovation-alliance/
+pull4 | electrochem.org | "molten salts Archives" | https://www.electrochem.org/ecsnews/tag/molten-salts
+```
+
+## RESIDUAL WATCH LIST — RE-MEASURED ITEM BY ITEM, CITED BY NAME
+
+| item | this round's live measurement |
+|---|---|
+| `The Battery Saloon` (79a) | OFFERED 4 of 5 pulls (window 2) — correctly NOT ingested to final pool, 0 of 4. Unregressed. |
+| EUCHEMSIL dateless (83a/90b source-side) | RE-CONFIRMED: `date: ""` on every offer, both windows. A SIXTH independent window confirms the doctrine. |
+| Honest-host fallback (84b(1)) | RE-WITNESSED 2 of 5 pulls (`batterysummit.solarenergyevents.com`), ADMITTED to final pool both times. |
+| Dateless full-pool rate | RECORDED: 40/44 = 90.9% this window, a SIXTH window, inside the standing 79-97% band. Zero of the 4 dated rows carries an invented or malformed value (62b, direct scan, zero hits). |
+| Title-loss rates (79d) | NOT independently re-derived this round, consistent with the standing honest limit. |
+| `CSE`-class acronym collision | RE-WITNESSED 3 of 5 (`pire.illinois.edu`), 0 of 3 reaches the final pool — unchanged, net rendered cost still zero. |
+| "General 1" chrome shape (80b) | NOT witnessed this window (`membranes.org` not offered, 0 of 5). Absence, reopen trigger did not fire. |
+| Occupation-profile page-kind (81b) | `www.faraday.ac.uk` offered 4 of 5, 0 of 4 reaches the final pool — unrelated pre-existing guard. Residual stands, unregressed. |
+| Latent `postdocjobs.com` sibling | RE-WITNESSED 1 of 5 pulls, admitted with silent company (A29-03 pattern, unchanged), reached the final pool this window. |
+| `@ Septerna` shape | NOT organically witnessed — zero ` @ ` titles anywhere in the offered job corpus this window (both windows checked). Unchanged. |
+| Segment-order (`Chemistry`/`Chemical Engineering` bare) | NOT witnessed this round's final job pool (checked directly by regex, zero matches). Still deferred. |
+| `Career Connections Center University of Florida` (82a) | NOT witnessed, absent from both offered corpora (checked by scan). Reopen trigger did not fire. |
+| Bare-word `"Project"` orgs | CONFIRMED CLEAN again: zero final-pool `company` values equal "Project". No organic false positive. |
+| PR-headline unwitnessed verb siblings (`announces`/`to exhibit at`/`attends`) | NOT witnessed this round — zero matches by regex scan across all offered event titles, both windows. Still residual-watched by name. |
+| `thrlab.tamu.edu` (87a) | NOT RE-WITNESSED, 0 of 10 pulls (both windows), either surface. Not hunted by name, per Ruling 75. |
+| `lco.cl` reversed-order title shape (87a) | NOT offered at all this round on either surface, either window (host absent). No live cost either way. |
+| Single-posting-page residual (Ruling 93) | Named, not commissioned this round. NOT organically witnessed — scanned every offered event title for job/career vocabulary without an archive/board/directory tail; only the correctly-handled career-fair must-keeps and the pre-existing `ionenviromgt.net` hub-page guard matched. Still open, unaddressed, unwitnessed live. |
+| **The exact-prefix different-event residual (Ruling 100)** | **NOT organically witnessed this round — the only pair the containment pass actually merged (djk/quintus, part 1) IS the true positive it was built for, not a false-prefix case. No two-different-events-sharing-an-opening-phrase pair appeared anywhere in either window's 850-row combined offered corpus (checked via the false-merge scan, part 1). Residual stays named, unwitnessed, not proven impossible.** |
+| Attribution-phrase lead (90b) | A lead, not a duty. No evidence landed in this round's own corpus that bears on it; not investigated. |
+| **A34-01 (re-verified this round, see part 1)** | Confirmed LIVE via direct execution through the real shipped pipeline function with genuine live enrichment (1 survivor, `events.evwire.com`); organic sibling not co-offered this window (absence, not failure). |
+| **A35-01 (FIXED this round — round 36 B/C's `mergeContainedEventNames`, Ruling 100/101)** | **CONFIRMED LIVE at the strongest level yet: organically witnessed merging on real traffic (window 1 pull 2, both rows offered together, only one survives) PLUS direct execution (both orderings) PLUS an independent 120-pair corpus replay. This item is now CLOSED as a live, verified fix — not merely a code-level claim.** |
+
+Committed and pushed as its own item. Part 3 (visual census, standing tallies, gate verdict, close-out) follows.
