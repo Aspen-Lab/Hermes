@@ -241,6 +241,24 @@ describe("findProgrammePageUrl", () => {
     ).toBeNull();
   });
 
+  it("picks a plural 'Programs' link over a higher-scoring 'agenda' lead-gen link", () => {
+    // Round 3 B item 1 (advancedautobat.com witness): the singular-only
+    // `program(?:me)?\b` pattern could never match "Programs", so a real
+    // same-host programme page sat unscored next to a PDF-gated lead-gen
+    // form whose text says "agenda". Widening the pattern to `program(?:me)?s?\b`
+    // lets "Programs" score (7 weight, text+href both match: 7*2+7=21),
+    // beating the agenda-only link (5 weight, text only: 5*2+0=10) outright.
+    expect(
+      findProgrammePageUrl(
+        `
+          <a href="/us/2026-brochure-download-form">View Brochure &amp; Final Agenda</a>
+          <a href="/aabc-us/programs">Programs</a>
+        `,
+        "https://www.advancedautobat.com/us/",
+      ),
+    ).toBe("https://www.advancedautobat.com/aabc-us/programs");
+  });
+
   it("uses explicit href fragments but never returns a same-document link", () => {
     expect(
       findProgrammePageUrl(
@@ -251,6 +269,94 @@ describe("findProgrammePageUrl", () => {
         "https://conference.example.org/2027/home",
       ),
     ).toBe("https://conference.example.org/2027/day-one");
+  });
+
+  it("returns null when the only programme-scoring link sits inside sitewide chrome (rsc.org must-drop witness)", () => {
+    // F-P2-01 / Round 6 B / Ruling 114: the live rsc.org page picked this
+    // exact sitewide-nav link ("Careers talks and events") as an ion-exchange
+    // course's programme page, and that wrong page's ChemCareers content
+    // bled into talkSummaries. The real markup nests it inside a capitalised
+    // `<Nav id="mainnav">` framework component whose class names
+    // (`mainnav__link`) do NOT match the furniture keyword regex, but the
+    // already-shipped tag-name check matches `<Nav>` case-insensitively —
+    // this fixture asserts the fix reaches it and the pick falls to null,
+    // the safe failure direction, rather than a wrong-event fill.
+    expect(
+      findProgrammePageUrl(
+        `
+          <Nav id="mainnav" class="mainnav" data-ktc-search-exclude>
+            <a href="/funding-and-support/careers/career-support/talks-and-events" class="mainnav__link">Careers talks and events</a>
+          </Nav>
+          <main>
+            <h1>IEX 2026</h1>
+          </main>
+        `,
+        "https://www.rsc.org/events/iex-2026",
+      ),
+    ).toBeNull();
+  });
+
+  it("never picks a nav-nested candidate over a lower-scoring non-chrome one (mechanism lock)", () => {
+    // Locks the direction of the fix: a nav-nested link that would outscore
+    // a real, non-chrome link on keyword weight alone must never win — the
+    // chrome filter now runs before scoring even sees the candidate, so a
+    // higher raw score inside a <nav> cannot beat a lower one outside it.
+    expect(
+      findProgrammePageUrl(
+        `
+          <nav>
+            <a href="/programme/agenda">Programme Agenda</a>
+          </nav>
+          <main>
+            <a href="/speakers">Speakers List</a>
+          </main>
+        `,
+        "https://conference.example.org/home",
+      ),
+    ).toBe("https://conference.example.org/speakers");
+  });
+
+  it("keeps a second, non-chrome occurrence of the same link when the first sits in a nav dropdown (advancedautobat.com must-keep witness)", () => {
+    // Round 6 B's live corpus: the real advancedautobat.com "Programs"
+    // link's FIRST DOM occurrence sits inside a Bootstrap nav-dropdown
+    // (`navbar-collapse` > `nav navbar-nav`), which this fix now strips too
+    // — but an identical-href second occurrence lives in real page content
+    // (an "about-blurb" section) and resolves to the same final answer, so
+    // the must-keep pick survives unchanged.
+    expect(
+      findProgrammePageUrl(
+        `
+          <nav class="navbar navbar-collapse">
+            <ul class="nav navbar-nav">
+              <li><a href="/aabc-us/programs">Programs</a></li>
+            </ul>
+          </nav>
+          <main>
+            <div class="about-blurb">
+              <p>Read more in our <a href="/aabc-us/programs">Programs</a> section.</p>
+            </div>
+          </main>
+        `,
+        "https://www.advancedautobat.com/us/",
+      ),
+    ).toBe("https://www.advancedautobat.com/aabc-us/programs");
+  });
+
+  it("leaves a pick with no chrome involved unchanged (euchemsil2026.com must-keep witness)", () => {
+    // Round 6 B's live corpus: euchemsil2026.com's programme pick involves
+    // no chrome at all, so this fix is a no-op on this shape — named
+    // explicitly for traceability to the live specimen, mirroring round
+    // 3/4's own live-witness-as-fixture practice.
+    expect(
+      findProgrammePageUrl(
+        `
+          <main>
+            <a href="/program/">Programme</a>
+          </main>
+        `,
+        "https://www.euchemsil2026.com/",
+      ),
+    ).toBe("https://www.euchemsil2026.com/program/");
   });
 });
 

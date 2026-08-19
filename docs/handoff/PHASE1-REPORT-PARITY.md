@@ -196,3 +196,37 @@ attribution (a recorded precedent, used again after account-limit deaths).
 Phase 2 — the same campaign for the Tier 1/2 LLM-enriched deep reports — begins next,
 with its own baseline census and this document's named-cost registry as the starting
 backlog.
+
+---
+
+## Addendum — Phase 2: the Tier 1/2 LLM report campaign (closed)
+
+Phase 2 ran the same ABC machinery against the LLM-enriched deep reports (9 rounds,
+Rulings 109–117), measured over the local Vertex Gemini path. What it delivered:
+
+- **The 11-field LLM inventory verified**: 7 LLM-only sections (specific requirements/
+  duties, sponsorship read, emphasis on jobs; talk summaries, plan, poster fit on
+  events) + 4 provenance-upgraded fields, all rendering inside the plate-conformant
+  shells with zero new layout defects.
+- **A three-part quality rubric** replaced literal plate-matching for LLM content
+  (the spec only mocks the locked state): layout conformance, fidelity-to-page
+  (every claim substring-verified against the fetched source), field-contract form.
+  **Zero hallucinations were observed in any census** — across three independent
+  measurement rounds the strictest check (every quoted string a literal substring of
+  the real page) passed on every call, including the manager's own.
+- **One content-correctness defect found and fixed (F-P2-01)**: the programme-page
+  picker could select a site's own navigation link, bleeding another event's content
+  into the report. Root cause was a one-line asymmetry (the third extraction path
+  never stripped page furniture like its two siblings); fixed, tested, and verified
+  across three layers and two fresh live windows.
+- **The serif/sans doctrine completed**: source-prose = serif, Peer's voice = sans,
+  headings = sans; a five-victim styling trap (tailwind-merge vs the custom text
+  scale) closed at the root with a general fix.
+- **Honest costs recorded**: programme pages that exist only behind lead-gen PDF
+  forms or in client-rendered SPAs yield an empty section by design (empty-over-wrong
+  is the campaign's binding failure direction — proven the right call when the
+  alternative scored a "Schedule a Call" button above the real agenda).
+
+Final gate: **2,442 tests, all green.** Both phases closed under the same convergence
+criterion: two consecutive clean rounds, each sealed by the manager's independent
+fresh-window re-measurement.

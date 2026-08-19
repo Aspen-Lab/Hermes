@@ -1000,6 +1000,11 @@ export function JobReport({
   const roleBullets = enrichment?.roleSummary?.length
     ? enrichment.roleSummary
     : splitIntoBullets(roleSummary);
+  // Ruling 111b (Phase 2 round 4 C item 2, B1). `roleBullets` is EITHER the
+  // posting's own text (Tier 0) OR Class-B's LLM-composed sentences, never
+  // both. Only the posting's own prose earns the reading serif below — the
+  // LLM's own voice is Peer's, not the posting's, so it stays sans.
+  const roleBulletsAreLlmVoice = Boolean(enrichment?.roleSummary?.length);
   const materials = distinct(job.applicationMaterials ?? []);
   const visaEvidence = clean(job.visa?.evidence);
   const roleTitle = cleanJobTitle(job.roleTitle) || job.roleTitle;
@@ -1325,8 +1330,12 @@ export function JobReport({
                     key={point}
                     data-role-bullet
                     /* V26-J02, element 4. Plate 02 sets the role bullets in
-                       `Georgia 12.0` `#4d3a28`, 7 spans over 3 bullets. */
-                    className="relative pl-5 font-reading text-body-lg leading-8 text-text"
+                       `Georgia 12.0` `#4d3a28`, 7 spans over 3 bullets — for
+                       the POSTING's own prose (Tier 0). Ruling 111b (Phase 2
+                       round 4 C item 2, B1): when this slot instead holds
+                       Class-B's LLM-composed `roleSummary` sentences, that is
+                       Peer's own voice, not the posting's, so it stays sans. */
+                    className={`relative pl-5 ${roleBulletsAreLlmVoice ? "" : "font-reading "}text-body-lg leading-8 text-text`}
                   >
                     <span
                       aria-hidden
@@ -1395,7 +1404,12 @@ export function JobReport({
             {enrichment?.specificRequirements?.map((requirement) => (
               <li
                 key={requirement}
-                className="rounded-lg border border-border bg-surface px-4 py-3 text-body text-heading"
+                /* Ruling 111b (Phase 2 round 4 C item 2, A1). Verbatim quote
+                   from the posting, mechanically enforced by
+                   `quotableStringList` — the posting's own prose, so it
+                   takes the reading serif like the other verbatim-quote
+                   sites (`visaEvidence` at :1456). */
+                className="rounded-lg border border-border bg-surface px-4 py-3 font-reading text-body text-heading"
               >
                 {requirement}
               </li>
@@ -1413,7 +1427,10 @@ export function JobReport({
             {enrichment?.specificDuties?.map((duty) => (
               <li
                 key={duty}
-                className="rounded-lg border border-border bg-surface px-4 py-3 text-body text-heading"
+                /* Ruling 111b (Phase 2 round 4 C item 2, A2). Same mechanism
+                   as A1 above: verbatim quote, mechanically enforced by
+                   `quotableStringList`, so it takes the reading serif. */
+                className="rounded-lg border border-border bg-surface px-4 py-3 font-reading text-body text-heading"
               >
                 {duty}
               </li>
@@ -1453,7 +1470,7 @@ export function JobReport({
         <ReportSection title="Sponsorship read">
           <div className="grid gap-3 md:grid-cols-2">
             {visaEvidence && (
-              <blockquote className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 text-body leading-7 text-text-muted">
+              <blockquote className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 font-reading text-body leading-7 text-text-muted">
                 {/* Round 28 items 2+3 (V28-01/V28-02): shared step, colour
                     stays `text-accent` — this quote is deliberately tinted. */}
                 <span className={`mb-2 block ${REPORT_LABEL_STEP} text-accent`}>

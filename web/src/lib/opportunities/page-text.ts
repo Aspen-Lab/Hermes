@@ -37,7 +37,7 @@ const PAGE_FURNITURE_NAME_RE =
 const JAVASCRIPT_PLACEHOLDER_RE =
   /^(?:(?:please\s+)?enable\s+javascript|javascript\s+(?:is\s+)?required|loading)\b[^.!?]{0,120}[.!?]*$/i;
 const PROGRAMME_LINK_KEYWORDS = [
-  { pattern: /\bprogram(?:me)?\b/i, weight: 7 },
+  { pattern: /\bprogram(?:me)?s?\b/i, weight: 7 },
   { pattern: /\bschedule\b/i, weight: 6 },
   { pattern: /\bagenda\b/i, weight: 5 },
   { pattern: /\bsessions\b/i, weight: 4 },
@@ -277,7 +277,19 @@ export function findProgrammePageUrl(
   baseUrl.hash = "";
 
   let best: { score: number; index: number; url: string } | null = null;
-  const visibleHtml = withoutHiddenContent(html);
+  // F-P2-01 (round 5-6, Ruling 114): this was the one extraction path in
+  // this file that scanned <a> tags via withoutHiddenContent alone, without
+  // the withoutPageFurniture pass that extractPageHeadings (:170) and
+  // extractPageText (:350) already run — the asymmetry was the root cause.
+  // The live witness: an ion-exchange course's rsc.org page carried a
+  // sitewide nav link ("Careers talks and events") that scored high enough
+  // to be picked as its programme page, and that wrong page's own
+  // ChemCareers content then bled into talkSummaries. Routing this scan
+  // through the same withoutPageFurniture call makes all three paths
+  // symmetric: a chrome-suppressed candidate now falls out of the
+  // comparison entirely, so the safe failure direction is a null pick (an
+  // honestly empty programme), never a wrong-event fill.
+  const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));
   for (const match of visibleHtml.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
     const href = linkHref(match[1] ?? "");
     if (!href) continue;

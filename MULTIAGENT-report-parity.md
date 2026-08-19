@@ -275,6 +275,828 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+WHOSE TURN:       MANAGER — Phase 2 FINAL re-measurement, convergence
+                  candidate 2. A's round 9 window is clean (zero NEW-CLASS
+                  findings); per Ruling 105a the manager now independently
+                  re-measures. If the manager's own window is ALSO clean,
+                  two consecutive clean candidates close Phase 2 — the
+                  manager writes that ruling, A does not. See §4
+                  `### Phase 2 Round 9 — Agent A` for the full census.
+PHASE 2 MEASUREMENT PROFILE:
+                  (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
+                  baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
+                  field-scoped per Ruling 95 (`researchTopics`, `softTopics`,
+                  `preferredMethods`, `careerStage`, `industryVsAcademia`,
+                  `locationPreferences`, `currentProject` — never read whole).
+                  `aiTier` engaged via the LOCAL VERTEX PATH
+                  (`resolveProvider`'s local-dev branch, `web/src/lib/llm/
+                  providers/registry.ts`, Ruling 66a) — `NODE_ENV=development`
+                  (Vitest itself sets `test`; stub required to reach the
+                  branch, mirroring `registry.test.ts`'s own pattern),
+                  `GOOGLE_VERTEX_PROJECT` present, no BYOK override.
+                  `searchProvider: gemini` only — Ruling 75 stands in Phase 2,
+                  `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
+                  ever. Every future Phase 2 census states this profile or an
+                  explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 9 A IS COMPLETE @ 2026-08-19 ~04:5x local
+                  (~09:5x UTC). CONVERGENCE CANDIDATE 2 — THE FULL ROUND-5/8
+                  CENSUS PROTOCOL, RE-BUILT FROM SCRATCH (NOT COPIED),
+                  ZERO NEW-CLASS FINDINGS.** Run by `LAPTOP-3CL10CG5`. Claimed
+                  the lock after `git pull` (already up to date) and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp` (claiming push ACCEPTED at
+                  `97c8ceb`). Grepped `Phase 2 Round 9` first — zero prior
+                  entries, fresh start not a resume. Read §0 (incl. §0d turn
+                  lock), §1's first ~450 lines, Rulings 113-116 in full, and
+                  both the `Phase 2 Round 5 — Agent A` and `Phase 2 Round 8 —
+                  Agent A`/`Phase 2 Round 8 — MANAGER` §4 entries in full
+                  before touching anything. **Found and fixed a protocol gap
+                  before starting the census itself: §1's top block still
+                  read round 8's `WHOSE TURN: MANAGER` even though Ruling 116
+                  (§4, end of file) had already closed candidate 1 and handed
+                  off round 9 to A — the manager's own round-8 closing commit
+                  updated §4 but never updated §1. Synced §1 to Ruling 116's
+                  actual state in the same commit that claimed the lock.**
+                  Confirmed on disk: `page-text.ts:170/292/362` all three
+                  still call `withoutPageFurniture(withoutHiddenContent(html))`
+                  — F-P2-01's fix unchanged since round 7.
+
+                  **GATE, COLD FIRST: 100 files / 2442 tests, 2442 passing,
+                  ZERO failures**, matching round 8's own count exactly.
+                  `tsc` clean; `eslint` — the one standing `quiz.tsx:46`
+                  error only.
+
+                  **DUTY 1 — VISUAL RE-WALK.** Harness rebuilt from scratch
+                  this round (round 8's own was deleted, as designed) —
+                  re-derived every render site, prop shape and `cn`-trap
+                  mechanism straight from the two page components on disk,
+                  not assumed from prior rounds' prose. Combined-fixture
+                  render of all 11 Class-A/B rows + all six cn-trap sites.
+                  **18/18 assertions passed** after THREE self-caught harness
+                  bugs (two regex-vs-inner-`<span>` mismatches, one
+                  first-occurrence-vs-scoped ordering mistake in the plan
+                  block's own assertion — none were product findings, all
+                  caught and fixed before trusting the result). **ZERO
+                  visual defects** — every row and every trap site confirmed
+                  still healed.
+
+                  **DUTY 2 — 109c RUBRIC LIVE WINDOW + F-P2-01 SPOT-CHECK.**
+                  2 pulls/surface (15 unique job rows, 10 unique event
+                  rows), 3 job + 3 event live LLM enrichment calls, one
+                  live-network timeout on the FIRST attempt at the job-pool
+                  step (45s budget too tight; raised to 100s, clean on
+                  retry and every run after — Ruling-96b-shaped, not a code
+                  defect). BF1's eligible-specimen population RE-CONFIRMED
+                  live on the gevernova witness, fidelity mechanically
+                  VERIFIED (`Array.every`, every `specificRequirements`/
+                  `specificDuties` string a literal substring of the fetched
+                  page). **F-P2-01 SPOT-CHECK (direct execution, lighter than
+                  round 8's three-layer verification per this round's own
+                  charter): live re-fetch of the exact recorded rsc.org
+                  specimen, `findProgrammePageUrl` still returns `null`,
+                  zero "ChemCareers"-shaped headings. Fix holds.** Pool
+                  sanity: zero Phase 1 regressions; `events.ornl.gov`'s
+                  bare-hostname fallback reappeared and is Ruling 83c's own
+                  ADMITTED class, not new. One incidental, unreplicated
+                  observation (a Drupal-shaped display-date string on one
+                  event row, one pull, not reproduced on the second pull)
+                  recorded but not classified. Named-cost registry
+                  re-confirmed by name (111a, 114's residual); Ruling 108's
+                  list not re-filed.
+
+                  **GATE, FINAL (harness deleted): 100 files / 2442 tests,
+                  2442 passing, ZERO failures**, confirming zero leakage from
+                  `web/zz-p2a9/` (outside `web/src/`, deleted before this
+                  commit). `git status --porcelain --untracked-files=all`
+                  clean. **ZERO NEW-CLASS FINDINGS this round.**
+
+                  Full detail in §4 `### Phase 2 Round 9 — Agent A`.
+                  `WHOSE TURN: MANAGER — Phase 2 FINAL re-measurement,
+                  convergence candidate 2.` A does not declare Phase 2
+                  complete — if the manager's own window is also clean, two
+                  consecutive clean candidates close Phase 2 and the manager
+                  writes that ruling. Turn lock RELEASED (`HELD BY: free`) in
+                  this commit.
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 8 A IS COMPLETE @ 2026-08-19 ~09:1x UTC.
+                  CONVERGENCE CANDIDATE 1 RE-RUN — THE FULL ROUND-5 CENSUS
+                  PROTOCOL, ZERO NEW-CLASS FINDINGS. F-P2-01's FIX (RULING
+                  114) CONFIRMED LIVE AT THREE INDEPENDENT LAYERS, ON BOTH AN
+                  ORGANIC DRAW AND A FORCED RE-FETCH OF THE EXACT RECORDED
+                  rsc.org SPECIMEN.** Run by `LAPTOP-3CL10CG5`. Claimed the
+                  lock after `git pull` (already up to date) and confirming
+                  `git branch --show-current` reads
+                  `feature/summary-report-revamp` (`710b335`, claiming push
+                  ACCEPTED at `8f1d8d8`). Grepped `Phase 2 Round 8` first —
+                  zero prior entries, fresh start not a resume. Read §0 (incl.
+                  §0d turn lock) and §1's first ~450 lines, Rulings 113-115 in
+                  full, the `Phase 2 Round 5 — Agent A` §4 entry in full (the
+                  census protocol re-run this round), and the `Phase 2 Round 7
+                  — Agent C` §4 entry in full (what shipped) before touching
+                  anything. Confirmed on disk first: all three `page-text.ts`
+                  anchor-scan call sites (`:170/292/362`) now run
+                  `withoutPageFurniture(withoutHiddenContent(html))`; the 4
+                  new `findProgrammePageUrl` tests present at `:274,299,319,345`.
+
+                  **GATE, COLD FIRST: 100 files / 2442 tests, 2442 passing,
+                  ZERO failures**, matching round 7's own count exactly, no
+                  flake. `tsc` clean; `eslint` — the one standing `quiz.tsx:46`
+                  error only.
+
+                  **DUTY 1 — VISUAL RE-WALK.** Combined-fixture render
+                  (round 5's own method) of all 11 Class-A/B rows + all six
+                  cn-trap sites, ONE populated `JobReport`/`EventReport` render
+                  each. **23/23 assertions passed** after one self-caught
+                  harness bug (an apostrophe HTML-escaped by
+                  `renderToStaticMarkup`, same bug class round 2 caught, not a
+                  product finding). **ZERO visual defects** — every row and
+                  every trap site (HeaderChip both surfaces, activity chip
+                  both branches, StarButton's inactive branch, both roster
+                  reason sites' both branches) confirmed still healed, no new
+                  render-order/class-collision issue from exercising every
+                  field together.
+
+                  **DUTY 2 — 109c RUBRIC LIVE WINDOW + F-P2-01
+                  RE-VERIFICATION.** 2 pulls/surface (11 unique rows each
+                  surface), 3 job + 2 organic-event + 1 forced-event live LLM
+                  enrichment calls, zero timeouts/flakes/retries anywhere.
+                  BF1 re-confirmed DISSOLVED live on the gevernova-class
+                  witness, fidelity mechanically VERIFIED (every
+                  `specificRequirements` string asserted a literal substring
+                  of the fetched page, not eyeballed). **F-P2-01 CONFIRMED
+                  FIXED AT THREE INDEPENDENT LAYERS:** (1) URL-selection —
+                  direct execution on a fresh live re-fetch of the exact
+                  recorded rsc.org IEX-2026 specimen (200 OK today) returns
+                  `null`, never the wrong-event nav link, headings
+                  byte-identical to round 5/6's own recorded shape (7 total,
+                  0 talk-shaped); (2) downstream merge — `route.ts`'s own
+                  guard confirmed never entered, merged text asserted to
+                  contain zero "ChemCareers" occurrences; (3) full live LLM
+                  call, BOTH an ORGANIC draw (the RSC event surfaced
+                  unforced in this round's own pool pull, returned
+                  `talkTitles: []`) AND a FORCED re-fetch of the recorded
+                  specimen through the complete pipeline (`talkSummaries: []`
+                  asserted `toHaveLength(0)`, zero "ChemCareers", a topically
+                  correct and traceable `condensedDescription`). Pool sanity:
+                  zero Phase 1 regressions across both surfaces; one
+                  incidental, unreplicated, out-of-mandate observation
+                  (a blank `companyOrLab` on one job row) recorded but not
+                  classified. Named-cost registry re-confirmed by name
+                  (111a, 114's residual); Ruling 108's list not re-filed.
+
+                  **GATE, FINAL (harness deleted): 100 files / 2442 tests,
+                  2442 passing, ZERO failures**, confirming zero leakage from
+                  `web/zz-p2a8/` (outside `web/src/`, deleted before this
+                  commit). `git status --porcelain --untracked-files=all`
+                  clean. **ZERO NEW-CLASS FINDINGS this round.**
+
+                  Full detail in §4 `### Phase 2 Round 8 — Agent A`.
+                  `WHOSE TURN: MANAGER — Phase 2 convergence candidate 1
+                  re-measurement.` A does not declare Phase 2 complete —
+                  Ruling 105a requires a second clean candidate round after
+                  this one. Turn lock RELEASED (`HELD BY: free`) in this
+                  commit.
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 7 C IS COMPLETE @ 2026-08-19 ~09:0x UTC.
+                  RULING 114 LANDED — THE ONE-LINE `page-text.ts:280`
+                  ASYMMETRY FIX PLUS 4 NEW CONSTRUCTED-FIXTURE TESTS, GATE
+                  FULLY GREEN.** Run by `LAPTOP-3CL10CG5`. Claimed the lock
+                  after `git pull` (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`
+                  (`37632ab`, claiming push ACCEPTED). Grepped `Phase 2 Round
+                  7` first — zero prior entries, fresh start not a resume.
+                  Read §0 (incl. §0d turn lock) and §1's first ~450 lines,
+                  Ruling 114 in full, and both the `Phase 2 Round 6 — Agent B`
+                  and `Phase 2 Round 6 — MANAGER` §4 entries in full before
+                  touching anything.
+
+                  Changed `web/src/lib/opportunities/page-text.ts:280` inside
+                  `findProgrammePageUrl`: `withoutHiddenContent(html)` →
+                  `withoutPageFurniture(withoutHiddenContent(html))`, exactly
+                  as designed — no deviation. Added a doc comment above the
+                  line naming F-P2-01's witness (the rsc.org sitewide-nav link
+                  picked as an ion-exchange course's programme page,
+                  ChemCareers content bleeding into `talkSummaries`), the
+                  asymmetry as root cause, and the safe failure direction
+                  (chrome-suppressed pick falls to `null`, never a
+                  wrong-event fill). Added FOUR new tests to
+                  `page-text.test.ts`'s `findProgrammePageUrl` block, pure
+                  additions, zero existing tests touched: (1) RSC-shaped
+                  must-drop (capitalised `<Nav id="mainnav">`-wrapped
+                  positive-scoring anchor, only candidate on the page →
+                  `null`, exercising the exact case-insensitive tag-name path
+                  B traced since the class name alone does not match the
+                  furniture regex); (2) nav-chrome mechanism-lock (a
+                  nav-nested candidate scoring 21 loses to a non-chrome
+                  candidate scoring only 6, proving chrome-filtering now runs
+                  before scoring); (3) advancedautobat-shaped must-keep
+                  (identical href appears twice, first inside a Bootstrap
+                  nav-dropdown now stripped, second in real page content —
+                  pick unchanged); (4) euchemsil-shaped must-keep (no chrome
+                  involved anywhere on the page — pick unchanged, confirming
+                  the fix is a no-op on this shape).
+
+                  **GATE, FULL-CAPTURE, COLD: 100 files / 2442 tests, 2442
+                  passing, ZERO failures** (2438 baseline + 4 new tests, exact
+                  match; no `benchmark.test.ts` flake this run — clean
+                  straight through). `tsc --noEmit` clean. `eslint src` —
+                  exactly the one standing `quiz.tsx:46` error, unchanged.
+                  Scope check: `git diff --stat` shows exactly the two
+                  intended files touched (`page-text.ts` +14/-1,
+                  `page-text.test.ts` +88/-0). No POLICY items. No deviation
+                  from B's design or Ruling 114 — landed verbatim.
+
+                  Full detail in §4 `### Phase 2 Round 7 — Agent C`. Turn lock
+                  RELEASED (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 6 B IS COMPLETE @ 2026-08-19 ~08:4x UTC.
+                  F-P2-01 DIAGNOSED AND DESIGNED — A WINNING CANDIDATE FOUND,
+                  LIVE-VERIFIED ON 4 REAL SPECIMENS, ZERO REGRESSIONS. B
+                  CHANGED NO PRODUCT CODE (design-only turn).** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`
+                  (`8fb87b2`, claiming push ACCEPTED). Grepped `Phase 2 Round
+                  6` first — zero prior entries, fresh start not a resume.
+                  Read §0/§1, Ruling 113 (a-b) in full, the `Phase 2 Round 5 —
+                  Agent A` §4 entry in full (F-P2-01's own mechanism trace),
+                  and the `Phase 2 Round 3 — Agent B — ITEM 1` entry in full
+                  (the diagnosis method this item builds on) before touching
+                  anything.
+
+                  **ROOT-CAUSE RE-TRACE:** `findProgrammePageUrl`
+                  (`page-text.ts:266-322`) is the ONE function in the file
+                  that scans `<a>` tags WITHOUT first calling the file's own
+                  `withoutPageFurniture` — `extractPageHeadings`/
+                  `extractPageText` both already do. Live-fetched the real
+                  RSC page and traced the winning wrong anchor's exact
+                  ancestor chain: its immediate class names (`mainnav__item`/
+                  `mainnav__link`) do NOT match the existing furniture regex
+                  (confirmed by direct execution — a compound BEM class evades
+                  the whole-word check) — but the actual enclosing element is
+                  a literal `<Nav id="mainnav" ...>` tag, which the shipped
+                  `withoutPageFurniture`'s case-insensitive tag-name check
+                  DOES already catch. **The existing, already-shipped,
+                  already-tested chrome-stripping machinery can already see
+                  this exact chrome — it just was never asked the question at
+                  this one call site.**
+
+                  **WINNING CANDIDATE: a ONE-LINE reuse fix** —
+                  `page-text.ts:280`, `withoutHiddenContent(html)` →
+                  `withoutPageFurniture(withoutHiddenContent(html))`. No new
+                  regex, no signature change, zero new exports. Verified by
+                  temporarily patching the real shipped file and executing the
+                  SHIPPED functions directly against 4 freshly-fetched real
+                  specimens: **RSC (must-DROP)** flips from the wrong
+                  cross-event nav link to `null` — the SAFE failure direction
+                  Ruling 113b requires, and the RSC main page's own 7
+                  headings (unaffected by this fix) are all administrative,
+                  none a plausible talk title, so `talkSummaries` should
+                  render honestly empty. **`advancedautobat.com` (must-KEEP,
+                  round 3/4/5's own corrected witness)** — pick UNCHANGED
+                  (the winning link's first DOM occurrence is itself inside a
+                  Bootstrap nav-dropdown and gets stripped too, but an
+                  identical-URL second occurrence sits in real page content
+                  and wins instead — same final answer). **`flogen.org`
+                  (must-KEEP, round 5's own live populated witness)** — pick
+                  changes from a same-shape nav-dropdown link to `null`, but
+                  direct-fetch confirmed that page is a content-free "Coming
+                  soon!" stub (337 chars, 2 headings) — zero information lost,
+                  round 5's real positive result came from the main page's
+                  own 12 headings, unaffected by this fix. **`euchemsil2026.com`
+                  (must-KEEP)** — pick fully UNCHANGED, no chrome involved.
+                  **Full gate with the patch applied, cold: 100 files / 2438
+                  tests, 2438 passing, ZERO failures** (one `benchmark.test.ts`
+                  Ruling-96b flake, clean on retry); `tsc` clean; `eslint`
+                  unchanged. Patch reverted before commit
+                  (`git checkout --`), tree confirmed clean.
+
+                  **TWO ALTERNATIVES MEASURED AND REJECTED WITH EVIDENCE, not
+                  merely reasoned about:** a base-URL-slug corroboration gate
+                  breaks an ALREADY-SHIPPED, ALREADY-PASSING test
+                  (`page-text.test.ts:192-209`, a fixture whose correct
+                  winner deliberately shares zero tokens with its own base
+                  pathname); an event-NAME corroboration gate would need a
+                  signature change plus an undesigned, unproven
+                  stopword/genericity filter and is redundant given the
+                  winning candidate already closes the mechanism upstream.
+                  An extraction-side per-talk name-corroboration gate carries
+                  a confirmed false-drop risk on round 5's own real
+                  `flogen.org` heading text (real titles that do not restate
+                  the event's own top-level name tokens) — not recommended as
+                  primary defense. **One honest residual named, not hidden:**
+                  chrome using neither a semantic tag, an ARIA role, nor a
+                  whole-word nav/menu/etc. class token would still evade
+                  detection — the same pre-existing residual
+                  `extractPageHeadings`/`extractPageText` already carry
+                  today, not newly introduced by this fix.
+
+                  **RECOMMENDATION FOR C:** land the one-line
+                  `page-text.ts:280` change plus ONE new constructed-fixture
+                  test in `page-text.test.ts` encoding the RSC nav-nested
+                  shape (mirroring round 3/4's own live-witness-as-fixture
+                  practice) — no existing test needs to change.
+
+                  Full detail, the live corpus table, and both rejected
+                  alternatives' evidence in §4 `### Phase 2 Round 6 — Agent
+                  B`. Turn lock RELEASED (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 5 A IS COMPLETE @ 2026-08-19 ~03:2x UTC.
+                  GATE-CANDIDATE-STYLE CENSUS RUN IN FULL — VISUAL RE-WALK OF
+                  ALL 11 ROWS (ZERO DEFECTS) + A LIVE 109c-RUBRIC WINDOW THAT
+                  FOUND ONE NEW, LIVE-REPRODUCED DEFECT (F-P2-01). MEASURES
+                  ONLY, A SHIPPED NO PRODUCT CODE.** Run by `LAPTOP-3CL10CG5`.
+                  Claimed the lock after `git pull` (already up to date) and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp` (`f077d12`); claiming push
+                  ACCEPTED (`bf8d032`). Grepped `Phase 2 Round 5` first — zero
+                  prior entries existed, fresh start not a resume. Read §0/§1
+                  in full, Rulings 109-112 in full, the `Phase 2 Round 2 —
+                  Agent A` §4 entry in full (the 11-row inventory + round-2's
+                  own combined-fixture visual-census method), the `Phase 2
+                  Round 1 — Agent A (baseline)` §4 entry in full (BF1-BF5),
+                  and all three `Phase 2 Round 4 — Agent C — ITEM 1/2/3`
+                  entries in full — confirmed all four round-4 code changes
+                  present on disk before building anything.
+
+                  **GATE COLD FIRST, BEFORE ANY HARNESS CODE: 100 files /
+                  2438 tests, 2438 passing, ZERO failures**, matching
+                  baseline exactly. `tsc` clean; `eslint` — the one standing
+                  `quiz.tsx:46` error, unchanged.
+
+                  **DUTY 1 (visual re-walk, harness `web/zz-p2a5/
+                  visual-census.test.ts`, deleted before commit): ZERO
+                  DEFECTS.** Reused round 2's own method but went one step
+                  further — ONE fully-populated `JobEnrichment`/
+                  `EventEnrichment` fixture per surface (all 11 rows +
+                  ALL SIX cn-trap victim sites, including a third roster
+                  entry added specifically to reach `StarButton`'s reachable
+                  branch) rendered ONCE each, so every row and every fix is
+                  exercised together in the same markup rather than six
+                  separate isolated fixtures. 21/21 assertions passed (one
+                  self-caught harness bug disclosed in §4: the sponsorship
+                  blockquote quotes `job.visa.evidence`, not
+                  `sponsorshipRead.basis` — corrected before trusting the
+                  result). V-P2-01's serif restoration renders; B1's
+                  conditional splits correctly BOTH directions in the same
+                  combined render; all six cn-trap sites (roster reason ×2
+                  branches on both organisations and the People-card twin,
+                  `HeaderChip` both surfaces, activity chip both branches,
+                  `StarButton` reachable branch) render their intended
+                  classes on real, combined content — not just the isolated
+                  locked unit tests that shipped with them.
+
+                  **DUTY 2 (109c rubric, live window, harness `web/zz-p2a5/
+                  value-census.test.ts`, 2 pulls/surface, 3 renders/surface,
+                  9 real bounded LLM calls, field-scoped `profile.json`,
+                  gemini-only, zero adzuna/usajobs): BF1 RE-CONFIRMED
+                  DISSOLVED LIVE** — `careers.gevernova.com` (same host as
+                  round 2's own witness) populated ALL SIX job fields
+                  including `specificRequirements`/`specificDuties`, with
+                  `requirementsFidelity: verified` (every returned string
+                  auto-confirmed a literal substring of the live fetched
+                  page). **BF2's plural-keyword fix RE-CONFIRMED LIVE via
+                  direct execution**, with an honest method correction: the
+                  bare `advancedautobat.com/` root no longer serves the
+                  specific conference page B/C witnessed (the site now
+                  portals through a conference-hub page after a
+                  restructuring) — corrected to the real conference-specific
+                  sub-page (`/conferences/aabc-us`), which still carries the
+                  SAME two link shapes B/C diagnosed, and
+                  `findProgrammePageUrl` picks the "Programs" link exactly as
+                  designed. One intermittent job-pool-pull flake, Ruling
+                  96b-shaped, clean on retry.
+
+                  **FINDING F-P2-01 (NEW, live-reproduced 3× across
+                  independent LLM calls on the same specimen) —
+                  `findProgrammePageUrl` can pick a real, same-host, but
+                  WRONG-EVENT page as an event's "programme."** On
+                  `rsc.org`'s real IEX 2026 ion-exchange training-course
+                  page, the function picks RSC's own SITEWIDE navigation
+                  link ("Career talks and events," scoring 9 purely on the
+                  bare keyword `talks`) — not any programme belonging to
+                  this event. That page's own text (RSC's generic
+                  "ChemCareers webinars" content) then merges into the
+                  enrichment prompt's evidence, and the LLM reports
+                  "ChemCareers 2026: Finding a job after 50" as a talk in the
+                  ion-exchange course's own programme — real, traceable text
+                  (not a classic hallucination), but attributed to the WRONG
+                  EVENT. Full mechanism trace (the winning anchor, its exact
+                  score, the merged-text follow-on fetch) in §4. **This is a
+                  THIRD, structurally distinct failure mode of the same
+                  already-shipped `findProgrammePageUrl` same-host path**
+                  (Ruling 111a already named two others: PDF-gated lead-gen
+                  forms, and the same-host-only filter excluding a real
+                  off-host agenda) and the FIRST content-CORRECTNESS defect
+                  (as opposed to population/presence) found anywhere in
+                  Phase 2's 11-row census across 5 rounds. **A's own
+                  classification argument (not a ruling — the call is the
+                  manager's, per §2): NEW DEFECT CLASS, resets the
+                  convergence clock under Ruling 105a.** Ruling 111a's own
+                  named-cost registry entry is separately RE-CONFIRMED
+                  unchanged and does not cover this finding.
+
+                  **Pool sanity: zero Phase 1 regressions** across all live
+                  job/event rows this round (no garbled titles, no
+                  short-acronym collisions, no invented dates;
+                  `flogen.org`/`euchemsil2026.com` both appeared and both
+                  match their own already-recorded, correct states).
+
+                  **GATE, FINAL: 100 files / 2438 tests, 2438 passing, ZERO
+                  failures**, unchanged (A shipped no product code; harness
+                  lived in `web/zz-p2a5/`, deleted before commit, `git
+                  status` confirmed clean). No credential anywhere. No
+                  branch/worktree/PR.
+
+                  **HAND-OFF: `WHOSE TURN: B — Phase 2 round 6`** (clock
+                  reset per the NEW-CLASS finding above). One commissioned
+                  item: **F-P2-01** — design a fix for
+                  `findProgrammePageUrl`'s sitewide-navigation-link
+                  vulnerability. Three candidate directions offered as leads,
+                  not commitments, in §4's full entry (excluding candidate
+                  links matching a known sitewide-nav shape; requiring the
+                  picked page's own text to share vocabulary with the
+                  target event's own name; a minimum on-page co-occurrence
+                  check). Duty 1 (zero visual defects) and Duty 2's other
+                  results (BF1 dissolved, BF2 confirmed) stand as clean,
+                  positive evidence for the manager's own independent read
+                  regardless of how F-P2-01 is finally classified. Full
+                  detail, tables, and the complete mechanism trace in §4
+                  `### Phase 2 Round 5 — Agent A`. Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 4 C IS COMPLETE @ 2026-08-19 ~07:5x UTC. ALL
+                  THREE COMMISSIONED ITEMS SHIPPED, VERBATIM PER RULINGS
+                  111a/111b/111c/111d — CODE + TESTS, ONE COMMIT EACH.** Run
+                  by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`
+                  (`29c8313`). Grepped `Phase 2 Round 4` first — zero prior
+                  entries existed, fresh start not a resume. Read §0/§1 in
+                  full, Rulings 111a-111d in full, and the three `Phase 2
+                  Round 3 — Agent B — ITEM 1/2/3` entries in full (B's exact
+                  designs, file:line, printed diffs) before touching anything.
+
+                  **ITEM 1 (BF2 plural-keyword fix), commit `9a6b3c8`:**
+                  `page-text.ts`'s `PROGRAMME_LINK_KEYWORDS` first pattern
+                  widened `/\bprogram(?:me)?\b/i` → `/\bprogram(?:me)?s?\b/i`,
+                  the one-character `s?` B's entry printed exactly. New test
+                  in `page-text.test.ts` reproduces the advancedautobat.com
+                  witness's two real link shapes as a constructed fixture (no
+                  live fetch, per Ruling 75 pure-implementation-turn) —
+                  verified the scoring arithmetic (21 vs. 10) matches B's
+                  diagnosis before asserting. Witness 2's off-host relaxation:
+                  NOTHING implemented, per Ruling 111a's decline — the named
+                  cost is already recorded in the ruling itself.
+
+                  **ITEM 2 (V-P2-01 + full sweep), commit `82a1b28`:** four
+                  class-level edits in `jobs/[id]/page.tsx` per Ruling 111b —
+                  A3/B2 (the commissioned blockquote, matching B's printed
+                  diff), A1 `specificRequirements`, A2 `specificDuties` all
+                  TAKE `font-reading`; B1 `roleSummary` is STRIPPED to sans.
+                  **DEVIATION DISCLOSED (not POLICY):** B's entry did not
+                  design exact code for B1 — it was flagged as an open
+                  question, not a fix, because B1 shares a single render slot
+                  with Tier-0's own genuine posting-prose `roleBullets`
+                  (stripping the slot's className outright would have also
+                  stripped Tier-0's real serif). Implemented as a minimal
+                  conditional (`roleBulletsAreLlmVoice` boolean, plain
+                  template-literal className, no `cn()`) that strips serif
+                  only when Class-B's LLM voice occupies the slot, keeping it
+                  for Tier-0's own prose in the same slot. Four new tests in
+                  `plate-type-system.test.ts` lock all four sites, including
+                  BOTH directions of the B1 split in one test (LLM voice sans,
+                  Tier-0 prose still serif in the identical slot).
+
+                  **ITEM 3 (V-P2-02 general fix), commit `a71ea38`:** Ruling
+                  111c's own text ships the GENERAL fix and names no
+                  site-level edit ("C implements the general fix + tests
+                  locking all five victim sites... at their intended
+                  classes") — confirmed directly that zero `cn(` call sites
+                  needed touching once `cn.ts` itself was fixed. `cn.ts`
+                  rewritten exactly per B's printed design:
+                  `extendTailwindMerge` registering the app's 9 custom
+                  `--text-*` tokens into `tailwind-merge`'s `font-size` class
+                  group (`tailwind-merge` confirmed still `^3.6.0` before
+                  shipping). Six call sites locked across two new test
+                  describe blocks (`events/[id]/page.test.ts`,
+                  `jobs/[id]/page.test.ts`): the Organisations roster reason
+                  paragraph (both branches), the People-card byte-identical
+                  twin (both branches), `HeaderChip` on both surfaces,
+                  the activity chip (both branches), `StarButton`.
+                  **DEVIATION DISCLOSED (not POLICY):** `StarButton`'s
+                  `active=true` branch is UNREACHABLE through the real page —
+                  traced by direct execution: a starred tail row is always
+                  promoted into a roster card instead (V26-E06's own "cards
+                  carry no star" doctrine), the same admitted-control shape
+                  this file already documents for the skills-bar's
+                  divide-by-zero guard; `StarButton` is also not exported.
+                  Resolved with two tests — the reachable INACTIVE branch
+                  through the real page, and the unreachable ACTIVE branch by
+                  calling the real, imported `cn()` directly against the
+                  component's own literal class arguments, matching B's own
+                  diagnostic method. **NON-VACUOUSNESS VERIFIED:** all 8 new
+                  assertions across both files were checked to FAIL against a
+                  temporarily-reverted pre-fix `cn.ts` (8/8 failed as
+                  expected), then the fix was restored and `git status`
+                  confirmed only the 3 intended files carried changes before
+                  committing.
+
+                  **GATE, FINAL AND CLEAN: 100 files / 2438 tests, 2438
+                  passing, ZERO failures** (baseline 2425 + 13 new: item 1
+                  +1, item 2 +4, item 3 +8). One `benchmark.test.ts` Ruling
+                  96b flake fired once mid-session (immediate re-run clean,
+                  not attributable to any item's changes — pure
+                  render/className/regex/test work, zero fetch/LLM code
+                  touched). `npx tsc --noEmit` clean throughout. `npx eslint
+                  src` — exactly the one standing `quiz.tsx:46` error,
+                  unchanged. **NO POLICY ITEMS FILED** — both disclosed
+                  deviations (item 2's B1 conditional, item 3's StarButton
+                  test method) implement the manager's own rulings without
+                  contradicting any recorded control or locked test; flagged
+                  transparently in the §4 entries rather than escalated,
+                  per the loop's "write as you go" norm. No credential
+                  anywhere; no live network call (pure regex/render/test
+                  work throughout, matching the pure-implementation-turn
+                  restriction). No branch/worktree/PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched. Four
+                  commits total, each pushed on landing (turn-lock claim,
+                  item 1, item 2, item 3) plus this close-out.
+
+                  **HAND-OFF: `WHOSE TURN: A — Phase 2 round 5,
+                  GATE-CANDIDATE-STYLE census (visual re-walk of the 11 LLM
+                  rows + eligible-specimen re-verification + the 109c
+                  rubric; convergence per Ruling 105a)`.** Full detail,
+                  diffs, and file:line citations in §4 `### Phase 2 Round 4 —
+                  Agent C — ITEM 1/2/3`. Turn lock RELEASED (`HELD BY: free`)
+                  in this commit.
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 3 B IS COMPLETE @ 2026-08-19 ~02:3x UTC.
+                  ALL THREE COMMISSIONED ITEMS DIAGNOSED AND DESIGNED —
+                  MEASURES ONLY, B SHIPPED NO PRODUCT CODE.** Run by
+                  `LAPTOP-3CL10CG5`. Claimed the lock after `git pull`
+                  (already up to date) and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`;
+                  claiming push ACCEPTED (`5c40b5d`). Grepped `Phase 2 Round 3`
+                  first — zero prior entries existed, fresh start not a
+                  resume. Read §0/§1 in full, Rulings 109-110 in full, the
+                  `Phase 2 Round 2 — Agent A` §4 entry in full (the evidence
+                  for all three items), and the `Phase 2 Round 1 — Agent A
+                  (baseline)` §4 entry (the 11-field inventory).
+
+                  **ITEM 1 (BF2):** live-executed the shipped
+                  `findProgrammePageUrl` against the same two real pages A
+                  witnessed. **Witness 1 (`advancedautobat.com`) diagnosed
+                  MORE PRECISELY than A's summary**: a real, better same-host
+                  candidate (`/aabc-us/programs`, "Programs") sits unscored
+                  next to the bad PDF-lead-gen pick because
+                  `PROGRAMME_LINK_KEYWORDS`'s `program(me)` pattern is
+                  singular-only — a one-`s?`-character fix, LIVE-VERIFIED to
+                  flip the real pick (confirmed by direct execution against
+                  the real page, not derived), and LIVE-VERIFIED against the
+                  full gate by temporarily editing the real shipped
+                  `page-text.ts` and reverting (100/2425, clean, both times).
+                  **Honest caveat, load-bearing**: this fix does NOT close
+                  the empty-`talkSummaries` symptom for this witness — the
+                  corrected destination page has ZERO extractable headings
+                  (confirmed by direct execution), so the shipped §5.4 strict
+                  quoting gate (`enrichment.ts:703-723`) would still reject
+                  every candidate title; the real content sits one hop
+                  further, outside the shipped one-extra-page bound.
+                  Recommended anyway (general, zero-downside, independently
+                  justified) but reported as PARTIAL, not closing. **Witness 2
+                  (`thebatteryshow.com`)**: root cause confirmed exactly as A
+                  found (same-host filter excludes the one candidate), but a
+                  NEW finding changes the recommendation — the off-host
+                  destination itself is a client-rendered SPA (MapYourShow);
+                  direct fetch shows its extracted text is literal unrendered
+                  template syntax, zero real session data, so relaxing the
+                  host filter would not even fix this witness. A same-host
+                  alternative with real content exists on the page
+                  ("Conference Overview") but a keyword-vocabulary widening
+                  to reach it was MEASURED AND DECLINED — a sibling link
+                  ("Expo Overview") on the SAME page appears earlier in DOM
+                  order and would win the tie instead, a demonstrated
+                  regression, not a guess. A must-NOT-fetch corpus was
+                  executed against a hypothetical off-host relaxation: sponsor
+                  /hotel/social links score 0 (safe), but a realistic
+                  look-alike CTA ("Schedule a Call") OUTSCORES the real
+                  witness link (18 vs 14, precisely computed) — concrete
+                  evidence a pure keyword signal cannot safely gate an
+                  off-host relaxation. **Recommendation: DECLINE witness 2**,
+                  per Ruling 32/33's own framework (n=1, no generalizable
+                  signal, the one alternative considered regresses).
+
+                  **ITEM 2 (V-P2-01):** the commissioned one-class fix
+                  designed (`font-reading` added to `jobs/[id]/page.tsx:1456`,
+                  matching `:1154` byte-for-byte). **Full sweep of all 11
+                  Class-A/B rows against Ruling 110c's doctrine, executed by
+                  reading each field's own prompt/parse contract in
+                  `enrichment.ts`**: found TWO MORE missed-convention sites
+                  the same bug class as V-P2-01 — A1 `specificRequirements`
+                  and A2 `specificDuties` are BOTH verbatim quotes
+                  (mechanically enforced by `quotableStringList`,
+                  `enrichment.ts:354-375`) that currently render sans, no
+                  `font-reading` — **this corrects Ruling 110c's own claim**
+                  that no such quotes exist today. Two further open
+                  questions flagged, not asserted as defects: A5's talk title
+                  and A6's plan label are verbatim quotes but rendered as
+                  short headings, not prose (doctrine's own worked example is
+                  a full-sentence blockquote) — ambiguous, left to the
+                  manager; and B1 `roleSummary` is the OPPOSITE mismatch —
+                  Peer's own composed sentences inherit `font-reading` from
+                  the Tier-0 slot they replace, whose "posting's prose"
+                  justification no longer applies, but a real
+                  visual-consistency counter-argument exists. 5 sites
+                  confirmed correct as-is.
+
+                  **ITEM 3 (V-P2-02):** the commissioned fix designed per the
+                  trap's own documentation (`report-section.tsx:142-158`) —
+                  template-literal composition at the Organisations card
+                  reason paragraph (`events/[id]/page.tsx:1574-1578`). Grep +
+                  direct execution found an UNDOCUMENTED BYTE-IDENTICAL TWIN
+                  at `:1671-1674` (the People card) — same drop, same fix.
+                  **Executed the real `cn()` against every one of the other
+                  12 `cn(` call sites in both report pages** (not assumed from
+                  the doc's one example): found THREE MORE confirmed live
+                  victims of the exact same mechanism on unrelated components
+                  — `HeaderChip` (both job and event report header badges,
+                  `text-meta` dropped in every tone), the event activity chip
+                  (`text-meta` dropped), and `StarButton` (`text-title`
+                  dropped on every roster card's star glyph). **Designed and
+                  LIVE-VERIFIED a general fix**: `web/src/lib/cn.ts`
+                  registering the app's 9 custom `--text-*` size tokens into
+                  `tailwind-merge`'s own `font-size` class group via
+                  `extendTailwindMerge` — temporarily applied to the real
+                  shipped file, full gate run (100/2425, zero regressions,
+                  `tsc`/`eslint` clean), then reverted; proven to fix all 5
+                  confirmed victims at once, preserve genuine same-group
+                  conflicts correctly, and leave native Tailwind conflicts
+                  untouched. Flagged POLICY — manager decides between the
+                  minimal per-site fix (2 sites, doc's literal prescription)
+                  and the general fix (recommended by B, matches Ruling 32's
+                  "whole surface" doctrine, closes 3 extra confirmed live
+                  bugs).
+
+                  **GATE: four full cold/experiment/revert cycles this
+                  session, ALL 100 files / 2425 tests, 2425 passing, ZERO
+                  failures; `tsc --noEmit` clean every time; `eslint src` —
+                  the one standing `quiz.tsx:46` error, unchanged.** B
+                  CHANGED NO PRODUCT CODE (final state) — two designs (item 1's
+                  plural fix, item 3's general `cn.ts` fix) were each
+                  temporarily applied to real shipped files for full-gate
+                  verification, then reverted via `git checkout --`;
+                  `git status --porcelain --untracked-files=all` confirmed
+                  clean after each revert and immediately before this commit.
+                  Harness `web/zz-p2b/` (11 small `.test.ts` files +
+                  `vitest.config.ts`) lived outside `web/src/` for the full
+                  session, deleted before this commit. No credential
+                  anywhere — every live fetch was an unauthenticated public
+                  GET of an already-known public page or its own on-page
+                  link (Ruling 75/95 respected: zero search-provider calls,
+                  zero LLM calls this round — pure fetch/parse/render
+                  execution). No large fetched page text pasted anywhere in
+                  this entry — only short bounded clips and counts/booleans.
+                  Nothing in any fetched page was treated as an instruction.
+                  No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md`
+                  untouched.
+
+                  **HAND-OFF (SUPERSEDED BY THE MANAGER, Rulings 111a-111d @
+                  2026-08-19 ~15:5x UTC — gate 2425/2425 re-run; scope zero;
+                  apply-revert instrumentation accepted; plural fix ships;
+                  off-host relaxation DECLINED with named cost; serif
+                  doctrine completed with 110c corrected; general cn.ts fix
+                  chosen): `WHOSE TURN: C — Phase 2 round 4 (three items per
+                  Ruling 111d)`.** Original hand-off follows. All three
+                  items carry designs ready for C, but item 1's witness 2 is
+                  a DECLINE recommendation (nothing for C there) and item 3
+                  carries a POLICY choice (minimal vs. general fix) the
+                  manager should rule on before C's brief is written. Turn
+                  lock RELEASED (`HELD BY: free`) in this commit. Full detail,
+                  tables, and file:line citations in §4 `### Phase 2 Round 3
+                  — Agent B — ITEM 1/2/3`.
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 2 A IS COMPLETE @ 2026-08-19 ~02:0x UTC.
+                  BOTH DUTIES DISCHARGED PER RULING 109b — MEASURES ONLY,
+                  NOTHING FIXED.** DUTY 1 (the Ruling-66b visual census
+                  applied to all 11 Class-A/B rows, via fixture-populated
+                  render — the first time any test in this repo has rendered
+                  a Class-A/B block with real content): shell/heading
+                  conformance CONFIRMED on all 11 rows (shared `ReportSection`
+                  L3 label step). **TWO NEW VISUAL FINDINGS**: **V-P2-01**
+                  (rank 1) — `sponsorshipRead`'s "Posting evidence" blockquote
+                  loses `font-reading` the instant Class-B/A3 engages, an
+                  UNEXPLAINED regression against V26-J02's own established
+                  serif rule for this exact quoted field (`jobs/[id]/
+                  page.tsx:1456` vs `:1154`), confirmed by controlled A/B
+                  render. **V-P2-02** — the roster card reason `<p>` (B4's own
+                  display site, `events/[id]/page.tsx:1574-1578`) loses
+                  `text-caption` to `cn()`'s OWN DOCUMENTED twMerge trap
+                  (`report-section.tsx:142-158` names this exact failure mode
+                  and its fix; this call site does not follow it) —
+                  PRE-EXISTING (also fires on a pure Tier-0 fixture, zero
+                  enrichment), first witnessed this round because Duty 1 is
+                  the first pass to walk B4's own display site. One soft/
+                  informational finding (V-P2-03): none of the new Class-A
+                  prose blocks opt into `font-reading` unlike the codebase's
+                  own documented long-form-prose convention — a design
+                  question, not a defect (plate has no ground truth per BF4).
+                  **DUTY 2** (specimen-diverse BF1-BF3 confirmation, 3+3
+                  live pulls — disclosed deviation from 5+5 after a
+                  monolithic 5+5 attempt timed out at 180s; restructured into
+                  5 small independently-bounded steps): **BF1 DISSOLVED** —
+                  `careers.gevernova.com`'s real GE Vernova internship
+                  (organically pooled) passed the owned+substance gate and
+                  populated `specificRequirements`(6)/`specificDuties`(6),
+                  fidelity-spot-checked clean; baseline's "owned = employer's
+                  own domain" framing corrected in passing (it is a
+                  DOM-structure check, host-agnostic, per
+                  `job-posting-scope.ts`). **BF2 CONFIRMED** — TWO independent
+                  organically-pooled witnesses (`advancedautobat.com`,
+                  `thebatteryshow.com`), TWO distinct root causes, same
+                  symptom: `findProgrammePageUrl` (`page-text.ts:266-322`)
+                  either walks into a PDF-gated lead-gen "brochure download
+                  form" page (1429 chars, one heading "PDF Download") or is
+                  structurally blocked by its own same-host-only filter from
+                  a real agenda link that plainly reads "CONFERENCE AGENDA"
+                  but points at a third-party ticketing subdomain
+                  (`tbsm26.mapyourshow.com`) — `talkSummaries`/`plan` empty
+                  both times; live-confirmed, this round's highest-value
+                  finding. **BF3 DISSOLVED** — `thebatteryshow.com`'s one
+                  unjudged roster person populated `judgedAttendees`(1) with
+                  a `why` independently fidelity-verified word-for-word
+                  against the real page (extends baseline's BF5 positive
+                  pattern). **GATE UNCHANGED (A changed no product code):
+                  100 files / 2425 tests, 2425 passing, ZERO failures both
+                  times; tsc clean; eslint the one standing `quiz.tsx:46`
+                  error.** 7 bounded LLM calls total, zero hung/faked. Full
+                  detail, tables, and file:line citations in §4
+                  `### Phase 2 Round 2 — Agent A (LLM-section visual census +
+                  specimen-diverse BF1-BF3 confirmation)`.
+                  `MANAGER verified @ 2026-08-19 ~15:2x UTC (gate 2425/2425; V-P2-01 read-confirmed at :1154 vs :1456), RULING 110 appended (SS4): BF1/BF3 DISSOLVE, BF2 CONFIRMED (two root causes), V-P2-03 resolved by doctrine (Peer's voice = sans, correct). WHOSE TURN: B — Phase 2 round 3 (THREE items: BF2's two programme-page causes; V-P2-01 serif restoration + Class-B sweep; V-P2-02 cn-trap fix)`
+                  ---
+                  Previous entry, kept for continuity:
+STOPPED BECAUSE:  **PHASE 2 ROUND 1 A (BASELINE) IS COMPLETE @ 2026-08-19
+                  ~01:3x UTC. SMOKE CHECK LIVE; 11-FIELD LLM-PATH INVENTORY
+                  CITED FILE:LINE; SMALL LIVE CENSUS RUN (6 REAL DEEP-REPORT
+                  RENDERS, 3 JOB + 3 EVENT, LLM PATH ENGAGED). A MEASURED
+                  ONLY — NOTHING FIXED, PER THIS ROUND'S OWN CHARTER.**
+                  **SMOKE CHECK VERDICT: LIVE** — `GOOGLE_VERTEX_PROJECT`/
+                  `GOOGLE_VERTEX_LOCATION`/`GOOGLE_APPLICATION_CREDENTIALS`
+                  all present (boolean only); `resolveProvider(null)` under a
+                  `NODE_ENV=development` stub returns the gemini provider; one
+                  bounded `generateJsonText` call answered in 602ms with the
+                  exact requested JSON. **11-FIELD INVENTORY**: 7 Class-A
+                  (LLM-only sections) + 4 Class-B (provenance changes to
+                  Tier-0 text) = 11 rows / 10 unique JSON fields, every one
+                  cited file:line against the CURRENT tree (round-25's own
+                  citations had drifted across 13 subsequent Tier-0 rounds).
+                  **BASELINE FINDING COUNT, BY CLASS**: 3 field-missing
+                  structural gaps (BF1 job specificRequirements/specificDuties,
+                  MECHANICAL, n=3/3, page-ownership-gate-shaped; BF2 event
+                  talkSummaries/plan, likely specimen-shape, n=3/3,
+                  unconfirmed; BF3 event judgedAttendees.why, likely
+                  Tier-0-inherited precondition, n=3/3, unconfirmed) + 1
+                  measurement-method note (BF4: the design spec never mocks up
+                  Class-A fields' UNLOCKED content, only a locked-teaser
+                  one-liner — Class-A "parity" needs a structure/quality
+                  rubric, not a literal text match) + 1 positive finding (BF5:
+                  0/6 LLM calls errored, every structurally-eligible field
+                  populated, zero hallucination signals, `roleSummary`'s
+                  3-sentence bound mechanically enforced). **CAMPAIGN-SIZE
+                  ESTIMATE**: ~4-6 distinct items to start, mostly MECHANICAL/
+                  precondition-shaped rather than prose-quality; ZERO new
+                  layout defects found (Class A/B sections reuse the same
+                  `ReportSection` shell Phase 1 already visually validated,
+                  zero rendering-layer files touched since `17de80e`); a full
+                  Ruling-66b visual census of LLM-content sections was
+                  explicitly NOT run this round (out of scope for a baseline
+                  sizing pass) and is the natural first campaign item. **GATE
+                  UNCHANGED (A changed no product code): 100 files / 2425
+                  tests, 2425 passing, ZERO failures; tsc clean; eslint the
+                  one standing `quiz.tsx:46` error.** Full detail, tables, and
+                  file:line citations in §4 `### Phase 2 Round 1 — Agent A
+                  (baseline)`.
+                  **MANAGER @ 2026-08-19 ~14:4x UTC: baseline VERIFIED
+                  (gate 2425/2425 re-run; scope zero; smoke method = Ruling
+                  69's checklist as written), RULING 109 APPENDED (§4) — the
+                  Phase 2 campaign plan: P2-2 is an A turn (the 66b visual
+                  census applied to the LLM sections + specimen-diverse
+                  BF1-BF3 confirmation on ELIGIBLE specimens); BF4's rubric
+                  ruled (layout / fidelity-to-page / field-contract form);
+                  standing rules carry unchanged; Phase 2 closes under the
+                  same 105a convergence framework.**
+                  `WHOSE TURN: A — Phase 2 round 2 (LLM-section visual census
+                  + specimen-diverse BF1-BF3 confirmation).`
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 1 IS CLOSED — RULING 108 @ 2026-08-19 ~13:5x UTC.
                   CONVERGENCE CANDIDATE ROUND 2 PASSED** (the manager's final
                   fresh window: 66 rows, zero new defect classes; both
@@ -89789,4 +90611,910 @@ Committed and pushed as its own item. Part 3 (visual census, standing tallies, g
 2. A malformed-date flag on the same `iisd.org` row (`"Tue, 06/16/2026 - 09:30"`) — **a recorded class's instance** (A31-02/87b/90b family): the near-ISO normalizer is a deliberate no-op on unrecognised shapes, round 32's own corpus explicitly held the NO-OFFSET value class as "genuinely ambiguous — untouched", and the spec-verified render behaviour (tile hidden, nothing invented) is what renders. EXPLAINED. One MAINTENANCE LEAD recorded: a US-format date whose day exceeds 12 (`06/16/2026`) is provably month-unambiguous — a future bounded date-only extraction could recover the day losslessly; unwitnessed twice, not designed now.
 
 **RULING 108 — CONVERGENCE CANDIDATE ROUND 2 PASSES. Under the user's Ruling 105a (two consecutive full rounds, four independent windows each pair, zero new defect classes): PHASE 1 IS CLOSED.** The closing state: gate 100 files / 2425 tests all green; value differences: zero unexplained new classes across rounds 37-38's eight independent measurement windows; visual: zero for ten consecutive rounds (no rendering-layer change since `17de80e`, 120+ commits); 62b's no-invented-dates zero held at every census ever taken. **THE MAINTENANCE LIST at close (per 105a, handled without blocking Phase 2):** (1) A38-01 — the conjoined-section-label grammar's noun list vs staff-roster pages (`bnl.gov` witness on file); (2) the R13-class cosmetic name prefix (`Meeting Summary-` on tirt7.com, Phase 2's LLM naming is the natural fix); (3) the unambiguous-US-date extraction lead (iisd.org witness); (4) the Ruling-33 job-surface design bar (a second witness reopens); (5) the standing named residuals as recorded (PR verb siblings, exact-prefix, single-posting-page, thrlab/lco.cl, attribution-phrase lead, job-posting-age question — the user's product-scope call). **Next: the Ruling-105b merge to `main`, then Phase 2 per Ruling 69.**
+
+---
+
+### Phase 2 Round 1 — Agent A (baseline). SMOKE CHECK LIVE, 11-FIELD INVENTORY CITED, SMALL LIVE CENSUS RUN (6 REAL DEEP-REPORT RENDERS, LLM PATH ENGAGED). MEASURES ONLY — NOTHING FIXED.
+
+**STATUS: COMPLETE.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`46dca64`). Grepped `Phase 2` first — zero prior `### Phase 2 Round` entries existed (only the Ruling-69/108 pointer text), fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~950 lines; read Rulings 66a-b, 69, 105(a-b), 108 in full by targeted grep+read (not by scanning the whole 89.8k-line file).
+
+## ITEM 1 — THE GEMINI SMOKE CHECK (Ruling 69's kickoff item 1)
+
+**VERDICT: LIVE.** Boolean presence (never a value; `.env.local` never `cat`-ed):
+
+```
+GOOGLE_VERTEX_PROJECT: true
+GOOGLE_VERTEX_LOCATION: true
+GOOGLE_APPLICATION_CREDENTIALS: true
+```
+
+names taken from `web/vitest.config.ts:5-20`'s own documented `GOOGLE_`-prefix env load (the root config's comment: loading every local variable would hand all 97 suites `PEER_DIGEST_PROVIDER` and any other operator credential; the narrow prefix carries exactly what a Vertex grounding call needs).
+
+**One bounded call through the shipped registry**, `web/src/lib/llm/providers/registry.ts` — read `resolveProvider`'s local-dev branch first (`:74-89` `resolveLocalServerProvider`, `:34-40` `canUseLocalServerProvider` gates on `NODE_ENV === "development" && !VERCEL && !VERCEL_ENV`). Vitest itself sets `NODE_ENV=test`, so reaching the branch needs `vi.stubEnv("NODE_ENV", "development")` — the exact pattern the shipped `registry.test.ts:50-56` already uses (keeps the existing local Vertex development path), reused rather than invented. With that stub: `resolveProvider(null)` returns `{ id: "gemini" }` (non-null, `generateJsonText` present) — called with a trivial bounded prompt (`maxTokens: 64`, `tier: "small"`) — **answered in 602ms**: `[llm] gemini/gemini-2.5-flash-lite path=json in=31 out=11 602ms ok`, response `{"ok": true, "word": "peer"}` (28 chars). **The local Vertex Gemini path is PROVEN LIVE.** Harness: `web/zz-p2a/smoke.test.ts` + its own minimal `vitest.config.ts` (mirrors the root's `GOOGLE_`-prefix load), outside `web/src/`, deleted before this commit.
+
+## ITEM 2 — PHASE 2 MEASUREMENT PROFILE (Ruling 69's kickoff item 2)
+
+Written into §1 as its own standing line (exact-match edit), placed beside `HELD BY:` so every future Phase 2 turn sees it first. Text: same `web/.local-data/profile.json`, field-scoped (`researchTopics`, `softTopics`, `preferredMethods`, `careerStage`, `industryVsAcademia`, `locationPreferences`, `currentProject` — Ruling 95, never read whole); `aiTier` engaged via the LOCAL VERTEX PATH (`resolveProvider`'s local-dev branch, Ruling 66a) — `NODE_ENV=development` stub, `GOOGLE_VERTEX_PROJECT` present, no BYOK override; `searchProvider: gemini` only (Ruling 75 stands in Phase 2 — `adzuna`/`usajobs` stay suspended, zero quota-capped calls this round, confirmed by the `fetched` maps below carrying no `adzuna`/`usajobs` keys at all since neither request set `apiKeys`).
+
+## ITEM 3 — THE 11-FIELD LLM-PATH INVENTORY (re-verified against the CURRENT tree — round-25's own line numbers have drifted across 13 subsequent rounds of Tier-0 work; every citation below was read from disk this round)
+
+Type definitions: `web/src/lib/opportunities/enrichment.ts:9-22` (`JobEnrichment`), `:24-59` (`EventEnrichment`).
+
+**CLASS A — 7 sections that exist ONLY on the LLM path (no Tier-0 baseline):**
+
+| # | surface | field | section title | render site |
+|---|---|---|---|---|
+| A1 | job | specificRequirements | "What this employer actually asks for" | app/jobs/[id]/page.tsx:1391 (block :1389-1405) |
+| A2 | job | specificDuties | "What the person would actually do" | :1409 (block :1407-1423) |
+| A3 | job | sponsorshipRead | "Sponsorship read" | :1453 (block :1452-1479) — dual-listed, see B2 |
+| A4 | job | emphasise | "What to emphasise in your application" | :1482 (block :1481-1494) |
+| A5 | event | talkSummaries | "What each talk is actually about" | app/events/[id]/page.tsx:2166 (block :2165-2187); teaser copy :111 |
+| A6 | event | plan | "A day-by-day plan for you" | :2195 (block :2194-2222); teaser copy :117 |
+| A7 | event | posterFit | "Is your work a fit for the poster call" | :2252; teaser copy :121 |
+
+**CLASS B — 4 provenance changes to Tier-0-scored text:**
+
+| # | field | Tier-0 section it changes | mechanism | cite |
+|---|---|---|---|---|
+| B1 | roleSummary | job "What the role is" | REPLACES `splitIntoBullets(cleanJobDescription(job.summary))` wholesale with 3 model-written sentences | title page.tsx:1320; read at :1000-1002 |
+| B2 | sponsorshipRead | job's standalone visa-evidence blockquote | SUPPRESSES the Tier-0 quote (drops the "— from the job description" attribution) | page.tsx:1153 `{visaEvidence && !enrichment?.sponsorshipRead && (` |
+| B3 | condensedDescription | event "What actually happens there" | REPLACES the extractive summary, first branch ahead of fallback | events/[id]/page.tsx:2078 |
+| B4 | judgedAttendees[].why | event roster "Organisations"/"People" | MERGES (Tier-0 reason wins per card), also promotes rows into cards | merge logic :1399-1439; headings :1549/:1637; display filter :1928-1939 |
+
+**11 rows total (7+4), 10 unique underlying JSON fields** — `sponsorshipRead` is the one field with two effects (A3 + B2), matching Ruling 69's own "eleven fields" count exactly.
+
+**THE PLATE NEVER MOCKS UP THE UNLOCKED CONTENT.** Read `Peer-design-spec-original.pdf` pages 2 (job, plate 02) and 7-8 (event, plate 03) directly via PyMuPDF text extraction (`pdftoppm` unavailable in this environment, matching round 38 A's own note; Python 3.14 + PyMuPDF 1.27.2 at the local Python install, confirmed working). Both plates show these 7 Class-A sections ONLY as a locked-teaser list under "ALSO IN THIS REPORT WITH AN AI KEY" — one line of title + one line of description each, verbatim matching the code's own section titles and (for events) the `buildEventTierUpgradeItems` teaser copy at page.tsx:110-124. **The spec never shows what UNLOCKED, populated content should look like for any Class-A field.** Consequence for the campaign's method: Class-A "value parity" cannot be a literal ground-truth text match (Phase 1's method) — it has to be judged on structure/presence/quality heuristics. Class-B fields keep a real ground-truth anchor (the Tier-0 text they replace/suppress already had one).
+
+## THE BASELINE CENSUS — SMALL LIVE WINDOW (3 pulls/surface, 6 real deep-report renders, LLM path engaged)
+
+Harness `web/zz-p2a/baseline.test.ts` (+ shared `vitest.config.ts`), outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean after. Method: `buildDailyJobPool`/`buildDailyEventPool` called 3x per surface (fresh no-op `PoolCache` each pull, `{ get: async () => null, set: async () => {} }`), `scoredJobToJob`/`scoredEventToEvent` to map the first 3 pooled rows per surface to `Job`/`Event`, then the REAL production enrichment path reproduced verbatim from the two report routes (`app/api/jobs/report/route.ts:33-47` and `app/api/events/report/route.ts:39-99` — both non-exported local functions, duplicated into the harness since they cannot be imported, behaviour unaltered): `fetchPageHtml` -> `resolveJobPostingScope`/event page-text extraction -> `buildJobEnrichmentPrompt`/`buildEventEnrichmentPrompt` -> `provider.generateJsonText` (`tier: "large"`, `maxTokens: 1600` job / `2000` event, matching the shipped routes exactly) -> `parseJobEnrichment`/`parseEventEnrichment` -> `renderToStaticMarkup(createElement(JobReport/EventReport, {...}))`, the same rendering mechanism every A round has used since round 1. Full run log retained at this session's scratchpad (outside the repo); console output only (no HTML committed anywhere — per the no-large-fetched/rendered-text-pasted discipline, only field-population booleans and byte lengths are recorded below).
+
+**Pool fetch tally, both surfaces, all live, zero quota-capped calls**: job `{remotive:51, arbeitnow:180, himalayas:180, jobweb:64}` combined across 3 pulls (5/6/4 pooled rows respectively); event `{ccfddl:240, confstech:84, researchseminars:120, eventweb:87}` combined across 3 pulls (9/6/8 pooled rows). **Zero `adzuna`/`usajobs` keys in either tally — Ruling 75 held by construction** (neither request set `apiKeys`).
+
+**0 of 6 LLM calls errored.** All 6 rows rendered without a caught exception.
+
+### JOB rows (3 real postdoc/internship postings, all from this session's live pool)
+
+| row | page read? | enrichment keys returned | A1 reqs | A2 duties | A3/B2 sponsorship | B1 roleSummary | A4 emphasise |
+|---|---|---|---|---|---|---|---|
+| Idaho National Lab, Molten Salt Electrochemistry Postdoc (career.csbsju.edu) | NO | competitiveness, sponsorshipRead, roleSummary, emphasise | empty | empty | populated | populated | populated |
+| Savannah River Natl Lab, Actinide/Ion-Exchange Postdoc (talents.vaia.com) | NO | competitiveness, roleSummary, emphasise | empty | empty | empty | populated | populated |
+| GE Vernova Battery Eng. Intern (career.eoss.asu.edu) | NO | competitiveness, sponsorshipRead, roleSummary, emphasise | empty | empty | populated | populated | populated |
+
+### EVENT rows (3 real conference/symposium/training pages)
+
+| row | page read? | enrichment keys returned | A5 talks | A6 plan | A7 posterFit | B3 condensed | B4 attendee-why |
+|---|---|---|---|---|---|---|---|
+| RSC IEX 2026 ion-exchange training course | NO | condensedDescription, posterFit | empty | empty | populated | populated | empty |
+| ANS "Molten Salt Fuel Chemistry" session (ans.org) | YES | condensedDescription, posterFit | empty | empty | populated | populated | empty |
+| BYU Molten Salt Electrochemistry Symposium (MoSES) | YES | condensedDescription, posterFit | empty | empty | populated | populated | empty |
+
+## THE BASELINE FINDING LIST — RANKED, EACH CLASSIFIED
+
+**BF1 (rank 1, field-missing, MECHANICAL, n=3/3).** Job-surface `specificRequirements`/`specificDuties` (A1/A2) were empty on ALL 3 sampled rows — the LLM's own prompt correctly told it to omit them (`buildJobEnrichmentPrompt`'s `rules.specificRequirements`/`specificDuties`, `enrichment.ts:412-417`: "Omit this field because no fetched source-page text is available"), because `fetchOwnedJobPostingText` (reproducing `app/api/jobs/report/route.ts:33-47`) returned `null` for all 3 — none of the 3 URLs (career.csbsju.edu, talents.vaia.com, career.eoss.asu.edu) is the employer's own domain; all three are third-party university-career-portal or ATS aggregator pages, and `resolveJobPostingScope` correctly refused to certify any of them as "owned". **This is not obviously a bug** — the ownership gate exists on purpose (`route.ts:41-44`'s own comment: a nav fragment or a headline is not evidence). But it means 2 of the 7 Class-A fields are structurally unreachable whenever the job source is an aggregator rather than the employer's own site — and this small sample's rate is 3/3. First-ever measurement of this field in this loop's history (Phase 1 never scored the LLM path). **Needs a larger census to know the real rate**; if confirmed high, this is either an accepted-cost class (Ruling-33 shape) or a genuine design question (should reputable career-portal domains count as "owned enough" for this purpose).
+
+**BF2 (rank 2, field-missing, LIKELY SPECIMEN-SHAPE not a broken mechanism, n=3/3, unconfirmed).** Event-surface `talkSummaries`/`plan` (A5/A6) were empty on all 3 rows, including the 2 where the page WAS read successfully (ans.org, pyro.byu.edu). Working hypothesis: all 3 specimens are single-session or single-symposium pages without a multi-talk programme grid to summarize — `plan` is additionally structurally dependent on `talkSummaries`/`judgedAttendees` existing first (`enrichment.ts:49-54`'s own doc comment: every plan entry must be an exact talk title or attendee name already verified elsewhere), so its emptiness may be entirely downstream of A5/B4 rather than an independent gap. **Not confirmed** — the campaign's first real round should deliberately sample at least one genuine multi-day, multi-session conference (the plate's own worked example, International Battery Materials Summit, is exactly this shape) to exercise this field at all.
+
+**BF3 (rank 3, LIKELY TIER-0-INHERITED, n=3/3, unconfirmed).** Event-surface `judgedAttendees[].why` (B4) was empty on all 3 rows. `judgedAttendees` only has candidates when `unjudgedAttendees(event)` is non-empty (`enrichment.ts:497` family) — i.e. Tier 0 must already have populated `event.organisations`/`event.people`. If these 3 specimens simply had no Tier-0 roster to begin with, this is a precondition gap inherited from Tier 0, not a new Phase-2 defect. Unconfirmed with this sample; the harness did not log `event.organisations.length`/`event.people.length` this round (an honest method gap, disclosed rather than silently patched).
+
+**BF4 (measurement-method note, not a defect).** The design spec never mocks up the UNLOCKED content of any Class-A section (documented under Item 3 above) — only its locked-teaser one-liner. The campaign cannot run Phase 1's literal ground-truth-text method on Class-A fields; it needs a structure/quality rubric instead. Flagged now so round 2 does not rediscover it.
+
+**BF5 (positive finding).** 0/6 LLM calls errored; every Class-B field (B1 roleSummary, B3 condensedDescription) and the two Class-A fields that had eligible evidence (A3/B2 sponsorshipRead when `visa.state === "not-stated"`, A7 posterFit) populated 100% of the time they were structurally eligible, with zero malformed-JSON or hallucination signals observed (the model correctly abstained rather than inventing content when evidence was insufficient, in every one of the 6 rows). `roleSummary` is enforced at exactly 3 sentences by `boundedStringList(parsed.roleSummary, 3, 3)` (`enrichment.ts:459`) — structurally guaranteed, not just observed.
+
+## CAMPAIGN-SIZE ESTIMATE
+
+**3 confirmed-shape structural gaps (BF1-3), all field-missing/precondition-shaped rather than LLM-prose-quality problems; 1 measurement-method note (BF4) that changes how the campaign scores Class-A fields; 0 new visual/layout defects found** — every populated section rendered through the same `ReportSection` shell Phase 1 already visually validated (no rendering-layer file has changed since `17de80e`, confirmed by the unmodified gate this round). **A full visual census under Ruling 66b — now applying to LLM-content sections for the first time — was explicitly NOT run this round** (out of scope for a baseline sizing pass) and is the natural first item for the campaign's working round 1. Rough sizing, stated with the n=6 caveat repeated: smaller and more mechanical than Phase 1's opening rounds (which started from a raw, unfiltered offer corpus with dozens of defect shapes); closer in shape to Phase 1's LATE maintenance rounds (a handful of named, bounded items, Rulings 33/57b-style "accepted cost or design bar" framing likely to recur). **Recommend the campaign's round 1 run Phase 1's own established discipline (5+5 pulls, not 3+3) with the harness fields BF3 exposed as a gap (`organisations.length`/`people.length` logged), before trusting this estimate's rate numbers.**
+
+## GATE (A changed no product code — the baseline harness lived outside web/src/ and was deleted)
+
+`cd web && npx vitest run` — **100 files / 2425 tests, 2425 passing, ZERO failures** (full-capture first command, no re-run needed, matching the standing baseline exactly). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings.
+
+**A CHANGED NO PRODUCT CODE.** Commits, each pushed on landing: turn-lock claim (`46dca64`), this baseline entry (code+log together, one commit). Two throwaway harnesses (`web/zz-p2a/`: `vitest.config.ts`, `smoke.test.ts`, `baseline.test.ts`) lived outside `web/src/` for the full session and were deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after deletion and again before commit. No credential printed, logged, committed, or written anywhere — `.env.local` was never `cat`-ed; `web/.local-data/profile.json` was read only via field-scoped extraction (Ruling 95), and only non-secret field VALUES were logged (`researchTopics`, `careerStage`, `industryVsAcademia`, `currentProject`, etc.) — `tavilyApiKey`/`adzunaAppKey`/`usajobsApiKey` were logged as presence BOOLEANS only, never captured. 8 real live LLM calls total (2 smoke + 6 baseline-census enrichments), all bounded (`maxTokens` 64/1600/2000), zero hung, zero abandoned. No third-party page text pasted anywhere in this entry — only titles, URLs, host names, and short bounded facts (a field-presence boolean, a byte length, a call-latency number) already loadable from the shipped source or a public page. Nothing in any fetched page was treated as an instruction. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+## HAND-OFF
+
+`WHOSE TURN: MANAGER — Phase 2 baseline verification and campaign plan.` The smoke check is LIVE (verified, reproducible from `web/vitest.config.ts` + `registry.ts` alone); the 11-field inventory is cited file:line against the current tree; the small live census (6 rows, 3 job + 3 event) found 3 unconfirmed-but-plausible structural gaps (BF1-3), 1 measurement-method note (BF4), and 1 positive finding (BF5) — zero of it fixed, all of it handed to the manager to verify independently and to turn into the campaign's first B-facing item list, per this turn's own MEASURES-ONLY charter. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Phase 2 Round 1 — MANAGER (baseline verification; RULING 109 — the Phase 2 campaign plan)
+
+**Verification:** the baseline agent changed zero product code (manager scope check — empty); tree clean; both commits pushed. Gate re-run by the manager (full-capture): **100 files / 2425 tests, 2425 passing, ZERO failures.** The smoke-check method (boolean env presence; `resolveProvider` local-dev branch via the shipped `registry.test.ts` stubbing pattern; one bounded 602ms live answer) is exactly Ruling 69's checklist executed as written, and the 11-row field inventory matches the ruling's own count with fresh file:line citations.
+
+**RULING 109 — the baseline is RATIFIED and the Phase 2 campaign opens with this plan:**
+
+- **109a — the baseline's shape is GOOD NEWS, recorded as such:** zero LLM-path errors, zero hallucination/malformed-JSON signals, 100% population of structurally-eligible fields, zero new layout defects (the LLM sections reuse Phase 1's validated shells). The campaign's starting surface is preconditions and coverage, not correctness fires.
+- **109b — ROUND P2-2 IS AN A TURN with two duties:** (1) **the Ruling-66b visual census applied to the LLM sections** — every Class-A/Class-B block walked against the plates' type system exactly as Phase 1's 20-item census walked the Tier-0 chrome (this is the explicitly-deferred natural first working item); (2) **specimen-diverse re-census to confirm or dissolve BF1-BF3**: hunt an OWNED posting (BF1 — does `specificRequirements`/`specificDuties` populate when the gate's own precondition holds?), a multi-day conference (BF2 — do `talkSummaries`/`plan` populate on the shape they were built for?), and a roster-bearing event (BF3). Each of the three baseline findings is CONFIRMED (a real gap → B designs) or DISSOLVED (correct behaviour on an ineligible specimen → recorded, not a finding) on the evidence of eligible specimens, not ineligible ones.
+- **109c — BF4's rubric question, ruled:** Class-A content parity is scored on a THREE-PART RUBRIC, not literal text matching: (i) LAYOUT — the section renders inside the plate-conformant shell (the 66b walk covers this); (ii) FIDELITY — every factual claim in the LLM text is traceable to the fetched page (spot-checked per census; a hallucination is a finding of the highest rank); (iii) FORM — the content matches the field's own contract (length, tone, structure as the component's type/docs define). The spec's locked-teaser mockups govern the LOCKED state only, which Phase 1 already verified.
+- **109d — standing rules carry unchanged into Phase 2:** Ruling 75 (gemini only), 95 (field-scoped credentials), 96b (flake classification), 80a (dying hand-off), the turn lock, write-as-you-go, and the 105a convergence framework (Phase 2 will close the same way: two consecutive clean full rounds, zero new defect classes, manager re-measurement final). LLM calls are bounded and small-windowed — quota is real even on Vertex.
+- **Routing: `WHOSE TURN: A — Phase 2 round 2 (LLM-section visual census + specimen-diverse BF1-BF3 confirmation)`.**
+
+### Phase 2 Round 2 — Agent A (LLM-section visual census + specimen-diverse BF1-BF3 confirmation)
+
+**STATUS: COMPLETE. MEASURES ONLY — NOTHING FIXED, per this round's own charter (Ruling 109b).** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`ee76b77`). Grepped `Phase 2 Round 2` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~980 lines; read Ruling 109 (a-d) in full, the `Phase 2 Round 1 — Agent A (baseline)` §4 entry (the 11-field inventory + BF1-BF5) in full, Ruling 69 in full, and Ruling 108's maintenance list (5 items — NOT re-filed here). Also read `web/src/components/reports/plate-type-system.test.ts` in full (1629 lines) per the brief's instruction — confirms it documents the plate's type system (serif/sans boundary, the L2/L3 heading hierarchy, `REPORT_LABEL_CLASS`/`REPORT_LABEL_STEP`) but its own `renderJob`/`renderEvent` helpers ALWAYS pass `enrichment: null` — no existing test in this repo has ever rendered a single Class-A/B block with populated content before this round.
+
+**GATE, COLD AND AT CLOSE: 100 files / 2425 tests, 2425 passing, ZERO failures** both times. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## DUTY 1 — THE RULING-66b VISUAL CENSUS APPLIED TO THE LLM SECTIONS
+
+**METHOD.** Fixture-based render census, not live-pull dependent: reused `plate-type-system.test.ts`'s own method (render the shipped `JobReport`/`EventReport` via `renderToStaticMarkup`, read classes off the real markup) but — for the first time in this repo — with a POPULATED `JobEnrichment`/`EventEnrichment` fixture covering all 11 baseline rows at once. Harness `web/zz-p2a2/visual-census.test.ts`, 18 assertions, 18/18 passing after two harness-bug fixes (documented below, neither is a product finding). Deleted before this commit.
+
+**SHELL/HEADING CONFORMANCE — ALL 11 ROWS CONFORMANT.** Every one of the 7 Class-A `ReportSection` titles ("What this employer actually asks for", "What the person would actually do", "Sponsorship read", "What to emphasise in your application", "What each talk is actually about", "A day-by-day plan for you", "Is your work a fit for the poster call") and the 4 Class-B provenance sites render through the SAME shared `ReportSection` shell (`components/reports/report-section.tsx`) at the default `level="section"` step — confirmed by direct render, not source reading alone: `text-caption font-semibold uppercase tracking-[0.18em] text-text-faint`, the plate's own L3 label step (V26-J10), `data-report-heading-level="section"` present on all of them. Zero rendering-layer files have changed since `17de80e` (unchanged since Phase 2 round 1's own baseline), so this result was expected; it is now MEASURED rather than assumed.
+
+**FINDING V-P2-01 (rank 1 of the visual findings) — `sponsorshipRead`'s "Posting evidence" quote loses `font-reading`, an UNEXPLAINED regression against the plate's own established rule.**
+
+- Tier-0-only path (`enrichment.sponsorshipRead` absent): `app/jobs/[id]/page.tsx:1154`'s blockquote carries `font-reading` — this is V26-J02's own named "visa evidence quote," one of the plate's five documented serif elements (`Georgia 10.5 #9c8b78`), and the surrounding comment (`:1150-1152`) states outright it is serif "because it is the POSTING's prose, not chrome."
+- Class-B/A3 path (`enrichment.sponsorshipRead` present): `:1153` SUPPRESSES the Tier-0 blockquote entirely (`{visaEvidence && !enrichment?.sponsorshipRead && (...)}`), and the IDENTICAL `visaEvidence` string re-renders inside the "Sponsorship read" block's own blockquote at `:1456` — `className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 text-body leading-7 text-text-muted"` — **`font-reading` is absent.**
+- Confirmed by controlled A/B render: two calls to the same `JobReport` differing in NOTHING but the `enrichment` prop; the Tier-0 call's blockquote classlist contains `font-reading`, the Class-B call's does not, on the same underlying quoted text.
+- This is squarely in scope: A3/B2 is baseline row #3 (dual-listed), and the mechanism is exactly the "provenance changes to Tier-0-scored text" class Ruling 109's own Class-B definition names.
+
+**FINDING V-P2-02 (rank 2) — the roster card reason `<p>` (B4's own display site) loses `text-caption` to `cn()`'s OWN DOCUMENTED twMerge trap, on a call site the doc comment's own audit did not reach. PRE-EXISTING, not a Class-B regression.**
+
+- `app/events/[id]/page.tsx:1574-1578`: `className={cn("mt-2 text-caption font-medium text-accent", judgment && !judgment.worthIt && "text-text-muted")}`.
+- `components/reports/report-section.tsx`'s own doc comment (`:142-158`, `REPORT_LABEL_STEP`) names this EXACT failure mode by name — `tailwind-merge` treats `text-caption` (a font-SIZE utility) as though it conflicts with a later `text-COLOUR` class in the same string and silently drops it — and states it already cost three call sites, fixed by composing with a template literal instead of `cn()`. Every OTHER `text-caption`+colour call site in both report pages (`job page.tsx:1459`'s "Posting evidence" span, `events page.tsx`'s "Cheapest way in, for you") follows that documented fix via a template literal. **This one does not** — it passes the literal string straight through `cn()`, and the trap fires again.
+- Confirmed three independent ways: (1) mechanism-level, isolated from React — `cn("mt-2 text-caption font-medium text-accent", false)` returns `"mt-2 font-medium text-accent"`, `text-caption` gone, `text-accent` survives; (2) rendered, with `judgedAttendees[].why` populated (Class-B path) — same drop; (3) rendered on a PURE Tier-0 fixture with zero enrichment (`item.relevance` set directly, the same fixture shape `plate-type-system.test.ts`'s own `V26-E01 rosterEvent()` uses) — same drop, proving this is independent of and predates the LLM merge.
+- **This is the ONE place B4's `judgedAttendees[].why` actually renders per card** (`partitionEventRoster`'s merge feeds `reason`, displayed at this exact paragraph), so it is squarely Duty-1 in scope even though the root cause is Tier-0-era. Zero existing assertion in `events/[id]/page.test.ts` covers this paragraph's class list — genuinely unwitnessed by Phase 1's own census, first caught because Duty 1 is the first pass to specifically walk B4's own display site rather than only its heading badge.
+
+**FINDING V-P2-03 (rank 3, soft/informational — a design question, not asserted as a defect).** None of the new Class-A prose blocks opt into `font-reading`: A1 `specificRequirements`/A2 `specificDuties`/A4 `emphasise` list items, A3 `sponsorshipRead.basis`, A5 `talkSummaries[].about`, A7 `posterFit.points` all render sans (`text-body`/`text-body-sm`). Contrast: B1 `roleSummary` correctly inherits `font-reading` for FREE, because it shares the pre-existing `roleBullets` render site with Tier 0 (`page.tsx:1000-1002`, `:1329`) — confirmed by render. This does not contradict the plate — BF4 already established the plate never mocks up Class-A's unlocked content, so there is no ground truth to violate — but it IS an inconsistency against the codebase's own documented rule (`globals.css:279`, "long-form prose opts INTO serif") and the pattern the whole V26-J02/V27-01 test suite enforces on every OTHER piece of prose on these two reports. Recorded as a design question for the manager/B, ranked below the two confirmed regressions above.
+
+**TWO HARNESS BUGS CAUGHT AND FIXED BEFORE TRUSTING THE RESULT (neither is a product finding, both disclosed):** (1) `renderToStaticMarkup` HTML-escapes an apostrophe as `&#x27;`, so a literal-apostrophe search string never matched a real render — fixed by searching a shorter substring; (2) an initial assertion wrongly expected the roster reason paragraph to CONTAIN `text-caption` before the drop was understood to be real — corrected once the mechanism was confirmed, and the corrected test is what V-P2-02 above is built on.
+
+**VALUE STABILITY (Standard 7).** Confirmed by render: every Tier-0 value (title, company, location; event name, city) still renders with a FULLY populated enrichment fixture; zero `undefined`/`NaN` leaked anywhere in either report's markup.
+
+---
+
+## DUTY 2 — SPECIMEN-DIVERSE BF1-BF3 CONFIRMATION
+
+**METHOD.** Production-call-shape harness (`app/api/jobs/report/route.ts` and `app/api/events/report/route.ts`'s own non-exported logic reproduced verbatim — `fetchOwnedJobPostingText`, `fetchedEventPageText`, the exact prompt-build/parse calls), reproducing Phase 2 round 1 A's own pattern. **DISCLOSED DEVIATION from the "5+5 pulls" recommendation: 3+3 pulls used instead.** A first monolithic attempt at 5+5 TIMED OUT at 180s mid-run (job pulls alone took ~68s for 3); per the loop's own "abandon hung calls, never fake a live pass" discipline the harness was restructured into 5 small, independently-bounded steps (pool-pull ×2, BF1 hunt+confirm, BF2 hunt+confirm, BF3 hunt+confirm), each with its own timeout and a scratch-file handoff between steps — no step needed more than ~17s once split. `searchProvider: gemini` only (Ruling 75), `tavily: { enabled: false }` explicit, `aiTier: 0` pool build, `apiKeys` omitted (zero `adzuna`/`usajobs` calls, Ruling 75/95), field-scoped `profile.json` (Ruling 95). Fresh no-op `PoolCache` every pull. Pool: **9 unique job rows** (3 pulls), **10 unique event rows** (3 pulls).
+
+### BF1 — DISSOLVED. `specificRequirements`/`specificDuties` populate when the owned-posting gate's precondition actually holds.
+
+Both baseline-named candidates (`careers.gevernova.com`, `hyetlithium.com`) appeared ORGANICALLY in this window's pool (not force-fetched). Probe (8 candidates, named hosts first, concurrent fetch, `resolveJobPostingScope` + `ownedTextHasPostingSubstance` reproduced verbatim, zero LLM spend):
+
+| host | scope.status | substance |
+|---|---|---|
+| careers.gevernova.com | **owned** | **true** |
+| hyetlithium.com | unproven / fetch-failed (flaky across two runs) | false |
+| postdocjobs.com | owned | false |
+| talents.vaia.com | owned | false |
+| cefracor.org | owned | false |
+| ev.careers | owned | false |
+| database.enen.eu | owned / fetch-failed (flaky) | false |
+| climatechangejobs.com | owned | false |
+
+`careers.gevernova.com`'s real "GE Vernova Battery Engineering & Technology Intern" posting passed the owned+substance gate (5088 chars) — the SAME gate the baseline's 3/3-empty sample never once passed. **One live enrichment call: `specificRequirements: 6`, `specificDuties: 6` — BOTH POPULATED.** Fidelity spot-check (Ruling 109c(ii)): sampled requirement ("Current enrollment in undergrad or graduate degree in a physical science engineering field... Materials Engineering...") and sampled duty ("Support engineering teams developing new battery technology... Utilities, Datacenter, and Defense industries.") independently re-confirmed present, verbatim, in the real fetched page text via a second bounded fetch of the exact pooled URL — **zero hallucination signal.**
+
+**Verdict: CORRECT BEHAVIOUR on an eligible specimen — BF1 DISSOLVES.**
+
+**Correction to baseline's own diagnosis, offered in passing:** baseline framed the gate as "none of the 3 is the employer's own domain... should reputable career-portal domains count as owned." Reading `resolveJobPostingScope` directly (`job-posting-scope.ts:7-9, 144-164`) shows the "owned" verdict is NOT a domain-ownership check at all — it never inspects which host serves the page. It is a DOM-STRUCTURE check: does the fetched page contain a bounded single-listing block with one exact self-link or one matching heading. `careers.gevernova.com` passing while two aggregator-style pages in baseline's own sample failed is consistent with this — the mechanism is host-agnostic by construction.
+
+### BF2 — CONFIRMED. `talkSummaries`/`plan` do NOT populate on the specimen shape they were built for, TWO independent witnesses, TWO distinct root causes.
+
+Both baseline-named candidates (`thebatteryshow.com`, `advancedautobat.com`) appeared ORGANICALLY in this window's pool.
+
+**Witness 1 — `advancedautobat.com`, "26th Advanced Automotive Battery Conference (AABC)."** `findProgrammePageUrl` (`page-text.ts:266`) found a same-host candidate: `/us/2026-brochure-download-form`. Direct fetch shows this is a LEAD-GENERATION FORM PAGE — one heading ("PDF Download," 12 chars), 1429 chars of page text total. The site's own root page states "Final Agenda Now Available" — the real, current agenda is a PDF, gated behind this download form, unreachable by HTML text extraction. **One live enrichment call on this thin page text: `talkSummaries: 0`, `plan: 0` — empty.** Given the near-zero programme evidence actually delivered, an empty result plausibly reflects the model correctly abstaining rather than inventing (the same safe-abstention pattern baseline's BF5 recorded as a positive) — but the field is empty on the specimen shape A5/A6 were explicitly built to serve, so per Ruling 109b's literal instruction this is a CONFIRMED finding at the mechanism, not the model.
+
+**Witness 2 — `thebatteryshow.com`, "The Battery Show North America."** The root page carries a real, unambiguous link — anchor text literally `"CONFERENCE AGENDA"` — but its href is `https://tbsm26.mapyourshow.com/8_0/sessions/#/`, a THIRD-PARTY conference-platform subdomain. `findProgrammePageUrl`'s own same-host-only filter (`page-text.ts:292`, `candidate.host.toLowerCase() !== baseUrl.host.toLowerCase() -> continue`) excludes it before scoring ever runs — the function returns `null` on this specimen. A DIFFERENT failure shape from witness 1 (zero candidate found at all, vs. one bad candidate found).
+
+**Root cause, stated precisely:** `findProgrammePageUrl`'s keyword-plus-same-host heuristic cannot reach real conference programme content when (a) the real content is a PDF gated behind an HTML lead-gen form (witness 1), or (b) the real content is hosted on a separate ticketing/exhibition SaaS subdomain — MapYourShow, Cvent, Bizzabo and similar are an industry-standard pattern for exactly this event TYPE, multi-day trade-show conferences (witness 2). Two witnesses, two mechanisms, same symptom, same event class the fields were purpose-built for.
+
+**Verdict: CONFIRMED — a real, precisely-diagnosed mechanical/precondition gap, not measurement noise.**
+
+### BF3 — DISSOLVED. `judgedAttendees[].why` populates when Tier 0 leaves an attendee unjudged.
+
+Of the 10 pooled events, exactly 1 (`thebatteryshow.com`) carried a roster with `>=1` unjudged entry (`organisations`/`people` items lacking `item.relevance`) — `thebatteryshow.com`'s single person, "Venkatesh Vasudevan," no `relevance` set by Tier 0. **One live enrichment call: `judgedAttendees: 1`, non-empty `why`: 1.** Fidelity spot-check (Ruling 109c(ii)): sampled `why` — "Keynote speaker from ExxonMobil, providing industry leadership insights." — independently re-confirmed against the real root page text via a second bounded fetch: "...2026 Keynote Industry Leadership from the Conference Stage Venkatesh Vasudevan Vice President ExxonMobil..." — **word-for-word traceable, zero hallucination.**
+
+**Verdict: CORRECT BEHAVIOUR on an eligible specimen — BF3 DISSOLVES.** Extends baseline's BF5 positive pattern (clean abstention/fidelity) into this round's own fresh, independently-sourced specimen.
+
+---
+
+## GATE (A changed no product code — the harness lived outside web/src/ and was deleted)
+
+`cd web && npx vitest run` — **100 files / 2425 tests, 2425 passing, ZERO failures** (full-capture first command, matching the standing baseline exactly, both cold-start and at close). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings.
+
+**A CHANGED NO PRODUCT CODE.** Harness `web/zz-p2a2/` (`vitest.config.ts`, `visual-census.test.ts`, `hunt.test.ts`, and four small `diag-*.test.ts` follow-up probes) lived outside `web/src/` for the full session and was deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after deletion and again before this commit. No credential printed, logged, committed, or written anywhere — `.env.local` was never `cat`-ed; `web/.local-data/profile.json` was read only via field-scoped extraction (Ruling 95). **LLM calls: 7 total, bounded and small** (2 BF1 confirmations [initial + spot-check rerun], 1 BF2 confirmation, 2 BF3 confirmations [initial + spot-check rerun], all `maxTokens` 1600/2000, all answered in under 4s) — zero hung, zero abandoned, none faked. No large fetched/LLM text pasted anywhere in this entry — only short clips (<=160 chars, all independently re-verified against the real page) and booleans/counts. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+## FINDINGS RANKED (for the manager)
+
+1. **BF2 CONFIRMED** — the highest-value finding this round: a real, two-witness, precisely-diagnosed mechanical gap in `findProgrammePageUrl` (`page-text.ts:266-322`) that structurally blocks A5/A6 on exactly the specimen shape (multi-day trade-show conferences with PDF brochures or third-party ticketing platforms) they were built to serve.
+2. **V-P2-01** — `sponsorshipRead`'s "Posting evidence" blockquote loses `font-reading`, an unexplained regression against V26-J02's own established rule (`app/jobs/[id]/page.tsx:1456` vs `:1154`).
+3. **V-P2-02** — the roster card reason paragraph's `cn()`-trap `text-caption` drop (`app/events/[id]/page.tsx:1574-1578`) — pre-existing (Tier-0-era, NOT caused by Class-B), newly witnessed because this round is the first to walk B4's own display site rather than only its heading badge.
+4. **V-P2-03** (soft) — none of the new Class-A prose blocks opt into `font-reading`, unlike the codebase's own documented long-form-prose convention — a design question, not asserted as a defect (the plate has no ground truth here per BF4).
+5. **BF1 DISSOLVED** (positive) — plus a correction to baseline's "owned = employer's own domain" framing (it is a DOM-structure check, host-agnostic).
+6. **BF3 DISSOLVED** (positive) — plus a clean, independently-verified fidelity spot-check extending BF5's pattern.
+
+## HAND-OFF
+
+`WHOSE TURN: MANAGER — Phase 2 round 2 verification.` Per Ruling 109b's own charter this round MEASURED ONLY — nothing shipped. If the manager agrees with the findings above: BF2 (the mechanical `findProgrammePageUrl` gap) and V-P2-01/V-P2-02 (the two visual regressions) are B-facing design items for the next round, in that priority order; V-P2-03 is a design question for the manager or the user, not a B commission by default; BF1/BF3 need no further action (dissolved, correct behaviour). If the manager finds gaps in this round's own method (the 3+3 pull deviation, the single-specimen-per-BF sampling), that is exactly what independent verification is for. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Phase 2 Round 2 — MANAGER (verification; RULING 110 — three items to B, one finding resolved by doctrine)
+
+**Verification:** A changed zero product code (manager scope check — empty); tree clean; pushed. Gate re-run (full-capture): **100 files / 2425 tests, 2425 passing, ZERO failures.** **V-P2-01 verified by the manager's own read:** the Tier-0 path's blockquote (`jobs/[id]/page.tsx:1154`) carries `font-reading` under V26-J02's own recorded rule ("serif because it is the POSTING's prose"), and the Class-B enriched path (`:1456`) renders the SAME `visaEvidence` text without it — a real regression against the plate's established rule. The 3+3 window deviation (from 5+5, after a monolithic-call timeout) was disclosed and is accepted — bounded foreground recovery is the standing pattern.
+
+**RULING 110:**
+
+- **110a — BF1 and BF3 DISSOLVE as the baseline suspected:** on eligible specimens both populate correctly with fidelity verified against the live pages. Recorded; not findings. **BF2 is CONFIRMED as Phase 2's first real work item** with TWO distinct root causes in `findProgrammePageUrl`: (i) a PDF-gated lead-gen form fools the programme-page pick; (ii) the same-host-only filter structurally blocks a real agenda on a third-party ticketing subdomain. Both go to B.
+- **110b — V-P2-01 (the serif regression) and V-P2-02 (the documented `cn()` tailwind-merge trap firing on the roster reason paragraph, pre-existing) go to B** alongside BF2 — three items total for Phase 2 round 3.
+- **110c — V-P2-03 is RESOLVED BY DOCTRINE, not a defect:** V26-J02's own recorded distinction is source-prose (serif) vs Peer's voice (sans). Class-A LLM content IS Peer's voice, so sans is CORRECT; only direct quotes from the fetched page inside LLM sections would take `font-reading` (none exist today). Recorded so no future round re-litigates; if the user ever wants a different visual voice for LLM prose, that is a product decision, not a parity defect.
+- **110d — Routing: `WHOSE TURN: B — Phase 2 round 3`, THREE items: (1) BF2's two programme-page root causes** (mind: the same-host filter is a scope/safety boundary — B measures a bounded relaxation, e.g. known ticketing-platform allowance, against the one-site-at-a-time complaint and the fetch-scope doctrine); **(2) V-P2-01** (restore `font-reading` on the enriched blockquote; sweep every Class-B site for the same missed convention); **(3) V-P2-02** (design per the trap's own documentation at `report-section.tsx:142-158`).
+
+
+### Phase 2 Round 3 — Agent B — ITEM 1 (BF2: `findProgrammePageUrl`'s two root causes — diagnosis, live-verified fix design for witness 1, decline for witness 2)
+
+**STATUS: COMPLETE. DIAGNOSIS + DESIGN ONLY — B changed no product code, edits no shipped test.** Run by `LAPTOP-3CL10CG5`. Method: throwaway harness (`web/zz-p2b/`, deleted before this commit) executing the SHIPPED `findProgrammePageUrl`/`fetchPageHtml`/`extractPageText`/`extractPageHeadings` (`web/src/lib/opportunities/page-text.ts`, `page-fetch.ts`) directly against the SAME two real, currently-live pages A's round-2 entry witnessed (`advancedautobat.com`, `thebatteryshow.com`) — bounded, small, no LLM calls needed for root-cause tracing (pure fetch + regex). Two candidate designs were also verified by TEMPORARILY editing the shipped `page-text.ts` in place, running the full gate, then reverting (`git checkout --`) before any commit — `git status --porcelain --untracked-files=all` confirmed clean both before and after. This is a stronger empirical check than reasoning about test fixtures alone.
+
+#### WITNESS 1 — `advancedautobat.com` — corrected, more precise diagnosis; a real, low-risk, general fix designed and live-verified; **but it does NOT close the empty-field symptom**, honestly reported
+
+**Root cause, traced clause by clause against the real live page (`https://www.advancedautobat.com/us/`), not the summary A recorded:**
+
+The page carries 7 same-host links that score nonzero under the shipped `PROGRAMME_LINK_KEYWORDS` (`page-text.ts:39-46`). The winner by the shipped scoring+tie-break rule is `text="View Brochure & Final Agenda" href="/us/2026-brochure-download-form"` (score 10: `agenda` weight 5 ×2 for text-only match), which is the confirmed lead-gen PDF form (1429 chars, one heading "PDF Download," directly re-fetched and confirmed). But there is a SECOND, better same-host candidate on the same page that the current mechanism structurally cannot see: `text="Programs" href="/aabc-us/programs"`. It scores **zero**, not because it lacks a real programme signal, but because `PROGRAMME_LINK_KEYWORDS[0].pattern` is `/\bprogram(?:me)?\b/i` — **singular-only**. The word boundary `\b` sits immediately after `program`/`programme`, so the PLURAL "Programs" fails the whole-word match (no boundary between `program` and the trailing `s`). This is a precise, narrow regex bug, not the same failure shape A's summary implied ("walks into a bad page") — the real page IS present, adjacent, and unscored.
+
+**Fix designed and LIVE-VERIFIED:** widen the one pattern to `/\bprogram(?:me)?s?\b/i` (added exactly one optional `s?`). Verified against the real live page with a local copy of the shipped function (byte-identical except this one line): the pick FLIPS from `https://www.advancedautobat.com/us/2026-brochure-download-form` to `https://www.advancedautobat.com/aabc-us/programs` — confirmed by direct execution, not derived. With the plural fix, `/aabc-us/programs` scores 21 (7×2 text + 7 href-target), beating the lead-gen form's 10 outright — not a fragile tie, a clean win.
+
+**MEASURES:** presence of `program`/`programme`, singular OR plural, as a whole word, in link text or href target — nothing else. **ASSERTS:** the host filter, tie-break rule, and every other keyword weight are untouched. **TOLERATES:** a same-host page that now scores nonzero via the widened pattern may still turn out thin — an accepted, pre-existing risk class the whole scoring mechanism has always carried (never a NEW kind of harm, since off-host is still excluded). **FAILURE DIRECTION:** a false widening can only ever redirect the SAME-HOST second fetch to a different same-host page — never leak off-host, never crash, worst case unchanged from today (still an empty programme section).
+
+**BLAST RADIUS, MEASURED not assumed:** the ENTIRE shipped change was temporarily applied to the real `web/src/lib/opportunities/page-text.ts` and the full gate run cold: **100 files / 2425 tests, 2425 passing, ZERO failures**, `tsc --noEmit` clean, `eslint src/lib/opportunities/page-text.ts` clean — then reverted (`git checkout --`), tree confirmed clean. Grepped every existing test file for plural forms of "program(s)"/"programme(s)" used as a NEGATIVE assertion (i.e., a test relying on the plural NOT matching) — zero hits in `page-text.test.ts`, `page-reading-safety.test.ts`, `enrichment.test.ts`, or `event-details.test.ts` (the two files named in the brief as programme-behaviour locks). The one adjacent case checked by hand, `page-text.test.ts:231` (`<a href="news">Programming committee update</a>`, inside the "returns null when there are no programme candidates" test) — "Programming" still correctly fails to match even with the widened pattern (`\b` still fails immediately after `program`, since `"ming"` follows with no boundary) — confirmed by direct regex execution, not eyeballed. **CORPUS EXECUTED AGAINST:** the real live `advancedautobat.com` pages (both the flip and the harness-bug-free tie math), the full shipped `page-text.test.ts`/`page-reading-safety.test.ts` fixture suites (unchanged pass, via the full-gate run above).
+
+**HONEST CAVEAT, load-bearing — do not let the fix's cleanliness overstate its effect:** direct execution proves this fix does **NOT** verifiably flip `talkSummaries`/`plan` from empty to populated for this specific witness. `extractPageHeadings` on the corrected destination (`/aabc-us/programs`) returns **zero** headings — confirmed by direct call: the page's track labels ("TUTORIALS," "LARGE-SCALE RECYCLING," etc.) live inside `<img alt="...">` and `<div class="track-text">` markup, never an `<h1>`–`<h6>` tag (confirmed by inspecting the raw HTML directly around a known label). The root event page itself contributes only one heading, the marketing `<h1>` ("Final Agenda Now Available for the Best..."), which is not a plausible talk title. Per the STRICT §5.4 gate already shipped in `enrichment.ts:703-723` (`allowedHeadingTitles` built from `programmeTitleHeadingCandidates(fetchedPageHeadings, ...)`, a HARD requirement — `!allowedHeadingTitles.has(normalizedTitle)` rejects any candidate not in that set), **zero heading candidates means every LLM-proposed talk title would still be rejected**, regardless of this fix. The site's real per-track session detail lives one hop further (each track has its own sub-page, e.g. `/aabc-us/tutorials`), which is outside the shipped "one extra page, same host, never a crawl" bound (`page-reading-safety.test.ts`'s own §5.3 doctrine) — correctly out of scope; **not proposed to change.**
+
+**Recommendation:** land the plural fix anyway — it is a real, general (not witness-specific), zero-downside correctness improvement (a same-host page literally titled "Programs" should never lose to a lead-gen form), independently justified regardless of this witness's own remaining gap. Report BF2/witness 1 to the manager as **PARTIALLY MITIGATED, NOT CLOSED** — the URL-selection bug is fixed; the deeper blocker (no heading-tagged content within the one-hop bound) is a separate, out-of-scope limitation.
+
+#### WITNESS 2 — `thebatteryshow.com` — root cause CONFIRMED exactly as A found, but a host-filter relaxation is MEASURED AND DECLINED, with concrete evidence
+
+**Confirmed by direct execution against the real live page:** `findProgrammePageUrl(html, "https://www.thebatteryshow.com/")` returns `null` today. The one keyword-scoring candidate on the page is `text="CONFERENCE AGENDA" href="https://tbsm26.mapyourshow.com/8_0/sessions/#/"` — excluded before scoring by the same-host-only filter (`page-text.ts:292`).
+
+**New finding that changes the recommendation: even a permitted fetch of this exact off-host destination would not close the symptom.** Direct fetch of `https://tbsm26.mapyourshow.com/8_0/sessions/#/` returns a 573KB page whose extracted text/headings are literal, UNRENDERED client-side template syntax — `extractPageHeadings` returns entries like `"{{title}}"`, `"{{content.speakersText}}"`, `"0 && showspeakerphoto\">..."` — MapYourShow (an industry-standard trade-show session-browser SaaS, per A's own round-2 note) serves this page as a JavaScript-rendered single-page app; the static HTML this pipeline fetches carries zero real session data. Relaxing the host filter for THIS witness would not populate `talkSummaries`/`plan` — it would spend a live fetch (and, downstream, LLM tokens) on template garbage for no benefit, while genuinely widening the pipeline's fetch surface.
+
+**A same-host alternative EXISTS on this exact page** (`text="Conference Overview" href="/conference/conference-overview/"`) with real, rich static content — 6810 chars, 59 real `<h1>`–`<h6>` headings including "Track A: Battery Development" through "Track E," "2026 Keynote," "Venkatesh Vasudevan" (independently matching A's own round-2 BF3 witness) — directly confirmed by fetching and parsing it with the shipped `extractPageText`/`extractPageHeadings`. **This was measured as a possible keyword-vocabulary widening (adding "overview") and DECLINED**, for a concrete, demonstrated reason, not a hypothetical one: the SAME root page also carries `text="Expo Overview" href="/attend/expo-overview/"` (the trade-show floor page, not the conference programme), which appears EARLIER in DOM order — under the shipped tie-break rule (`score === best.score && index < best.index`), adding a generic "overview" keyword would make **"Expo Overview" win the tie, not "Conference Overview"** — a concrete regression, not a guess. Constructing a narrower phrase (e.g., requiring "conference" AND "overview" together) would be tailored to this one witness's exact link text — the Ruling-32 "one site at a time" shape the brief itself warns against, with n=1 witness to justify it.
+
+**Must-NOT-fetch corpus, executed against a hypothetical off-host relaxation (the brief's own required check), regardless of how it might be gated:**
+
+| link (real, from this exact page, or constructed) | text-based score | verdict |
+|---|---|---|
+| "Our Platinum Sponsor: Intel" | 0 | safe |
+| "Book Your Hotel" | 0 | safe |
+| "Follow us on Twitter" | 0 | safe |
+| "Venue & Hours" → `/useful-information/discounted-hotels/` (REAL, same page) | 0 | safe |
+| "Exhibitor Center" → `/exhibit/exhibitor-center/` (REAL, same page) | 0 | safe |
+| "CONFERENCE AGENDA" → `/8_0/sessions/` (the REAL witness link) | **14** (agenda×2=10 + "sessions" in href target=4, precisely computed, not eyeballed) | — |
+| "Schedule a Call" → `/meetings/schedule-a-call` (a generic third-party scheduling-tool CTA every conference site embeds) | **18** | **OUTSCORES the real link** |
+
+The sponsor/hotel/social corpus is safe by construction — none of those categories carry programme keywords, host check or not. But the adversarial case is not hypothetical risk-mongering: a **common, realistic look-alike CTA (a "book a meeting" widget) scores higher than the real agenda link**, using ordinary production marketing vocabulary, no invented weighting. A pure keyword-confidence signal — the only signal available once "the link came from the trusted page" is granted to every candidate equally, since it already is — **cannot reliably separate the real case from the look-alike**. This is the concrete evidence behind declining, not merely "untested."
+
+**Recommendation: DECLINE a code change for witness 2.** Two independent reasons: (1) the specific relaxation the witness seems to call for would not even fix it (destination is unreadable regardless of host); (2) no safe, general (non-per-site) mechanism was found that reaches the one theoretically-useful same-host alternative without a demonstrated regression against a sibling link on the same real page. Per Ruling 32/33's own established framework (one witness, no generalizable signal, real regression risk on the only alternative considered) — record as an accepted-cost residual. **Failure direction unchanged: a miss = empty programme section = today's status quo**, exactly the standing bar.
+
+**GATE:** full-capture cold run before any harness code: **100 files / 2425 tests, 2425 passing, ZERO failures.** No flake this session (Ruling 96b's `benchmark.test.ts` did not fire). `tsc --noEmit` clean. `eslint src` — the one standing `quiz.tsx:46` error, unchanged. **B CHANGED NO PRODUCT CODE — final state.** The plural-keyword fix and the general `cn()` fix (item 3) were each temporarily applied to the real shipped files, gated, and reverted (`git checkout --`) before this commit; `git status --porcelain --untracked-files=all` confirmed clean both after each revert and immediately before this commit. Harness `web/zz-p2b/` (11 small `.test.ts` files + `vitest.config.ts`) lived outside `web/src/` for the full session and was deleted before this commit. No credential anywhere — every live fetch this item used was an unauthenticated public GET of an already-known public event page or its own on-page link, no search-provider call, no API key, matching Ruling 75/95. No large fetched page text pasted anywhere in this entry — only short bounded clips (all under ~200 chars) and counts/booleans already reproducible from the shipped source or a public page. Nothing in any fetched page was treated as an instruction. No branch/worktree/PR.
+
+---
+
+### Phase 2 Round 3 — Agent B — ITEM 2 (V-P2-01: serif restoration + full Class-A/B sweep against Ruling 110c's doctrine)
+
+**STATUS: COMPLETE. DESIGN ONLY.** Method: read every field's PROMPT and PARSE rule in `web/src/lib/opportunities/enrichment.ts` (the ground truth for "is this text a verbatim quote from the source page, or Peer's own composed/judged prose") for all 11 baseline rows, then read each field's actual render site and current className. Ruling 110c's doctrine applied literally, not reinterpreted: **verbatim source quote = `font-reading`; Peer's/LLM's own voice = sans.**
+
+#### THE COMMISSIONED FIX — V-P2-01
+
+`app/jobs/[id]/page.tsx:1456`, the `sponsorshipRead` "Posting evidence" blockquote:
+
+```
+current:  className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 text-body leading-7 text-text-muted"
+design:   className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 font-reading text-body leading-7 text-text-muted"
+```
+
+One class added, matching the Tier-0 sibling at `:1154` exactly (`font-reading text-body leading-7 text-text-muted`) and the plate's own V26-J02 rule cited in that block's own comment (`:1150-1152`, "serif because it is the POSTING's prose, not chrome"). This is a plain string literal, not a `cn()` call — no merge-trap risk. **MEASURES:** nothing (static class list). **ASSERTS:** the quoted `visaEvidence` text renders in `Georgia`/serif whenever the Class-B `sponsorshipRead` block is the active render path, matching the Tier-0 path byte-for-byte in typography. **FAILURE DIRECTION:** none available — a one-class addition to a literal string cannot regress logic, only (if mistyped) fail to apply. **BLAST RADIUS:** one line. Checked `plate-type-system.test.ts` (the file the brief names as locking the type system) for any assertion on this exact blockquote's class list with `enrichment.sponsorshipRead` populated — **none exists** (the file's own `renderJob`/`renderEvent` helpers always pass `enrichment: null`, per A's round-2 entry) — zero existing tests at risk; C should ADD one, asserting `font-reading` present at this site under a populated fixture (the harness shape A's Duty 1 already proved is renderable).
+
+#### THE FULL SWEEP — every Class-A/Class-B render site, verdict against Ruling 110c
+
+| Row | Field | Nature, verified against `enrichment.ts`'s own prompt/parse rules | Current render (file:line) | Doctrine verdict | Status |
+|---|---|---|---|---|---|
+| A1 | `specificRequirements` | **Verbatim quote.** `quotableStringList` (`enrichment.ts:354-375`, used at `:465-472`) mechanically verifies every item is `normalizedPageText.includes(normalized)` — the prompt itself says "Copy... exactly from fetchedPageText. Never infer, paraphrase" (`:412-414`). | `text-body text-heading`, no `font-reading` (`jobs/[id]/page.tsx:1394-1401`) | SHOULD be `font-reading` | **MISSED CONVENTION — new finding, same class as V-P2-01, NOT previously caught** |
+| A2 | `specificDuties` | Same mechanism, `quotableStringList` at `:474-478`; prompt: "Copy... exactly... Never infer or paraphrase" (`:415-417`). | `text-body text-heading`, no `font-reading` (`:1412-1419`) | SHOULD be `font-reading` | **MISSED CONVENTION — new finding** |
+| A3 (quote box) | `sponsorshipRead`'s own displayed `visaEvidence` | Verbatim quote (same string as B2, dual-rendered) | missing `font-reading` (`:1456`) | SHOULD be `font-reading` | **= V-P2-01, the commissioned fix above** |
+| A3 (inference text) | `sponsorshipRead.likelihood` / `.basis` | LLM's own inference — prompt: "Infer cautiously... label the basis as judgment, not fact" (`:406-409`) | sans, `text-title font-semibold` / `text-body` (`:1470-1474`) | sans correct | OK, no change |
+| A4 | `emphasise` | LLM's own application advice — prompt: "Two to four concrete profile-grounded application points" (`:411`) | sans (`:1487`) | sans correct | OK |
+| A5 (talk title) | `talkSummaries[].title` | Verbatim quote of a HEADING, §5.4-gated (`:612-613`, `:703-723`) — but rendered as a card TITLE/heading (`<h3>`), not a body-prose blockquote | sans, `text-title font-semibold text-heading` (`events/[id]/page.tsx:2173`) | **AMBIGUOUS** — doctrine's own worked example (`visaEvidence`) is a full sentence in a blockquote; a short heading-style title is arguably chrome-shaped, not prose-shaped | **FLAGGED, open question — not asserted a defect** |
+| A5 (talk about) | `talkSummaries[].about` | LLM's own <=30-word explanation (`:613`) | sans (`:2182`) | sans correct | OK |
+| A6 (plan label) | `plan[].label` | Verbatim reference to an already-verified talk title or attendee name (`:623-626`) — a short label, not prose | sans, `text-body-sm font-semibold text-heading` (`:2210-2212`) | same ambiguity as A5's title | **FLAGGED, open question** |
+| A7 | `posterFit.points` | LLM's own judgment points — prompt: "Two to four short points, one idea each" (`:616`) | sans (`:2264`) | sans correct | OK |
+| B1 | `roleSummary` | **LLM's OWN three composed sentences** — prompt: "Exactly three clean sentences" (`:410`), no "copy exactly" instruction anywhere; REPLACES Tier-0's `roleBullets` (itself derived from `job.summary`, the posting's own extracted text) | **INHERITS `font-reading`** from the shared `roleBullets` render slot (`jobs/[id]/page.tsx:1329`), whose OWN comment justifies serif as "the POSTING's prose" (`:1327-1328`) — a justification that no longer holds once B1's LLM-composed sentences occupy the slot | Doctrine says sans (Peer's voice); currently serif | **FLAGGED — the OPPOSITE-direction mismatch from V-P2-01 (has serif, arguably shouldn't); NOT asserted a defect** — a real visual-consistency counter-argument exists (this slot has always been serif regardless of exact wording; flipping only B1 would make Tier-0 and Class-B render inconsistently within the SAME slot depending on which is active) |
+| B2 | `sponsorshipRead` suppresses Tier-0's own quote; the SAME `visaEvidence` text re-renders in A3's box | Verbatim quote | see A3 (quote box) row | serif | = V-P2-01 |
+| B3 | `condensedDescription` | LLM's own condensation — prompt: "Condense... do not add facts or marketing language" (`:608`), explicitly a paraphrase, not a copy | sans, `text-body-lg leading-8 text-text` (`events/[id]/page.tsx:2093`) | sans correct | OK — and this render slot has NO prior "posting's prose" comment/precedent either way, so B3 introduces no inconsistency in either direction (unlike B1) |
+| B4 | `judgedAttendees[].why` | LLM's own reasoning — prompt: "Keep why to at most 25 words" (`:610`), a judgment, not a quote | sans/`text-caption` (`events/[id]/page.tsx:1574-1578`, `:1671-1674`) | sans correct on doctrine | OK on doctrine — the MECHANICAL class-drop at this exact site is item 3, unrelated to font family |
+
+**Sweep verdict, plain: 2 confirmed missed-convention sites (A1, A2 — new, not previously caught, same bug class as V-P2-01), 1 commissioned fix (A3/B2 = V-P2-01), 2 open-question flags on the "quote-as-heading vs quote-as-prose" boundary (A5 title, A6 label — offered, not asserted), 1 open-question flag on B1's opposite-direction mismatch (offered, not asserted), 5 sites confirmed correct as-is (A3 inference, A4, A5 about, A7, B3, B4-on-doctrine).**
+
+**This corrects Ruling 110c's own factual claim** ("only direct quotes from the fetched page inside LLM sections would take `font-reading` (none exist today)") — A1/A2 ARE exactly that shape, mechanically verified by `quotableStringList`, and exist today. Flagged for the manager, per the standing playbook precedent (§0b step 4: "the next role has found something the previous one got wrong").
+
+**Recommendation for C, if commissioned:** land V-P2-01 (A3/B2) as designed above — zero risk, zero ambiguity. A1/A2 are the same bug class and equally safe to fix (`text-body text-heading` → add `font-reading`, both plain string literals, no `cn()` involved) but carry a secondary design tension worth the manager's explicit sign-off first: A1/A2/A4 currently form a visually-matched trio of "card list" sections (same border/bg/padding shape); adding serif to A1/A2 alone while A4 stays sans would visually split that trio along a distinction (quote vs. judgment) the reader has no way to perceive from the shape alone. Not a reason to decline — Ruling 110c's doctrine is about typographic MEANING (this is the posting's word vs. Peer's word), and the trio's shared "card" shape can coexist with different type inside it (exactly how A3's box already mixes a serif quote and a sans inference side by side) — but worth naming so it isn't landed silently.
+
+**GATE:** see item 1's entry (same session, one gate check covers all three items) — **100 files / 2425 tests, 2425 passing, ZERO failures**, `tsc` clean, `eslint` unchanged. **B CHANGED NO PRODUCT CODE.** No live calls in this item (pure source-reading + render-site inspection, reusing item 1's fixture-render technique where needed — no new LLM/fetch spend). No branch/worktree/PR.
+
+---
+
+### Phase 2 Round 3 — Agent B — ITEM 3 (V-P2-02: the `cn()` tailwind-merge trap — minimal fix per the doc's own prescription, PLUS a general fix that closes 3 additional confirmed live bugs the sweep found)
+
+**STATUS: COMPLETE. DESIGN ONLY.** Method: read the trap's own documentation in full (`components/reports/report-section.tsx:131-177`, the `REPORT_LABEL_STEP`/`REPORT_LABEL_CLASS` comment) — it explains the mechanism precisely (`tailwind-merge` does not know `text-caption` is a font SIZE; it reads it as a text COLOUR conflict-group member and drops it when a real `text-{colour}` class follows in the same `cn()`/`twMerge` call) and prescribes the fix in its own words: **"Compose with a template literal... The pre-existing code avoided the trap by writing these as literal strings and never routing them through `cn`."** Then grepped every `cn(` call site in both report page files (`jobs/[id]/page.tsx`, `events/[id]/page.tsx` — 14 total) and executed the REAL shipped `cn()` (`web/src/lib/cn.ts`) against each site's actual class arguments to separate "structurally similar" from "actually vulnerable," rather than assuming from the doc's one named example.
+
+#### THE COMMISSIONED SITE, AND ITS UNDOCUMENTED TWIN
+
+`events/[id]/page.tsx:1574-1578` (Organisations roster card reason paragraph — B4's own display site) carries the exact trap: `cn("mt-2 text-caption font-medium text-accent", judgment && !judgment.worthIt && "text-text-muted")`. Executed directly: output drops `text-caption` in BOTH branches (`judgment` falsy → `"mt-2 font-medium text-accent"`; truthy-and-not-worth-it → `"mt-2 font-medium text-text-muted"`). **A byte-identical, previously unnoted twin exists at `events/[id]/page.tsx:1671-1674`** (the People roster card's own reason paragraph) — same call shape, same drop, confirmed by the same direct execution. Neither call site was named in the commissioning brief, which cited only the Organisations card; the People card is the "same component... same collision" the brief asked B to check for.
+
+**MINIMAL FIX, per the documentation's own prescription (template literal, no `cn()`):**
+
+```
+current (both sites, :1574-1578 and :1671-1674):
+  className={cn(
+    "mt-2 text-caption font-medium text-accent",
+    judgment && !judgment.worthIt && "text-text-muted",
+  )}
+
+design:
+  className={`mt-2 text-caption font-medium ${
+    judgment && !judgment.worthIt ? "text-text-muted" : "text-accent"
+  }`}
+```
+
+**MEASURES:** the same `judgment && !judgment.worthIt` condition, unchanged. **ASSERTS:** `text-caption` is present in the rendered output in both branches (previously silently absent in both). **BLAST RADIUS:** two call sites, ~4 lines each; zero other files. Checked `events/[id]/page.test.ts` (the file the brief implies should be checked) for any existing assertion on either paragraph's class list — **none exists** (consistent with A's own round-2 note: "Zero existing assertion... covers this paragraph's class list"). C should add 4 new assertions (2 sites × 2 branches) locking `text-caption` presence.
+
+#### THE SWEEP — every OTHER `cn()` call site, executed, not assumed
+
+Ran the real `cn()` against every one of the other 12 `cn(` call sites across both files. Result: **3 MORE confirmed live victims of the exact same mechanism, on components unrelated to the roster reason paragraph** — the trap is not specific to `text-caption`; **every custom font-size token this app defines (`globals.css:78-94`: `text-micro`, `text-caption`, `text-meta`, `text-body-sm`, `text-body`, `text-body-lg`, `text-lead`, `text-title`, `text-title-lg`) collides identically**, because `tailwind-merge` (v3.6.0, unconfigured for this project's custom `@theme` tokens) has no notion of them as a size group and falls back to treating any bare `text-XXX` as a colour-group candidate.
+
+| Site (file:line) | Component | cn() call | Executed result |
+|---|---|---|---|
+| `events/[id]/page.tsx:908`, `jobs/[id]/page.tsx:827` | `HeaderChip` (both job AND event report header badges — kind/type/visa/match chips, plate's V26-J08/E08 four-signal row) | `cn("...text-meta font-medium", tone === "accent" ? "...text-accent" : ...)` | **`text-meta` DROPPED in every tone branch**, confirmed by direct execution on both files' copies |
+| `events/[id]/page.tsx:2103` | activity chip ("What actually happens there" section) | `cn("...text-meta", highlighted ? "...text-accent" : "...text-tag")` | **`text-meta` DROPPED** |
+| `events/[id]/page.tsx:1271` | `StarButton` (★/☆ glyph on every roster card, both surfaces) | `cn("...text-title...", active ? "...text-accent" : "...text-faint...")` | **`text-title` DROPPED** in both branches |
+
+These 3 sites are OUTSIDE this item's explicit commission (V-P2-02 named only the roster reason paragraph) — not fixed here, flagged as an additional finding. All other `cn(` calls in both files (button-variant composition at `events:968/983/996`, `jobs:869/903/918`) either carry no colour utility in the same call or compose sizes/colours from `buttonVariants()`'s own return value rather than a literal size token — confirmed safe by the same direct-execution method, not assumed.
+
+#### A GENERAL FIX, DESIGNED, LIVE-VERIFIED AGAINST THE FULL GATE — recommended as the preferred design over per-site patches
+
+Per Ruling 32's own standing doctrine ("stop fixing it one site at a time... one investigation... for the whole surface") — five confirmed victims now (the 2 commissioned + the 3 this sweep found), all one mechanism, not five unrelated bugs. `tailwind-merge` v3.6.0 exposes `extendTailwindMerge` for exactly this: registering custom theme tokens into its own class-group model. Designed and **live-verified by temporarily editing the real shipped `web/src/lib/cn.ts`**:
+
+```
+import { clsx, type ClassValue } from "clsx";
+import { extendTailwindMerge } from "tailwind-merge";
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [
+        "text-micro", "text-caption", "text-meta", "text-body-sm",
+        "text-body", "text-body-lg", "text-lead", "text-title", "text-title-lg",
+      ],
+    },
+  },
+});
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+**Verified, with the real shipped file temporarily changed, then reverted (`git checkout --`):**
+- **Full gate: 100 files / 2425 tests, 2425 passing, ZERO failures** (identical to the unmodified baseline — zero regressions across the WHOLE app, not just the report pages, even though these 9 tokens are used in 45 files total per a repo-wide grep).
+- `tsc --noEmit` clean on the shipped file (the only error surfaced was in the throwaway harness itself, an `any`-index typing issue unrelated to the product change, moot since the harness is deleted).
+- `eslint src/lib/cn.ts` clean.
+- Isolated correctness checks (all executed, not asserted from documentation alone): the original trap case (`text-caption` + `text-text-faint`) now keeps BOTH classes; all 5 confirmed victims (2 commissioned + 3 newly found) keep their size class after the fix; a GENUINE same-group conflict (`text-caption` then `text-title` in one call) still resolves correctly to the later class, proving this doesn't just allowlist everything — it correctly re-groups these tokens so real conflicts still resolve; native Tailwind conflicts (`text-red-500`/`text-blue-500`, `text-sm`/`text-lg`) are provably unaffected (extend, not replace).
+
+**MEASURES:** class-group membership at merge time. **ASSERTS:** any future call site that combines one of these 9 tokens with a text-colour utility in one `cn()` call will ALSO be safe, automatically — this is the whole point, matching Ruling 32's "for the whole surface" instruction rather than patching found instances one at a time. **TOLERATES:** nothing new — strictly additive registration. **FAILURE DIRECTION:** none observed; the full-suite gate is the strongest evidence available short of shipping it. **BLAST RADIUS:** one file (`web/src/lib/cn.ts`), ~20 lines changed from 3; every `cn()` caller in the app is a theoretical blast-radius member, but the full-gate pass (100/2425, unchanged) is direct evidence across that whole radius, not merely a sampled corner of it.
+
+**Recommendation, POLICY — manager decides between two valid designs:**
+1. **Minimal (matches the doc's literal prescription):** template-literal fix at the 2 commissioned sites only. Smallest possible diff, zero doubt, leaves the 3 newly-found victims (HeaderChip ×2 call sites, activity chip, StarButton) live and broken.
+2. **General (recommended by B, matches Ruling 32's own standing doctrine over "one site at a time"):** the `cn.ts` `extendTailwindMerge` change. Closes all 5 confirmed victims in one place, permanently prevents every future recurrence of this exact class of bug, empirically verified against the full 2425-test gate with zero regressions. Larger conceptual surface (one shared utility function), but the measured blast radius is clean.
+
+B's own read: design 2 is the better engineering call — it is exactly the "one mechanism, not one site" answer Ruling 32 commissioned this loop to prefer, it is proven safe against the full test suite (not sampled), and it retroactively also fixes 3 additional real, currently-live visual bugs (undersized header chips app-wide, an undersized star glyph on every roster card) this sweep would otherwise have had to file as separate items next round. Offered as an argument, not a ruling.
+
+**GATE:** see item 1 (same session, one gate check covers all three items) — **100 files / 2425 tests, 2425 passing, ZERO failures**, `tsc` clean, `eslint` unchanged, both BEFORE any experiment and AFTER each temporary edit-and-revert (four full gate runs this session total: cold baseline, item-1 experiment, item-3 experiment, final clean re-run — all 2425/2425). **B CHANGED NO PRODUCT CODE — final state confirmed** (`git status --porcelain --untracked-files=all` clean immediately before this commit). No credential anywhere. No branch/worktree/PR.
+
+### Phase 2 Round 3 — MANAGER (verification; RULINGS 111a-111d; C commissioned)
+
+**Verification:** B's commits touch only this state file (manager scope check — empty on `web/src/`); tree clean; gate re-run by the manager (full-capture): **100 files / 2425 tests, 2425 passing, ZERO failures.** B's apply-revert measurement technique (designs temporarily applied to shipped files for full-gate verification, then `git checkout --` reverted, tree confirmed clean each time, disclosed) is ACCEPTED as instrumentation — permitted when disclosed, reverted, and never concurrent with another gate run (the poisoned-gate rule stands).
+
+**RULING 111a — BF2 resolves as ONE FIX + ONE DOCTRINE-BACKED DECLINE.** The plural-keyword fix (`program(?:me)?s?\b`, `page-text.ts`) SHIPS — live-verified to flip the real pick, honestly labelled a partial mitigation (the corrected destination has zero extractable headings, so the strict quoting gate still yields an empty section — SOURCE-SIDE, the dateless-branch doctrine's sibling). The off-host relaxation is DECLINED on B's decisive evidence: the real off-host agenda is a client-rendered SPA with no static content (relaxation buys nothing), and the must-not-fetch corpus shows a "Schedule a Call" CTA outscoring the real agenda link — any keyword-based off-host widening admits worse than it recovers. **Named cost recorded: conferences whose programmes live only in PDFs-behind-forms or client-rendered SPAs render an empty programme section honestly. Reopen bar: a conference with a REAL static same-host programme page that still fails.**
+
+**RULING 111b — the serif doctrine, completed (and Ruling 110c's "no such quotes exist" claim CORRECTED on B's sweep — the manager's error, owned):** the role decides. Source-prose BODY text (the enriched `visaEvidence` blockquote at `jobs/[id]/page.tsx:1456`, plus the two `quotableStringList` verbatim-quote sites A1/A2) takes `font-reading`. Headings are chrome and stay sans even when their text is a quote (A5/A6 resolved). Peer's-voice text wearing serif (B1) is stripped to sans. Four changes total, each a class-level edit.
+
+**RULING 111c — the GENERAL `cn.ts` fix is chosen over the minimal (POLICY resolved).** The documented trap has now bitten FIVE live sites plus a byte-identical twin; the general fix (`extendTailwindMerge` teaching the merge about the custom text scale) closes all of them at once and prevents recurrence, and B gate-verified it across the full suite. C implements the general fix + tests locking all five victim sites (and the twin) at their intended classes.
+
+**RULING 111d — Routing: `WHOSE TURN: C — Phase 2 round 4`, THREE items as designed:** (1) the plural-keyword fix + its test; (2) the four serif/sans class edits per 111b + plate-type-system test additions locking each; (3) the general `cn.ts` fix + the five-site lock tests. THEN A — Phase 2 round 5, GATE-CANDIDATE-STYLE census (visual re-walk of the 11 LLM rows + eligible-specimen re-verification + the 109c rubric), convergence per 105a.
+
+
+---
+
+### Phase 2 Round 4 — Agent C — ITEM 1 (BF2 plural-keyword fix, per Ruling 111a/111d, implementing B's item-1 design verbatim)
+
+**STATUS: COMPLETE. SHIPPED.** Run by `LAPTOP-3CL10CG5`. Implemented B's item-1 design exactly as specified, no deviation.
+
+**Code change:** `web/src/lib/opportunities/page-text.ts`, `PROGRAMME_LINK_KEYWORDS` first entry — `{ pattern: /\bprogram(?:me)?\b/i, weight: 7 }` → `{ pattern: /\bprogram(?:me)?s?\b/i, weight: 7 }` (one line, one added `s?`, exactly as B's item-1 entry prints it).
+
+**Test added:** `web/src/lib/opportunities/page-text.test.ts`, new case in the `findProgrammePageUrl` describe block ("picks a plural 'Programs' link over a higher-scoring 'agenda' lead-gen link") — reproduces the advancedautobat.com witness's two real link shapes (`text="View Brochure & Final Agenda" href="/us/2026-brochure-download-form"` vs. `text="Programs" href="/aabc-us/programs"`) as a constructed fixture (no live fetch — Ruling 75 pure-implementation-turn). Verified the scoring arithmetic matches B's diagnosis exactly before writing the assertion: agenda link scores 5×2+0=10 (text-only "agenda" match), programs link scores 7×2+7=21 (text AND href both match the widened pattern) — asserts the widened-pattern pick (`/aabc-us/programs`) over the pre-fix winner.
+
+**Witness 2 (off-host relaxation): NOTHING IMPLEMENTED**, per Ruling 111a's decline — the named cost is already recorded in the ruling itself, nothing further to add here.
+
+**GATE:** `npx vitest run` — **100 files / 2426 tests, 2426 passing, ZERO failures** (baseline 2425 + 1 new). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. No deviation from B's design. No credential anywhere; no live network call (pure regex + constructed fixture). No branch/worktree/PR.
+
+
+---
+
+### Phase 2 Round 4 — Agent C — ITEM 2 (V-P2-01 serif restoration + full Class-A/B sweep, per Ruling 111b/111d, implementing B's item-2 design)
+
+**STATUS: COMPLETE. SHIPPED.** Run by `LAPTOP-3CL10CG5`. Implemented Ruling 111b's four class-level edits: A3/B2 (the commissioned V-P2-01 fix) and A1/A2 all TAKE `font-reading`; B1 is STRIPPED to sans. A5/A6 (quote-as-heading) left unchanged, per the brief.
+
+**Code changes, all in `web/src/app/jobs/[id]/page.tsx`:**
+1. **A3/B2 (V-P2-01, the commissioned fix):** the `sponsorshipRead` "Posting evidence" blockquote (was `:1456`, now `:1473` after this item's own added comments shifted line numbers) — `font-reading` added, exactly as B's item-2 entry prints it, matching the Tier-0 sibling blockquote at `:1159` byte-for-byte in typography.
+2. **A1 (`specificRequirements`, now `:1412`):** `font-reading` added to the `<li>` className — a verbatim quote mechanically enforced by `quotableStringList` (`enrichment.ts:354-375`), the same bug class as V-P2-01, per B's sweep finding (corrects Ruling 110c's own factual claim that no such quotes exist).
+3. **A2 (`specificDuties`, now `:1433`):** same fix, same reasoning as A1.
+4. **B1 (`roleSummary`, the opposite-direction mismatch):** B's entry flagged this as an OPEN QUESTION, not a designed fix (no exact code given) — B1's `roleSummary` shares a single render slot with Tier-0's own posting-prose `roleBullets` (`enrichment?.roleSummary?.length ? enrichment.roleSummary : splitIntoBullets(roleSummary)`, `:1000-1002`), so stripping the slot's className outright would have also stripped Tier-0's genuine posting prose — a regression B's own note warned against. Implemented as a conditional: a new `roleBulletsAreLlmVoice` boolean (`Boolean(enrichment?.roleSummary?.length)`, `:1007`) computed at the same site as `roleBullets` itself, then the render's plain string literal className (no `cn()`, no merge-trap risk) becomes a template literal that omits `font-reading` only when Class-B's LLM voice occupies the slot, keeping it for Tier-0's own prose in the exact same slot. **DEVIATION NOTED:** B's entry did not provide exact code for B1 (unlike A1-A3, which are verbatim per B's tables/blockquote diff) — this is C's own minimal implementation of Ruling 111b's directive, using the narrowest change that satisfies the doctrine without breaking the Tier-0 sibling rendering through the same slot. Not filed as POLICY since it does not conflict with any recorded control or locked test — flagged here for the manager's visibility per the loop's "write as you go" transparency norm.
+
+**Tests added, `web/src/components/reports/plate-type-system.test.ts`**, new describe block "Ruling 111b — the serif doctrine completed (A1, A2, A3/B2, B1)" (reuses the `renderJobWithEnrichment` helper pattern already established locally in the V28-01 block): one test per site — V-P2-01 (blockquote takes `font-reading`), A1 (takes `font-reading`), A2 (takes `font-reading`), B1 (does NOT take `font-reading` when Class-B's `roleSummary` is active, AND Tier-0's own prose in the same slot still DOES via a second assertion in the same test, locking both directions of the split so a blanket-strip mistake cannot pass).
+
+**GATE:** full-capture first run — `src/lib/events/benchmark.test.ts`'s live-search source-timeout fired (1 failed / 2430) — the standing Ruling 96b named flake, not attributable to this item's changes (pure render/className/test work, zero fetch/LLM code touched). Immediate re-run: **100 files / 2430 tests, 2430 passing, ZERO failures** (baseline 2426 + 4 new). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. No credential anywhere; no live network call initiated by this item (the one flake was the gate's own pre-existing benchmark test, not a call C made). No branch/worktree/PR.
+
+
+---
+
+### Phase 2 Round 4 — Agent C — ITEM 3 (V-P2-02 general cn.ts fix, per Ruling 111c/111d, implementing B's item-3 design verbatim; no site-level edits per the ruling's own text)
+
+**STATUS: COMPLETE. SHIPPED.** Run by `LAPTOP-3CL10CG5`. Ruling 111c ships the GENERAL fix, not the minimal per-site template-literal fix — its own text says "C implements the general fix + tests locking all five victim sites (and the twin) at their intended classes," naming no site-level edit. The general fix makes every site-level change unnecessary (all 6 literal `cn(` call sites across the two report pages keep their existing `cn()` calls, untouched) — confirmed directly: reading both `jobs/[id]/page.tsx` and `events/[id]/page.tsx`, zero `cn(` call sites needed editing once `web/src/lib/cn.ts` itself was fixed.
+
+**Code change:** `web/src/lib/cn.ts` — rewritten exactly per B's item-3 entry's printed design: `twMerge` swapped for `extendTailwindMerge({ extend: { classGroups: { "font-size": [...9 tokens...] } } })`, registering the app's 9 custom `--text-*` size tokens (`globals.css:78-94`) — `text-micro`, `text-caption`, `text-meta`, `text-body-sm`, `text-body`, `text-body-lg`, `text-lead`, `text-title`, `text-title-lg` — into tailwind-merge's own `font-size` class group, so a bare `text-XXX` custom token is no longer misread as a text-colour conflict-group member. `tailwind-merge` confirmed still at `^3.6.0` (matches B's verified version) before shipping.
+
+**The six literal call sites this fix closes** (B's "5 confirmed victims + 1 byte-identical twin"), each confirmed unaffected in source (no edit needed) and locked by a new test:
+1. Organisations roster card reason paragraph — `events/[id]/page.tsx:1574-1578` (the originally commissioned V-P2-02 site).
+2. People roster card reason paragraph — `events/[id]/page.tsx:1670-1674` (the undocumented byte-identical twin B's sweep found).
+3. `HeaderChip`, job surface — `jobs/[id]/page.tsx:825-838` (`data-header-chip="kind"`/`"accent"`/etc.).
+4. `HeaderChip`, event surface — `events/[id]/page.tsx:905-918` (same component shape, separate file).
+5. Activity chip — `events/[id]/page.tsx:2100-2109` (`data-activity-chip="matched"`/`"plain"`).
+6. `StarButton` — `events/[id]/page.tsx:1264-1280` (not exported from the module).
+
+**Tests added:**
+- `web/src/app/events/[id]/page.test.ts`, new describe block "Ruling 111c — the cn() tailwind-merge trap, general fix locks (event surface)": organisation reason paragraph (both branches — Tier-0 positive/`text-accent` and negative-judgment/`text-text-muted`, 2 assertions), the People-card twin (same 2 branches), `HeaderChip` (kind tone + accent match tone, 2 assertions), activity chip (highlighted + plain branches, 2 assertions), `StarButton` (2 tests — see deviation below).
+- `web/src/app/jobs/[id]/page.test.ts`, new describe block "Ruling 111c — the cn() tailwind-merge trap, general fix locks (job surface)": `HeaderChip` kind tone + accent match tone (2 assertions).
+
+**DEVIATION, DISCLOSED:** `StarButton`'s `active={true}` branch is UNREACHABLE through the full integrated page render — traced by direct execution: `partitionEventRoster`'s own `concerns` gate (`Boolean(reason) || starred`) means any starred tail row is immediately promoted into a roster CARD instead of staying in the tail, and cards render with no `StarButton` at all (V26-E06's own doctrine, "highlighted cards carry no star" — verified by writing the naive full-render test first, which failed with an empty capture, then tracing why). This is the same admitted-control shape this same test file already documents for the skills-progress-bar's divide-by-zero guard (V26-J07, "UNREACHABLE BY CONSTRUCTION"). `StarButton` is also not exported from `events/[id]/page.tsx`, so it cannot be rendered in isolation either. Resolved by testing the reachable INACTIVE branch through the real page (one test), and the unreachable ACTIVE branch by calling the real, imported `cn()` directly against the component's own literal class arguments copied verbatim from `events/[id]/page.tsx:1271-1276` (a second test) — the same direct-execution method B's own item-3 entry used throughout ("executed the REAL shipped cn() against each site's actual class arguments"). Not filed as POLICY — this does not conflict with any recorded control or locked test, it is a testing-method adaptation to a pre-existing, already-documented reachability gap in the app itself.
+
+**NON-VACUOUSNESS CHECK, RUN AND DISCLOSED:** all 8 new assertions across both files were verified to FAIL when `web/src/lib/cn.ts` was temporarily reverted to its pre-fix `twMerge` form (`git show HEAD:web/src/lib/cn.ts`, applied, gate-checked, then restored) — 8/8 failed as expected, confirming none is vacuous. Restored via `git diff --stat` confirming only the intended 3 files carry changes; no scratch files left behind (`git status --short` clean of anything but the 3 intended files before commit).
+
+**GATE:** `npx vitest run` — **100 files / 2438 tests, 2438 passing, ZERO failures** (baseline 2430 + 8 new). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. No deviation from B's design on the `cn.ts` fix itself (verbatim). No credential anywhere; no live network call. No branch/worktree/PR.
+
+
+### Phase 2 Round 4 — MANAGER (verification of C; RULING 112; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture): **100 files / 2438 tests, 2438 passing, ZERO failures** (2425 + 13 exact). All three commits scope-clean (each touches exactly its item's files + this state file); tree clean; pushed. C's mid-session benchmark red was the 96b named flake, classified correctly.
+
+**RULING 112 — Phase 2 round 4 C is VERIFIED AND ACCEPTED; both disclosed deviations are RATIFIED:** (1) the B1 conditional (`roleBulletsAreLlmVoice` — serif strips only when the LLM voice occupies the shared slot) is the CORRECT reading of Ruling 111b applied to a shared render slot B's entry had not fully specified: the Tier-0 posting-prose path keeps its V26-J02 serif, the Class-B Peer-voice path goes sans, and the test locks BOTH directions; (2) the StarButton unreachable-branch technique (full render for the reachable branch, direct `cn()` execution for the unreachable one, plus the 8-assertion negative verification against a temporarily-reverted pre-fix `cn.ts`) is sound instrumentation, disclosed and restored. **The hand-off stands: `WHOSE TURN: A — Phase 2 round 5, GATE-CANDIDATE-STYLE census (visual re-walk of the 11 LLM rows + eligible-specimen re-verification + the 109c rubric; convergence per Ruling 105a — zero new defect classes across A's window + the manager's re-measurement counts as Phase 2 convergence candidate round 1).**
+
+---
+
+### Phase 2 Round 5 — Agent A (GATE-CANDIDATE-STYLE census — visual re-walk of all 11 rows + 109c rubric live window + convergence candidate round 1)
+
+**STATUS: COMPLETE. MEASURES ONLY — NOTHING FIXED.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`bf8d032`). Grepped `Phase 2 Round 5` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~450 lines, Rulings 109-112 in full, the `Phase 2 Round 2 — Agent A` §4 entry in full (the 11-row inventory + round-2's own combined-fixture census method), the `Phase 2 Round 1 — Agent A (baseline)` §4 entry in full (BF1-BF5, the 11-field table), and all three `Phase 2 Round 4 — Agent C — ITEM 1/2/3` entries in full (exact file:line of every shipped fix). Confirmed all four round-4 code changes present on disk before building anything (`page-text.ts`'s widened `program(?:me)?s?` pattern; `jobs/[id]/page.tsx:1007/1338/1412/1433/1473` — the `roleBulletsAreLlmVoice` conditional and the three `font-reading` additions; `cn.ts`'s `extendTailwindMerge` rewrite).
+
+**GATE, COLD FIRST (before any harness code): 100 files / 2438 tests, 2438 passing, ZERO failures**, matching the standing baseline exactly. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## DUTY 1 — VISUAL RE-WALK, ALL 11 CLASS-A/B ROWS, ONE COMBINED FIXTURE PER SURFACE (round-2's own method)
+
+**METHOD.** Harness `web/zz-p2a5/visual-census.test.ts` (+ its own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix load), outside `web/src/`, deleted before this commit. Reused round 2's own method — render the REAL shipped `JobReport`/`EventReport` via `renderToStaticMarkup` — but went one step further than round 2's per-field locked unit tests (which each isolate ONE field): built ONE fully-populated `JobEnrichment` (all 6 fields) and ONE fully-populated `EventEnrichment` (all 5 fields, PLUS a roster carrying both the Tier-0-reason-wins branch and the judgment-supplies-the-reason branch on BOTH organisations and people) and rendered each ONCE, so every row and every cn-trap site is exercised simultaneously in the SAME markup — the one thing an isolated per-field test cannot catch (a class collision or render-order regression when many LLM fields fire together). 21/21 assertions passed after one self-caught harness bug (first attempt searched for `sponsorshipRead.basis` inside the blockquote; the blockquote actually quotes `job.visa.evidence` — `jobs/[id]/page.tsx:1469-1480` — corrected before trusting the result, disclosed here per the same discipline round 2's own two harness-bug catches modeled).
+
+**ALL 11 ROWS RENDER, CORRECT CLASS, IN THE COMBINED FIXTURE:**
+
+| row | field | renders? | class verdict |
+|---|---|---|---|
+| A1 | specificRequirements | yes | `font-reading` present (verbatim-quote doctrine, Ruling 111b) |
+| A2 | specificDuties | yes | `font-reading` present |
+| A3/B2 | sponsorshipRead | yes | blockquote `font-reading` present (V-P2-01 confirmed restored); Tier-0 standalone blockquote correctly SUPPRESSED once `enrichment.sponsorshipRead` present |
+| A4 | emphasise | yes | sans (Ruling 110c doctrine — Peer's voice) |
+| A5 | talkSummaries | yes | sans |
+| A6 | plan | yes | renders |
+| A7 | posterFit | yes | sans |
+| B1 | roleSummary | yes | LLM voice: sans; Tier-0 prose in the SAME slot (separate render): `font-reading` — **both directions of the split confirmed in one test**, matching Ruling 112's own ratification |
+| B3 | condensedDescription | yes | renders (Peer's voice) |
+| B4 (org) | judgedAttendees[].why | yes, both branches | `text-caption` + `text-accent` (Tier-0-wins) / `text-caption` + `text-text-muted` (judgment-supplies) — cn-trap fix holds |
+| B4 (people) | judgedAttendees[].why (twin) | yes, both branches | same as above, the byte-identical twin site |
+
+**SHELL/HEADING CONFORMANCE.** Every Class-A `ReportSection` title on both surfaces (7 titles total) carries the shared L3 label step (`text-caption`, `uppercase`, no serif) — confirmed by direct render in the SAME combined markup, not assumed from round 2's unchanged-rendering-layer argument.
+
+**cn-TRAP VICTIM SITES — ALL SIX, ON REAL CONTENT, IN THE COMBINED RENDER:** organisations roster reason (both branches), People-card twin (both branches), `HeaderChip` job surface (`data-header-chip="info"`, `text-meta`), `HeaderChip` event surface (`data-header-chip="accent"`, `text-meta`), activity chip (both `matched`/`plain` branches, `text-meta`), and `StarButton`'s reachable INACTIVE branch (a third, plain tail-row organisation with no Tier-0 reason and no judgment, added to the SAME combined fixture — `text-title` present). This is the first time all six sites have been exercised together in one render rather than six separate isolated fixtures.
+
+**VALUE STABILITY (Standard 7).** Zero `undefined`/`NaN` leaked in either report's markup; Tier-0 values (title, company, location; event name, city) render correctly alongside the fully-populated enrichment.
+
+**VERDICT: ZERO visual defects. Round 4's three fixes (BF2 plural keyword, V-P2-01 serif restoration + full sweep, V-P2-02 general `cn.ts` fix) all render correctly on combined, realistic content — not just the isolated locked unit tests that shipped with them.**
+
+---
+
+## DUTY 2 — THE 109c RUBRIC, SMALL LIVE WINDOW (2 pulls/surface, 3 renders/surface)
+
+**METHOD.** Harness `web/zz-p2a5/value-census.test.ts`, reproducing the two report routes' own non-exported logic verbatim (round 1/2's own established pattern): `buildDailyJobPool`/`buildDailyEventPool` (fresh no-op `PoolCache` each pull) → `fetchOwnedJobPostingText`/`fetchedEventPageText` (both reproduced exactly, including the programme-page follow-on fetch) → `buildJobEnrichmentPrompt`/`buildEventEnrichmentPrompt` → `provider.generateJsonText` (`tier: "large"`, real `maxTokens` 1600/2000) → `parseJobEnrichment`/`parseEventEnrichment`. `NODE_ENV=development` stub (Ruling 66a local Vertex path), field-scoped `profile.json` read (Ruling 95 — `researchTopics`/`softTopics`/`preferredMethods`/`careerStage`/`industryVsAcademia`/`locationPreferences`/`currentProject`, never read whole), `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }` explicit (Ruling 75), `apiKeys` omitted (zero adzuna/usajobs calls, confirmed by the fetched tally carrying neither key). Ran 4 times total while iterating the harness itself (one intermittent live-network flake on the first job-pool pull, Ruling 96b-shaped, clean on immediate retry — disclosed, not hidden); the final, most complete run is the one reported below. **9 real LLM enrichment calls total this round** (3 job + 3 event ×1 run, plus 3 event calls from one earlier iteration used only to catch the finding below — all bounded, all answered in 1-6s, zero hung/abandoned/faked).
+
+### JOB rubric (3 live specimens, final run)
+
+| title | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| Postdoctoral Appointee | postdocjobs.com | no | competitiveness, sponsorshipRead, roleSummary, emphasise | correct — aggregator, not owned |
+| **GE Vernova Battery Engineering & Technology Intern** | **careers.gevernova.com** | **yes** | competitiveness, sponsorshipRead, roleSummary, emphasise, **specificRequirements, specificDuties** | **BF1 re-confirmed DISSOLVED, live, same host as round 2's own witness. `requirementsFidelity: verified`** — every `specificRequirements` string automatically confirmed a literal substring of the fetched page (the `quotableStringList` verbatim contract holding under live conditions, not just the parser's own unit tests) |
+| PhD Opportunity in Molten Salt Reactor | database.enen.eu | no | competitiveness, sponsorshipRead, roleSummary | correct — not owned |
+
+### EVENT rubric (3 live specimens, final run)
+
+| name | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| Molten [...] Symposium (12th Intl. Symp. on Sustainable Molten Salt...) | flogen.org | yes | condensedDescription, talkSummaries, plan, posterFit | ALL FOUR Class-A/B event fields populated on one live specimen; talk topic traceable to the fetched page (title/about match the page's own symposium name) |
+| IEX 2026 technical training (ion exchange, water treatment) | rsc.org | yes | condensedDescription, talkSummaries, plan | condensedDescription topically correct; **talkSummaries — SEE FINDING F-P2-01 BELOW, a real defect** |
+| EUCHEMSIL 2026: 30th EUCHEMS Meeting | euchemsil2026.com | yes | condensedDescription (varied run to run: sometimes also talkSummaries) | condensedDescription topically correct and traceable |
+
+### STEP 5 — BF2 plural-keyword fix, DIRECT EXECUTION on the same real witness B/C used
+
+**LIVE-RECONFIRMED, with an honest method correction.** The bare root `advancedautobat.com/` no longer serves the specific conference page B/C witnessed in round 3/4 — Cambridge Innovation Institute restructured the site since then; the root now redirects to a conference-portal hub (AABC US / AABC Europe / AABA Asia / previous conferences), a genuinely different page. Fetching the root alone (this harness's own first attempt) returned zero programme-shaped candidate links — a method miss, not a code finding, disclosed and corrected. The actual conference-specific page is now at `/conferences/aabc-us`, and it still carries the SAME two link shapes B/C diagnosed: `"View Brochure & Final Agenda"` → `/us/2026-brochure-download-form` (the lead-gen form) and `"Programs"` → `/aabc-us/programs`. **`findProgrammePageUrl` picks `/aabc-us/programs` on this corrected target — the fix holds live, exactly as designed.**
+
+---
+
+## FINDING F-P2-01 (rank 1 — NEW, live-reproduced 3× across independent LLM calls on the SAME specimen) — `findProgrammePageUrl` can pick a real, same-host, but WRONG-EVENT page, letting unrelated cross-event content bleed into `talkSummaries`
+
+**THE SYMPTOM.** On `rsc.org`'s real "IEX 2026 technical training introductory course: Introduction to ion exchange design and operation for industrial water treatment" event page, the live enrichment's `talkSummaries[0]` came back as: `title: "ChemCareers 2026: Finding a job after 50"`, `about: "Explore career transitions and job searching strategies for individuals over 50."` — **a talk with nothing to do with ion exchange or water treatment**, reported as if it belongs to this event's own programme. Reproduced 3 times across 3 independent live LLM calls (non-deterministic wording each time, same wrong subject every time).
+
+**THE MECHANISM, TRACED TO GROUND (all direct execution, zero LLM cost for the trace itself):**
+1. `findProgrammePageUrl(html, eventUrl)` (`page-text.ts:266`), run against the real RSC event page, picks `https://www.rsc.org/funding-and-support/careers/career-support/talks-and-events`.
+2. That URL is **not a programme for this event** — it is RSC's own **sitewide global-navigation link**, present in the page's site-chrome menu (confirmed: the winning anchor's visible text is `"Career talks and events"`, part of a "Career support" navigation family that appears in RSC's site nav, not this event's own content).
+3. It wins the score purely on the bare keyword `talks` — `PROGRAMME_LINK_KEYWORDS`'s `/\btalks\b/i` (weight 3) matches BOTH the visible text (`×2` per `findProgrammePageUrl`'s own text-weighting) and the href (`/talks-and-events`) — a score of 9, and this specific event's own page apparently carries no real per-session agenda link that scores higter (or none at all).
+4. The picked page's own text (confirmed by direct fetch) contains: `"ChemCareers webinars — Get your questions answered and receive practical advice... All RSC members can register for our ChemCareers lunchtime webinars..."` — this is RSC's own generic careers-development content, unrelated to the ion-exchange training course, and it gets merged into the "programme evidence" the LLM is handed (per `fetchedEventPageText`'s own follow-on-fetch design, `route.ts:60-90`).
+5. The LLM, given this merged text, extracts a "talk" from it — reasonably, since nothing in the merged text tells it the second page is unrelated site-chrome rather than this event's own agenda.
+
+**WHY THIS IS A NEW DEFECT CLASS, NOT A RECORDED-CLASS INSTANCE (offered as A's own argument — the classification is the manager's call, per §2's standing instruction).** Ruling 111a already named and priced TWO failure modes of this exact function: (i) a same-host PDF-gated lead-gen form, (ii) the same-host-only filter excluding a real off-host agenda. **This is a THIRD, structurally different failure mode of the SAME already-shipped, already-"safe" same-host path**: the picked page is real, live, same-host, and has real content — it is simply the WRONG SUBJECT (sitewide chrome, not this event's programme). Phase 1 has a structurally similar-SHAPED class on record (Ruling 90b's `nucnet.org` sidebar-contamination trap for date extraction — "a generic `<time>` reader would have shipped an invented date from an unrelated sidebar article"), but that finding is (a) a different pipeline (deterministic date extraction, not LLM enrichment), (b) a different field (dates, not talk summaries), and (c) predates Phase 2's LLM path entirely. This is the FIRST content-CORRECTNESS defect (as opposed to population/presence) ever found across all of Phase 2's rows — everything found in rounds 1-4 (BF1-BF3, V-P2-01/02/03) was about presence or visual class, never about wrong content being generated. **A's read: NEW DEFECT CLASS, resets the convergence clock per Ruling 105a.**
+
+**SEVERITY.** Ranked above BF1-3/V-P2-01-03 for this round because it is a FIDELITY defect under Ruling 109c(ii)'s own terms — the text is not invented from nothing (every word is traceable to a real page, so it is not a classic "hallucination"), but it is confidently presented as part of the target event's own programme when it is not, which is arguably MORE misleading to a user than an honest gap, since it reads as grounded and specific.
+
+**NOT YET DESIGNED.** This entry measures and diagnoses only, per this round's own MEASURES-ONLY charter — B's job for round 6 is to design the fix (candidate directions, offered as leads not commitments: excluding candidate links whose visible text/href matches a known sitewide-nav pattern; requiring the picked programme page's own content to share vocabulary with the target event's own name/title before accepting it; a minimum on-page co-occurrence check between the event's own distinguishing terms and the candidate page's text).
+
+---
+
+## DUTIES — POOL SANITY, FLAKE RATE, NAMED-COST REGISTRY
+
+**POOL SANITY (Tier-0 layer, quick scan against Phase 1 defect classes).** All 6 live job rows and all 3-4 live event rows this round (across all sub-runs) are legitimate, on-topic, correctly-titled postings/events — no garbled titles, no short-acronym collisions (Ruling 33), no invented dates observed. `flogen.org` appeared in the event pool — a recorded Ruling 62a CONTAMINATION_HOST for PLACE extraction (city mentioned once, non-venue) — its appearance as an EVENT is expected and correct; place silence there is the documented correct behaviour, not re-litigated here. `euchemsil2026.com` appeared — a known long-named, correctly-dateless specimen per Ruling 83a/90b, consistent with its recorded state. **Zero Phase 1 regressions spotted.**
+
+**TIMEOUT-FLAKE RATE.** One intermittent job-pool-pull flake (returned 0 rows on a 2-pull run; an isolated single-pull re-run and the next full run both succeeded cleanly) — live-network-shaped, Ruling 96b's own classification, not attributable to any code path. Zero LLM-call timeouts; all 9 live enrichment calls answered in 1-6s.
+
+**NAMED-COST REGISTRY, RE-CONFIRMED BY NAME.** Ruling 111a's own named cost stands and is RE-CONFIRMED, not reopened: "conferences whose programmes live only in PDFs-behind-forms or client-rendered SPAs render an empty programme section honestly" — nothing this round contradicts it; the `advancedautobat.com` re-check (STEP 5 above) exercises the FIX side of that ruling, not the declined SPA side. **F-P2-01 above is a DIFFERENT, additional cost/defect — it does not fall under 111a's named registry entry and is not a re-filing of it.** (Ruling 108's Phase 1 maintenance list is not re-filed here, per the round's own instruction.)
+
+---
+
+## GATE, FINAL (unchanged — A shipped no product code)
+
+`cd web && npx vitest run` — **100 files / 2438 tests, 2438 passing, ZERO failures**, matching the cold-start number exactly (harness lived entirely in `web/zz-p2a5/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error. No credential anywhere (`.env.local` never read; `profile.json` read field-scoped only). No large fetched/LLM text pasted — every quote above is a short fragment already used to make a specific, necessary point, matching round 1/2's own discipline. No branch/worktree/PR.
+
+## HAND-OFF
+
+**F-P2-01 is a live, 3×-reproduced, fully-traced NEW finding.** Per this round's own instruction ("Any NEW-CLASS finding: hand off `WHOSE TURN: B — Phase 2 round 6` (clock resets)"), and because A's own classification argument above reads it as a new defect class (not a recorded-class instance), the convergence clock resets and this round does NOT proceed to manager re-measurement as a clean candidate.
+
+**`WHOSE TURN: B — Phase 2 round 6.` One commissioned item: F-P2-01** (`findProgrammePageUrl`'s sitewide-navigation-link vulnerability — a real, same-host, wrong-event page can win the programme-page score and its content bleeds into `talkSummaries`) — B designs a fix, informed by the exact mechanism trace above (the winning anchor, its score, the merged-text follow-on fetch, and the three candidate fix directions offered as leads, not commitments). Duty 1's visual re-walk (zero defects, all 11 rows + round 4's fixes confirmed on combined real content) and Duty 2's other live results (BF1 re-confirmed dissolved with live fidelity verification; BF2's fix re-confirmed live via corrected direct execution) stand as clean, positive evidence for the manager's own independent read, but the round as a whole does not pass clean because of F-P2-01. If the manager's own classification of F-P2-01 disagrees (i.e. rules it a recorded-class instance rather than new), that ruling supersedes A's argument here, per standing practice (Rulings 106a/107a's own precedent for exactly this kind of disagreement). Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Phase 2 Round 5 — MANAGER (verification; RULING 113 — F-P2-01 classified NEW CLASS, clock resets, B commissioned)
+
+**Verification:** A changed zero product code (manager scope check — empty); tree clean; pushed. Gate re-run (full-capture): **100 files / 2438 tests, 2438 passing, ZERO failures.** The visual re-walk's combined-fixture method (all 11 rows + all six trap sites in ONE populated render per surface) is an IMPROVEMENT over isolated fixtures — interactions render together as they do in production — and is noted for future censuses.
+
+**RULING 113:**
+
+- **113a — the round-4 fixes are VERIFIED LIVE, ratified:** V-P2-01's serif renders; B1's conditional splits both directions in one render; all six `cn()`-trap sites healed on real content; BF1 re-dissolved with substring-level fidelity; BF2's plural fix picks the right link on the corrected specimen URL (the site's own restructure honestly disclosed).
+- **113b — F-P2-01 is CLASSIFIED A NEW DEFECT CLASS, exactly as A argued: the wrong-EVENT page pick with content contamination.** `findProgrammePageUrl` selected a same-host but sitewide-navigation link ("Career talks and events") as an ion-exchange course's programme page, and another event's content ("ChemCareers 2026: Finding a job after 50") entered the rendered `talkSummaries` attributed to the wrong event — reproduced 3×, mechanism fully traced offline. This is Phase 2's first CONTENT-CORRECTNESS defect and the highest-severity class the rubric names short of hallucination (worse than empty: confidently wrong). **The Phase 2 convergence clock RESETS. `WHOSE TURN: B — Phase 2 round 6`, ONE item: F-P2-01.** B starts from A's trace (the exact winning anchor and score, the merged-text mechanism) and A's candidate directions; the design space includes at least an event-context corroboration on the picked link (the programme link must relate to THIS event — slug/name-token overlap with the event's own page, not sitewide nav), a nav-chrome structural signal, and/or an extraction-side event-name corroboration gate on quoted talks; the must-keep corpus is every correct programme pick on record (gevernova's fields, the corrected advancedautobat pick, round-2's populated specimens); failure direction: a miss = empty programme = status quo, NEVER a wrong-event fill.
+
+
+### Phase 2 Round 6 — Agent B (F-P2-01: `findProgrammePageUrl`'s sitewide-nav-link vulnerability — diagnosis + design, WINNING CANDIDATE live-verified on 4 real specimens)
+
+**STATUS: COMPLETE. DIAGNOSIS + DESIGN ONLY — B changed no product code, edits no shipped test.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`8fb87b2`). Grepped `Phase 2 Round 6` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~450 lines, Ruling 113 (a-b) in full, the `Phase 2 Round 5 — Agent A` §4 entry in full (F-P2-01's mechanism trace: winning anchor, score, merged-text follow-on fetch), and the `Phase 2 Round 3 — Agent B — ITEM 1` entry in full (the scoring-table diagnosis method this item builds on). Method: throwaway harness (`web/zz-p2b6/`, deleted before this commit) executing the SHIPPED `findProgrammePageUrl`/`extractPageHeadings`/`extractPageText` directly against REAL, freshly-fetched HTML from the exact recorded specimens (RSC's IEX page, A's own witness; `advancedautobat.com`'s corrected specimen; round-5's own `flogen.org` and `euchemsil2026.com` live rows) — a direct re-fetch of a recorded URL, the ratified pattern. The one candidate design below was verified by TEMPORARILY editing the shipped `page-text.ts` in place (one line), running the full gate, then reverting (`git checkout --`) before this commit — `git status --porcelain --untracked-files=all` confirmed clean both before and after. Zero LLM calls needed for any part of this diagnosis (pure fetch + the shipped parsing functions).
+
+**GATE, COLD FIRST (before any harness code): 100 files / 2438 tests, 2438 passing, ZERO failures**, matching baseline exactly. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## THE RE-TRACE — why the ALREADY-SHIPPED chrome-stripping machinery didn't already catch this, and where it actually would
+
+`findProgrammePageUrl` (`page-text.ts:266-322`) is the ONE function in `page-text.ts` that scans raw HTML for `<a>` tags without first calling the file's own `withoutPageFurniture` — `extractPageHeadings` (`:170`) and `extractPageText` (`:350`) both call `withoutPageFurniture(withoutHiddenContent(html))`; `findProgrammePageUrl` (`:280`, before this item) calls only `withoutHiddenContent(html)`. This asymmetry is the root mechanism: the OTHER two functions already refuse to read sitewide nav/header/footer/aside chrome, `findProgrammePageUrl` alone does not.
+
+**First check, done honestly rather than assumed: does the EXISTING `withoutPageFurniture`/`isPageFurniture` machinery, completely UNMODIFIED, actually see RSC's real chrome?** Fetched the real RSC page live and located the winning wrong anchor's exact ancestor markup. Its immediate container classes are `mainnav__item`/`mainnav__link` — and by direct execution of the shipped `PAGE_FURNITURE_NAME_RE` (`/\b(?:nav|navigation|navbar|header|masthead|footer|sidebar|menu|breadcrumb)\b/i`) against these exact class strings, **none of them match** — `"mainnav"` has no internal word boundary before `"nav"`, so the whole-word regex misses compound BEM-style class names. This would have been a false "the machinery can't see it, don't reuse it" conclusion — so the ancestor chain was traced one level further up, and the actual enclosing element is **`<Nav id="mainnav" class="mainnav" data-ktc-search-exclude>`** — a literal tag named `Nav` (a framework/CMS component, capitalised). `withoutPageFurniture`'s own opening-tag scanner (`page-text.ts:104`, `/<(nav|header|footer|aside|div|section)\b([^>]*)>/gi`) is case-insensitive and matches `<Nav` as tag `"nav"`, and `isPageFurniture`'s tag-name fast path (`:98`, `["nav","header","footer","aside"].includes(tag)`) returns true immediately — **the existing, already-shipped, already-tested machinery DOES see this specific chrome region, just not via the class-name path.** No new detection logic was needed; the machinery just was not being asked the question for this call site.
+
+## WINNING CANDIDATE — route `findProgrammePageUrl`'s anchor scan through the EXISTING `withoutPageFurniture`
+
+**The entire fix is a one-line change** (`page-text.ts:280`, before this item's target):
+
+```
+- const visibleHtml = withoutHiddenContent(html);
++ const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));
+```
+
+No new function, no new regex, no signature change, zero new exports — pure reuse of code that Duty 1's own combined-fixture census (round 2, round 5) has already exercised clean on real, live, combined content.
+
+**MEASURES:** whether a candidate `<a>` sits inside an ancestor the shipped `withoutPageFurniture` already classifies as chrome — a literal `<nav>`/`<header>`/`<footer>`/`<aside>` tag (case-insensitive), an ARIA landmark role (`navigation`/`banner`/`contentinfo`/`complementary`), or a `<div>`/`<section>` whose semantic attribute values contain a WHOLE-WORD `nav`/`navigation`/`navbar`/`header`/`masthead`/`footer`/`sidebar`/`menu`/`breadcrumb` token (the existing `session-header` carve-out, `:97`, is untouched). **ASSERTS:** every other rule — keyword weights, the same-host filter, the tie-break, the PDF/ICS/ZIP exclusion — is byte-identical; this item touches nothing else. **TOLERATES:** (named as residuals below, not silently accepted) chrome that evades every one of `isPageFurniture`'s signals, and a legitimate content link that happens to sit inside a container whose class coincidentally matches a furniture keyword. **FAILURE DIRECTION, confirmed not assumed:** the anchor scan now runs over a STRICT SUBSET of what it scanned before, so a link can only ever be newly EXCLUDED, never newly included — the worst case is exactly the `null` the function already returns today on a page with no surviving candidate. Directly executed, not reasoned about: see the corpus table below.
+
+### CORPUS EXECUTED AGAINST, LIVE — 4 real specimens, all re-fetched fresh this session
+
+| specimen | role | UNPATCHED pick (confirmed reproduces the recorded state) | PATCHED pick | verdict |
+|---|---|---|---|---|
+| `rsc.org` IEX 2026 (A's own F-P2-01 witness) | must-DROP | `https://www.rsc.org/funding-and-support/careers/career-support/talks-and-events` (the wrong sitewide nav link, byte-identical to A's trace) | **`null`** | **DEFECT ELIMINATED — and via the SAFE failure direction the ruling requires (empty, not a wrong-event fill)** |
+| `advancedautobat.com/conferences/aabc-us` (round 3/4/5's corrected witness) | must-KEEP | `https://www.advancedautobat.com/aabc-us/programs` | **`https://www.advancedautobat.com/aabc-us/programs` (UNCHANGED)** | **PRESERVED.** The winning link's FIRST DOM occurrence is itself inside a Bootstrap nav-dropdown (`class="collapse navbar-collapse"` → `<ul class="nav navbar-nav...">` → matches `\bnavbar\b`/`\bnav\b`) and gets correctly stripped by this fix too — but a SECOND real, non-chrome occurrence of the identical href exists in the page's own marketing content (`<div class="about-blurb">...<a href="/aabc-us/programs">`, a "What's Your AABC Story?" section), and it resolves to the exact same URL, so the final pick is identical either way |
+| `flogen.org/sips2026/summit.php?id=13` (round 5's live populated `talkSummaries`/`plan`/`posterFit` witness) | must-KEEP | `https://www.flogen.org/sips2026/detailed_program_grid.php?p=37` (inside a real `<nav class="navbar...">` tag — same shape as AABC's dropdown) | **`null`** | **NO REGRESSION, confirmed not assumed:** direct-fetched the sub-page — it is a **content-free "Coming soon!" stub** (2 headings, one literally `"Coming soon!"`, 337 chars total text). Compared its headings against the main page's own 12 headings: only 2 are unique to it, and neither is real content. Round 5's positive result did not depend on this fetch — the main event page's OWN 12 headings (unaffected by this fix, `extractPageHeadings` already used `withoutPageFurniture`) already carry the real symposium/topic content that fed the LLM |
+| `euchemsil2026.com` (round 5's third live event specimen) | must-KEEP | `https://www.euchemsil2026.com/program/` | **`https://www.euchemsil2026.com/program/` (UNCHANGED)** | **PRESERVED**, no chrome involved in this pick at all |
+
+**Downstream confirmation on the RSC specimen (not just the URL-selection layer):** with the follow-on fetch now returning `null`, route.ts's own `if (programmeUrl && remainingChars > 0)` (`route.ts:66`) skips the second fetch entirely — the wrong page's "ChemCareers" text never enters the merged evidence at all, closing the mechanism at its SOURCE rather than filtering after the fact. Checked what remains: the RSC main page's own `extractPageHeadings` returns exactly 7 headings — the event title, "Deadlines," "Event details," "SCI," "Conference team," a members'-area label, and a bare deadline date — **none are a plausible per-session talk title** (`isGenericSessionLabel`/`isPlausibleTalkTitle`, `enrichment.ts:182,247-252`, would very likely reject or find nothing usable here regardless). This event's own page appears to carry no per-session agenda at all, exactly as A's own trace already surmised — so the expected, verified-safe outcome is an EMPTY `talkSummaries`, matching Ruling 113b's binding failure direction exactly.
+
+**BLAST RADIUS, MEASURED not assumed:** the one-line change was applied to the real shipped `page-text.ts` and the full gate run cold: **100 files / 2438 tests, 2438 passing, ZERO failures** (one `benchmark.test.ts` flake on the first run — Ruling 96b's own live-search-timeout shape, `EVENT_BENCHMARK_SEARCH_PROVIDER` logged `source-timeout after 25000ms`; clean on immediate isolated retry, then clean again on a full second cold run). `tsc --noEmit` clean. `eslint src` — exactly the one standing `quiz.tsx:46` error, unchanged. Read every `findProgrammePageUrl` test in `page-text.test.ts` (`:191-273`) and `page-reading-safety.test.ts` (`:131-164`) in full before running them: **zero existing fixture wraps any anchor in a `<nav>`/`<header>`/`<footer>`/`<aside>`/furniture-classed `<div>`/`<section>`** — every test uses bare top-level `<a>` tags — so this change was structurally guaranteed not to touch them, and the full-suite green run confirms it rather than merely predicting it. `enrichment.test.ts` was grepped for `findProgrammePageUrl` and any nav/header/footer/aside markup — zero hits; it tests `parseJobEnrichment`/`parseEventEnrichment` directly on pre-built text/headings, never the fetch/URL-selection layer, so it is structurally out of this item's reach.
+
+---
+
+## ALTERNATIVES MEASURED AND NOT RECOMMENDED (the ruling's other named directions)
+
+**Event-context corroboration on the picked link's URL slug — MEASURED, and REJECTED with a concrete counter-example found in the SHIPPED test corpus itself.** Tried the most literal version of Ruling 113b's own wording first: require the candidate URL's pathname to share a token with the EVENT PAGE's own pathname (both already in scope inside the function — zero signature change). This works on the two live witnesses that motivated it (`advancedautobat.com`: base pathname `/conferences/aabc-us` and winning candidate `/aabc-us/programs` both share `aabc`; RSC: base pathname tokens share nothing but the stopword `and` with the wrong link's tokens). But it **breaks an already-shipped, already-passing test**: `page-text.test.ts:192-209` ("returns the best single same-host programme link") has base pathname `/2027/home` (tokens `2027`, `home`) and its own EXPECTED correct winner resolves to pathname `/programme/full-schedule` (tokens `programme`, `full`, `schedule`) — **zero token overlap with the base**, because the fixture's relative `../` link deliberately walks OUT of the `/2027/` segment. A same-host event page's own URL is frequently just a generic slug (`/home`, `/event/123`) that carries no identifying vocabulary at all, so this gate is too strict as a general rule — it would have shipped a regression the FIRST time it was checked against the existing locked corpus, exactly what "measure against every correct pick on record" is for.
+
+**Event-context corroboration via the event's declared NAME (not the URL) — considered, not pursued.** Using `event.name` tokens (e.g., `"aabc"` from `"26th Advanced Automotive Battery Conference (AABC)"`) does corroborate correctly on the two witnesses checked by hand, but it requires (a) a new parameter threaded through `findProgrammePageUrl`'s signature and its one real caller (`route.ts:60`), and (b) an undesigned stopword/genericity filter — generic event-shape words like "conference"/"battery"/"summit" are common enough across a site's OWN sitewide chrome that requiring overlap on THOSE would under-protect, while requiring overlap on a "distinctive" token (an acronym, a year) has no general definition and is unproven beyond n=2 witnesses. Given the winning candidate above already closes the SAME mechanism, with a smaller blast radius, and a clean 4-specimen live corpus, this alternative was not built.
+
+**Extraction-side event-name corroboration gate on quoted talks — considered, not pursued, real false-drop risk confirmed on real content.** This would guard the SYMPTOM (a wrong-event talk reaching the screen) rather than the CAUSE (the wrong page being fetched at all), and the winning candidate above already prevents the wrong page's text from ever entering the merged evidence — making this gate redundant for F-P2-01 specifically. It also carries the exact false-drop risk the brief asked to measure: round 5's own real, live, `flogen.org` heading text (fetched fresh this session) includes titles like `"SYMPOSIUM and ROUND TABLE TOPICS"` and `"12th Intl. Symp. on Sustainable Molten Salt, Ionic & Glass-forming Liquids & Powdered Materials"` — real, correctly-extracted programme content that does **not** literally restate the event's own top-level name tokens. A strict per-talk name-corroboration gate risks suppressing exactly this kind of legitimately-differently-worded, real content. Not recommended as primary defense; a possible future belt-and-braces addition, not commissioned here.
+
+## HONEST RESIDUAL — NOT CLOSED BY THIS FIX, named rather than hidden
+
+A chrome region that uses **NEITHER** a semantic tag (`nav`/`header`/`footer`/`aside`) **NOR** an ARIA landmark role **NOR** a whole-word `nav`/`navigation`/`navbar`/`header`/`masthead`/`footer`/`sidebar`/`menu`/`breadcrumb` class/id/token (e.g., a bare `<ul>` sibling list with no wrapping element at all, or a compound-only class like `"topmenu"`/`"gnav"` with no backing `<nav>` tag to catch it via the tag-name path) would still evade `isPageFurniture` and could still win. This is the SAME residual `extractPageHeadings`/`extractPageText` already carry today, unchanged by this item — not a new gap this fix introduces, but also not one it closes. Per the ruling's own failure-direction rule, the cost of THIS residual, if it ever fires, is bounded the same way: a same-host, real-content pick (never off-host), scored by the SAME keyword mechanism already in production — a lower-confidence version of today's status quo, not a new class of harm.
+
+---
+
+## RECOMMENDATION FOR C
+
+Land the one-line change at `page-text.ts:280` inside `findProgrammePageUrl`:
+`withoutHiddenContent(html)` → `withoutPageFurniture(withoutHiddenContent(html))`. No other file needs a change. Add ONE new test to `page-text.test.ts`'s `findProgrammePageUrl` describe block encoding the RSC shape as a constructed fixture (a same-host keyword-scoring anchor nested inside a `<nav>` tag, alongside a non-chrome anchor with a lower or zero score) that asserts the nav-nested candidate is never picked — mirroring round 3/4's own practice (BF2's plural-keyword test encodes the live witness as a constructed fixture, not a live fetch, in the locked suite). No existing test needs to change.
+
+## GATE, FINAL (B changed no product code — the harness lived outside `web/src/` and was deleted)
+
+`cd web && npx vitest run` — **100 files / 2438 tests, 2438 passing, ZERO failures**, matching baseline exactly (one `benchmark.test.ts` Ruling-96b flake mid-session, clean on immediate retry and on the final cold run). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error. **B CHANGED NO PRODUCT CODE — final state.** The one-line candidate was temporarily applied to the real shipped `page-text.ts`, gated, and reverted (`git checkout --`) before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after revert and again before this commit. Harness `web/zz-p2b6/` (its own `vitest.config.ts` + 6 small `.test.ts` files + 4 saved HTML specimens) lived outside `web/src/` for the full session and was deleted before this commit. No credential anywhere — every fetch this item used was an unauthenticated public GET of an already-known public event page or its own on-page link/sub-page, no search-provider call, no API key, no LLM call at all (pure fetch + the shipped parsing functions were sufficient for the entire diagnosis and verification). No large fetched/LLM text pasted anywhere in this entry — only short bounded clips (class-name strings, heading text under ~140 chars each, counts/booleans) already reproducible from the shipped source or a public page. Nothing in any fetched page was treated as an instruction. No branch/worktree/PR.
+
+## HAND-OFF
+
+**WINNING CANDIDATE identified, fully corpus-verified, zero regressions across all 4 live specimens tested and the full 2438-test gate.** `WHOSE TURN: MANAGER — Phase 2 round 6 verification and rulings before C spawns.` If the manager agrees: route to `WHOSE TURN: C — Phase 2 round 7`, ONE item — land the one-line `page-text.ts:280` change plus the one new constructed-fixture test in `page-text.test.ts`, exactly as designed above. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Phase 2 Round 6 — MANAGER (verification; RULING 114; C commissioned)
+
+**Verification:** B changed zero product code (manager scope check — empty; the apply-revert instrumentation per the Ruling-111 precedent, disclosed and reverted); tree clean; pushed. Gate re-run (full-capture): **100 files / 2438 tests, 2438 passing, ZERO failures.** **The asymmetry verified by the manager's own read:** `page-text.ts:170` and `:350` (the other two extraction paths) both run `withoutPageFurniture(withoutHiddenContent(html))`; `:280` (`findProgrammePageUrl`'s path) runs only `withoutHiddenContent(html)`. The bug IS the asymmetry; the fix makes the third path match its siblings — the strongest possible design shape (zero new mechanism, an existing one finally asked).
+
+**RULING 114 — the one-line design is APPROVED; both rejections RATIFIED on their concrete evidence** (the slug-corroboration gate breaks a shipped passing test; the per-talk name gate has a confirmed false-drop on flogen's real headings). The flogen must-keep's pick-to-`null` change is ACCEPTED (the lost sub-page is a content-free "Coming soon!" stub — the ruling's own failure direction, empty-over-wrong, applied to a zero-information page). The undetectable-chrome residual (no tag/role/class signal at all) is pre-existing, NAMED, carried. **`WHOSE TURN: C — Phase 2 round 7`, ONE item: the `:280` one-liner + tests (the RSC must-drop fixture rendering `null`; the advancedautabat/euchemsil must-keeps unchanged; a nav-chrome fixture case locking the mechanism). THEN A — Phase 2 round 8: convergence candidate 1 RE-RUN (the full round-5 census protocol).**
+
+
+### Phase 2 Round 7 — Agent C (Ruling 114 landed: `findProgrammePageUrl`'s asymmetry fix + 4 new constructed-fixture tests)
+
+**STATUS: COMPLETE.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp`; claiming push ACCEPTED (`37632ab`). Grepped `Phase 2 Round 7` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~450 lines, Ruling 114 in full, and both the `Phase 2 Round 6 — Agent B` and `Phase 2 Round 6 — MANAGER` §4 entries in full before touching anything.
+
+**CODE CHANGE, exactly as designed — no deviation.** `web/src/lib/opportunities/page-text.ts:280` (inside `findProgrammePageUrl`, line numbers shifted slightly by the added doc comment): `const visibleHtml = withoutHiddenContent(html);` → `const visibleHtml = withoutPageFurniture(withoutHiddenContent(html));` — the third anchor-scanning path now matches its two siblings (`extractPageHeadings` at `:170`, `extractPageText` at `:350`), closing the asymmetry B diagnosed as the root cause. Added a doc comment directly above the line naming F-P2-01's witness (the rsc.org sitewide-nav link picked as an ion-exchange course's programme page, ChemCareers content bleeding into `talkSummaries`), the asymmetry as the root cause, and the failure direction (a chrome-suppressed pick now falls out of the candidate comparison entirely, so the safe direction is a `null` pick — an honestly empty programme — never a wrong-event fill). No other line in the file touched; no signature change; no new export.
+
+**FOUR NEW TESTS added to `page-text.test.ts`'s `findProgrammePageUrl` describe block, pure additions — zero existing tests edited:**
+1. **RSC-shaped must-drop** — a same-host, positive-scoring anchor (`"Careers talks and events"`, mirroring the live witness's own keyword profile) nested inside a capitalised `<Nav id="mainnav" class="mainnav" data-ktc-search-exclude>` tag, no other candidate on the page. Asserts `findProgrammePageUrl` returns `null` — the safe failure direction. Deliberately used capitalised `<Nav>` (not lowercase `<nav>`) to exercise the exact case-insensitive tag-name path B's diagnosis traced on the real page, since the class name alone (`mainnav__link`) does NOT match the furniture keyword regex (compound BEM name, no word boundary) — only the tag-name fast path catches this specimen, same as the live site.
+2. **Nav-chrome mechanism-lock case** — a nav-nested anchor scoring 21 (`/programme/agenda`, text `"Programme Agenda"`) alongside a non-chrome anchor scoring only 6 (`/speakers`, text `"Speakers List"`). Before the fix the higher raw score would win; asserts the non-chrome, lower-scoring link is picked instead — locking that a nav-nested candidate can never win on score alone once chrome-filtering runs before scoring.
+3. **advancedautobat-shaped must-keep** — mirrors B's live corpus finding exactly: the same href (`/aabc-us/programs`) appears twice, first inside a Bootstrap nav-dropdown (`navbar-collapse` > `nav navbar-nav`, now stripped), second in real page content (an `about-blurb` paragraph). Asserts the pick is unchanged (`https://www.advancedautobat.com/aabc-us/programs`) — the second, non-chrome occurrence carries the pick exactly as B verified live.
+4. **euchemsil-shaped must-keep** — a plain non-chrome anchor (`/program/`) with zero chrome involved anywhere on the page. Asserts the pick is unchanged (`https://www.euchemsil2026.com/program/`) — confirms the fix is a no-op on this shape, named explicitly for traceability to the live specimen per round 3/4's own live-witness-as-fixture practice.
+
+None of the 19 pre-existing `findProgrammePageUrl`/`extractPageHeadings`/`extractPageText`/`annotatePageHeadings` tests needed any change — re-confirmed by the full green run below, not merely predicted.
+
+**GATE, FULL-CAPTURE, COLD:**
+- `cd web && npx vitest run` (targeted file first, then full suite): `page-text.test.ts` alone — **23/23 passing** (19 pre-existing + 4 new). Full suite — **100 files / 2442 tests, 2442 passing, ZERO failures.** Baseline was 2438 (Round 6's own confirmed cold count); 2438 + 4 new tests = 2442, exact match — no test count drift, no `benchmark.test.ts` flake this run (clean straight through, no retry needed).
+- `npx tsc --noEmit` — clean.
+- `npx eslint src` — exactly the one standing `quiz.tsx:46` error (`react-hooks/set-state-in-effect`), unchanged.
+
+**Scope check:** `git diff --stat` shows exactly two files touched — `web/src/lib/opportunities/page-text.ts` (+14/-1, the one-line change plus its doc comment) and `web/src/lib/opportunities/page-text.test.ts` (+88/-0, four new tests only). No scaffold directories created this round (diagnosis/verification was already complete from B's round 6 work; this round was implementation-only, no throwaway harness needed). No credential anywhere in this diff. No live network call made this round — all four new tests are pure constructed fixtures against the already-shipped, already-fetched-live-and-verified function; nothing fetched over the network this session (Ruling 75 N/A — no search-provider call of any kind). No branch/worktree/PR.
+
+**No POLICY items. No deviation from B's design or the manager's Ruling 114 — landed verbatim.**
+
+## HAND-OFF
+
+Ruling 114 fully landed: one-line asymmetry fix + doc comment + 4 new tests, full gate green (100 files / 2442 tests, 2442 passing, ZERO failures; `tsc` clean; `eslint` — the one standing pre-existing error only). `WHOSE TURN: A — Phase 2 round 8, CONVERGENCE CANDIDATE 1 RE-RUN` (the full round-5 census protocol: 11-row visual re-walk + 109c rubric live window + F-P2-01 verification — confirming the fix holds on a live re-fetch of the rsc.org specimen and that the wider census still shows zero defects). Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Phase 2 Round 7 — MANAGER (verification of C; RULING 115; hand-off to A confirmed)
+
+**Verification:** Gate re-run cold by the manager (full-capture): **100 files / 2442 tests, 2442 passing, ZERO failures** (2438 + 4 exact). Commit `69d0f7d` touches exactly the two source files + this state file; tree clean; pushed; zero deviations.
+
+**RULING 115 — Phase 2 round 7 C is VERIFIED AND ACCEPTED; F-P2-01's fix is LIVE. The hand-off stands: `WHOSE TURN: A — Phase 2 round 8, CONVERGENCE CANDIDATE 1 RE-RUN` (the full round-5 census protocol: 11-row visual re-walk on combined fixtures + the 109c rubric live window + F-P2-01 verification — the RSC specimen must yield an empty programme section, never ChemCareers content, if re-drawn; direct execution regardless). Zero new classes across A's window + the manager's subsequent re-measurement = Phase 2 convergence candidate 1 passes; two clean candidates close Phase 2 (105a).**
+
+
+
+### Phase 2 Round 8 — Agent A (CONVERGENCE CANDIDATE 1 RE-RUN — the full round-5 census protocol: 11-row visual re-walk + 109c rubric live window + F-P2-01 live re-verification)
+
+**STATUS: COMPLETE. MEASURES ONLY — NOTHING FIXED.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp` (`710b335`, claiming push ACCEPTED at `8f1d8d8`). Grepped `Phase 2 Round 8` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock) and §1's first ~450 lines, Rulings 113-115 in full, the `Phase 2 Round 5 — Agent A` §4 entry in full (the census protocol this round re-runs, plus F-P2-01's own mechanism trace), and the `Phase 2 Round 7 — Agent C` §4 entry in full (Ruling 114's landed fix). Confirmed on disk before building anything: `page-text.ts:170/292/362` all three now call `withoutPageFurniture(withoutHiddenContent(html))` (the asymmetry closed); `page-text.test.ts`'s `findProgrammePageUrl` block carries the 4 new tests at `:274,299,319,345` (RSC-must-drop, nav-chrome mechanism-lock, advancedautobat-must-keep, euchemsil-must-keep).
+
+**GATE, COLD FIRST (before any harness code): 100 files / 2442 tests, 2442 passing, ZERO failures**, matching Round 7's own confirmed count exactly — no drift, no flake this run. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## DUTY 1 — VISUAL RE-WALK, ALL 11 CLASS-A/B ROWS + SIX cn-TRAP SITES, COMBINED FIXTURE (round 5's own improved method)
+
+**METHOD.** Harness `web/zz-p2a8/visual-census.test.ts` (+ its own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix load), outside `web/src/`, deleted before this commit. Rendered the REAL shipped `JobReport`/`EventReport` via `renderToStaticMarkup`, one fully-populated `JobEnrichment` (all 6 fields) and one fully-populated `EventEnrichment` (all 5 fields, plus a roster carrying BOTH the Tier-0-reason-wins branch and the judgment-supplies-the-reason branch on BOTH organisations and people, plus a third unreasoned tail-row organisation for StarButton's reachable INACTIVE branch, plus activities exercising both the matched/plain activity-chip branches) rendered ONCE each — every row and every trap site exercised simultaneously in the SAME markup, exactly round 5's own method. **23/23 assertions passed** after one self-caught harness bug, disclosed here per the same discipline round 2/5 modeled: `renderToStaticMarkup` HTML-escapes an apostrophe as `&#x27;`, so the posterFit search string `"poster track's stated scope"` never matched — corrected to a substring without the apostrophe (`"poster track"`), same exact bug class round 2 caught on its own first attempt, not a product finding.
+
+**ALL 11 ROWS RENDER, CORRECT CLASS, IN THE COMBINED FIXTURE — zero change from round 5's own record:**
+
+| row | field | renders? | class verdict |
+|---|---|---|---|
+| A1 | specificRequirements | yes | `font-reading` present |
+| A2 | specificDuties | yes | `font-reading` present |
+| A3/B2 | sponsorshipRead | yes | blockquote `font-reading` present; Tier-0 standalone blockquote correctly SUPPRESSED (exactly one `<blockquote>` in the combined render) |
+| A4 | emphasise | yes | sans |
+| A5 | talkSummaries | yes | renders |
+| A6 | plan | yes | renders |
+| A7 | posterFit | yes | sans |
+| B1 | roleSummary | yes | LLM voice: sans; Tier-0 prose in the SAME slot (twin render, no enrichment): `font-reading` — both directions confirmed |
+| B3 | condensedDescription | yes | renders verbatim (Peer's voice) |
+| B4 (org) | judgedAttendees[].why | yes, both branches | Tier-0-wins: `text-caption`+`text-accent`; judgment-supplies (worthIt=false): `text-caption`+`text-text-muted` |
+| B4 (people) | judgedAttendees[].why (twin) | yes, both branches | same as above, byte-identical twin site |
+
+**SHELL/HEADING CONFORMANCE.** All Class-A `ReportSection` titles checked (4 job, 2 event) carry `text-caption`/`uppercase`, no serif — the shared L3 label step, unchanged.
+
+**cn-TRAP SITES — ALL SIX, ON REAL CONTENT, CONFIRMED HEALED:** organisations roster reason (both branches), People-card twin (both branches), `HeaderChip` job surface (`data-header-chip="info"` from `visa.state: "sponsors"`, `text-meta`), `HeaderChip` event surface (`data-header-chip="accent"` from `relevanceScore`, `text-meta`, "87% match" rendered correctly), activity chip (both `matched`/`plain` branches via `event.matchedTerms`, `text-meta`), `StarButton`'s reachable INACTIVE branch (`text-title` on the plain tail-row organisation's star button). **No regression on any of round 4's three fixes.**
+
+**VALUE STABILITY.** Zero `undefined`/`NaN` leaked in either report's markup with the fully-populated fixture.
+
+**VERDICT: ZERO visual defects.** Every row and trap site from round 5's own record still renders correctly; no new render-order or class-collision issue surfaced by exercising all fields together.
+
+---
+
+## DUTY 2 — THE 109c RUBRIC, SMALL LIVE WINDOW (2 pulls/surface, up to 3 renders/surface) + F-P2-01 LIVE RE-VERIFICATION
+
+**METHOD.** Three harness files in `web/zz-p2a8/` (all deleted before this commit): `value-census.test.ts` (pool pulls + rubric renders, split into 5 independently-bounded steps — round 2's own discipline, since round 5's own monolithic-harness timeout precedent), `fp201-verify.test.ts` (F-P2-01's own direct-execution + downstream-merge check against a live re-fetch of the exact recorded specimen), `pool-sanity.test.ts` (one extra lightweight job-pool pull, aiTier 0, no LLM cost, for the Phase-1-regression title scan). `NODE_ENV=development` stub, field-scoped `profile.json` (Ruling 95 — `researchTopics`/`softTopics`/`preferredMethods`/`careerStage`/`industryVsAcademia`/`locationPreferences`/`currentProject` only), `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }` (Ruling 75), `apiKeys` omitted (zero adzuna/usajobs calls). Fresh `MemoryPoolCache` (a `Map`-backed no-op `PoolCache`) instantiated per pull. **Zero timeouts, zero flakes, zero retries needed across all 7 test cases this round — clean straight through on the first run of every harness file.**
+
+### F-P2-01 LIVE RE-VERIFICATION — THREE INDEPENDENT LAYERS, ALL CONFIRMING THE FIX HOLDS
+
+1. **URL-selection layer, direct execution against a fresh live re-fetch of the exact recorded specimen** (`https://www.rsc.org/events/find-an-event/iex-2026-technical-training-introductory-course-introduction-to-ion-exchange-design-and-operation`, the URL recorded in round 5's own trace, `200 OK`, 164,469 bytes live today): `findProgrammePageUrl(html, url)` returns **`null`** — confirmed NOT the wrong-event `.../career-support/talks-and-events` link. `extractPageHeadings` returns exactly **7 headings, 0 talk-shaped** — byte-identical to round 5/6's own recorded shape, confirming the site content is unchanged and the fix's effect is isolated to the one call site.
+2. **Downstream merge layer, `route.ts`'s own logic reproduced verbatim:** with `programmeUrl` null, `route.ts:66`'s own guard (`if (programmeUrl && remainingChars > 0)`) is confirmed never entered — the second fetch never runs, and the merged text handed to the LLM contains **zero occurrences of "ChemCareers"** (case-insensitive), asserted directly on the real fetched+capped text, not inferred.
+3. **Full end-to-end, a real live LLM call, both ORGANIC and FORCED:** the RSC IEX 2026 event was drawn ORGANICALLY into this round's own live event-pool pull (Duty 2's Step 3, unforced) — its live rubric render returned `talkTitles: []`, empty, exactly the safe direction. Separately, Step 4 forced the exact recorded specimen through the full pipeline (direct fetch of a recorded URL — round 6/7's own ratified pattern) including a real `provider.generateJsonText` call: `talkSummaries: []` (asserted `toHaveLength(0)`), zero "ChemCareers" anywhere in the output, and `condensedDescription` came back topically correct and grounded ("This SCI-sponsored training course offers an introduction to ion exchange design and operation for industrial water treatment... chemists and engineers involved in the specification, design, operation, and maintenance of ion exchange water purification plants.") — traceable to the real page, no hallucination signal.
+
+**F-P2-01 VERDICT: FIX CONFIRMED LIVE, on the real recorded specimen, at all three layers, on both an organic draw and a forced re-fetch. Zero recurrence.**
+
+### JOB rubric (3 live specimens)
+
+| title | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| Postdoctoral Appointee | postdocjobs.com | no | competitiveness, sponsorshipRead, roleSummary, emphasise | correct — aggregator, not owned |
+| **GE Vernova Battery Engineering & Technology Intern** | **careers.gevernova.com** | **yes** | competitiveness, sponsorshipRead, roleSummary, emphasise, **specificRequirements, specificDuties** | **BF1 re-confirmed DISSOLVED, live, same host as round 2/5's own witness (gevernova-class eligible specimen still populates). `requirementsFidelity` VERIFIED** — every `specificRequirements` string mechanically asserted a literal substring of the fetched page text (`Array.every`, not spot-checked by eye) |
+| Internship, Battery Engineering (Summer 2026) | ev.careers | no | competitiveness, sponsorshipRead, roleSummary, emphasise | correct — not owned |
+
+### EVENT rubric (2 organic live specimens + 1 forced F-P2-01 specimen, above)
+
+| name | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| IEX 2026 technical training (organic draw) | rsc.org | yes | condensedDescription | **talkTitles: [] — F-P2-01's fix holds on an ORGANIC draw**, not just the forced Step-4 re-check |
+| Molten Salt Electrochemistry Symposium (MoSES) | pyro.byu.edu | yes | condensedDescription, posterFit | both topically correct and traceable to the fetched page |
+
+### POOL SANITY (Tier-0 layer, Phase-1-regression scan)
+
+Job pool (2 pulls, `value-census.test.ts`): **11 unique rows.** Job pool (1 extra pull, `pool-sanity.test.ts`): 2 rows this pull (`GE Vernova Battery Engineering & Technology Intern` @ careers.gevernova.com; `Careers Open application` @ hyetlithium.com — both legitimate, no garbled titles, no acronym collisions). Event pool (2 pulls): **11 unique rows**, hosts: `rsc.org`, `pyro.byu.edu`, `flibe.com`, `flogen.org`, `euchemsil2026.com`, `djk.co.jp`, `ibatterysummit.com`, `batterysummit.solarenergyevents.com`, `tescometering.com`, `thebatteryshow.com`, `advancedautobat.com` — all legitimate battery/chemistry-conference hosts, all on-topic, no garbled titles, no invented dates observed. `flogen.org` present — a recorded Ruling 62a CONTAMINATION_HOST for PLACE extraction, its appearance as an EVENT is expected and correct, not re-litigated. `euchemsil2026.com` present, consistent with its recorded long-named/correctly-dateless state (Ruling 83a/90b). `advancedautobat.com` present — BF2's own corrected witness host, consistent with its recorded state. **Zero Phase 1 regressions spotted.** (One incidental, non-scored observation, out of this round's mandate: one job row's `companyOrLab` printed `undefined` in the raw pool dump — not one of the visual census's 11 rows, not a rendered-report-surface finding, not a garbled title/acronym-collision/invented-date per the named Phase-1-class scan; not chased further, not classified, not ranked — flagged here only so it is not silently dropped.)
+
+**TIMEOUT-FLAKE RATE.** Zero. All pool pulls, all 6 live LLM enrichment calls (3 job + 2 event organic + 1 event forced), and both F-P2-01 direct-execution checks completed clean on the first attempt — no `benchmark.test.ts`-shaped Ruling-96b flake this round, no retry needed anywhere.
+
+**NAMED-COST REGISTRY, RE-CONFIRMED BY NAME.** Ruling 111a's own named cost (conferences whose programmes live only in PDFs-behind-forms or client-rendered SPAs render an empty programme section honestly) — not re-exercised this round, not contradicted, stands as recorded. Ruling 114's own named undetectable-chrome residual (no tag/role/class signal at all would still evade `isPageFurniture`) — not re-exercised, named as carried, unchanged. Ruling 108's Phase 1 maintenance list — NOT re-filed, per this round's own instruction.
+
+---
+
+## GATE, FINAL (A shipped no product code)
+
+`cd web && npx vitest run` — **100 files / 2442 tests, 2442 passing, ZERO failures**, matching the cold-start number exactly, run again after the harness (`web/zz-p2a8/`, three `.test.ts` files + its own `vitest.config.ts`) was deleted — confirms the harness never leaked into the root suite (it lived outside `web/src/`, and the root config's own `include: ["src/**/*.test.{ts,tsx}"]` never reached it). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error. `git status --porcelain --untracked-files=all` confirmed clean before this commit. No credential logged anywhere (`.env.local` never read; `profile.json` read field-scoped only, values never printed — only `Object.keys()` checked during exploration). No large fetched/LLM text pasted — every quote above is a short fragment already necessary to make the specific point, matching round 1/2/5's own discipline. No branch/worktree/PR.
+
+## FINDINGS CLASSIFIED
+
+**Zero NEW-CLASS findings this round.** Everything measured either reconfirms a prior ruling (round 4's three visual fixes, BF1/BF2's dissolutions, Ruling 114's F-P2-01 fix) or is a clean positive result with no prior defect attached (the MoSES specimen, the organic RSC draw). The one incidental pool-sanity observation (a blank `companyOrLab` on one row) is explicitly NOT classified — it falls outside every named scan this round's charter covers, is unreplicated (n=1, single pull), and does not touch any of the 11 census rows or any rendered-report surface; recorded for visibility, not ranked.
+
+## HAND-OFF
+
+**Convergence candidate 1's A-side window is clean: zero NEW defect classes, matching round 5's own protocol exactly, with F-P2-01's fix now confirmed live at three independent layers on both an organic and a forced draw.** Per this round's own instruction, this routes to the manager rather than resetting the clock. `WHOSE TURN: MANAGER — Phase 2 convergence candidate 1 re-measurement.` A does not declare Phase 2 complete — per Ruling 105a, this is candidate round 1; a second clean candidate round is still required to close Phase 2. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Phase 2 Round 8 — MANAGER (the candidate-1 re-measurement; RULING 116 — PHASE 2 CONVERGENCE CANDIDATE 1 PASSES)
+
+**Verification of A:** zero product code changed (manager scope check); tree clean; pushed; gate re-run by the manager earlier this round green at 2442. A's three-layer F-P2-01 verification and the round's zero-new-classes verdict accepted pending the manager's own window — which follows.
+
+**The manager's OWN re-measurement window** (harness `web/zz-mgrp2c1/`, deleted after; two instrument bugs in the manager's own probe fixed mid-run — a return-shape misread and a provider call-shape misread, both the manager's errors, disclosed): three probes, all green —
+1. **F-P2-01 mechanism, direct execution:** a `<Nav id="mainnav">`-wrapped programme-ish link → `findProgrammePageUrl` returns `null`; a non-chrome programme link on the same shape → picked. The fix's both directions hold.
+2. **A fresh 2+2 live Tier-0 window, every final-pool row scanned:** ZERO defect flags (no role-word companies, no encyclopedia hosts, no wrong-event bleed, no unmerged ≥4-token containment pairs, no unexpected-parse dates).
+3. **A live job LLM loop on the recorded eligible specimen, end to end through the PRODUCTION pieces** (`fetchPagesConcurrently` → `extractPageText` → `buildJobEnrichmentPrompt` → the resolved Gemini provider's `generateJsonText` → `parseJobEnrichment`): non-empty `specificRequirements`/`specificDuties`, and **EVERY quoted string mechanically verified as a literal normalized substring of the fetched page — the strictest anti-hallucination check, passed on the manager's own independent call.** (Scope note, honest: the manager's live LLM observation covered the job surface; the event surface's LLM content carries A's two rounds of substring-verified fidelity plus the manager's mechanism-level and window-level checks.)
+
+**RULING 116 — PHASE 2 CONVERGENCE CANDIDATE 1 PASSES: zero new defect classes across A's window and the manager's.** Per Ruling 105a: **round 9 is CANDIDATE 2 — A runs the full census protocol once more, then the manager re-measures. Two clean candidates close Phase 2**, followed by the campaign-close report and merge per the user's standing pattern. **`WHOSE TURN: A — Phase 2 round 9, CONVERGENCE CANDIDATE 2 (the full round-5/8 census protocol).`**
+
+
+### Phase 2 Round 9 — Agent A (CONVERGENCE CANDIDATE 2 — the full round-5/8 census protocol: 11-row visual re-walk + 109c rubric live window + F-P2-01 spot-check)
+
+**STATUS: COMPLETE. MEASURES ONLY — NOTHING FIXED.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp` (claiming push ACCEPTED at `97c8ceb`). Grepped `Phase 2 Round 9` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock), §1's first ~450 lines, Rulings 113-116 in full, the `Phase 2 Round 5 — Agent A` §4 entry in full (the census protocol re-run this round), and the `Phase 2 Round 8 — Agent A` + `Phase 2 Round 8 — MANAGER` §4 entries in full (candidate 1's own record, Ruling 116) before touching anything. **CORRECTED A STALE §1: the top `CURRENT STATE` block still read round 8's `WHOSE TURN: MANAGER — Phase 2 convergence candidate 1 re-measurement` even though Ruling 116 (§4, end of file) had already closed candidate 1 and handed off round 9 to A — the manager's round-8 closing commit updated §4 but never updated §1's own block. Synced §1 to Ruling 116's actual hand-off in the same commit that claimed the lock, per §0's own rule that §1 must always be true.**
+
+Confirmed on disk before building anything: `page-text.ts:170/292/362` all three still call `withoutPageFurniture(withoutHiddenContent(html))` (F-P2-01's fix intact, unchanged since round 7).
+
+**GATE, COLD FIRST (before any harness code): 100 files / 2442 tests, 2442 passing, ZERO failures**, matching round 8's own confirmed count exactly. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## DUTY 1 — VISUAL RE-WALK, ALL 11 CLASS-A/B ROWS + SIX cn-TRAP SITES, COMBINED FIXTURE (round 5/8's own method)
+
+**METHOD.** Harness `web/zz-p2a9/visual-census.test.ts` (+ its own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix load), outside `web/src/`, deleted before this commit. Built from scratch this round (round 8's own harness was deleted per protocol, as designed) rather than copied — re-derived the exact render sites, prop shapes and `cn`-trap mechanics straight from `jobs/[id]/page.tsx` and `events/[id]/page.tsx` on disk (not assumed from the prior round's prose) before writing a single assertion. Rendered the REAL shipped `JobReport`/`EventReport` via `renderToStaticMarkup`, one fully-populated `JobEnrichment` (all 6 fields) and one fully-populated `EventEnrichment` (all 5 fields, plus a roster carrying both the Tier-0-reason-wins branch — an org/person with its own `relevance` — and the judgment-supplies-the-reason branch — an org/person with no Tier-0 reason but a `judgedAttendees` entry, `worthIt: false` — on BOTH organisations and people, plus a third unreasoned tail-row organisation for `StarButton`'s reachable INACTIVE branch, plus activities exercising both the matched/plain activity-chip branches via `event.matchedTerms`) rendered ONCE each. **18/18 assertions passed** after three self-caught harness bugs, disclosed here per the same discipline every prior round modeled: (1) the roleSummary/plan-ordering assertions used a naive `[^<]*` regex between an opening tag and its text that broke on an inner `<span>` (icons/`aria-hidden` markers) — replaced with a helper that walks back from the text's own position to its nearest enclosing tag; (2) the plan-ordering check first compared the FIRST occurrence of each name anywhere on the page, which caught the roster card's own earlier mention of "Dr. Ada Voltaic" rather than the plan block's own entry — narrowed to compare `data-plan-entry` list items specifically; (3) the poster-fit list item's text sits after an inner `<span aria-hidden>`, same shape as bug 1. None were product findings — all three were regex-matching mistakes in the harness itself, caught before trusting the result.
+
+**ALL 11 ROWS RENDER, CORRECT CLASS, IN THE COMBINED FIXTURE — zero change from round 5/8's own record:**
+
+| row | field | renders? | class verdict |
+|---|---|---|---|
+| A1 | specificRequirements | yes | `font-reading` present |
+| A2 | specificDuties | yes | `font-reading` present |
+| A3/B2 | sponsorshipRead | yes | blockquote `font-reading` present; standalone visa-evidence blockquote correctly SUPPRESSED once `enrichment.sponsorshipRead` present (exactly one `<blockquote>` in the combined render) |
+| A4 | emphasise | yes | sans |
+| A5 | talkSummaries | yes | renders |
+| A6 | plan | yes | renders, both `kind: "session"` and `kind: "person"` entries in order |
+| A7 | posterFit | yes | sans |
+| B1 | roleSummary | yes | LLM voice: sans; Tier-0 prose in the SAME slot (twin render, no enrichment): `font-reading` — both directions confirmed |
+| B3 | condensedDescription | yes | renders verbatim (Peer's voice) |
+| B4 (org) | judgedAttendees[].why | yes, both branches | Tier-0-wins: `text-caption font-medium text-accent`; judgment-supplies (worthIt=false): `text-caption font-medium text-text-muted` |
+| B4 (people) | judgedAttendees[].why (twin) | yes, both branches | same as above, byte-identical twin site |
+
+**SHELL/HEADING CONFORMANCE.** Every rendered L3 `ReportSection` title (job + event) carries `text-caption`/`uppercase`, never `font-display` — the shared L3 label step. The one L2 group heading (`Who'll be in the room`) carries `font-display`, no `uppercase` — the serif sub-head, confirmed distinct from L3 in the same render.
+
+**cn-TRAP SITES — ALL SIX, ON REAL CONTENT, CONFIRMED HEALED:** organisations roster reason (both branches), People-card twin (both branches), `HeaderChip` job surface (`data-header-chip="info"` from `visa.state: "sponsors"`, `text-meta`), `HeaderChip` event surface (`data-header-chip="accent"` from `relevanceScore`, "91% match" rendered correctly), activity chip (both `matched`/`plain` branches via `event.matchedTerms`, both carry `text-meta`), `StarButton`'s reachable INACTIVE branch (`aria-pressed="false"`, `text-title`, on the plain tail-row organisation). **No regression on any prior round's fix.**
+
+**VALUE STABILITY.** Zero `undefined`/`NaN` leaked in either report's markup with the fully-populated fixture.
+
+**VERDICT: ZERO visual defects.** Every row and trap site from round 5/8's own record still renders correctly on a freshly-built (not copy-pasted) combined fixture.
+
+---
+
+## DUTY 2 — THE 109c RUBRIC, SMALL LIVE WINDOW (2 pulls/surface, up to 3 renders/surface) + F-P2-01 SPOT-CHECK
+
+**METHOD.** Two harness files in `web/zz-p2a9/` (both deleted before this commit): `value-census.test.ts` (pool pulls + rubric renders, split into 6 independently-bounded steps) and `fp201-spotcheck.test.ts` (F-P2-01's own direct-execution re-check against a live re-fetch of the exact recorded specimen). `NODE_ENV=development` stub, field-scoped `profile.json` (Ruling 95 — `researchTopics`/`softTopics`/`preferredMethods`/`careerStage`/`industryVsAcademia`/`locationPreferences`/`currentProject` only), `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }` (Ruling 75), `apiKeys` omitted (zero adzuna/usajobs calls). Fresh `MemoryPoolCache` (a `Map`-backed no-op `PoolCache`) per pull, reproducing `buildDailyJobPool`/`buildDailyEventPool` → `scoredJobToJob`/`scoredEventToEvent` → the report routes' own fetch/prompt/parse logic verbatim (round 1/2/5/8's own established pattern — the route modules themselves are awkward to invoke directly outside the Next.js server runtime).
+
+### F-P2-01 SPOT-CHECK, DIRECT EXECUTION (lighter than round 8's three-layer live re-verification, per this round's own charter)
+
+Confirmed on disk first (above) that all three `page-text.ts` call sites are unchanged. Live re-fetch of the exact recorded rsc.org IEX-2026 specimen today: `findProgrammePageUrl(html, url)` returns **`null`**, never the wrong-event `.../career-support/talks-and-events` sitewide-nav link — the safe failure direction holds. `extractPageHeadings` returns zero headings containing "ChemCareers". **F-P2-01 VERDICT: fix confirmed live, holds on direct execution. Zero recurrence.**
+
+### JOB rubric (3 live specimens)
+
+| title | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| Molten Salt Systems Engineer/Scientist in Idaho Falls | talents.vaia.com | no | competitiveness, roleSummary | correct — aggregator, not owned |
+| Postdoctoral Appointee | postdocjobs.com | no | competitiveness, sponsorshipRead, roleSummary, emphasise | correct — aggregator, not owned |
+| **GE Vernova Battery Engineering & Technology Intern** | **careers.gevernova.com** | **yes** | competitiveness, sponsorshipRead, roleSummary, emphasise, **specificRequirements, specificDuties** | **BF1's eligible-specimen population re-confirmed, live, same host as rounds 2/5/8's own witness. `requirementsFidelity` VERIFIED** — every `specificRequirements`/`specificDuties` string mechanically asserted (`Array.every`) a literal substring of the fetched page text, not eyeballed |
+
+### EVENT rubric (3 live specimens)
+
+| name | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| events.ornl.gov (bare-hostname fallback) | events.ornl.gov | yes | condensedDescription | topically correct — this row is itself a re-confirmation of Ruling 83c's own named, ADMITTED, honest-host-fallback class, not a new finding |
+| 19th Asian Conference on Solid State Ionics | thaienergystorage.org | yes | condensedDescription, talkSummaries | both topically correct and traceable to the fetched page |
+| Slowing Down to Speed Up: Unveiling the Secrets of Topochemical Polymerization | foundry.lbl.gov | yes | (none) | page read but the model returned no usable field — an honest empty result, not a fabricated one |
+
+### POOL SANITY (Tier-0 layer, Phase-1-regression scan)
+
+Job pool (2 pulls): **15 unique rows** across two runs — hosts include `careers.gevernova.com`, `postdocjobs.com` (×2 titles), `bebee.com` (×2), `talents.vaia.com` (×3), `climatechangejobs.com`, `cadenzainnovation.com`, `americanlithiumenergy.com`, `zintellect.com`, `careers.fm.com`, `arbeitnow.com`, `geosi.com` — all legitimate, on-topic, correctly-titled postings, no garbled titles, no short-acronym collisions (Ruling 33). Event pool (2 pulls): **10 unique rows** — hosts include `events.ornl.gov` (Ruling 83c's own named bare-hostname-fallback class, re-confirmed, not new), `thaienergystorage.org`, `foundry.lbl.gov`, `sunsirs.com`, `wsew.jp`, `battery-power.eu`, `volta.foundation`, `advancedautobat.com` (×2 rows — the corrected witness host, consistent with its recorded state), `materialscience.materialsconferences.com` — all legitimate, on-topic. **Zero Phase 1 regressions spotted this window's `badDates` scan** (every populated event date parsed to a plausible 2024-2030 year; blank dates left un-flagged as a separate, already-named shape).
+
+**ONE INCIDENTAL, UNREPLICATED OBSERVATION, NOT CLASSIFIED, RECORDED FOR VISIBILITY ONLY:** on the FIRST of the two event-pool pulls (a run whose other rows were otherwise discarded once the final 10-row set was assembled), one row — "Battery Summit 2026" — carried `date: "Tue, 06/16/2026 - 09:30"`, a Drupal-shaped display-date string rather than the `YYYY-MM-DD`/`YYYY-MM` shape `parseDate` (`lib/format.ts:16`) expects. This did NOT reproduce on the second pull, is n=1, falls outside this round's own named scans (it is not a garbled title, not an acronym collision, not a wrong-event bleed), and was not chased further — flagged here only so it is not silently dropped, exactly the discipline round 8's own `companyOrLab: undefined` observation modeled. Not ranked, not assumed to be a defect: could equally be a source that genuinely displays only a formatted date string with no machine-readable equivalent on the page, which downstream `parseDate`'s `new Date(iso)` fallback may or may not parse correctly depending on locale — untraced this round.
+
+**TIMEOUT-FLAKE RATE.** One flake: the first attempt at STEP 1 (job pool, 2 pulls) timed out at a 45s budget; raised to 100s and re-run clean at 35.79s — a Ruling-96b-shaped live-network variance, not a code defect (the same 2-pull step completed in under 40s on every subsequent run). Zero LLM-call timeouts across all 6 live enrichment calls (3 job + 3 event) or the F-P2-01 live fetch.
+
+**NAMED-COST REGISTRY, RE-CONFIRMED BY NAME.** Ruling 111a's own named cost (conferences whose programmes live only in PDFs-behind-forms or client-rendered SPAs render an empty programme section honestly) — not directly re-exercised this round (no such specimen drawn), not contradicted, stands as recorded. Ruling 114's own named undetectable-chrome residual (no tag/role/class signal at all would still evade `isPageFurniture`) — not re-exercised, named as carried, unchanged (confirmed present verbatim in `page-text.ts`'s own doc comment on disk). Ruling 108's Phase 1 maintenance list — NOT re-filed, per this round's own instruction.
+
+---
+
+## GATE, FINAL (A shipped no product code)
+
+`cd web && npx vitest run` — **100 files / 2442 tests, 2442 passing, ZERO failures**, matching the cold-start number exactly, confirmed BOTH before harness deletion (with `web/zz-p2a9/` present but outside the root config's `include: ["src/**/*.test.{ts,tsx}"]`) and after (harness fully deleted). `npx tsc --noEmit` clean (checked both with the harness present — which the root `tsconfig.json`'s `**/*.ts` include DOES reach, one real type error caught and fixed this way: the `Event` fixture was initially missing the required `shortDescription`/`relevanceReason` fields — a harness bug, not a product finding — and after harness deletion). `npx eslint src` — exactly the one standing `quiz.tsx:46` error. `git status --porcelain --untracked-files=all` confirmed clean before this commit. No credential logged anywhere (`.env.local` never read; `profile.json` read field-scoped only, values never printed beyond the already-non-secret topic-label lists every prior round has also read this way). No large fetched/LLM text pasted — every quote above is a short fragment already necessary to make the specific point. No branch/worktree/PR.
+
+## FINDINGS CLASSIFIED
+
+**Zero NEW-CLASS findings this round.** Everything measured either reconfirms a prior ruling (all four round-4 fixes, BF1's dissolution, F-P2-01's fix, Ruling 83c's bare-hostname fallback) or is a clean positive result with no prior defect attached (the two new organic event/job specimens). The one incidental pool-sanity observation (an unreplicated Drupal-shaped date string on one row, one pull) is explicitly NOT classified — n=1, unreplicated, outside every named scan this round's charter covers, does not touch any of the 11 census rows or any rendered-report surface; recorded for visibility, not ranked.
+
+## HAND-OFF
+
+**Convergence candidate 2's A-side window is clean: zero NEW defect classes, matching round 5/8's own protocol exactly, on a harness rebuilt from scratch this round (not copied) with three self-caught harness bugs disclosed and fixed before trusting any result.** Per Ruling 105a and this round's own charter, this routes to the manager for the second candidate's own independent re-measurement. **`MANAGER FINAL RE-MEASUREMENT COMPLETE @ 2026-08-19 ~17:0x UTC - three probes green (mechanism, fresh window zero flags, live LLM substring fidelity). RULING 117 (SS4): PHASE 2 IS CLOSED; THE CAMPAIGN IS COMPLETE. WHOSE TURN: NONE - campaign complete; maintenance mode per Rulings 108/117.`** If the manager's own window is also clean, **PHASE 2 CLOSES** (two consecutive clean candidates) — the manager writes that ruling, not A. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+
+### Phase 2 Round 9 — MANAGER (THE FINAL RE-MEASUREMENT; RULING 117 — **PHASE 2 IS CLOSED. THE CAMPAIGN IS COMPLETE.**)
+
+**Verification of A:** zero product code changed; tree clean; pushed. A's correction of the manager's own round-8 §1 sync miss is accepted and owned (the same field-sync class as 78d — the §4/§1 dual-write discipline slipped once at the manager's seat; A repaired it exactly as the protocol intends). The unreplicated non-ISO date observation is a recorded-class instance at worst (the A31-02/87b/90b family), not a new class.
+
+**The manager's OWN final window (harness `web/zz-mgrp2c2/`, deleted after): THREE PROBES, ALL GREEN —** (1) F-P2-01's mechanism holds both directions by direct execution; (2) a fresh 2+2 live Tier-0 window, every final-pool row scanned: ZERO defect flags; (3) the live job LLM loop end-to-end through the production pieces: every quoted string a literal normalized substring of the fetched page, on the manager's own independent call.
+
+**RULING 117 — PHASE 2 CONVERGENCE CANDIDATE 2 PASSES. Under Ruling 105a (two consecutive clean full rounds): PHASE 2 IS CLOSED.**
+
+**The campaign ledger at close:**
+- **Phase 1** (rounds 1-38, closed at Ruling 108): Tier-0 job/event deep reports at verified parity — merged to `main` at `ca4366a`.
+- **Phase 2** (rounds 1-9, closed here): the Tier 1/2 LLM-enriched reports verified on the 109c rubric — layout conformant across all 11 Class-A/B blocks and six healed style sites; content fidelity substring-verified across three independent measurement rounds (two of A's, plus the manager's own live calls in rounds 8 and 9); zero hallucinations ever observed; the one content-correctness defect found (F-P2-01, wrong-event contamination) fixed by a one-line asymmetry repair and verified at three layers plus two fresh windows.
+- **Phase 2 named costs / maintenance:** 111a (PDF-gated and SPA-only programme pages render an empty section honestly; reopen: a static same-host programme page that still fails); 114's undetectable-chrome residual (pre-existing, named); the BF2 flogen "Coming soon" stub class (zero information lost). Phase 1's Ruling-108 maintenance list stands unchanged.
+- **Gate at close: 100 files / 2442 tests, all passing.** Suite growth across the campaign: ~1,600 → 2,442.
+
+**Post-close actions (the user's standing pattern):** the Phase 2 addendum is appended to `docs/handoff/PHASE1-REPORT-PARITY.md`'s narrative; the branch merges to `main` (second merge, carrying Phase 2's fixes); the resume clocks (session cron + cloud routine) are DISARMED — the campaign they exist to resume is complete; re-arm if a new campaign opens. `WHOSE TURN: NONE — campaign complete; maintenance mode per Rulings 108/117.`
 

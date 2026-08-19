@@ -10,6 +10,7 @@ import type {
   EventEnrichment,
   OpportunityPageReadingReason,
 } from "@/lib/opportunities/enrichment";
+import { cn } from "@/lib/cn";
 import { EventReport } from "./page";
 
 // B-02. A fixed clock so the countdowns and the "Today" milestone render the
@@ -1699,5 +1700,166 @@ describe("B20-01 — a hybrid event keeps its venue in the report", () => {
       baseEvent({ location: "San Diego, US", date: "2027-03-08", endDate: "2027-03-11" }),
     );
     expect(html).toContain("San Diego, US · in person · 4 days");
+  });
+});
+
+/**
+ * **RULING 111c (Phase 2 round 4, C item 3) — THE cn() TAILWIND-MERGE TRAP,
+ * GENERAL FIX.** `tailwind-merge`'s own class-group model had no notion of
+ * this app's custom `--text-*` size tokens, so any `cn()` call combining one
+ * with a text-colour utility silently DROPPED the size class. Round 3 B's
+ * sweep found FIVE live victims — the roster reason paragraph (commissioned,
+ * V-P2-02) plus its previously-undocumented byte-identical twin on the People
+ * card, the `HeaderChip` badges (both job and event surfaces), the activity
+ * chip, and `StarButton` — all fixed at once by teaching `web/src/lib/cn.ts`
+ * about the 9 tokens (`extendTailwindMerge`), no site-level edits needed.
+ * These lock each site at its intended rendered class, both branches where a
+ * branch exists, so a future regression to the old bare `twMerge` reds here.
+ */
+describe("Ruling 111c — the cn() tailwind-merge trap, general fix locks (event surface)", () => {
+  /** Element-anchored capture: the FIRST tag of `tag` whose inner text contains `text`. */
+  function classesOfTagContaining(html: string, tag: string, text: string): string {
+    const open = new RegExp(`<${tag}\\b[^>]*>`, "g");
+    for (const match of html.matchAll(open)) {
+      const start = (match.index ?? 0) + match[0].length;
+      const end = html.indexOf(`</${tag}>`, start);
+      if (end < 0) continue;
+      if (html.slice(start, end).includes(text)) {
+        return /class="([^"]*)"/.exec(match[0])?.[1] ?? "";
+      }
+    }
+    throw new Error(`no <${tag}> containing ${JSON.stringify(text)} was rendered`);
+  }
+
+  it("V-P2-02 — keeps text-caption on the Organisations roster card reason, BOTH branches", () => {
+    // Positive/default branch: a Tier 0 reason, no negative judgment — renders text-accent.
+    const positive = renderReport(
+      baseEvent({
+        organisations: [
+          { name: "Solid Power", relevance: "They work on the interface you study." },
+        ],
+      }),
+    );
+    const positiveClasses = classesOfTagContaining(
+      positive,
+      "p",
+      "They work on the interface you study.",
+    );
+    expect(positiveClasses).toContain("text-caption");
+    expect(positiveClasses).toContain("text-accent");
+
+    // Negative-judgment branch: no Tier 0 reason, so `judgedAttendees[].why`
+    // supplies it and `worthIt: false` swaps the tone — renders text-text-muted.
+    const negative = renderReport(
+      baseEvent({ organisations: [{ name: "Volta Lab", descriptor: "Exhibitor" }] }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        judgedAttendees: [
+          { name: "Volta Lab", worthIt: false, why: "Score-inflated, not actually relevant." },
+        ],
+      },
+    );
+    const negativeClasses = classesOfTagContaining(
+      negative,
+      "p",
+      "Score-inflated, not actually relevant.",
+    );
+    expect(negativeClasses).toContain("text-caption");
+    expect(negativeClasses).toContain("text-text-muted");
+  });
+
+  it("the undocumented twin — keeps text-caption on the People roster card reason, BOTH branches", () => {
+    // Same mechanism, same two branches, on the People card (`:1670-1674`) —
+    // the byte-identical twin B's sweep found unnoted next to the commissioned site.
+    const positive = renderReport(
+      baseEvent({
+        people: [
+          { name: "Dana Reyes", relevance: "They chair the session you asked about." },
+        ],
+      }),
+    );
+    const positiveClasses = classesOfTagContaining(
+      positive,
+      "p",
+      "They chair the session you asked about.",
+    );
+    expect(positiveClasses).toContain("text-caption");
+    expect(positiveClasses).toContain("text-accent");
+
+    const negative = renderReport(
+      baseEvent({ people: [{ name: "Ada Okafor", role: "Principal Scientist" }] }),
+      "PhD Year 3",
+      { registered: false, submitted: false },
+      {
+        judgedAttendees: [
+          { name: "Ada Okafor", worthIt: false, why: "Not actually working on your topic." },
+        ],
+      },
+    );
+    const negativeClasses = classesOfTagContaining(
+      negative,
+      "p",
+      "Not actually working on your topic.",
+    );
+    expect(negativeClasses).toContain("text-caption");
+    expect(negativeClasses).toContain("text-text-muted");
+  });
+
+  it("keeps text-meta on the HeaderChip badges, both the plain kind tone and the accent match tone", () => {
+    const kind = /<span[^>]*data-header-chip="kind"[^>]*>/.exec(
+      renderReport(baseEvent()),
+    )?.[0] ?? "";
+    expect(kind).toContain("text-meta");
+
+    // The accent match chip only renders once `matchPct` is non-null, which
+    // requires a real `relevanceScore` — see the component's own gate.
+    const accent = /<span[^>]*data-header-chip="accent"[^>]*>/.exec(
+      renderReport(baseEvent({ relevanceScore: 0.91 })),
+    )?.[0] ?? "";
+    expect(accent).toContain("text-meta");
+  });
+
+  it("keeps text-meta on the activity chip, both the highlighted and the plain branch", () => {
+    const html = renderReport(
+      baseEvent({
+        activities: ["poster session", "career fair"],
+        matchedTerms: ["poster"],
+      }),
+    );
+    const highlighted = /<span[^>]*data-activity-chip="matched"[^>]*>/.exec(html)?.[0] ?? "";
+    const plain = /<span[^>]*data-activity-chip="plain"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(highlighted).toContain("text-meta");
+    expect(plain).toContain("text-meta");
+  });
+
+  it("keeps text-title on StarButton's INACTIVE glyph, reached through the real page", () => {
+    // StarButton lives on the roster TAIL rows (plain, untagged entries), so
+    // this needs an organisation with no Tier 0 reason and no judgment.
+    const html = renderReport(
+      baseEvent({ organisations: [{ name: "Battery Org 1" }] }),
+    );
+    const star =
+      /<button[^>]*aria-label="Star Battery Org 1"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(star).toContain("text-title");
+  });
+
+  it("keeps text-title on StarButton's ACTIVE glyph — unreachable through the page, so tested at the cn() call itself", () => {
+    // `partitionEventRoster`'s own `concerns` gate (`Boolean(reason) ||
+    // starred`) means a starred tail row is ALWAYS promoted into a card
+    // instead, and cards render no `StarButton` at all (V26-E06's own
+    // doctrine: "highlighted cards carry no star") — so `active={true}` is
+    // UNREACHABLE by construction through the full page, the same admitted-
+    // control shape as V26-J07's divide-by-zero guard above. `StarButton`
+    // itself is not exported, so this locks the fix directly against the
+    // component's own literal `cn()` call (`events/[id]/page.tsx:1271-1276`),
+    // copied verbatim — exactly B's own diagnostic method (round 3 item 3:
+    // "executed the REAL shipped cn() against each site's actual class
+    // arguments").
+    const classes = cn(
+      "shrink-0 rounded-full px-2 py-1 text-title transition-colors",
+      true ? "bg-accent/10 text-accent" : "text-text-faint hover:bg-accent/10 hover:text-accent",
+    );
+    expect(classes).toContain("text-title");
   });
 });
