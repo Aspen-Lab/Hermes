@@ -275,6 +275,27 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **PHASE 1 IS CLOSED — RULING 108 @ 2026-08-19 ~13:5x UTC.
+                  CONVERGENCE CANDIDATE ROUND 2 PASSED** (the manager's final
+                  fresh window: 66 rows, zero new defect classes; both
+                  instrument flags resolved — one was the manager's own crude
+                  scan mis-flagging TWO DIFFERENT real events that the
+                  shipped 4-token floor correctly kept apart, a live organic
+                  vindication of round 36's design; one is the recorded
+                  no-offset-date class, spec-correct render). A38-01
+                  classified a recorded-class instance (the conjoined-
+                  section-label grammar's own disclosed bound) → the
+                  MAINTENANCE LIST, clock not reset. **Closing state: gate
+                  100 files / 2425 tests all green; zero unexplained new
+                  classes across rounds 37-38's eight independent windows;
+                  visual zero for ten consecutive rounds; 62b's zero held at
+                  every census ever taken. The maintenance list (5 items) is
+                  enumerated in Ruling 108. NEXT: the Ruling-105b merge to
+                  `main`, then Phase 2 (Ruling 69).**
+                  `WHOSE TURN: MANAGER — execute the 105b merge; then Phase 2
+                  kickoff.`
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 38 A (CONVERGENCE CANDIDATE ROUND 2) IS COMPLETE @
                   2026-08-19 ~01:0x UTC — NOT A DOUBLE-ZERO ROUND. ONE FRESH
                   UNEXPLAINED VALUE FINDING (A38-01, job surface, a 116-person
@@ -89758,3 +89779,14 @@ Committed and pushed as its own item. Part 3 (visual census, standing tallies, g
 **NO CREDENTIAL was printed, logged, committed or written anywhere.** `profile.json` was read ONLY via field-scoped extraction per Ruling 95 -- never read whole. Key presence was checked as BOOLEANS ONLY, once, at the start of this turn. `PEER_PROFILE_SNAPSHOT_PATH` was not set (the harness used the default path, the real local file). **No third-party page text was pasted** anywhere -- every quote is a title, URL, or short bounded fact (an `<h1>` string, a meta-description sentence, a JSON-LD type-token list, an `<li>` count) already loadable from the shipped source, a public page, or already recorded elsewhere in this file. Nothing in any fetched page was treated as an instruction.
 
 **HAND-OFF: `WHOSE TURN: MANAGER -- final re-measurement, convergence candidate round 2`.** A38-01 is A's own argued recorded-class instance (not a new defect class, per the classification evidence above) -- flagged prominently for the manager's own independent verification and ruling, exactly as Rulings 107a/107b handled A37-01/M37-01. If the manager's own fresh window and this round's own four windows together show zero NEW defect classes (even counting A38-01 as a recorded instance, per Ruling 105a), **PHASE 1 CLOSES**, followed by the Ruling-105b merge-to-main with the PR-quality description and the ABC-process narrative -- the manager executes that, not A. If the manager instead rules A38-01 a NEW class, the convergence clock resets and the next turn is B for round 39. Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Round 38 — MANAGER (THE FINAL RE-MEASUREMENT; RULING 108 — CONVERGENCE CANDIDATE ROUND 2 PASSES; **PHASE 1 IS CLOSED**)
+
+**Verification of A:** zero product code changed (manager scope check — empty); gate re-run by the manager: **100 files / 2425 tests, 2425 passing, zero failures.** A38-01's classification VERIFIED by the manager's own read of `isConjoinedSectionLabelTitle`'s doc comment (`jobweb.ts:762-794`) — the closed noun list, the measured-and-refused shape, and the failure direction ("a programme page outside this grammar survives exactly as it does today") are all disclosed in the recorded-class marker pattern. **A38-01 = a recorded class's instance → the MAINTENANCE LIST; the clock did not reset.**
+
+**The manager's own final window (5+5 fresh live pulls, harness `web/zz-mgr38/` deleted after, 66 final-pool rows all read by eye): ZERO NEW DEFECT CLASSES.** Two instrument flags, both resolved by direct inspection:
+1. A `possible-dup` flag on `djk.co.jp` vs `"Battery Summit 2026"` @ `iisd.org` — **the manager's own crude substring scan mis-flagged TWO DIFFERENT REAL EVENTS (the Chicago Solid-State Battery Summit vs an India battery-manufacturing summit), and the SHIPPED containment pass correctly did NOT merge them: "battery summit" is 2 tokens, below the 4-token floor.** Round 36's adversarial design case ("a generic short phrase contained in half the corpus") appeared organically in the wild for the first time and the floor held. An instrument artifact and a live vindication, not a defect.
+2. A malformed-date flag on the same `iisd.org` row (`"Tue, 06/16/2026 - 09:30"`) — **a recorded class's instance** (A31-02/87b/90b family): the near-ISO normalizer is a deliberate no-op on unrecognised shapes, round 32's own corpus explicitly held the NO-OFFSET value class as "genuinely ambiguous — untouched", and the spec-verified render behaviour (tile hidden, nothing invented) is what renders. EXPLAINED. One MAINTENANCE LEAD recorded: a US-format date whose day exceeds 12 (`06/16/2026`) is provably month-unambiguous — a future bounded date-only extraction could recover the day losslessly; unwitnessed twice, not designed now.
+
+**RULING 108 — CONVERGENCE CANDIDATE ROUND 2 PASSES. Under the user's Ruling 105a (two consecutive full rounds, four independent windows each pair, zero new defect classes): PHASE 1 IS CLOSED.** The closing state: gate 100 files / 2425 tests all green; value differences: zero unexplained new classes across rounds 37-38's eight independent measurement windows; visual: zero for ten consecutive rounds (no rendering-layer change since `17de80e`, 120+ commits); 62b's no-invented-dates zero held at every census ever taken. **THE MAINTENANCE LIST at close (per 105a, handled without blocking Phase 2):** (1) A38-01 — the conjoined-section-label grammar's noun list vs staff-roster pages (`bnl.gov` witness on file); (2) the R13-class cosmetic name prefix (`Meeting Summary-` on tirt7.com, Phase 2's LLM naming is the natural fix); (3) the unambiguous-US-date extraction lead (iisd.org witness); (4) the Ruling-33 job-surface design bar (a second witness reopens); (5) the standing named residuals as recorded (PR verb siblings, exact-prefix, single-posting-page, thrlab/lco.cl, attribution-phrase lead, job-posting-age question — the user's product-scope call). **Next: the Ruling-105b merge to `main`, then Phase 2 per Ruling 69.**
+
