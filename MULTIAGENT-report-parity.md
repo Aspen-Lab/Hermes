@@ -270,38 +270,34 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent C round 3 + 2026-08-19 19:58 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       MANAGER — Phase 3 round 2 verification and rulings before
-                  C spawns. B's four deliverables are complete: (1) J1
-                  closed by execution — root cause is Himalayas' own
-                  upstream API literally returning `companyName: "name"`
-                  (20/200 sampled records, 18 real companies incl.
-                  Salesforce/Lockheed Martin — NOT a `directDeclarations`
-                  regex artifact, that candidate mechanism was RULED OUT by
-                  execution); (2) the family-(a) enumeration — both
-                  surfaces' full admission chain mapped end to end, plus a
-                  fresh Tier-2 schema.org `@type` measurement (job surface:
-                  clean positive signal but small-n; event surface: unsafe
-                  as an admission requirement — 5/6 real controls carry no
-                  `Event` schema — but safe as a 2-token rejection list);
-                  (3) four designs (F2 cross-surface guard port, a formal
-                  escape-clause invocation for family b/forum with a live
-                  executed contrast proof, F8/F9 name-repair strips with
-                  F9's root cause upgraded from A's "inference" to fully
-                  confirmed live, plus a small J2 token addition) — B
-                  changed no product code; (4) six dispositions with Ruling
-                  119e's full machinery, plus Ruling 119b's check-me clause
-                  answered by direct execution (the Tier≥1 Tavily
-                  discovery side-channel is gated open at Tier 2 but wired
-                  exclusively to Tavily with no gemini branch — confirmed
-                  by running the real function under the exact Phase 3
-                  profile — so it is dark this phase for THAT reason, not
-                  because of Tier). See §4 `### Phase 3 Round 2 — Agent B`
-                  (4 parts) for full detail, POLICY items, and the gate.
+WHOSE TURN:       C — Phase 3 round 3 (Ruling 120g). §1's top block synced
+                  in this lock-claim commit — same class of stale-block gap
+                  round 1 A, round 9 A, and round 2 B each found and fixed
+                  before it; the manager's Rulings 120a-120g (end of §4)
+                  already ratified B's round-2 work and routed here. Five
+                  items commissioned, one commit each, B's designs
+                  implemented VERBATIM: (1) J1 — route `catalogLabel`
+                  through `resolveEmployerIdentity`'s own validation, gated
+                  by a new closed placeholder-token predicate (measured
+                  member: `name`); new `"catalog"` status variant approved
+                  (Ruling 120d(4)) as a discriminated-union widening, one
+                  existing test's assertion REWRITTEN not deleted; (2) F2 —
+                  port the job surface's `isDateStructuredResearchPath` to
+                  the event surface (foundry.lbl.gov witnesses); (3) J2 —
+                  add `products` to `NON_JOB_PATH_RE`; (4) F8 — name-repair
+                  strip for a trailing "applications open" clause; (5) F9 —
+                  TEST-suffix strip, EVENT-ONLY per Ruling 120d(2), not the
+                  shared `gemini-search.ts`. Escape clause pre-authorised
+                  (Ruling 120g): if an approved design breaks a recorded
+                  control or needs an open-class list, STOP that item, file
+                  `POLICY — manager decides`, move on. See §4 `### Phase 3
+                  Round 2 — Agent B` (4 parts) and `### Phase 3 Round 2 —
+                  MANAGER` (Rulings 120a-120g) for full detail.
 PHASE 3 MEASUREMENT PROFILE:
                   (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
                   whole point of the phase (Tier-0 profiles never exercised
