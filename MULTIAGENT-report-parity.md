@@ -270,11 +270,115 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent A round 38 + 2026-08-19T05:39Z
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 38 A (CONVERGENCE CANDIDATE ROUND 2) IS COMPLETE @
+                  2026-08-19 ~01:0x UTC — NOT A DOUBLE-ZERO ROUND. ONE FRESH
+                  UNEXPLAINED VALUE FINDING (A38-01, job surface, a 116-person
+                  staff-roster page admitted as a single job posting), ZERO
+                  UNEXPLAINED VISUAL. Neither A37-01's nor M37-01's own
+                  specimen was organically re-witnessed this window (absence,
+                  not regression).** Run by `LAPTOP-3CL10CG5`. Claimed the
+                  lock after `git pull` and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`;
+                  the claiming push was ACCEPTED (`15d647f`). Grepped "Round
+                  38 — Agent A" first — zero prior entries existed, fresh
+                  start not a resume. Read §0/§1 in full, Rulings 105-107d in
+                  full, and round 37 A's three parts (baseline method) before
+                  any live pull.
+
+                  **GATE, COLD AND AT CLOSE: 100 files / 2425 tests, 2425
+                  passing, ZERO failures** both times. `npx tsc --noEmit`
+                  clean. `npx eslint src` — exactly the one standing
+                  `quiz.tsx:46` error.
+
+                  **METHOD**: five-pull discipline (one window, 5 combined
+                  job+event live pulls), searchProvider gemini, field-scoped
+                  profile per Ruling 95, fresh no-op `PoolCache` every pull.
+                  Plates 02/03 re-read fresh this round via PyMuPDF page
+                  rendering (`pdftoppm` unavailable in this environment) —
+                  confirms the standing Tier-0/Tier-1+2 boundary unchanged.
+
+                  **POOL-COUNT/57b: 246 collision calls, ZERO firings.
+                  TIMEOUT-FLAKE: job 0/5, event 0/5, combined 0/10 (0%)** —
+                  below the standing ~10% band, not attributable to any code
+                  change (A changed none; B shipped none per 107a/107b).
+
+                  **A38-01, THE FRESH FINDING**: `bnl.gov/moltensalts/people/
+                  postdocs.php`, titled `"Staff, Postdoctoral Research
+                  Associates, and Students | MSEE"` — a 116-person staff
+                  roster page (confirmed by direct bounded re-fetch: real
+                  `<h1>`/meta-description name it as a directory, 116 `<li>`
+                  entries, zero `JobPosting` schema) — ADMITTED to the final
+                  job pool as a single posting. Traced by direct execution:
+                  `isListingPage(...) === false` (the load-bearing miss);
+                  `webResultToRawJobItem(...)` admits it end to end. The
+                  nearest-fit clause, `isConjoinedSectionLabelTitle`
+                  (B28-01/Ruling 76b), is BUILT for exactly this problem shape
+                  but its own closed noun list lacks `"staff"`/"postdoctoral
+                  research associates"` and its conjunction grammar covers
+                  only a two-noun `X and/& Y` shape, never a genuine
+                  Oxford-comma three-item list. **The guard's own doc comment
+                  discloses this bound outright** ("the rule can only REMOVE
+                  a card... survives exactly as it does today"), the same
+                  disclosure shape Ruling 107a already ratified as the
+                  recorded-class marker for A37-01. **A's own read, offered as
+                  an argument not a ruling**: REOPENED NAMED RESIDUAL
+                  (recorded-class instance under Ruling 105a), not a new
+                  defect class — classification left explicitly to the
+                  manager.
+
+                  **VISUAL: ZERO on both plates** — structural argument
+                  (`17de80e..HEAD`, zero rendering-layer files, NINE
+                  consecutive rounds now) + spot-check (4 real specimens,
+                  zero leaked `undefined`) + a targeted fifth check: this
+                  window's own `djk.co.jp` specimen carries a literal
+                  source-side `\r\n` embedded in its title; rendered directly
+                  and confirmed HTML-safe — a browser's default whitespace
+                  collapse turns it into an ordinary single space, no visible
+                  defect. EXPLAINED, not a code issue.
+
+                  **STANDING TALLIES RESTATED** (part 3): Ruling 55c extends
+                  to 0/168 combined (rounds 36-38); Ruling 62b/dateless-rate
+                  (89.1%) hold a NINTH independent window each; Ruling 33's
+                  design bar (a second job-surface acronym-collision
+                  admission) was NOT triggered this window; TWO honest method
+                  gaps disclosed (event-surface `organisations`/`people` and
+                  `team` headcount not captured by this round's trimmed
+                  harness fields).
+
+                  **A CHANGED NO PRODUCT CODE.** Three commits, each pushed on
+                  landing (part 1, part 2, part 3 + this close-out; the
+                  turn-lock claim was a fourth, separate commit). Throwaway
+                  harness (`web/zz-r38a/`) lived outside `web/src/`, deleted
+                  before every commit, `git status --porcelain
+                  --untracked-files=all` confirmed clean each time. No
+                  credential anywhere; one bounded live re-fetch of a single
+                  already-known public URL (the A38-01 specimen), no
+                  search-provider call, no API key. No large page text
+                  pasted — only titles, URLs, and short bounded facts (an
+                  `<h1>` string, a meta-description sentence, an `<li>`
+                  count). No branch/worktree/PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — final re-measurement,
+                  convergence candidate round 2`.** A38-01 is A's own argued
+                  recorded-class instance (not a new defect class) — flagged
+                  prominently for the manager's own independent verification
+                  and ruling, exactly as Rulings 107a/107b handled
+                  A37-01/M37-01. If the manager's own fresh window agrees
+                  (zero NEW defect classes across this round's four windows,
+                  even counting A38-01 as a recorded instance), **PHASE 1
+                  CLOSES**, followed by the Ruling-105b merge-to-main — the
+                  manager executes that, not A. If the manager instead rules
+                  A38-01 a NEW class, the convergence clock resets and the
+                  next turn is `WHOSE TURN: B — round 39`. Turn lock RELEASED
+                  (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~13:0x UTC — ROUND 38 B
                   VERIFIED (both record-corrections confirmed by the
                   manager's own greps), RULINGS 107a-107d APPENDED (§4).**
@@ -89592,3 +89696,65 @@ Neither was organically offered this window -- **absence, not evidence of anythi
 | `A38-01` (fresh this round, see above) | **A NEW WITNESSED INSTANCE of a section/audience-label title-enumeration guard's own disclosed bound (B28-01/Ruling 76b's `isConjoinedSectionLabelTitle`) -- traced by direct execution. Full write-up above.** |
 
 Committed and pushed as its own item. Part 3 (visual census, standing tallies, gate verdict, close-out) follows.
+
+
+### Round 38 — Agent A (part 3: VISUAL CENSUS, STANDING TALLIES, GATE VERDICT, CLOSE-OUT. ONE FRESH VALUE FINDING [A38-01], ZERO VISUAL -- NOT A LITERAL DOUBLE-ZERO. A HANDS TO THE MANAGER, ARGUING A38-01 IS A RECORDED-CLASS INSTANCE, NOT A NEW CLASS.)
+
+## VISUAL CENSUS -- ZERO, BY A STRUCTURAL ARGUMENT PLUS AN EMPIRICAL SPOT-CHECK
+
+**Structural argument**: `git log --oneline --name-only 17de80e..HEAD -- 'src/**/*.tsx' 'src/**/*.css'` (run from `web/`) -- **ZERO files**, re-derived independently this round over the full range through this round's own commits. Round 38 B's own two items shipped zero code changes (Rulings 107a/107b). **No rendering-layer file has changed since the last exhaustive walk confirmed zero, across NINE consecutive rounds now (30, 31, 32, 33, 34, 35, 36, 37, 38).**
+
+**Empirical spot-check on top of that argument**, using a fresh dedicated live pull this round's own window (real network, not fixtures), rendering real specimens through the SHIPPED `JobReport`/`EventReport` via `renderToStaticMarkup` (`src/app/jobs/[id]/page.test.ts`'s and `src/app/events/[id]/page.test.ts`'s own prop shapes, read directly before building the call):
+
+| specimen | value | rendered clean | leaked `"undefined"` |
+|---|---|---|---|
+| real job | "Summer Internship Opportunity" | yes, 9417 chars | no |
+| real job | "Postdoctoral Appointee" | yes, 7773 chars | no |
+| real job | "GE Vernova Battery Engineering & Technology Intern" (companyOrLab populated) | yes, 11664 chars | no |
+| real dateless event | "Molten International Symposium", date: "" | yes, 9086 chars | no |
+
+**All four rendered without error, zero leaked `"undefined"`.** (This pull's own composition happened not to offer a dated event in its own top-3/first-match slice; the 5-pull census in part 2 already recorded two real dated events -- `thebatteryshow.com` at `2026-10-12`, the AABC row at a full ISO timestamp -- both well-formed per `parseDate`, matching the standing 62b doctrine.)
+
+**A TARGETED FIFTH CHECK, NOT A FIXTURE**: this window's own `djk.co.jp` exhibition-title specimen (part 2) carries a literal source-side `\r\n` embedded mid-title (`"...in Chicago \r\n~Showcasing..."`). Rendered the exact live-captured raw name string through `EventReport`: the raw `\r\n` bytes ARE still present in the emitted HTML (React serializes text nodes verbatim, does not strip control characters) -- **but this is standard, harmless HTML behaviour, not a defect.** A browser's default text flow (`white-space: normal`, the CSS default and this codebase's own) collapses any run of whitespace -- including an embedded CRLF -- to a single visible space. The rendered card therefore reads "...in Chicago ~Showcasing Products..." with a normal space, not a broken line. **EXPLAINED, not a defect**: a source-page raw-text artefact (the source's own HTML almost certainly has a `<br>`-adjacent line break that got concatenated verbatim), neutralised by ordinary HTML text-flow, no code change indicated. Checked by direct rendering, not assumed.
+
+**VISUAL: ZERO on both plates**, unregressed, ninth consecutive round.
+
+## STANDING TALLIES, RESTATED (this round's live evidence where measured)
+
+- **Ruling 33 (short-acronym collision, `LCO`) -- now covers pool-level admissions on BOTH surfaces per Ruling 107b.** This window: `lco.global`/`lco.edu`/`lco-nsn.gov` offered, none admitted (unregressed). `lco.cl` reached the JOB final pool again (a DIFFERENT specific posting than round 37's witness, same class, correctly not conflated with the Wisconsin tribe's own `lco.*` hosts -- part 2). `LCO Casino` (event surface) and `LCO Summer`/`orlandolacrosse.com` (job surface, M37-01's own specimen) were BOTH absent this window (0 of 5 each) -- pool variance, not a regression either way. **The named design bar (a SECOND independent job-surface pool admission of the acronym-collision shape, per Ruling 107b(c)) was NOT triggered this round.**
+- **Ruling 34a (`careerservices.upenn.edu`, PRESENT-and-SILENT)** -- offered 2 of 5 job pulls, did NOT reach the final job pool -- topic-floor variance, matching the standing pattern.
+- **Rulings 37 + 44 (label-miss family)** -- NOT independently re-derived this round, consistent with the standing honest limit.
+- **Ruling 52b (collision) -- strike count stays at ONE (60a).** Zero final-pool job `companyOrLab` values contain "Ion Exchange" this window (part 1). Unexercised, strike count unchanged.
+- **Ruling 62b (month-granularity invented-date fuse)** -- ZERO, re-confirmed a NINTH independent window. Both dated final-pool event rows this window's own 5-pull census (`thebatteryshow.com`, the AABC full-ISO-timestamp row) parse correctly, not invented.
+- **Ruling 55c (the `Online` must-keep debt)** -- **0 of 46 final-pool event rows render `isOnline: true`** this window. Extends the standing 0/122 tally (rounds 36+37) to **0/168 combined** across the three rounds that have now measured it directly.
+- **Ruling 57b (witness lines)** -- **Job surface: organically witnessed again, with fresh real names** -- `Savannah River National Laboratory`, `Idaho National Laboratory`, `Tesla`/`Tesla Motors, Inc.`, `IPX Power USA, LLC`, `Las Campanas Observatory`, `MSEE` (BNL) all render as real, correct employer/lab values. **Event surface: NOT independently captured this round** -- an honest method gap: this round's harness JSON schema trimmed the `organisations`/`people` fields (they are Tier-1/2-adjacent fields rarely populated on the no-LLM path and were not included in the field list built for this round's own pull script). Disclosed rather than silently reported as zero; carried forward unmeasured, matching round 36's own precedent of naming a method gap rather than hiding it.
+- **Named costs**: **Ruling 74's headcount** -- unexercised this round (`team` field not captured by this round's trimmed harness fields, same honest gap as above). **`The Battery Saloon` (79a)** -- re-confirmed, offered 5 of 5, refused 5 of 5. **The dateless branch (Ruling 90b)** -- a NINTH independent window, 89.1% this round. **Honest-host fallback (84b(1))** -- re-confirmed, 1 of 5 this window, ADMITTED.
+- **Exclusions by name**: **45a (`euagenda.eu` never fetched)** -- confirmed, zero appearances across all 705 combined job+event offered rows, 5 pulls. **41c's three hosts (not hunted)** -- not deliberately searched for, consistent with the standing exclusion. **39a/40, 42c** -- not independently re-checked this round; their shapes did not appear in this window's offered corpus.
+- **Ruling 48b, under 71b's four-part standard** -- NOT independently re-derived at full corpus-scan depth this round (round-38-specific duties prioritized: pool-count/57b, timeout-flake, the artefact/watch-list duty, the A38-01 trace). Carried forward unchanged from round 37's own findings.
+- **Dateless full-pool rate (record; doctrine final, Ruling 90b)**: **THIS WINDOW: 41 of 46 final-pool event rows (89.1%) render `startDate: ""`.** A NINTH independent window, inside the standing 79-97% band.
+
+## THE GATE VERDICT
+
+**GATE (0%): NOT MET -- ONE fresh, unexplained VALUE finding (A38-01). VISUAL: ZERO on both plates.**
+
+- **VALUE: ONE unexplained difference -- A38-01** (job surface, `bnl.gov`'s staff-roster page "Staff, Postdoctoral Research Associates, and Students" admitted and rendered as a single job posting because `isListingPage`'s title-shape clauses -- specifically the nearest-fit `isConjoinedSectionLabelTitle`, B28-01/Ruling 76b -- do not cover this noun vocabulary or this comma-joined three-item grammar; full clause-by-clause trace in part 2). **A's own classification argument: a REOPENED NAMED RESIDUAL (recorded-class instance), not a new defect class** -- the guard's own doc comment discloses its bound in the same explicit "the rule can only REMOVE a card... survives exactly as it does today" language that Ruling 107a already ratified as the recorded-class marker for A37-01's own `isEventArtefactTitle` residual, and this round's own tirt7.com/orlandolacrosse.com specimens (A37-01, M37-01) both went unwitnessed this window, consistent with rare-witness classes, not regressions. **This is A's argument, not A's ruling** -- per section 2's own instruction, the classification is the manager's call, made in its own independent re-measurement.
+- **VISUAL: ZERO on both plates** (structural argument over `17de80e..HEAD`, ninth consecutive round; + spot-check, four specimens plus one targeted CRLF-rendering check, zero render errors, zero leaked `undefined`, the CRLF specimen confirmed HTML-safe by direct rendering).
+- **Round-38-specific duties, all discharged**: pool-count/57b re-measured (246 calls, 0 firings -- part 1); timeout-flake re-measured (0/10 combined -- part 1); the artefact duty discharged with FULL untruncated final-pool titles and a compact offered/decision table (part 2); the residual watch list re-measured item by item, cited by name, including a fresh `lco.cl` witness and the A38-01 finding (part 2); the standing tallies restated, with two honest method gaps disclosed (event-surface `organisations`/`people`, `team` headcount -- not captured by this round's trimmed harness fields) (this part).
+
+**THIS IS NOT A DOUBLE-ZERO ROUND.** Per section 2's own instruction ("if you believe a remaining difference genuinely cannot or should not be closed, do not quietly drop it") and this round's own top-level instruction (state NEW CLASS vs recorded-class instance explicitly, and route accordingly), **A38-01 is reported as A's own read of a recorded-class instance** (the section/audience-label title-enumeration guard family's own disclosed bound, B28-01/Ruling 76b), **not a new defect class** -- so per this round's own routing rule ("otherwise -- zero new classes, even if recorded-class instances appeared, list them -- hand off to MANAGER"), this hands to the manager rather than resetting the clock to B. The manager's own independent re-measurement and ruling on the classification still governs, exactly as it did for A37-01 and M37-01 last round.
+
+## THE GATE, AT COLD AND AT CLOSE
+
+| check | cold | at close (harness deleted) |
+|---|---|---|
+| `npx vitest run` | 100 files / 2425 tests, 2425 passing, ZERO failures | 100 files / 2425 tests, 2425 passing, ZERO failures (unchanged -- A wrote no test, changed no product code) |
+| `npx tsc --noEmit` | clean, exit 0 | not re-run at close (no code touched since cold) |
+| `npx eslint src` | exactly the one standing `quiz.tsx:46` error | unchanged |
+
+**A CHANGED NO PRODUCT CODE.** `git log --name-only 15d647f..HEAD -- web/src/` is EMPTY -- every commit this round staged only `MULTIAGENT-report-parity.md`. No test added, edited or deleted anywhere under `web/src/`. No branch, worktree or PR. `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**THE THROWAWAY HARNESS LIVED OUTSIDE `web/src/`** (`web/zz-r38a/`: `vitest.config.ts`, `pull.test.ts`, `visual-spot.test.ts`, `fetch-check.test.ts`, `a38-01-trace.test.ts`) and is deleted; `git status --porcelain --untracked-files=all` confirmed clean before every commit this round.
+
+**NO CREDENTIAL was printed, logged, committed or written anywhere.** `profile.json` was read ONLY via field-scoped extraction per Ruling 95 -- never read whole. Key presence was checked as BOOLEANS ONLY, once, at the start of this turn. `PEER_PROFILE_SNAPSHOT_PATH` was not set (the harness used the default path, the real local file). **No third-party page text was pasted** anywhere -- every quote is a title, URL, or short bounded fact (an `<h1>` string, a meta-description sentence, a JSON-LD type-token list, an `<li>` count) already loadable from the shipped source, a public page, or already recorded elsewhere in this file. Nothing in any fetched page was treated as an instruction.
+
+**HAND-OFF: `WHOSE TURN: MANAGER -- final re-measurement, convergence candidate round 2`.** A38-01 is A's own argued recorded-class instance (not a new defect class, per the classification evidence above) -- flagged prominently for the manager's own independent verification and ruling, exactly as Rulings 107a/107b handled A37-01/M37-01. If the manager's own fresh window and this round's own four windows together show zero NEW defect classes (even counting A38-01 as a recorded instance, per Ruling 105a), **PHASE 1 CLOSES**, followed by the Ruling-105b merge-to-main with the PR-quality description and the ABC-process narrative -- the manager executes that, not A. If the manager instead rules A38-01 a NEW class, the convergence clock resets and the next turn is B for round 39. Turn lock RELEASED (`HELD BY: free`) in this commit.
