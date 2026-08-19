@@ -90148,3 +90148,171 @@ Of the 10 pooled events, exactly 1 (`thebatteryshow.com`) carried a roster with 
 - **110c — V-P2-03 is RESOLVED BY DOCTRINE, not a defect:** V26-J02's own recorded distinction is source-prose (serif) vs Peer's voice (sans). Class-A LLM content IS Peer's voice, so sans is CORRECT; only direct quotes from the fetched page inside LLM sections would take `font-reading` (none exist today). Recorded so no future round re-litigates; if the user ever wants a different visual voice for LLM prose, that is a product decision, not a parity defect.
 - **110d — Routing: `WHOSE TURN: B — Phase 2 round 3`, THREE items: (1) BF2's two programme-page root causes** (mind: the same-host filter is a scope/safety boundary — B measures a bounded relaxation, e.g. known ticketing-platform allowance, against the one-site-at-a-time complaint and the fetch-scope doctrine); **(2) V-P2-01** (restore `font-reading` on the enriched blockquote; sweep every Class-B site for the same missed convention); **(3) V-P2-02** (design per the trap's own documentation at `report-section.tsx:142-158`).
 
+
+### Phase 2 Round 3 — Agent B — ITEM 1 (BF2: `findProgrammePageUrl`'s two root causes — diagnosis, live-verified fix design for witness 1, decline for witness 2)
+
+**STATUS: COMPLETE. DIAGNOSIS + DESIGN ONLY — B changed no product code, edits no shipped test.** Run by `LAPTOP-3CL10CG5`. Method: throwaway harness (`web/zz-p2b/`, deleted before this commit) executing the SHIPPED `findProgrammePageUrl`/`fetchPageHtml`/`extractPageText`/`extractPageHeadings` (`web/src/lib/opportunities/page-text.ts`, `page-fetch.ts`) directly against the SAME two real, currently-live pages A's round-2 entry witnessed (`advancedautobat.com`, `thebatteryshow.com`) — bounded, small, no LLM calls needed for root-cause tracing (pure fetch + regex). Two candidate designs were also verified by TEMPORARILY editing the shipped `page-text.ts` in place, running the full gate, then reverting (`git checkout --`) before any commit — `git status --porcelain --untracked-files=all` confirmed clean both before and after. This is a stronger empirical check than reasoning about test fixtures alone.
+
+#### WITNESS 1 — `advancedautobat.com` — corrected, more precise diagnosis; a real, low-risk, general fix designed and live-verified; **but it does NOT close the empty-field symptom**, honestly reported
+
+**Root cause, traced clause by clause against the real live page (`https://www.advancedautobat.com/us/`), not the summary A recorded:**
+
+The page carries 7 same-host links that score nonzero under the shipped `PROGRAMME_LINK_KEYWORDS` (`page-text.ts:39-46`). The winner by the shipped scoring+tie-break rule is `text="View Brochure & Final Agenda" href="/us/2026-brochure-download-form"` (score 10: `agenda` weight 5 ×2 for text-only match), which is the confirmed lead-gen PDF form (1429 chars, one heading "PDF Download," directly re-fetched and confirmed). But there is a SECOND, better same-host candidate on the same page that the current mechanism structurally cannot see: `text="Programs" href="/aabc-us/programs"`. It scores **zero**, not because it lacks a real programme signal, but because `PROGRAMME_LINK_KEYWORDS[0].pattern` is `/\bprogram(?:me)?\b/i` — **singular-only**. The word boundary `\b` sits immediately after `program`/`programme`, so the PLURAL "Programs" fails the whole-word match (no boundary between `program` and the trailing `s`). This is a precise, narrow regex bug, not the same failure shape A's summary implied ("walks into a bad page") — the real page IS present, adjacent, and unscored.
+
+**Fix designed and LIVE-VERIFIED:** widen the one pattern to `/\bprogram(?:me)?s?\b/i` (added exactly one optional `s?`). Verified against the real live page with a local copy of the shipped function (byte-identical except this one line): the pick FLIPS from `https://www.advancedautobat.com/us/2026-brochure-download-form` to `https://www.advancedautobat.com/aabc-us/programs` — confirmed by direct execution, not derived. With the plural fix, `/aabc-us/programs` scores 21 (7×2 text + 7 href-target), beating the lead-gen form's 10 outright — not a fragile tie, a clean win.
+
+**MEASURES:** presence of `program`/`programme`, singular OR plural, as a whole word, in link text or href target — nothing else. **ASSERTS:** the host filter, tie-break rule, and every other keyword weight are untouched. **TOLERATES:** a same-host page that now scores nonzero via the widened pattern may still turn out thin — an accepted, pre-existing risk class the whole scoring mechanism has always carried (never a NEW kind of harm, since off-host is still excluded). **FAILURE DIRECTION:** a false widening can only ever redirect the SAME-HOST second fetch to a different same-host page — never leak off-host, never crash, worst case unchanged from today (still an empty programme section).
+
+**BLAST RADIUS, MEASURED not assumed:** the ENTIRE shipped change was temporarily applied to the real `web/src/lib/opportunities/page-text.ts` and the full gate run cold: **100 files / 2425 tests, 2425 passing, ZERO failures**, `tsc --noEmit` clean, `eslint src/lib/opportunities/page-text.ts` clean — then reverted (`git checkout --`), tree confirmed clean. Grepped every existing test file for plural forms of "program(s)"/"programme(s)" used as a NEGATIVE assertion (i.e., a test relying on the plural NOT matching) — zero hits in `page-text.test.ts`, `page-reading-safety.test.ts`, `enrichment.test.ts`, or `event-details.test.ts` (the two files named in the brief as programme-behaviour locks). The one adjacent case checked by hand, `page-text.test.ts:231` (`<a href="news">Programming committee update</a>`, inside the "returns null when there are no programme candidates" test) — "Programming" still correctly fails to match even with the widened pattern (`\b` still fails immediately after `program`, since `"ming"` follows with no boundary) — confirmed by direct regex execution, not eyeballed. **CORPUS EXECUTED AGAINST:** the real live `advancedautobat.com` pages (both the flip and the harness-bug-free tie math), the full shipped `page-text.test.ts`/`page-reading-safety.test.ts` fixture suites (unchanged pass, via the full-gate run above).
+
+**HONEST CAVEAT, load-bearing — do not let the fix's cleanliness overstate its effect:** direct execution proves this fix does **NOT** verifiably flip `talkSummaries`/`plan` from empty to populated for this specific witness. `extractPageHeadings` on the corrected destination (`/aabc-us/programs`) returns **zero** headings — confirmed by direct call: the page's track labels ("TUTORIALS," "LARGE-SCALE RECYCLING," etc.) live inside `<img alt="...">` and `<div class="track-text">` markup, never an `<h1>`–`<h6>` tag (confirmed by inspecting the raw HTML directly around a known label). The root event page itself contributes only one heading, the marketing `<h1>` ("Final Agenda Now Available for the Best..."), which is not a plausible talk title. Per the STRICT §5.4 gate already shipped in `enrichment.ts:703-723` (`allowedHeadingTitles` built from `programmeTitleHeadingCandidates(fetchedPageHeadings, ...)`, a HARD requirement — `!allowedHeadingTitles.has(normalizedTitle)` rejects any candidate not in that set), **zero heading candidates means every LLM-proposed talk title would still be rejected**, regardless of this fix. The site's real per-track session detail lives one hop further (each track has its own sub-page, e.g. `/aabc-us/tutorials`), which is outside the shipped "one extra page, same host, never a crawl" bound (`page-reading-safety.test.ts`'s own §5.3 doctrine) — correctly out of scope; **not proposed to change.**
+
+**Recommendation:** land the plural fix anyway — it is a real, general (not witness-specific), zero-downside correctness improvement (a same-host page literally titled "Programs" should never lose to a lead-gen form), independently justified regardless of this witness's own remaining gap. Report BF2/witness 1 to the manager as **PARTIALLY MITIGATED, NOT CLOSED** — the URL-selection bug is fixed; the deeper blocker (no heading-tagged content within the one-hop bound) is a separate, out-of-scope limitation.
+
+#### WITNESS 2 — `thebatteryshow.com` — root cause CONFIRMED exactly as A found, but a host-filter relaxation is MEASURED AND DECLINED, with concrete evidence
+
+**Confirmed by direct execution against the real live page:** `findProgrammePageUrl(html, "https://www.thebatteryshow.com/")` returns `null` today. The one keyword-scoring candidate on the page is `text="CONFERENCE AGENDA" href="https://tbsm26.mapyourshow.com/8_0/sessions/#/"` — excluded before scoring by the same-host-only filter (`page-text.ts:292`).
+
+**New finding that changes the recommendation: even a permitted fetch of this exact off-host destination would not close the symptom.** Direct fetch of `https://tbsm26.mapyourshow.com/8_0/sessions/#/` returns a 573KB page whose extracted text/headings are literal, UNRENDERED client-side template syntax — `extractPageHeadings` returns entries like `"{{title}}"`, `"{{content.speakersText}}"`, `"0 && showspeakerphoto\">..."` — MapYourShow (an industry-standard trade-show session-browser SaaS, per A's own round-2 note) serves this page as a JavaScript-rendered single-page app; the static HTML this pipeline fetches carries zero real session data. Relaxing the host filter for THIS witness would not populate `talkSummaries`/`plan` — it would spend a live fetch (and, downstream, LLM tokens) on template garbage for no benefit, while genuinely widening the pipeline's fetch surface.
+
+**A same-host alternative EXISTS on this exact page** (`text="Conference Overview" href="/conference/conference-overview/"`) with real, rich static content — 6810 chars, 59 real `<h1>`–`<h6>` headings including "Track A: Battery Development" through "Track E," "2026 Keynote," "Venkatesh Vasudevan" (independently matching A's own round-2 BF3 witness) — directly confirmed by fetching and parsing it with the shipped `extractPageText`/`extractPageHeadings`. **This was measured as a possible keyword-vocabulary widening (adding "overview") and DECLINED**, for a concrete, demonstrated reason, not a hypothetical one: the SAME root page also carries `text="Expo Overview" href="/attend/expo-overview/"` (the trade-show floor page, not the conference programme), which appears EARLIER in DOM order — under the shipped tie-break rule (`score === best.score && index < best.index`), adding a generic "overview" keyword would make **"Expo Overview" win the tie, not "Conference Overview"** — a concrete regression, not a guess. Constructing a narrower phrase (e.g., requiring "conference" AND "overview" together) would be tailored to this one witness's exact link text — the Ruling-32 "one site at a time" shape the brief itself warns against, with n=1 witness to justify it.
+
+**Must-NOT-fetch corpus, executed against a hypothetical off-host relaxation (the brief's own required check), regardless of how it might be gated:**
+
+| link (real, from this exact page, or constructed) | text-based score | verdict |
+|---|---|---|
+| "Our Platinum Sponsor: Intel" | 0 | safe |
+| "Book Your Hotel" | 0 | safe |
+| "Follow us on Twitter" | 0 | safe |
+| "Venue & Hours" → `/useful-information/discounted-hotels/` (REAL, same page) | 0 | safe |
+| "Exhibitor Center" → `/exhibit/exhibitor-center/` (REAL, same page) | 0 | safe |
+| "CONFERENCE AGENDA" → `/8_0/sessions/` (the REAL witness link) | **14** (agenda×2=10 + "sessions" in href target=4, precisely computed, not eyeballed) | — |
+| "Schedule a Call" → `/meetings/schedule-a-call` (a generic third-party scheduling-tool CTA every conference site embeds) | **18** | **OUTSCORES the real link** |
+
+The sponsor/hotel/social corpus is safe by construction — none of those categories carry programme keywords, host check or not. But the adversarial case is not hypothetical risk-mongering: a **common, realistic look-alike CTA (a "book a meeting" widget) scores higher than the real agenda link**, using ordinary production marketing vocabulary, no invented weighting. A pure keyword-confidence signal — the only signal available once "the link came from the trusted page" is granted to every candidate equally, since it already is — **cannot reliably separate the real case from the look-alike**. This is the concrete evidence behind declining, not merely "untested."
+
+**Recommendation: DECLINE a code change for witness 2.** Two independent reasons: (1) the specific relaxation the witness seems to call for would not even fix it (destination is unreadable regardless of host); (2) no safe, general (non-per-site) mechanism was found that reaches the one theoretically-useful same-host alternative without a demonstrated regression against a sibling link on the same real page. Per Ruling 32/33's own established framework (one witness, no generalizable signal, real regression risk on the only alternative considered) — record as an accepted-cost residual. **Failure direction unchanged: a miss = empty programme section = today's status quo**, exactly the standing bar.
+
+**GATE:** full-capture cold run before any harness code: **100 files / 2425 tests, 2425 passing, ZERO failures.** No flake this session (Ruling 96b's `benchmark.test.ts` did not fire). `tsc --noEmit` clean. `eslint src` — the one standing `quiz.tsx:46` error, unchanged. **B CHANGED NO PRODUCT CODE — final state.** The plural-keyword fix and the general `cn()` fix (item 3) were each temporarily applied to the real shipped files, gated, and reverted (`git checkout --`) before this commit; `git status --porcelain --untracked-files=all` confirmed clean both after each revert and immediately before this commit. Harness `web/zz-p2b/` (11 small `.test.ts` files + `vitest.config.ts`) lived outside `web/src/` for the full session and was deleted before this commit. No credential anywhere — every live fetch this item used was an unauthenticated public GET of an already-known public event page or its own on-page link, no search-provider call, no API key, matching Ruling 75/95. No large fetched page text pasted anywhere in this entry — only short bounded clips (all under ~200 chars) and counts/booleans already reproducible from the shipped source or a public page. Nothing in any fetched page was treated as an instruction. No branch/worktree/PR.
+
+---
+
+### Phase 2 Round 3 — Agent B — ITEM 2 (V-P2-01: serif restoration + full Class-A/B sweep against Ruling 110c's doctrine)
+
+**STATUS: COMPLETE. DESIGN ONLY.** Method: read every field's PROMPT and PARSE rule in `web/src/lib/opportunities/enrichment.ts` (the ground truth for "is this text a verbatim quote from the source page, or Peer's own composed/judged prose") for all 11 baseline rows, then read each field's actual render site and current className. Ruling 110c's doctrine applied literally, not reinterpreted: **verbatim source quote = `font-reading`; Peer's/LLM's own voice = sans.**
+
+#### THE COMMISSIONED FIX — V-P2-01
+
+`app/jobs/[id]/page.tsx:1456`, the `sponsorshipRead` "Posting evidence" blockquote:
+
+```
+current:  className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 text-body leading-7 text-text-muted"
+design:   className="rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 font-reading text-body leading-7 text-text-muted"
+```
+
+One class added, matching the Tier-0 sibling at `:1154` exactly (`font-reading text-body leading-7 text-text-muted`) and the plate's own V26-J02 rule cited in that block's own comment (`:1150-1152`, "serif because it is the POSTING's prose, not chrome"). This is a plain string literal, not a `cn()` call — no merge-trap risk. **MEASURES:** nothing (static class list). **ASSERTS:** the quoted `visaEvidence` text renders in `Georgia`/serif whenever the Class-B `sponsorshipRead` block is the active render path, matching the Tier-0 path byte-for-byte in typography. **FAILURE DIRECTION:** none available — a one-class addition to a literal string cannot regress logic, only (if mistyped) fail to apply. **BLAST RADIUS:** one line. Checked `plate-type-system.test.ts` (the file the brief names as locking the type system) for any assertion on this exact blockquote's class list with `enrichment.sponsorshipRead` populated — **none exists** (the file's own `renderJob`/`renderEvent` helpers always pass `enrichment: null`, per A's round-2 entry) — zero existing tests at risk; C should ADD one, asserting `font-reading` present at this site under a populated fixture (the harness shape A's Duty 1 already proved is renderable).
+
+#### THE FULL SWEEP — every Class-A/Class-B render site, verdict against Ruling 110c
+
+| Row | Field | Nature, verified against `enrichment.ts`'s own prompt/parse rules | Current render (file:line) | Doctrine verdict | Status |
+|---|---|---|---|---|---|
+| A1 | `specificRequirements` | **Verbatim quote.** `quotableStringList` (`enrichment.ts:354-375`, used at `:465-472`) mechanically verifies every item is `normalizedPageText.includes(normalized)` — the prompt itself says "Copy... exactly from fetchedPageText. Never infer, paraphrase" (`:412-414`). | `text-body text-heading`, no `font-reading` (`jobs/[id]/page.tsx:1394-1401`) | SHOULD be `font-reading` | **MISSED CONVENTION — new finding, same class as V-P2-01, NOT previously caught** |
+| A2 | `specificDuties` | Same mechanism, `quotableStringList` at `:474-478`; prompt: "Copy... exactly... Never infer or paraphrase" (`:415-417`). | `text-body text-heading`, no `font-reading` (`:1412-1419`) | SHOULD be `font-reading` | **MISSED CONVENTION — new finding** |
+| A3 (quote box) | `sponsorshipRead`'s own displayed `visaEvidence` | Verbatim quote (same string as B2, dual-rendered) | missing `font-reading` (`:1456`) | SHOULD be `font-reading` | **= V-P2-01, the commissioned fix above** |
+| A3 (inference text) | `sponsorshipRead.likelihood` / `.basis` | LLM's own inference — prompt: "Infer cautiously... label the basis as judgment, not fact" (`:406-409`) | sans, `text-title font-semibold` / `text-body` (`:1470-1474`) | sans correct | OK, no change |
+| A4 | `emphasise` | LLM's own application advice — prompt: "Two to four concrete profile-grounded application points" (`:411`) | sans (`:1487`) | sans correct | OK |
+| A5 (talk title) | `talkSummaries[].title` | Verbatim quote of a HEADING, §5.4-gated (`:612-613`, `:703-723`) — but rendered as a card TITLE/heading (`<h3>`), not a body-prose blockquote | sans, `text-title font-semibold text-heading` (`events/[id]/page.tsx:2173`) | **AMBIGUOUS** — doctrine's own worked example (`visaEvidence`) is a full sentence in a blockquote; a short heading-style title is arguably chrome-shaped, not prose-shaped | **FLAGGED, open question — not asserted a defect** |
+| A5 (talk about) | `talkSummaries[].about` | LLM's own <=30-word explanation (`:613`) | sans (`:2182`) | sans correct | OK |
+| A6 (plan label) | `plan[].label` | Verbatim reference to an already-verified talk title or attendee name (`:623-626`) — a short label, not prose | sans, `text-body-sm font-semibold text-heading` (`:2210-2212`) | same ambiguity as A5's title | **FLAGGED, open question** |
+| A7 | `posterFit.points` | LLM's own judgment points — prompt: "Two to four short points, one idea each" (`:616`) | sans (`:2264`) | sans correct | OK |
+| B1 | `roleSummary` | **LLM's OWN three composed sentences** — prompt: "Exactly three clean sentences" (`:410`), no "copy exactly" instruction anywhere; REPLACES Tier-0's `roleBullets` (itself derived from `job.summary`, the posting's own extracted text) | **INHERITS `font-reading`** from the shared `roleBullets` render slot (`jobs/[id]/page.tsx:1329`), whose OWN comment justifies serif as "the POSTING's prose" (`:1327-1328`) — a justification that no longer holds once B1's LLM-composed sentences occupy the slot | Doctrine says sans (Peer's voice); currently serif | **FLAGGED — the OPPOSITE-direction mismatch from V-P2-01 (has serif, arguably shouldn't); NOT asserted a defect** — a real visual-consistency counter-argument exists (this slot has always been serif regardless of exact wording; flipping only B1 would make Tier-0 and Class-B render inconsistently within the SAME slot depending on which is active) |
+| B2 | `sponsorshipRead` suppresses Tier-0's own quote; the SAME `visaEvidence` text re-renders in A3's box | Verbatim quote | see A3 (quote box) row | serif | = V-P2-01 |
+| B3 | `condensedDescription` | LLM's own condensation — prompt: "Condense... do not add facts or marketing language" (`:608`), explicitly a paraphrase, not a copy | sans, `text-body-lg leading-8 text-text` (`events/[id]/page.tsx:2093`) | sans correct | OK — and this render slot has NO prior "posting's prose" comment/precedent either way, so B3 introduces no inconsistency in either direction (unlike B1) |
+| B4 | `judgedAttendees[].why` | LLM's own reasoning — prompt: "Keep why to at most 25 words" (`:610`), a judgment, not a quote | sans/`text-caption` (`events/[id]/page.tsx:1574-1578`, `:1671-1674`) | sans correct on doctrine | OK on doctrine — the MECHANICAL class-drop at this exact site is item 3, unrelated to font family |
+
+**Sweep verdict, plain: 2 confirmed missed-convention sites (A1, A2 — new, not previously caught, same bug class as V-P2-01), 1 commissioned fix (A3/B2 = V-P2-01), 2 open-question flags on the "quote-as-heading vs quote-as-prose" boundary (A5 title, A6 label — offered, not asserted), 1 open-question flag on B1's opposite-direction mismatch (offered, not asserted), 5 sites confirmed correct as-is (A3 inference, A4, A5 about, A7, B3, B4-on-doctrine).**
+
+**This corrects Ruling 110c's own factual claim** ("only direct quotes from the fetched page inside LLM sections would take `font-reading` (none exist today)") — A1/A2 ARE exactly that shape, mechanically verified by `quotableStringList`, and exist today. Flagged for the manager, per the standing playbook precedent (§0b step 4: "the next role has found something the previous one got wrong").
+
+**Recommendation for C, if commissioned:** land V-P2-01 (A3/B2) as designed above — zero risk, zero ambiguity. A1/A2 are the same bug class and equally safe to fix (`text-body text-heading` → add `font-reading`, both plain string literals, no `cn()` involved) but carry a secondary design tension worth the manager's explicit sign-off first: A1/A2/A4 currently form a visually-matched trio of "card list" sections (same border/bg/padding shape); adding serif to A1/A2 alone while A4 stays sans would visually split that trio along a distinction (quote vs. judgment) the reader has no way to perceive from the shape alone. Not a reason to decline — Ruling 110c's doctrine is about typographic MEANING (this is the posting's word vs. Peer's word), and the trio's shared "card" shape can coexist with different type inside it (exactly how A3's box already mixes a serif quote and a sans inference side by side) — but worth naming so it isn't landed silently.
+
+**GATE:** see item 1's entry (same session, one gate check covers all three items) — **100 files / 2425 tests, 2425 passing, ZERO failures**, `tsc` clean, `eslint` unchanged. **B CHANGED NO PRODUCT CODE.** No live calls in this item (pure source-reading + render-site inspection, reusing item 1's fixture-render technique where needed — no new LLM/fetch spend). No branch/worktree/PR.
+
+---
+
+### Phase 2 Round 3 — Agent B — ITEM 3 (V-P2-02: the `cn()` tailwind-merge trap — minimal fix per the doc's own prescription, PLUS a general fix that closes 3 additional confirmed live bugs the sweep found)
+
+**STATUS: COMPLETE. DESIGN ONLY.** Method: read the trap's own documentation in full (`components/reports/report-section.tsx:131-177`, the `REPORT_LABEL_STEP`/`REPORT_LABEL_CLASS` comment) — it explains the mechanism precisely (`tailwind-merge` does not know `text-caption` is a font SIZE; it reads it as a text COLOUR conflict-group member and drops it when a real `text-{colour}` class follows in the same `cn()`/`twMerge` call) and prescribes the fix in its own words: **"Compose with a template literal... The pre-existing code avoided the trap by writing these as literal strings and never routing them through `cn`."** Then grepped every `cn(` call site in both report page files (`jobs/[id]/page.tsx`, `events/[id]/page.tsx` — 14 total) and executed the REAL shipped `cn()` (`web/src/lib/cn.ts`) against each site's actual class arguments to separate "structurally similar" from "actually vulnerable," rather than assuming from the doc's one named example.
+
+#### THE COMMISSIONED SITE, AND ITS UNDOCUMENTED TWIN
+
+`events/[id]/page.tsx:1574-1578` (Organisations roster card reason paragraph — B4's own display site) carries the exact trap: `cn("mt-2 text-caption font-medium text-accent", judgment && !judgment.worthIt && "text-text-muted")`. Executed directly: output drops `text-caption` in BOTH branches (`judgment` falsy → `"mt-2 font-medium text-accent"`; truthy-and-not-worth-it → `"mt-2 font-medium text-text-muted"`). **A byte-identical, previously unnoted twin exists at `events/[id]/page.tsx:1671-1674`** (the People roster card's own reason paragraph) — same call shape, same drop, confirmed by the same direct execution. Neither call site was named in the commissioning brief, which cited only the Organisations card; the People card is the "same component... same collision" the brief asked B to check for.
+
+**MINIMAL FIX, per the documentation's own prescription (template literal, no `cn()`):**
+
+```
+current (both sites, :1574-1578 and :1671-1674):
+  className={cn(
+    "mt-2 text-caption font-medium text-accent",
+    judgment && !judgment.worthIt && "text-text-muted",
+  )}
+
+design:
+  className={`mt-2 text-caption font-medium ${
+    judgment && !judgment.worthIt ? "text-text-muted" : "text-accent"
+  }`}
+```
+
+**MEASURES:** the same `judgment && !judgment.worthIt` condition, unchanged. **ASSERTS:** `text-caption` is present in the rendered output in both branches (previously silently absent in both). **BLAST RADIUS:** two call sites, ~4 lines each; zero other files. Checked `events/[id]/page.test.ts` (the file the brief implies should be checked) for any existing assertion on either paragraph's class list — **none exists** (consistent with A's own round-2 note: "Zero existing assertion... covers this paragraph's class list"). C should add 4 new assertions (2 sites × 2 branches) locking `text-caption` presence.
+
+#### THE SWEEP — every OTHER `cn()` call site, executed, not assumed
+
+Ran the real `cn()` against every one of the other 12 `cn(` call sites across both files. Result: **3 MORE confirmed live victims of the exact same mechanism, on components unrelated to the roster reason paragraph** — the trap is not specific to `text-caption`; **every custom font-size token this app defines (`globals.css:78-94`: `text-micro`, `text-caption`, `text-meta`, `text-body-sm`, `text-body`, `text-body-lg`, `text-lead`, `text-title`, `text-title-lg`) collides identically**, because `tailwind-merge` (v3.6.0, unconfigured for this project's custom `@theme` tokens) has no notion of them as a size group and falls back to treating any bare `text-XXX` as a colour-group candidate.
+
+| Site (file:line) | Component | cn() call | Executed result |
+|---|---|---|---|
+| `events/[id]/page.tsx:908`, `jobs/[id]/page.tsx:827` | `HeaderChip` (both job AND event report header badges — kind/type/visa/match chips, plate's V26-J08/E08 four-signal row) | `cn("...text-meta font-medium", tone === "accent" ? "...text-accent" : ...)` | **`text-meta` DROPPED in every tone branch**, confirmed by direct execution on both files' copies |
+| `events/[id]/page.tsx:2103` | activity chip ("What actually happens there" section) | `cn("...text-meta", highlighted ? "...text-accent" : "...text-tag")` | **`text-meta` DROPPED** |
+| `events/[id]/page.tsx:1271` | `StarButton` (★/☆ glyph on every roster card, both surfaces) | `cn("...text-title...", active ? "...text-accent" : "...text-faint...")` | **`text-title` DROPPED** in both branches |
+
+These 3 sites are OUTSIDE this item's explicit commission (V-P2-02 named only the roster reason paragraph) — not fixed here, flagged as an additional finding. All other `cn(` calls in both files (button-variant composition at `events:968/983/996`, `jobs:869/903/918`) either carry no colour utility in the same call or compose sizes/colours from `buttonVariants()`'s own return value rather than a literal size token — confirmed safe by the same direct-execution method, not assumed.
+
+#### A GENERAL FIX, DESIGNED, LIVE-VERIFIED AGAINST THE FULL GATE — recommended as the preferred design over per-site patches
+
+Per Ruling 32's own standing doctrine ("stop fixing it one site at a time... one investigation... for the whole surface") — five confirmed victims now (the 2 commissioned + the 3 this sweep found), all one mechanism, not five unrelated bugs. `tailwind-merge` v3.6.0 exposes `extendTailwindMerge` for exactly this: registering custom theme tokens into its own class-group model. Designed and **live-verified by temporarily editing the real shipped `web/src/lib/cn.ts`**:
+
+```
+import { clsx, type ClassValue } from "clsx";
+import { extendTailwindMerge } from "tailwind-merge";
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [
+        "text-micro", "text-caption", "text-meta", "text-body-sm",
+        "text-body", "text-body-lg", "text-lead", "text-title", "text-title-lg",
+      ],
+    },
+  },
+});
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+**Verified, with the real shipped file temporarily changed, then reverted (`git checkout --`):**
+- **Full gate: 100 files / 2425 tests, 2425 passing, ZERO failures** (identical to the unmodified baseline — zero regressions across the WHOLE app, not just the report pages, even though these 9 tokens are used in 45 files total per a repo-wide grep).
+- `tsc --noEmit` clean on the shipped file (the only error surfaced was in the throwaway harness itself, an `any`-index typing issue unrelated to the product change, moot since the harness is deleted).
+- `eslint src/lib/cn.ts` clean.
+- Isolated correctness checks (all executed, not asserted from documentation alone): the original trap case (`text-caption` + `text-text-faint`) now keeps BOTH classes; all 5 confirmed victims (2 commissioned + 3 newly found) keep their size class after the fix; a GENUINE same-group conflict (`text-caption` then `text-title` in one call) still resolves correctly to the later class, proving this doesn't just allowlist everything — it correctly re-groups these tokens so real conflicts still resolve; native Tailwind conflicts (`text-red-500`/`text-blue-500`, `text-sm`/`text-lg`) are provably unaffected (extend, not replace).
+
+**MEASURES:** class-group membership at merge time. **ASSERTS:** any future call site that combines one of these 9 tokens with a text-colour utility in one `cn()` call will ALSO be safe, automatically — this is the whole point, matching Ruling 32's "for the whole surface" instruction rather than patching found instances one at a time. **TOLERATES:** nothing new — strictly additive registration. **FAILURE DIRECTION:** none observed; the full-suite gate is the strongest evidence available short of shipping it. **BLAST RADIUS:** one file (`web/src/lib/cn.ts`), ~20 lines changed from 3; every `cn()` caller in the app is a theoretical blast-radius member, but the full-gate pass (100/2425, unchanged) is direct evidence across that whole radius, not merely a sampled corner of it.
+
+**Recommendation, POLICY — manager decides between two valid designs:**
+1. **Minimal (matches the doc's literal prescription):** template-literal fix at the 2 commissioned sites only. Smallest possible diff, zero doubt, leaves the 3 newly-found victims (HeaderChip ×2 call sites, activity chip, StarButton) live and broken.
+2. **General (recommended by B, matches Ruling 32's own standing doctrine over "one site at a time"):** the `cn.ts` `extendTailwindMerge` change. Closes all 5 confirmed victims in one place, permanently prevents every future recurrence of this exact class of bug, empirically verified against the full 2425-test gate with zero regressions. Larger conceptual surface (one shared utility function), but the measured blast radius is clean.
+
+B's own read: design 2 is the better engineering call — it is exactly the "one mechanism, not one site" answer Ruling 32 commissioned this loop to prefer, it is proven safe against the full test suite (not sampled), and it retroactively also fixes 3 additional real, currently-live visual bugs (undersized header chips app-wide, an undersized star glyph on every roster card) this sweep would otherwise have had to file as separate items next round. Offered as an argument, not a ruling.
+
+**GATE:** see item 1 (same session, one gate check covers all three items) — **100 files / 2425 tests, 2425 passing, ZERO failures**, `tsc` clean, `eslint` unchanged, both BEFORE any experiment and AFTER each temporary edit-and-revert (four full gate runs this session total: cold baseline, item-1 experiment, item-3 experiment, final clean re-run — all 2425/2425). **B CHANGED NO PRODUCT CODE — final state confirmed** (`git status --porcelain --untracked-files=all` clean immediately before this commit). No credential anywhere. No branch/worktree/PR.
