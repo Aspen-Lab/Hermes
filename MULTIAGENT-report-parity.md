@@ -92633,3 +92633,26 @@ Commit: see git log (message states item 2 / F2). Pushed immediately per §0d Ru
 
 Continuing to item 3 (J2) in the same session.
 
+
+### Phase 3 Round 3 — Agent C, ITEM 3 (Ruling 120g item 3: J2 — add `products` to `NON_JOB_PATH_RE`)
+
+**STATUS: ITEM 3 COMPLETE.** Run by `LAPTOP-3CL10CG5`. Implements Phase 3 Round 2 B's fifth, small design VERBATIM. Gate before this item: 100 files / 2460 tests passing, tsc clean (item 2's own closing numbers).
+
+**WHAT LANDED:**
+
+- `web/src/lib/jobs/sources/jobweb.ts:69-95`: `NON_JOB_PATH_RE`'s alternation gains `products`, only. Doc comment quotes the shipped code's own prediction verbatim as instructed — **"`products`, `product`, `shop`, `cart` and `category` are LEFT OUT for the same vacuity reason as the ATS family above: no live case in this pull"** — and states that this round supplies the live case for exactly one of the five named tokens (neicorporation.com's product-catalogue page, admitted 1 of 5 pulls in Phase 3 round 1 A's census), naming the other four as still-unearned per the identical vacuity discipline this file already applies (J1's placeholder list, F8/F9's tail regexes). Also states the failure-direction reasoning B gave (Ruling 55c: a DROP guard is held to a higher bar than an admitting one; no real ATS/careers URL plausibly uses `/products/`, the same closed-by-construction argument `COMMERCE_PATH_RE` already relies on for the identical word on the event surface).
+
+**BLAST RADIUS RE-VERIFIED, NOT JUST TRUSTED:** re-grepped `NON_JOB_PATH_RE` across `src` (excluding tests) — exactly one call site (`jobweb.ts:1685`), unchanged. Grepped `/products/` across all of `src` (not just `src/lib/jobs/`): one hit outside the two files touched here — `src/lib/events/scoring.test.ts:725`, which exercises the EVENT surface's own separate `COMMERCE_PATH_RE` (already includes "products") via `webResultToRawEventItem`, structurally unreachable from `NON_JOB_PATH_RE` — confirmed by reading the test, not assumed from the grep alone. Independently re-read Phase 3 round 1 A's own "CORRECT JOB POSTINGS — 14 of 22" list (`careers.gevernova.com`, `cadenzainnovation.com`, `talents.vaia.com`'s LBNL/ORAU/Enersys/EnPower rows, `geosi.com`, `americanlithiumenergy.com`, `earnbetter.com`, `jobs.nzz.ch`, `jobright.ai`, DTU Energy's Oracle Cloud HCM posting) — none carries a `/products/` path segment, confirming B's must-keep claim myself rather than inheriting it.
+
+**CONTRACT-CHANGE REWRITE FOUND AND FIXED (not named in B's own blast-radius note — found by this round's own grep, the same "verify, don't trust" discipline B itself used on A):** `jobweb.test.ts`'s pre-existing consolidated regex-lock test, `"buys jobdetails and collections, and nothing else in either family"`, asserted `NON_JOB_PATH_RE.test("/products/batteries") === false` — a direct, literal lock on the OLD contract this item deliberately changes. Renamed to `"buys jobdetails, collections and (Phase 3 round 3, J2) products; nothing else in either family"`; the `products` assertion rewritten to `true` with a comment naming this item and quoting why; the sibling `shop` assertion is UNTOUCHED and still asserts `false`, since `shop` remains unearned. Rewritten, never deleted, per the standing rule.
+
+**TESTS ADDED (2 net-new + 1 rewrite):**
+- The rewrite above (contract change, not a net-new test).
+- New `describe("a product-catalogue page is not a job posting (J2, Phase 3 round 3)")` in `jobweb.test.ts`, placed immediately after the A22-06/A22-07 describe block (the file's own closest precedent — an identical DROP-guard, identical failure-direction shape): MUST-CATCH, the real `neicorporation.com` witness (`https://neicorporation.com/products/batteries/cathode-anode-powders/lithium-cobalt-oxide/`, "Lithium Cobalt Oxide Powder", pull 3 of Phase 3 round 1 A's census) run through the real `webResultToRawJobItem`, confirming it now drops. Must-keep is carried by (a) the rewritten regex-lock test's still-passing `shop`/`collections`/`jobdetails` assertions, (b) the independently-reread 14-row correct-job list above, and (c) the full suite staying green.
+
+**GATE, THIS ITEM:** `npx vitest run` — **100 files / 2461 tests, 2461 passing, ZERO failures** (2460 + 1 net-new; the rewrite is a modification, not an addition). `npx tsc --noEmit` — **clean, 0 errors**. `npx eslint src` — the one standing `quiz.tsx:46` error only, unchanged. `git status --porcelain --untracked-files=all` shows exactly the two files named above, nothing else.
+
+Commit: see git log (message states item 3 / J2). Pushed immediately per §0d Rule 1.
+
+Continuing to item 4 (F8) in the same session.
+

@@ -66,8 +66,34 @@ export const JOB_PATH_RE =
 //
 // `products`, `product`, `shop`, `cart` and `category` are LEFT OUT for the
 // same vacuity reason as the ATS family above: no live case in this pull.
+//
+// Phase 3 round 3 C, ITEM 3 (J2, Ruling 120g item 3): THE SHIPPED COMMENT
+// ABOVE PREDICTED THIS EXACT GAP IN ADVANCE, and Phase 3 round 2 B's fresh
+// Tier-2 census supplied the live case it was waiting on — a chemical
+// company's product-catalogue page
+// (`https://neicorporation.com/products/batteries/cathode-anode-powders/
+// lithium-cobalt-oxide/`, rendered "Lithium Cobalt Oxide Powder") admitted
+// as a job posting, 1 of 5 pulls. Confirmed by direct execution against the
+// real path: `NON_JOB_PATH_RE` returned false, `JOB_PATH_RE` returned false
+// too, and the title carries none of `JOB_TEXT_RE`'s closed vocabulary — the
+// row only survives via `snippetAbsent`. This promotes ONLY `products` —
+// the identical vacuity discipline this file already applies elsewhere
+// (J1's placeholder list, F8/F9's tail regexes): ship the measured token,
+// name the reasoned-but-unwitnessed siblings for a future round. `product`,
+// `shop`, `cart` and `category` still have no live witness THIS round
+// either, so none of them is added — they remain exactly as deferred as the
+// comment above already states.
+//
+// FAILURE DIRECTION: `NON_JOB_PATH_RE` is a DROP-the-row guard, held to a
+// higher bar than an admitting one (Ruling 55c: "a guard that DROPS is held
+// to a higher bar than one that admits"). No real posting URL plausibly
+// contains a whole `/products/` path segment — an ATS/careers routing
+// convention never uses this word, and it is retail/e-commerce vocabulary,
+// disjoint from job-board routing by construction, the same closed-by-
+// construction argument `COMMERCE_PATH_RE` already relies on for the
+// identical word on the EVENT surface.
 export const NON_JOB_PATH_RE =
-  /\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts|collections)(?:\/|$)/i;
+  /\/(?:article|articles|doi|paper|papers|publication|publications|news|blog|posts|collections|products)(?:\/|$)/i;
 
 // ROUND 32 C, ITEM 1 (A31-01, Ruling 87a) — COMPONENT A: a closed host list
 // for encyclopedias, the same shipped SHAPE as the event side's

@@ -2400,15 +2400,43 @@ describe("the job-detection line, both halves (A22-06 + A22-07)", () => {
 
   // The regexes themselves, so a later reader can see exactly which segments
   // were bought and which were deliberately not.
-  it("buys jobdetails and collections, and nothing else in either family", () => {
+  it("buys jobdetails, collections and (Phase 3 round 3, J2) products; nothing else in either family", () => {
     expect(JOB_PATH_RE.test("/search/jobdetails/role/uuid")).toBe(true);
     expect(NON_JOB_PATH_RE.test("/collections/batteries")).toBe(true);
     // Named as UNEARNED in source: no live case in this pull, so §3's vacuity
     // rule leaves them out. If a later round earns one, this is where it lands.
     expect(JOB_PATH_RE.test("/search/job-details/role")).toBe(false);
     expect(JOB_PATH_RE.test("/search/jobdetail/role")).toBe(false);
-    expect(NON_JOB_PATH_RE.test("/products/batteries")).toBe(false);
+    // Phase 3 round 3 C, ITEM 3 (J2, Ruling 120g item 3): CONTRACT CHANGE.
+    // This asserted `false` before this item — `products` was named in
+    // source as deliberately left out for vacuity (no live case in that
+    // pull). Phase 3 round 2 B's fresh Tier-2 census supplied that live
+    // case (neicorporation.com's product-catalogue page, admitted 1 of 5
+    // pulls) and this file's own comment had predicted the gap in advance.
+    // Rewritten to state the new, bought contract — never deleted.
+    expect(NON_JOB_PATH_RE.test("/products/batteries")).toBe(true);
+    // `shop` remains unbought — still no live witness this round either,
+    // exactly as the source comment continues to state.
     expect(NON_JOB_PATH_RE.test("/shop/batteries")).toBe(false);
+  });
+});
+
+// Phase 3 round 3 C, ITEM 3 (J2, Ruling 120g item 3): `NON_JOB_PATH_RE` gains
+// `products`. Same family and same failure direction as A22-06 immediately
+// above (a DROP-the-row guard, held to the higher bar Ruling 55c states) —
+// the shipped code's own comment at `NON_JOB_PATH_RE`'s declaration named
+// this exact gap in advance ("`products`... LEFT OUT for the same vacuity
+// reason... no live case in this pull"); Phase 3 round 2 B's fresh Tier-2
+// census supplied that live case.
+describe("a product-catalogue page is not a job posting (J2, Phase 3 round 3)", () => {
+  it("drops the real neicorporation.com witness", () => {
+    expect(
+      webResultToRawJobItem({
+        title: "Lithium Cobalt Oxide Powder",
+        url: "https://neicorporation.com/products/batteries/cathode-anode-powders/lithium-cobalt-oxide/",
+        snippet: "Battery-grade lithium cobalt oxide cathode and anode powders.",
+      }),
+    ).toBeNull();
   });
 });
 
