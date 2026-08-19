@@ -98,6 +98,7 @@ Full detail: [`docs/PRODUCT_DIRECTION.md`](docs/PRODUCT_DIRECTION.md) and [`VISI
 ├── README.md            ← you are here
 ├── VISION.md            ← product vision (the "why")
 ├── AGENTS.md            ← project rules for AI coding agents + git workflow
+├── QUALITY-CAMPAIGN-REPORT.md  ← jobs & events report quality campaign: what shipped, and how it was verified
 ├── assets/              ← shared brand assets (logo)
 ├── docs/                ← architecture & product blueprints (see below)
 ├── python/              ← Python CLI surface
