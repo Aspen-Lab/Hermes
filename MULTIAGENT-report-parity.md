@@ -270,11 +270,121 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent B round 38 @ 2026-08-19 05:16 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 38 B IS COMPLETE @ 2026-08-19 ~00:3x UTC — BOTH
+                  MAINTENANCE ITEMS DIAGNOSED; NEITHER SHIPS CODE. A37-01's
+                  ASKED-FOR FIX IS DISPROVEN BY DIRECT EXECUTION (it would
+                  DELETE a real, multi-round must-keep event); M37-01 IS
+                  RULING 33's OWN BINDING, ALREADY-ACCEPTED CLASS, TRACED
+                  END TO END FOR THE FIRST TIME. BOTH FLAGGED POLICY — 
+                  MANAGER DECIDES.** Run by `LAPTOP-3CL10CG5`. Claimed the
+                  lock after `git pull` and confirming `git
+                  branch --show-current` reads `feature/summary-report-revamp`;
+                  the claiming push was ACCEPTED (`df7adbd`). Grepped "Round
+                  38 — Agent B" first — zero prior entries existed, fresh
+                  start not a resume. Read Rulings 105, 106a-106d in full,
+                  round 37 A's own A37-01 trace (parts 1-3), and the round
+                  29 B item 7 / round 29 C item 1 `isEventArtefactTitle`
+                  design history before touching anything.
+
+                  **ITEM 1 (A37-01): NO CODE CHANGE.** The brief's own asked-
+                  for extension (noun `summary`, hyphen join) was constructed
+                  in a throwaway harness and run against the exact witnessed
+                  specimen — it fires TRUE on `tirt7.com`'s own title, which
+                  would flip `webResultToRawEventItem` to `null` at
+                  `eventweb.ts:2079`. But `tirt7.com` is an ESTABLISHED
+                  must-keep, checked directly against this file's own
+                  history: named "Real event 1" in the round-4-era real-data
+                  pass (`:25483-25517`, "a workshop-style summary page," NOT
+                  a repository artefact), organically ADMITTED in round 32 A's
+                  own census (`:86414`), and explicitly listed by name among
+                  round 33 B item 1's own 12-row must-keep corpus
+                  (`:86597`, "0 of 12 false positives"). The `Meeting
+                  Summary-` lead-in surviving in the rendered name is a
+                  DIFFERENT, already-named, 30+-round-old residual (R13,
+                  "event-name quality," `:25490`, `:43336`) reopening in a
+                  new gemini-era combined-title shape — round 12's own
+                  `eventNameFrom` fixture (`eventweb.test.ts:892-899`)
+                  proves this exact page was already certified a real event,
+                  just via a title/body SPLIT the current adapter no longer
+                  produces. A37-01 is RECLASSIFIED (POLICY): not an A29-07
+                  kind-admission defect, at most R13 reopening — does not
+                  reset the convergence clock either way.
+
+                  **ITEM 2 (M37-01): NO CODE CHANGE.** Traced end to end by
+                  direct execution against the real shipped pipeline for the
+                  first time (Ruling 33's original round-9 diagnosis only
+                  reached the job-summary FLOOR, never the pool-admission
+                  layer): the kind-guard chain admits the row via round 29's
+                  own deliberate abstain-on-empty-snippet safety net
+                  (`jobweb.ts:1689-1696`); the relevance floor
+                  (`passesRequiredGate`, `shared.ts:195-212`) opens SOLELY
+                  because the bare acronym `LCO` sits in the title and is
+                  not on the generic-term list (`term-expand.ts:36-48`) —
+                  confirmed live with the production call shape; and
+                  `isOwnerNameTopicCollision` (Ruling 57b) is structurally
+                  blind to this shape by its OWN doc comment
+                  (`shared.ts:259-263`) and its own existing test
+                  (`shared.test.ts:287-296`) — an absent/bare-acronym owner
+                  name has no proper sub-span for the topic to hide inside.
+                  This is Ruling 33's own binding, named, accepted-cost
+                  class — and, checked directly, it has ALREADY reached POOL
+                  ADMISSION six-plus rounds running on the EVENT surface
+                  (`"LCO Casino, Lodge & Convention Center"` @
+                  eventective.com, first recorded ~round 32, re-confirmed
+                  rounds 36 and 37 — `:88446`, `:89075`), always logged and
+                  left as an accepted cost, never escalated — correcting
+                  Ruling 106b's "first-ever" framing to "first-ever
+                  JOB-surface instance." A live re-fetch of the real page
+                  (bounded, one URL, Ruling 75 not implicated — not a
+                  search-provider call) found NO generalizable structural
+                  kind signal (generic WordPress JSON-LD, no `JobPosting`
+                  schema, no sports-club-specific schema either), and the one
+                  distinguishing WORD ("Summer") is actively dangerous to use
+                  as a negative kind signal on this exact job surface (real
+                  admitted rows this loop has recorded include genuine
+                  "Summer Internship" postings). One witness, no generalizable
+                  signal, both binding rulings (33 and 57b) point away from a
+                  new mechanism — recommend tally + framing correction only.
+
+                  **GATE, UNCHANGED (B wrote no test, changed no product
+                  code): 100 files / 2425 tests, 2425 passing, ZERO
+                  failures.** `npx tsc --noEmit` clean. `npx eslint src` —
+                  exactly the one standing `quiz.tsx:46` error.
+
+                  **B CHANGED NO PRODUCT CODE, EITHER ITEM.** Four commits,
+                  each pushed on landing (turn-lock claim, item 1, item 2,
+                  this close-out). Throwaway harness (`web/zz-r38b/`) lived
+                  outside `web/src/`, deleted before every commit, `git
+                  status --porcelain --untracked-files=all` confirmed clean
+                  each time. No credential anywhere; the one live fetch
+                  (item 2) touched a single already-known public URL, no
+                  search provider, no API key. No large page text pasted —
+                  only short titles, a bounded snippet slice (empty), and a
+                  short schema-type token list. No branch/worktree/PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **HAND-OFF: `WHOSE TURN: MANAGER — round 38 verification
+                  and rulings before C spawns`.** Both items carry a POLICY
+                  flag: B's own read on both is "no code ships" — the
+                  manager should verify B's execution independently (per
+                  standing practice, since B can be wrong too) before ruling.
+                  If the manager agrees with both, item 1 has a documentation
+                  gap worth noting (§1.6 of B's item-1 entry: the must-keep
+                  corpus that caught this lives only in this state file, not
+                  in an executable test) and item 2 has two concrete follow-
+                  on actions (extend Ruling 33's tally to pool-level
+                  admissions; correct the "first-ever" framing) that cost
+                  nothing to adopt. If the manager disagrees with either,
+                  C's next task changes accordingly — there is currently
+                  NOTHING for C to implement under B's own reading. Turn
+                  lock RELEASED (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER RE-MEASUREMENT COMPLETE @ 2026-08-19 ~12:3x UTC —
                   CONVERGENCE CANDIDATE ROUND 1 PASSES (Rulings 106a-106d,
                   §4). ROUND 37 CLOSED.** Gate: 2425/2425. **RULING 106a:
