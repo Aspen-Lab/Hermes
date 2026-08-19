@@ -459,6 +459,47 @@ const PR_ANNOUNCEMENT_HEADLINE_RE =
   /^\s*[A-Z][\w&.,'-]*(?:\s+[A-Z]?[\w&.,'-]*){0,4}\s+(?:plans?|schedules?)\s+(?:to\s+)?\d+\b/;
 
 /**
+ * Round 37 B (Ruling 102b, M36-01): the Ruling-93-named PR-headline
+ * verb-sibling residual's reopen trigger fired -- the manager's own
+ * independent re-measurement window organically witnessed the verb `sets`
+ * in exactly the shape this file's own round-31 doc comment named as
+ * residual-watched: `scanx.trade`'s "Ion Exchange sets 62nd AGM for
+ * September 11, 2026" (a stock-news site's corporate-shareholders'-AGM
+ * announcement, not a scholarly event), admitted and rendered as an event
+ * card with a real date.
+ *
+ * KEPT AS A SEPARATE CONST, NOT MERGED INTO PR_ANNOUNCEMENT_HEADLINE_RE
+ * ABOVE, on purpose: the witnessed shape's digit is an ORDINAL ("62nd"),
+ * not the bare count PR_ANNOUNCEMENT_HEADLINE_RE's own `\d+\b` arm was
+ * built for and is *structurally incapable* of matching (`\d+\b` requires
+ * a word-boundary immediately after the digit run; an ordinal's trailing
+ * letters leave no such boundary -- measured directly, see the round log).
+ * Isolating the new shape in its own regex means the existing, already-
+ * tested plans/schedules+bare-digit contract stays byte-unchanged --
+ * zero re-derivation risk on it, confirmed by the unmodified regression
+ * test below.
+ *
+ * Only `sets` is included, not the fuller unwitnessed PR-verb family
+ * (`announces`, `to exhibit at`, `attends`, `hosts`) -- those remain
+ * UNWITNESSED in this shape and are NOT added blind, per this loop's own
+ * "land what is confirmed" practice (round 31 B's own precedent on this
+ * exact guard). Still residual-watched by name below.
+ *
+ * A standalone veto on the bare token `AGM`/"Annual General Meeting" was
+ * measured and DROPPED (not shipped): four constructed, plausible real
+ * scholarly/professional-society titles (e.g. "Royal Society of Chemistry
+ * Annual General Meeting and Conference 2026") all false-drop under a
+ * standalone AGM-token veto, because the token alone cannot distinguish a
+ * corporate-shareholders' AGM from a genuine scholarly society's own
+ * AGM-plus-conference page, and `isNewsArticleTitle` has no rescue clause
+ * (unlike `isJobListingContentTitle`'s `looksLikeEvent` safety net) to
+ * protect against it. The verb+ordinal fix below already closes M36-01
+ * without it, so the AGM signal is not needed and was not added.
+ */
+const PR_SETS_ORDINAL_HEADLINE_RE =
+  /^\s*[A-Z][\w&.,'-]*(?:\s+[A-Z]?[\w&.,'-]*){0,4}\s+sets\s+\d+(?:st|nd|rd|th)\b/;
+
+/**
  * `url` is optional so every existing one-argument caller keeps working
  * unchanged — the path check simply does not run without it.
  */
@@ -466,6 +507,7 @@ export function isNewsArticleTitle(title: string, url?: string): boolean {
   const trimmedTitle = title.trim();
   if (NEWS_TITLE_RE.test(trimmedTitle)) return true;
   if (PR_ANNOUNCEMENT_HEADLINE_RE.test(trimmedTitle)) return true;
+  if (PR_SETS_ORDINAL_HEADLINE_RE.test(trimmedTitle)) return true;
   if (isTickerNewsPath(url)) return true;
   const phrase = urlPathPhrase(url);
   return phrase !== undefined && NEWS_HEADLINE_PATH_RE.test(phrase);

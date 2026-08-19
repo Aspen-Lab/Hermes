@@ -2849,6 +2849,92 @@ describe("Round 31 C — item 3, investor-PR headlines are not events (Ruling 84
     }
   });
 
+  // ROUND 37 C (Ruling 103, M36-01): PR_SETS_ORDINAL_HEADLINE_RE closes a
+  // fresh gap the manager's own independent re-measurement window witnessed
+  // organically -- a "sets <ordinal>" PR headline that PR_ANNOUNCEMENT_HEADLINE_RE
+  // is structurally incapable of catching even if "sets" were added to its
+  // verb list (see the doc comment above PR_SETS_ORDINAL_HEADLINE_RE in
+  // eventweb.ts for the `\d+\b`-cannot-match-an-ordinal proof). Isolated in
+  // its own describe block so this new regex's own contract is locked
+  // separately from PR_ANNOUNCEMENT_HEADLINE_RE's pre-existing, byte-unchanged
+  // one above.
+  describe("Round 37 C (Ruling 103, M36-01): PR_SETS_ORDINAL_HEADLINE_RE — the ordinal-verb PR headline gap", () => {
+    const WITNESS_TITLE = "Ion Exchange sets 62nd AGM for September 11, 2026";
+    const WITNESS_URL =
+      "https://scanx.trade/stock-market-news/companies/ion-exchange-sets-62nd-agm-september-11-2026/48600650";
+
+    it("catches the M36-01 witness via isNewsArticleTitle, both with and without the URL", () => {
+      expect(isNewsArticleTitle(WITNESS_TITLE, WITNESS_URL)).toBe(true);
+      // Title alone: only the new subject+"sets"+ordinal shape can be firing
+      // here. The URL's /stock-market-news/ path signal was measured and
+      // declined (B's round 37 §1.5, Ruling 103), so it must not be load-
+      // bearing for this assertion to hold.
+      expect(isNewsArticleTitle(WITNESS_TITLE)).toBe(true);
+    });
+
+    it("drops the M36-01 witness as a whole row via webResultToRawEventItem", () => {
+      expect(
+        webResultToRawEventItem(
+          {
+            title: WITNESS_TITLE,
+            url: WITNESS_URL,
+            snippet: "Ion Exchange Ltd has announced its 62nd Annual General Meeting.",
+          },
+          Date.parse("2026-08-19T00:00:00Z"),
+        ),
+      ).toBeNull();
+    });
+
+    it("does not disturb round 31's stocktitan.net regression", () => {
+      expect(isNewsArticleTitle(LIVE_TITLE, LIVE_URL)).toBe(true);
+    });
+
+    it("keeps admitting four plausible scholarly-society AGM-and-conference titles (the AGM-token veto was measured and DROPPED, not shipped — Ruling 103)", () => {
+      for (const title of [
+        "Royal Society of Chemistry Annual General Meeting and Conference 2026",
+        "British Ecological Society AGM and Scientific Meeting",
+        "Institution of Chemical Engineers -- Annual General Meeting & Symposium 2026",
+        "American Nuclear Society Section AGM and Technical Conference",
+      ]) {
+        expect(isNewsArticleTitle(title)).toBe(false);
+      }
+    });
+
+    it("keeps admitting round 31 B item 3's own ordinal adversarial set — the exact set that motivated the ordinal check in the first place", () => {
+      for (const title of [
+        "5th Battery Gigafactory Summit USA",
+        "2026 ANS Annual Conference",
+        "27th International Conference on Ion Exchange",
+        "The 250th ECS Meeting",
+      ]) {
+        expect(isNewsArticleTitle(title)).toBe(false);
+      }
+    });
+
+    it("requires an ORDINAL, not a bare digit, immediately after the verb 'sets'", () => {
+      // "3" here carries no ordinal suffix (st/nd/rd/th) -- the new regex's
+      // own \d+(?:st|nd|rd|th)\b arm must not fire on a bare count.
+      expect(
+        isNewsArticleTitle("Acme Corp sets 3 new manufacturing records this quarter"),
+      ).toBe(false);
+    });
+
+    it("keeps admitting a representative slice of round 33/36's must-keep event corpus", () => {
+      for (const title of [
+        "EUCHEMSIL 2026: 30th EUCHEMS Meeting",
+        "Molten Salt Electrochemistry Symposium (MoSES)",
+        "Twenty-Seventh Congress and General Assembly",
+        "Solid-State Battery Summit 2026",
+        "The Battery Show North America",
+        "26th Advanced Automotive Battery Conference (AABC)",
+        "Nuclear Career Fair - S&T Women in Nuclear",
+        "2026 Job Fair & Hiring Event Calendar - JobFairX",
+      ]) {
+        expect(isNewsArticleTitle(title)).toBe(false);
+      }
+    });
+  });
+
   it("leaves the balchem earnings-call and gain.inl.gov event-hub /news/ paths untouched", () => {
     // Neither path segment after `/news/` is a 1-5-char all-caps ticker, so
     // design A cannot fire on either — both are pre-existing, unrelated

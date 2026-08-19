@@ -270,11 +270,53 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Agent C round 37 + 2026-08-19 04:26 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **ROUND 37 C IS COMPLETE @ 2026-08-19 ~04:3x UTC —
+                  `PR_SETS_ORDINAL_HEADLINE_RE` SHIPPED, WIRED, TESTED,
+                  VERBATIM PER RULING 103.** Run by `LAPTOP-3CL10CG5`
+                  (commit `3e54246` claim, item commit follows). New const +
+                  doc comment at `eventweb.ts:459-499`, wired as one new
+                  disjunct at `:510` immediately after
+                  `PR_ANNOUNCEMENT_HEADLINE_RE` (byte-unchanged) and before
+                  `isTickerNewsPath`. No AGM-token signal, no
+                  `/stock-market-news/` path signal added — both stay out of
+                  the code per Ruling 103. **7 new tests** in
+                  `eventweb.test.ts:2861-2941` (nested describe inside the
+                  existing "Round 31 C — item 3" block): the M36-01 witness
+                  caught (title+URL and title-only) AND dropped via
+                  `webResultToRawEventItem`; the stocktitan.net regression
+                  unaffected; the four scholarly-society AGM adversarials
+                  KEPT (locks the drop reason); round 31 B's four ordinal
+                  adversarials re-asserted against the new regex; a
+                  bare-digit precision check (`sets 3` != ordinal); a
+                  representative 8-title slice of round 33/36's must-keep
+                  corpus. **GATE: full-capture first run 1 failed / 2425**
+                  (`benchmark.test.ts`'s live-search assertion,
+                  source-timeout — the Ruling 96b NAMED flake), **immediate
+                  re-run: 100 files / 2425 tests, 2425 passing, ZERO
+                  failures** (baseline 2418 + 7). `npx tsc --noEmit` clean.
+                  `npx eslint src` — exactly the one standing `quiz.tsx:46`
+                  error. **NO DEVIATION FROM B'S DESIGN, NOTHING FILED AS
+                  POLICY.** No throwaway scaffold (direct verbatim
+                  implementation, nothing to design). No credential
+                  anywhere; the only live network call was the gate's own
+                  pre-existing `benchmark.test.ts` flake, not a call C
+                  initiated. No branch/worktree/PR;
+                  `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+                  **HAND-OFF: `WHOSE TURN: A — round 37, GATE CANDIDATE
+                  ROUND (value + visual, searchProvider: gemini, artefact
+                  duty with full untruncated titles, pool-count re-measure,
+                  watch list, M36-01 verification, benchmark-flake per
+                  Ruling 96b)`.** If A measures double-zero: `WHOSE TURN:
+                  MANAGER — independent re-measurement before any close`.
+                  Turn lock RELEASED (`HELD BY: free`) in this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~11:2x UTC — ROUND 37 B
                   VERIFIED INDEPENDENTLY, RULING 103 APPENDED (§4).** Gate
                   re-run: **2418/2418, zero failures.** The structural claim
@@ -88583,4 +88625,30 @@ Read Ruling 84c in full (`:85313`): it ratified Design A (`TICKER_NEWS_PATH_RE`)
 - C implements: the regex + disjunct verbatim, tests (the witness caught via `isNewsArticleTitle` AND dropped via `webResultToRawEventItem`; stocktitan regression; the four AGM scholarly-society adversarials KEPT — locking the drop decision's reason; the four ordinal adversarials; `Company sets 3 records` style non-event... per B's corpus tables). THEN A — round 37 full gate-candidate census; if double-zero, `WHOSE TURN: MANAGER — independent re-measurement before any close`.
 
 Sonnet twenty-third data point: the ordinal-arm discovery is exactly why "just add the verb" briefs must be executed rather than obeyed — B tested the obvious fix, found it structurally dead, and built the smallest thing that actually works.
+
+### Round 37 — Agent C — ITEM 1 (Ruling 103, M36-01): **SHIPPED, VERBATIM PER B'S DESIGN AND THE MANAGER'S RULING. `PR_SETS_ORDINAL_HEADLINE_RE` LANDS AS ITS OWN ISOLATED DISJUNCT IN `isNewsArticleTitle`; `PR_ANNOUNCEMENT_HEADLINE_RE` STAYS BYTE-IDENTICAL.**
+
+**C changed only what was commissioned.** Claimed the turn lock (`3e54246`) after `git pull` and confirming `git branch --show-current` reads `feature/summary-report-revamp`; the claiming push was ACCEPTED. Grepped `Round 37 — Agent C` first — zero prior entries existed, fresh start not a resume. Read B's full item-1 entry (`:88444-88570`) and the manager's Ruling 103 (`:88573-88586`) in full before touching any code.
+
+**IMPLEMENTATION** (`web/src/lib/events/sources/eventweb.ts`):
+- New const `PR_SETS_ORDINAL_HEADLINE_RE` at `:459-499` (doc comment 459-497, regex at 498-499), placed immediately after `PR_ANNOUNCEMENT_HEADLINE_RE` and its own doc comment — transcribed verbatim from B's §1.2, including the M36-01 witness note, the WHY-a-separate-regex reasoning (the `\d+\b`-cannot-match-an-ordinal proof), the AGM-veto-drop reason, and the still-unwitnessed-verb-siblings residual note.
+- Wired at `:510`, one new disjunct line inside `isNewsArticleTitle` (`:505-513`), immediately after the existing `PR_ANNOUNCEMENT_HEADLINE_RE` check and before `isTickerNewsPath` — exactly B's recommended placement. `PR_ANNOUNCEMENT_HEADLINE_RE`, `TICKER_NEWS_PATH_RE`, `isTickerNewsPath`, `NEWS_TITLE_RE`, `NEWS_HEADLINE_PATH_RE` all confirmed byte-unchanged (diff scoped to the one new const + one new line only).
+- No AGM-token signal added, no `/stock-market-news/` path signal added — both stay out of the code exactly as Ruling 103 ratified.
+
+**TESTS ADDED** (`web/src/lib/events/sources/eventweb.test.ts`, pure additions, one new nested `describe` at `:2861-2941` inside the existing "Round 31 C — item 3" block, reusing its `LIVE_TITLE`/`LIVE_URL` closure for the regression check):
+1. M36-01 witness caught via `isNewsArticleTitle`, both title+URL and title-only (proves the URL's declined path signal is not load-bearing).
+2. M36-01 witness dropped as a whole row via `webResultToRawEventItem` (returns `null`).
+3. Round 31's `stocktitan.net` specimen still caught (regression, via the shared `LIVE_TITLE`/`LIVE_URL` consts already locked earlier in the same block).
+4. The four scholarly-society AGM adversarials from B's §1.4, transcribed verbatim, all still admitted (`false`) — locks the AGM-veto drop's reason in executable form.
+5. Round 31 B item 3's four ordinal adversarials (`5th Battery Gigafactory Summit USA`, `2026 ANS Annual Conference`, `27th International Conference on Ion Exchange`, `The 250th ECS Meeting`) re-asserted `false` against the NEW regex specifically — the exact set that motivated the ordinal check.
+6. A bare-digit precision check (`"Acme Corp sets 3 new manufacturing records this quarter"` → `false`) — proves the regex requires an ordinal suffix, not just the verb "sets" plus any digit.
+7. A representative 8-title slice of round 33/36's must-keep event corpus (real titles from those rounds' own artefact tables — EUCHEMSIL, MoSES, the AABC pair, a career fair, a job fair, etc.), all `false` — per B's own §1.8 recommendation to avoid duplicating the full 19+14+19 list verbatim since none of it is `sets`-shaped.
+
+**7 new test cases** (one `it` block asserts two related calls). Baseline 2418 + 7 = **2425**.
+
+**GATE, FULL-CAPTURE, FIRST COMMAND**: `npx vitest run` — **1 failed / 2425 (2424 passed)**, `benchmark.test.ts`'s live-search assertion (`source-timeout after 25000ms`, `survivors.length toBeGreaterThan(0)` read 0) — the Ruling 96b NAMED flake, confirmed by immediate full-capture re-run: **100 files / 2425 tests, 2425 passing, ZERO failures.** `npx tsc --noEmit` clean, exit 0. `npx eslint src` — exactly the one standing `quiz.tsx:46` `react-hooks/set-state-in-effect` error, zero warnings, matching baseline.
+
+**NO DEVIATION FROM B'S DESIGN.** No recorded control or locked test broke — nothing filed as `POLICY — manager decides`. `git status --porcelain --untracked-files=all` shows only the two intended files modified (`eventweb.ts`, `eventweb.test.ts`); no throwaway scaffold was created (this was a direct verbatim implementation, not a design-and-test exploration, so no `web/zz-r37c/` harness was needed). No credential anywhere; no live network call initiated by C directly (the gate's own `benchmark.test.ts` live call is the standing, pre-existing gate behavior every C round runs and classifies per Ruling 96b, not a new call C made). No large page text pasted. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+**HAND-OFF: `WHOSE TURN: A — round 37, GATE CANDIDATE ROUND (value + visual, searchProvider: gemini, artefact duty with full untruncated titles, pool-count re-measure, watch list, M36-01 verification, benchmark-flake per Ruling 96b)`.** If A measures double-zero: `WHOSE TURN: MANAGER — independent re-measurement before any close`. Turn lock RELEASED (`HELD BY: free`) in this commit.
 
