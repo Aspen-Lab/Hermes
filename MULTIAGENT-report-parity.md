@@ -270,19 +270,18 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          LAPTOP-3CL10CG5 / Phase 2 Agent A round 9 + 2026-08-19 09:21 UTC
+HELD BY:          free
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       A — Phase 2 round 9, CONVERGENCE CANDIDATE 2 (the full
-                  round-5/8 census protocol). Per Ruling 116, candidate 1
-                  PASSED (A's round 8 window + the manager's independent
-                  re-measurement, both clean). This is the second candidate
-                  round required by Ruling 105a to close Phase 2 — A measures
-                  only, never closes; a clean round hands off to the manager
-                  for the final re-measurement. See §4 `### Phase 2 Round 8 —
-                  MANAGER` (Ruling 116) for the candidate-1 record.
+WHOSE TURN:       MANAGER — Phase 2 FINAL re-measurement, convergence
+                  candidate 2. A's round 9 window is clean (zero NEW-CLASS
+                  findings); per Ruling 105a the manager now independently
+                  re-measures. If the manager's own window is ALSO clean,
+                  two consecutive clean candidates close Phase 2 — the
+                  manager writes that ruling, A does not. See §4
+                  `### Phase 2 Round 9 — Agent A` for the full census.
 PHASE 2 MEASUREMENT PROFILE:
                   (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
                   baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
@@ -299,6 +298,87 @@ PHASE 2 MEASUREMENT PROFILE:
                   `adzuna`/`usajobs` stay suspended, zero quota-capped calls,
                   ever. Every future Phase 2 census states this profile or an
                   explicitly named deviation from it.
+STOPPED BECAUSE:  **PHASE 2 ROUND 9 A IS COMPLETE @ 2026-08-19 ~04:5x local
+                  (~09:5x UTC). CONVERGENCE CANDIDATE 2 — THE FULL ROUND-5/8
+                  CENSUS PROTOCOL, RE-BUILT FROM SCRATCH (NOT COPIED),
+                  ZERO NEW-CLASS FINDINGS.** Run by `LAPTOP-3CL10CG5`. Claimed
+                  the lock after `git pull` (already up to date) and
+                  confirming `git branch --show-current` reads
+                  `feature/summary-report-revamp` (claiming push ACCEPTED at
+                  `97c8ceb`). Grepped `Phase 2 Round 9` first — zero prior
+                  entries, fresh start not a resume. Read §0 (incl. §0d turn
+                  lock), §1's first ~450 lines, Rulings 113-116 in full, and
+                  both the `Phase 2 Round 5 — Agent A` and `Phase 2 Round 8 —
+                  Agent A`/`Phase 2 Round 8 — MANAGER` §4 entries in full
+                  before touching anything. **Found and fixed a protocol gap
+                  before starting the census itself: §1's top block still
+                  read round 8's `WHOSE TURN: MANAGER` even though Ruling 116
+                  (§4, end of file) had already closed candidate 1 and handed
+                  off round 9 to A — the manager's own round-8 closing commit
+                  updated §4 but never updated §1. Synced §1 to Ruling 116's
+                  actual state in the same commit that claimed the lock.**
+                  Confirmed on disk: `page-text.ts:170/292/362` all three
+                  still call `withoutPageFurniture(withoutHiddenContent(html))`
+                  — F-P2-01's fix unchanged since round 7.
+
+                  **GATE, COLD FIRST: 100 files / 2442 tests, 2442 passing,
+                  ZERO failures**, matching round 8's own count exactly.
+                  `tsc` clean; `eslint` — the one standing `quiz.tsx:46`
+                  error only.
+
+                  **DUTY 1 — VISUAL RE-WALK.** Harness rebuilt from scratch
+                  this round (round 8's own was deleted, as designed) —
+                  re-derived every render site, prop shape and `cn`-trap
+                  mechanism straight from the two page components on disk,
+                  not assumed from prior rounds' prose. Combined-fixture
+                  render of all 11 Class-A/B rows + all six cn-trap sites.
+                  **18/18 assertions passed** after THREE self-caught harness
+                  bugs (two regex-vs-inner-`<span>` mismatches, one
+                  first-occurrence-vs-scoped ordering mistake in the plan
+                  block's own assertion — none were product findings, all
+                  caught and fixed before trusting the result). **ZERO
+                  visual defects** — every row and every trap site confirmed
+                  still healed.
+
+                  **DUTY 2 — 109c RUBRIC LIVE WINDOW + F-P2-01 SPOT-CHECK.**
+                  2 pulls/surface (15 unique job rows, 10 unique event
+                  rows), 3 job + 3 event live LLM enrichment calls, one
+                  live-network timeout on the FIRST attempt at the job-pool
+                  step (45s budget too tight; raised to 100s, clean on
+                  retry and every run after — Ruling-96b-shaped, not a code
+                  defect). BF1's eligible-specimen population RE-CONFIRMED
+                  live on the gevernova witness, fidelity mechanically
+                  VERIFIED (`Array.every`, every `specificRequirements`/
+                  `specificDuties` string a literal substring of the fetched
+                  page). **F-P2-01 SPOT-CHECK (direct execution, lighter than
+                  round 8's three-layer verification per this round's own
+                  charter): live re-fetch of the exact recorded rsc.org
+                  specimen, `findProgrammePageUrl` still returns `null`,
+                  zero "ChemCareers"-shaped headings. Fix holds.** Pool
+                  sanity: zero Phase 1 regressions; `events.ornl.gov`'s
+                  bare-hostname fallback reappeared and is Ruling 83c's own
+                  ADMITTED class, not new. One incidental, unreplicated
+                  observation (a Drupal-shaped display-date string on one
+                  event row, one pull, not reproduced on the second pull)
+                  recorded but not classified. Named-cost registry
+                  re-confirmed by name (111a, 114's residual); Ruling 108's
+                  list not re-filed.
+
+                  **GATE, FINAL (harness deleted): 100 files / 2442 tests,
+                  2442 passing, ZERO failures**, confirming zero leakage from
+                  `web/zz-p2a9/` (outside `web/src/`, deleted before this
+                  commit). `git status --porcelain --untracked-files=all`
+                  clean. **ZERO NEW-CLASS FINDINGS this round.**
+
+                  Full detail in §4 `### Phase 2 Round 9 — Agent A`.
+                  `WHOSE TURN: MANAGER — Phase 2 FINAL re-measurement,
+                  convergence candidate 2.` A does not declare Phase 2
+                  complete — if the manager's own window is also clean, two
+                  consecutive clean candidates close Phase 2 and the manager
+                  writes that ruling. Turn lock RELEASED (`HELD BY: free`) in
+                  this commit.
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **PHASE 2 ROUND 8 A IS COMPLETE @ 2026-08-19 ~09:1x UTC.
                   CONVERGENCE CANDIDATE 1 RE-RUN — THE FULL ROUND-5 CENSUS
                   PROTOCOL, ZERO NEW-CLASS FINDINGS. F-P2-01's FIX (RULING
@@ -91331,4 +91411,93 @@ Job pool (2 pulls, `value-census.test.ts`): **11 unique rows.** Job pool (1 extr
 3. **A live job LLM loop on the recorded eligible specimen, end to end through the PRODUCTION pieces** (`fetchPagesConcurrently` → `extractPageText` → `buildJobEnrichmentPrompt` → the resolved Gemini provider's `generateJsonText` → `parseJobEnrichment`): non-empty `specificRequirements`/`specificDuties`, and **EVERY quoted string mechanically verified as a literal normalized substring of the fetched page — the strictest anti-hallucination check, passed on the manager's own independent call.** (Scope note, honest: the manager's live LLM observation covered the job surface; the event surface's LLM content carries A's two rounds of substring-verified fidelity plus the manager's mechanism-level and window-level checks.)
 
 **RULING 116 — PHASE 2 CONVERGENCE CANDIDATE 1 PASSES: zero new defect classes across A's window and the manager's.** Per Ruling 105a: **round 9 is CANDIDATE 2 — A runs the full census protocol once more, then the manager re-measures. Two clean candidates close Phase 2**, followed by the campaign-close report and merge per the user's standing pattern. **`WHOSE TURN: A — Phase 2 round 9, CONVERGENCE CANDIDATE 2 (the full round-5/8 census protocol).`**
+
+
+### Phase 2 Round 9 — Agent A (CONVERGENCE CANDIDATE 2 — the full round-5/8 census protocol: 11-row visual re-walk + 109c rubric live window + F-P2-01 spot-check)
+
+**STATUS: COMPLETE. MEASURES ONLY — NOTHING FIXED.** Run by `LAPTOP-3CL10CG5`. Claimed the lock after `git pull` (already up to date) and confirming `git branch --show-current` reads `feature/summary-report-revamp` (claiming push ACCEPTED at `97c8ceb`). Grepped `Phase 2 Round 9` first — zero prior entries existed, fresh start not a resume. Read §0 (incl. §0d turn lock), §1's first ~450 lines, Rulings 113-116 in full, the `Phase 2 Round 5 — Agent A` §4 entry in full (the census protocol re-run this round), and the `Phase 2 Round 8 — Agent A` + `Phase 2 Round 8 — MANAGER` §4 entries in full (candidate 1's own record, Ruling 116) before touching anything. **CORRECTED A STALE §1: the top `CURRENT STATE` block still read round 8's `WHOSE TURN: MANAGER — Phase 2 convergence candidate 1 re-measurement` even though Ruling 116 (§4, end of file) had already closed candidate 1 and handed off round 9 to A — the manager's round-8 closing commit updated §4 but never updated §1's own block. Synced §1 to Ruling 116's actual hand-off in the same commit that claimed the lock, per §0's own rule that §1 must always be true.**
+
+Confirmed on disk before building anything: `page-text.ts:170/292/362` all three still call `withoutPageFurniture(withoutHiddenContent(html))` (F-P2-01's fix intact, unchanged since round 7).
+
+**GATE, COLD FIRST (before any harness code): 100 files / 2442 tests, 2442 passing, ZERO failures**, matching round 8's own confirmed count exactly. `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error.
+
+---
+
+## DUTY 1 — VISUAL RE-WALK, ALL 11 CLASS-A/B ROWS + SIX cn-TRAP SITES, COMBINED FIXTURE (round 5/8's own method)
+
+**METHOD.** Harness `web/zz-p2a9/visual-census.test.ts` (+ its own `vitest.config.ts` mirroring the root's `GOOGLE_`-prefix load), outside `web/src/`, deleted before this commit. Built from scratch this round (round 8's own harness was deleted per protocol, as designed) rather than copied — re-derived the exact render sites, prop shapes and `cn`-trap mechanics straight from `jobs/[id]/page.tsx` and `events/[id]/page.tsx` on disk (not assumed from the prior round's prose) before writing a single assertion. Rendered the REAL shipped `JobReport`/`EventReport` via `renderToStaticMarkup`, one fully-populated `JobEnrichment` (all 6 fields) and one fully-populated `EventEnrichment` (all 5 fields, plus a roster carrying both the Tier-0-reason-wins branch — an org/person with its own `relevance` — and the judgment-supplies-the-reason branch — an org/person with no Tier-0 reason but a `judgedAttendees` entry, `worthIt: false` — on BOTH organisations and people, plus a third unreasoned tail-row organisation for `StarButton`'s reachable INACTIVE branch, plus activities exercising both the matched/plain activity-chip branches via `event.matchedTerms`) rendered ONCE each. **18/18 assertions passed** after three self-caught harness bugs, disclosed here per the same discipline every prior round modeled: (1) the roleSummary/plan-ordering assertions used a naive `[^<]*` regex between an opening tag and its text that broke on an inner `<span>` (icons/`aria-hidden` markers) — replaced with a helper that walks back from the text's own position to its nearest enclosing tag; (2) the plan-ordering check first compared the FIRST occurrence of each name anywhere on the page, which caught the roster card's own earlier mention of "Dr. Ada Voltaic" rather than the plan block's own entry — narrowed to compare `data-plan-entry` list items specifically; (3) the poster-fit list item's text sits after an inner `<span aria-hidden>`, same shape as bug 1. None were product findings — all three were regex-matching mistakes in the harness itself, caught before trusting the result.
+
+**ALL 11 ROWS RENDER, CORRECT CLASS, IN THE COMBINED FIXTURE — zero change from round 5/8's own record:**
+
+| row | field | renders? | class verdict |
+|---|---|---|---|
+| A1 | specificRequirements | yes | `font-reading` present |
+| A2 | specificDuties | yes | `font-reading` present |
+| A3/B2 | sponsorshipRead | yes | blockquote `font-reading` present; standalone visa-evidence blockquote correctly SUPPRESSED once `enrichment.sponsorshipRead` present (exactly one `<blockquote>` in the combined render) |
+| A4 | emphasise | yes | sans |
+| A5 | talkSummaries | yes | renders |
+| A6 | plan | yes | renders, both `kind: "session"` and `kind: "person"` entries in order |
+| A7 | posterFit | yes | sans |
+| B1 | roleSummary | yes | LLM voice: sans; Tier-0 prose in the SAME slot (twin render, no enrichment): `font-reading` — both directions confirmed |
+| B3 | condensedDescription | yes | renders verbatim (Peer's voice) |
+| B4 (org) | judgedAttendees[].why | yes, both branches | Tier-0-wins: `text-caption font-medium text-accent`; judgment-supplies (worthIt=false): `text-caption font-medium text-text-muted` |
+| B4 (people) | judgedAttendees[].why (twin) | yes, both branches | same as above, byte-identical twin site |
+
+**SHELL/HEADING CONFORMANCE.** Every rendered L3 `ReportSection` title (job + event) carries `text-caption`/`uppercase`, never `font-display` — the shared L3 label step. The one L2 group heading (`Who'll be in the room`) carries `font-display`, no `uppercase` — the serif sub-head, confirmed distinct from L3 in the same render.
+
+**cn-TRAP SITES — ALL SIX, ON REAL CONTENT, CONFIRMED HEALED:** organisations roster reason (both branches), People-card twin (both branches), `HeaderChip` job surface (`data-header-chip="info"` from `visa.state: "sponsors"`, `text-meta`), `HeaderChip` event surface (`data-header-chip="accent"` from `relevanceScore`, "91% match" rendered correctly), activity chip (both `matched`/`plain` branches via `event.matchedTerms`, both carry `text-meta`), `StarButton`'s reachable INACTIVE branch (`aria-pressed="false"`, `text-title`, on the plain tail-row organisation). **No regression on any prior round's fix.**
+
+**VALUE STABILITY.** Zero `undefined`/`NaN` leaked in either report's markup with the fully-populated fixture.
+
+**VERDICT: ZERO visual defects.** Every row and trap site from round 5/8's own record still renders correctly on a freshly-built (not copy-pasted) combined fixture.
+
+---
+
+## DUTY 2 — THE 109c RUBRIC, SMALL LIVE WINDOW (2 pulls/surface, up to 3 renders/surface) + F-P2-01 SPOT-CHECK
+
+**METHOD.** Two harness files in `web/zz-p2a9/` (both deleted before this commit): `value-census.test.ts` (pool pulls + rubric renders, split into 6 independently-bounded steps) and `fp201-spotcheck.test.ts` (F-P2-01's own direct-execution re-check against a live re-fetch of the exact recorded specimen). `NODE_ENV=development` stub, field-scoped `profile.json` (Ruling 95 — `researchTopics`/`softTopics`/`preferredMethods`/`careerStage`/`industryVsAcademia`/`locationPreferences`/`currentProject` only), `searchConnectors: { tavily: { enabled: false }, gemini: { enabled: true } }` (Ruling 75), `apiKeys` omitted (zero adzuna/usajobs calls). Fresh `MemoryPoolCache` (a `Map`-backed no-op `PoolCache`) per pull, reproducing `buildDailyJobPool`/`buildDailyEventPool` → `scoredJobToJob`/`scoredEventToEvent` → the report routes' own fetch/prompt/parse logic verbatim (round 1/2/5/8's own established pattern — the route modules themselves are awkward to invoke directly outside the Next.js server runtime).
+
+### F-P2-01 SPOT-CHECK, DIRECT EXECUTION (lighter than round 8's three-layer live re-verification, per this round's own charter)
+
+Confirmed on disk first (above) that all three `page-text.ts` call sites are unchanged. Live re-fetch of the exact recorded rsc.org IEX-2026 specimen today: `findProgrammePageUrl(html, url)` returns **`null`**, never the wrong-event `.../career-support/talks-and-events` sitewide-nav link — the safe failure direction holds. `extractPageHeadings` returns zero headings containing "ChemCareers". **F-P2-01 VERDICT: fix confirmed live, holds on direct execution. Zero recurrence.**
+
+### JOB rubric (3 live specimens)
+
+| title | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| Molten Salt Systems Engineer/Scientist in Idaho Falls | talents.vaia.com | no | competitiveness, roleSummary | correct — aggregator, not owned |
+| Postdoctoral Appointee | postdocjobs.com | no | competitiveness, sponsorshipRead, roleSummary, emphasise | correct — aggregator, not owned |
+| **GE Vernova Battery Engineering & Technology Intern** | **careers.gevernova.com** | **yes** | competitiveness, sponsorshipRead, roleSummary, emphasise, **specificRequirements, specificDuties** | **BF1's eligible-specimen population re-confirmed, live, same host as rounds 2/5/8's own witness. `requirementsFidelity` VERIFIED** — every `specificRequirements`/`specificDuties` string mechanically asserted (`Array.every`) a literal substring of the fetched page text, not eyeballed |
+
+### EVENT rubric (3 live specimens)
+
+| name | host | page read? | keys returned | FORM/FIDELITY |
+|---|---|---|---|---|
+| events.ornl.gov (bare-hostname fallback) | events.ornl.gov | yes | condensedDescription | topically correct — this row is itself a re-confirmation of Ruling 83c's own named, ADMITTED, honest-host-fallback class, not a new finding |
+| 19th Asian Conference on Solid State Ionics | thaienergystorage.org | yes | condensedDescription, talkSummaries | both topically correct and traceable to the fetched page |
+| Slowing Down to Speed Up: Unveiling the Secrets of Topochemical Polymerization | foundry.lbl.gov | yes | (none) | page read but the model returned no usable field — an honest empty result, not a fabricated one |
+
+### POOL SANITY (Tier-0 layer, Phase-1-regression scan)
+
+Job pool (2 pulls): **15 unique rows** across two runs — hosts include `careers.gevernova.com`, `postdocjobs.com` (×2 titles), `bebee.com` (×2), `talents.vaia.com` (×3), `climatechangejobs.com`, `cadenzainnovation.com`, `americanlithiumenergy.com`, `zintellect.com`, `careers.fm.com`, `arbeitnow.com`, `geosi.com` — all legitimate, on-topic, correctly-titled postings, no garbled titles, no short-acronym collisions (Ruling 33). Event pool (2 pulls): **10 unique rows** — hosts include `events.ornl.gov` (Ruling 83c's own named bare-hostname-fallback class, re-confirmed, not new), `thaienergystorage.org`, `foundry.lbl.gov`, `sunsirs.com`, `wsew.jp`, `battery-power.eu`, `volta.foundation`, `advancedautobat.com` (×2 rows — the corrected witness host, consistent with its recorded state), `materialscience.materialsconferences.com` — all legitimate, on-topic. **Zero Phase 1 regressions spotted this window's `badDates` scan** (every populated event date parsed to a plausible 2024-2030 year; blank dates left un-flagged as a separate, already-named shape).
+
+**ONE INCIDENTAL, UNREPLICATED OBSERVATION, NOT CLASSIFIED, RECORDED FOR VISIBILITY ONLY:** on the FIRST of the two event-pool pulls (a run whose other rows were otherwise discarded once the final 10-row set was assembled), one row — "Battery Summit 2026" — carried `date: "Tue, 06/16/2026 - 09:30"`, a Drupal-shaped display-date string rather than the `YYYY-MM-DD`/`YYYY-MM` shape `parseDate` (`lib/format.ts:16`) expects. This did NOT reproduce on the second pull, is n=1, falls outside this round's own named scans (it is not a garbled title, not an acronym collision, not a wrong-event bleed), and was not chased further — flagged here only so it is not silently dropped, exactly the discipline round 8's own `companyOrLab: undefined` observation modeled. Not ranked, not assumed to be a defect: could equally be a source that genuinely displays only a formatted date string with no machine-readable equivalent on the page, which downstream `parseDate`'s `new Date(iso)` fallback may or may not parse correctly depending on locale — untraced this round.
+
+**TIMEOUT-FLAKE RATE.** One flake: the first attempt at STEP 1 (job pool, 2 pulls) timed out at a 45s budget; raised to 100s and re-run clean at 35.79s — a Ruling-96b-shaped live-network variance, not a code defect (the same 2-pull step completed in under 40s on every subsequent run). Zero LLM-call timeouts across all 6 live enrichment calls (3 job + 3 event) or the F-P2-01 live fetch.
+
+**NAMED-COST REGISTRY, RE-CONFIRMED BY NAME.** Ruling 111a's own named cost (conferences whose programmes live only in PDFs-behind-forms or client-rendered SPAs render an empty programme section honestly) — not directly re-exercised this round (no such specimen drawn), not contradicted, stands as recorded. Ruling 114's own named undetectable-chrome residual (no tag/role/class signal at all would still evade `isPageFurniture`) — not re-exercised, named as carried, unchanged (confirmed present verbatim in `page-text.ts`'s own doc comment on disk). Ruling 108's Phase 1 maintenance list — NOT re-filed, per this round's own instruction.
+
+---
+
+## GATE, FINAL (A shipped no product code)
+
+`cd web && npx vitest run` — **100 files / 2442 tests, 2442 passing, ZERO failures**, matching the cold-start number exactly, confirmed BOTH before harness deletion (with `web/zz-p2a9/` present but outside the root config's `include: ["src/**/*.test.{ts,tsx}"]`) and after (harness fully deleted). `npx tsc --noEmit` clean (checked both with the harness present — which the root `tsconfig.json`'s `**/*.ts` include DOES reach, one real type error caught and fixed this way: the `Event` fixture was initially missing the required `shortDescription`/`relevanceReason` fields — a harness bug, not a product finding — and after harness deletion). `npx eslint src` — exactly the one standing `quiz.tsx:46` error. `git status --porcelain --untracked-files=all` confirmed clean before this commit. No credential logged anywhere (`.env.local` never read; `profile.json` read field-scoped only, values never printed beyond the already-non-secret topic-label lists every prior round has also read this way). No large fetched/LLM text pasted — every quote above is a short fragment already necessary to make the specific point. No branch/worktree/PR.
+
+## FINDINGS CLASSIFIED
+
+**Zero NEW-CLASS findings this round.** Everything measured either reconfirms a prior ruling (all four round-4 fixes, BF1's dissolution, F-P2-01's fix, Ruling 83c's bare-hostname fallback) or is a clean positive result with no prior defect attached (the two new organic event/job specimens). The one incidental pool-sanity observation (an unreplicated Drupal-shaped date string on one row, one pull) is explicitly NOT classified — n=1, unreplicated, outside every named scan this round's charter covers, does not touch any of the 11 census rows or any rendered-report surface; recorded for visibility, not ranked.
+
+## HAND-OFF
+
+**Convergence candidate 2's A-side window is clean: zero NEW defect classes, matching round 5/8's own protocol exactly, on a harness rebuilt from scratch this round (not copied) with three self-caught harness bugs disclosed and fixed before trusting any result.** Per Ruling 105a and this round's own charter, this routes to the manager for the second candidate's own independent re-measurement. **`WHOSE TURN: MANAGER — Phase 2 FINAL re-measurement, convergence candidate 2.`** If the manager's own window is also clean, **PHASE 2 CLOSES** (two consecutive clean candidates) — the manager writes that ruling, not A. Turn lock RELEASED (`HELD BY: free`) in this commit.
 
