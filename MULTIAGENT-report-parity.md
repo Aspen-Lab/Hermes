@@ -275,6 +275,22 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~05:0x UTC — ROUND 34 B
+                  VERIFIED INDEPENDENTLY, RULING 93 APPENDED (§4).** Gate
+                  re-run (full-capture): **2386/2386, zero failures.**
+                  Spot-check passed: `EVENT_SIGNAL_RE`'s `job fair` alternative
+                  requires adjacency, so B's candidate-1a rejection is
+                  structural. **RULING 93: the gated alternative
+                  (`job postings/listings + archive|board|directory`) APPROVED
+                  as written; both rejections ratified; the single-posting-page
+                  residual joins the watch list by name. `WHOSE TURN: C —
+                  round 34` (ONE item: the one-alternative regex + tests),
+                  THEN A — round 34 GATE CANDIDATE (standing duty list,
+                  A33-01 verification, watch-list additions). If A measures
+                  double-zero: `WHOSE TURN: MANAGER — independent
+                  re-measurement before any close`.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 34 B IS COMPLETE @ 2026-08-19 ~00:44x UTC — THE ONE
                   COMMISSIONED ITEM (A33-01, RULING 92b) DESIGNED, ONE
                   COMMIT, PUSHED ON LANDING.** Run by `LAPTOP-3CL10CG5`.
@@ -85969,3 +85985,16 @@ The brief's other obvious candidate: add a `job[_-]postings?`-shaped terminal-pa
 **B CHANGED NO PRODUCT CODE.** One item, this one commit (code + log entry together), pushed on landing. Throwaway harness (`web/zz-r34b/`) lived outside `web/src/`, deleted before this commit; `git status --porcelain --untracked-files=all` confirmed clean immediately after. No credential anywhere; boolean presence checks only (none needed — no live calls this item); `.env.local` never `cat`-ed; no `PEER_PROFILE_SNAPSHOT_PATH`. No live network calls (pure regex/function-level design work, Ruling 75's live-probe option for this item was not spent, per the brief's own "optional" framing). No large page text pasted anywhere. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
 
 **HAND-OFF: `WHOSE TURN: MANAGER — round 34 verification and rulings before C spawns`.** Turn lock RELEASED (`HELD BY: free`) in this commit.
+
+### Round 34 — MANAGER (independent verification of B; RULING 93; C commissioned)
+
+**Verification:** B changed zero product code (the manager's own scope check — empty); tree clean; both commits pushed. Gate re-run (full-capture, log retained): **99 files / 2386 tests, 2386 passing, ZERO failures, zero failure lines.** Spot-checks passed: `EVENT_SIGNAL_RE` (`eventweb.ts:186-187`) read directly — `job fair` IS an adjacency-requiring alternative and "Fair" alone is not in the list, so `looksLikeEvent("Job Postings Fair 2026")` returning false is structural, exactly as B's candidate-1a rejection requires; the design is one appended alternative to `JOB_LISTING_CONTENT_RE` with the safety net, `hasRepeatedJobsMention`, and the wiring all untouched.
+
+**RULING 93 — the design is APPROVED AS WRITTEN; `WHOSE TURN: C — round 34` (ONE item), THEN A — round 34, GATE CANDIDATE ROUND.**
+
+- The gated alternative (`job\s+(?:postings?|listings?)\s+(?:archive|board|directory)`) ships exactly as §2.2 prints it. Both rejections are RATIFIED with approval: candidate 1a's bare trigger would drop a real fair the safety net structurally cannot rescue (proved, not assumed); candidate 2's coordinated two-edit fix on the older, widely-shared `isEventHubResult` costs a constructed-but-plausible real "Event Archive" single-event page — and B's decision to construct that collateral case OUTSIDE the locked suites (which pass either way) instead of trusting the suites' silence is precisely the discipline the 62b/48a family exists to enforce.
+- **The named residual is ACCEPTED**: a SINGLE job-posting page with no archive/board/directory tail word is the same defect class, unwitnessed live, out of A33-01's scope — it joins the watch list by name (reopen: organic witness with URL captured).
+- C implements: the one-alternative regex change + tests (must-catch 5: the specimen + round 33's four; the fair adversarial `"Job Postings Fair 2026"` KEPT; B's §2.4-2.5 corpus as the §4 entry records it). THEN A runs the gate-candidate census with the standing duty list, A33-01 verification (the specimen must drop at ingestion if offered; direct execution regardless), and the watch-list additions.
+- **If A measures double-zero on everything unexplained, the hand-off is `WHOSE TURN: MANAGER — independent re-measurement before any close`. A never closes the gate.**
+- Sonnet fourteenth data point: a tight single-item turn — two obvious-looking candidates killed by measurement before the right one shipped; the faithful-re-implementation cross-check (proving the local copy against every locked control row before trusting it on the new case) is a method worth naming for future harness work.
+
