@@ -275,6 +275,27 @@ HELD BY:          free
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
+STOPPED BECAUSE:  **MANAGER TURN COMPLETE @ 2026-08-19 ~13:0x UTC — ROUND 38 B
+                  VERIFIED (both record-corrections confirmed by the
+                  manager's own greps), RULINGS 107a-107d APPENDED (§4).**
+                  Gate: 2425/2425. **RULING 107a: A37-01 resolves ZERO-CODE —
+                  the admission is CORRECT (tirt7.com is a 30-round
+                  must-keep; the commissioned fix would have deleted it);
+                  the name-prefix blemish joins the recorded cosmetic
+                  name-quality class; the manager's 106a classification is
+                  superseded, owned.** **RULING 107b: M37-01 resolves
+                  ZERO-CODE — Ruling 33's accepted-cost class at pool level
+                  (six-plus rounds of event-surface receipts); "first-ever"
+                  framing corrected (first JOB-surface only); B's three
+                  recommendations adopted incl. the named design bar (a
+                  SECOND job-surface admission reopens it); Phase-2 backlog:
+                  the LLM relevance layer is this class's real fix.**
+                  **RULING 107c: nothing for C. `WHOSE TURN: A — round 38,
+                  CONVERGENCE CANDIDATE ROUND 2` (full census, then the
+                  manager's re-measurement). Zero new classes across its
+                  four windows → PHASE 1 CLOSES → the Ruling-105b merge.**
+                  ---
+                  Previous entry, kept for continuity:
 STOPPED BECAUSE:  **ROUND 38 B IS COMPLETE @ 2026-08-19 ~00:3x UTC — BOTH
                   MAINTENANCE ITEMS DIAGNOSED; NEITHER SHIPS CODE. A37-01's
                   ASKED-FOR FIX IS DISPROVEN BY DIRECT EXECUTION (it would
@@ -89365,3 +89386,16 @@ Ruling 106d itself floats this: "the kind question — a program page is also no
 **GATE**: 100 files / 2425 tests, 2425 passing, ZERO failures (unchanged — B wrote no test, changed no product code). `npx tsc --noEmit` clean. `npx eslint src` — exactly the one standing `quiz.tsx:46` error, matching baseline.
 
 **B CHANGED NO PRODUCT CODE, EITHER ITEM.** Four commits this round, each pushed on landing (turn-lock claim, item 1, item 2, this close-out follows). Throwaway harness (`web/zz-r38b/`) lived outside `web/src/` both items, deleted before every commit; `git status --porcelain --untracked-files=all` confirmed clean each time. No credential printed, logged, committed or written anywhere — `.env.local` never read; the one live fetch (item 2, §2.0) touched only a single already-known public URL, no search-provider call, no API key. No large third-party page text pasted — only short titles, a bounded 160-character snippet slice (which turned out empty), and a short list of schema-type tokens. No branch/worktree/PR; `docs/MEMBERSHIP_OAUTH_AND_MCP_HANDOFF.md` untouched.
+
+### Round 38 — MANAGER (independent verification of B; RULINGS 107a-107d — both maintenance items resolve with ZERO code, both manager framings corrected on B's receipts; CANDIDATE ROUND 2 begins immediately)
+
+**Verification:** B changed zero product code (manager scope check — empty); tree clean; all four commits pushed. Gate re-run (full-capture): **100 files / 2425 tests, 2425 passing, ZERO failures.** The manager's own greps confirm BOTH of B's record-corrections: `tirt7.com` is "Real event 1 — Titanium Round Table" from round 4's own live pass (`:25593`), its `Summary.html` URL was re-fetched as the REAL EVENT's page in the round-12 era (`:27816`), and it sits by name in round 36 B's 12-row must-keep corpus (`:86707`); `LCO Casino` @ `eventective.com` appears as an event-surface FINAL-POOL admission logged as "Ruling 33's named cost, re-confirmed" in rounds 36 AND 37's own artefact tables (`:88556`, `:89112`), six-plus rounds running.
+
+**RULING 107a — A37-01 RESOLVES WITH ZERO CODE: the admission is CORRECT and Ruling 106a's maintenance classification is SUPERSEDED (the manager's own misread, owned).** Extending the artefact guard as commissioned would have deleted a 30-round-established must-keep real event. The actual blemish — the page's own `<title>` leading with "Meeting Summary-" — is the recorded name-quality cosmetic residual class (round-12 era "R13"), reopened in a gemini-era title shape; it joins the maintenance/backlog record as cosmetic, with the note that Phase 2's LLM naming path is its natural fix.
+
+**RULING 107b — M37-01 RESOLVES WITH ZERO CODE: it is Ruling 33's own accepted-cost class AT POOL LEVEL, exactly as the event surface has recorded six-plus rounds running; the manager's "first-ever" framing is CORRECTED (first JOB-surface instance only).** B's full causal trace (empty-snippet abstain — round 29's own deliberate rescue net; context-free `termMatches` — Ruling 33's own binding design; `passesRequiredGate` opening on one non-generic token; 57b structurally and TESTEDLY out of scope at `shared.test.ts:287-296`) is ratified. The kind-layer alternative is REJECTED ON B's MEASUREMENTS (zero structural signal on the real page; the only distinguishing word is dangerous to the surface's own core genre; one witness is not a class). **B's three recommendations are ADOPTED:** (a) Ruling 33's frequency-tracking practice extends explicitly to pool-level admissions on both surfaces; (b) the framing correction stands on the record; (c) **the named design bar: a SECOND independent job-surface pool admission of the same acronym-collision shape reopens this as a design item** — the loop's own ≥2-witness precedent, now written down so nobody re-derives it. **Phase-2 backlog note: the semantic relevance layer (Tier 1/2 LLM) is where this class's real fix lives — a lacrosse club and lithium cobalt oxide are indistinguishable to a regex and trivially distinguishable to the LLM pass.**
+
+**RULING 107c — BOTH maintenance items resolved with zero code changes; there is NOTHING for C. Round 38 proceeds DIRECTLY to CONVERGENCE CANDIDATE ROUND 2: `WHOSE TURN: A — round 38, CONVERGENCE CANDIDATE ROUND 2 (the full gate-candidate census; then the manager's fresh-window re-measurement).** Under Ruling 105a: if candidate round 2's four windows show zero NEW defect classes, **PHASE 1 CLOSES**, followed immediately by the Ruling-105b merge-to-main with the PR-quality description and the ABC-process narrative.
+
+**RULING 107d — sonnet, twenty-fourth data point: the audit now runs UPWARD.** B corrected the manager's own two round-37 classifications with archive receipts, refused two commissioned designs the evidence argued against (one of which would have deleted a 30-round must-keep), and priced the refusals with named reopen bars. This is the loop working at full strength in its final maintenance round.
+
