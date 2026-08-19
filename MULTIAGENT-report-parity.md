@@ -270,19 +270,53 @@ the run ends. Committing per item (§3) matters more for you than for anyone.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          LAPTOP-3CL10CG5 / Phase 3 Agent A round 1 + 2026-08-19 18:04 UTC
                   (§0d turn lock. Claim before working: set this to your
                   identifier + UTC timestamp, commit, PUSH. If the push is
                   rejected you lost the race — pull and stand down. Stale
                   after 2 hours. Release to `free` when you stop.)
-WHOSE TURN:       MANAGER — Phase 2 FINAL re-measurement, convergence
-                  candidate 2. A's round 9 window is clean (zero NEW-CLASS
-                  findings); per Ruling 105a the manager now independently
-                  re-measures. If the manager's own window is ALSO clean,
-                  two consecutive clean candidates close Phase 2 — the
-                  manager writes that ruling, A does not. See §4
-                  `### Phase 2 Round 9 — Agent A` for the full census.
-PHASE 2 MEASUREMENT PROFILE:
+WHOSE TURN:       A — Phase 3 round 1 (the first Tier-2 census). Phase 2 is
+                  CLOSED (Ruling 117) and Phase 3 is now open (Ruling 118,
+                  §4 end of file): the Tier-2 pool (`aiTier: 2`,
+                  LLM-written search queries via `query-gen.ts`) has never
+                  been censused by any prior round — Phases 1 and 2 both ran
+                  `aiTier: 0`. **CORRECTED STALE §1 (same class as round 9
+                  A's own fix): this top block still read round 9's
+                  MANAGER/Phase-2 hand-off even though Ruling 118d (§4, end
+                  of file) had already opened Phase 3 and handed the round to
+                  A — the manager's Phase-3-opening commit updated §4 but not
+                  this block. Synced here in the same commit that claims the
+                  lock, per §0's own rule that §1 must always be true.** See
+                  §4 `### RULING 118` (manager) for the opening brief: A runs
+                  the standard census protocol against `aiTier: 2` for BOTH
+                  the event and job surfaces (5 pulls each), classifies every
+                  admitted row, traces each finding's guard-clause path, and
+                  confirms gemini serves all three surfaces (papers/jobs/
+                  events) now that Tavily is rate-limited (Ruling 118c).
+PHASE 3 MEASUREMENT PROFILE:
+                  (Ruling 118c, opened 2026-08-19.) `aiTier: 2` — this is the
+                  whole point of the phase (Tier-0 profiles never exercised
+                  `query-gen.ts`'s LLM-written search queries, so the pool
+                  composition below was never measured before). Same
+                  `web/.local-data/profile.json`, field-scoped per Ruling 95,
+                  never read whole (event surface: `eventRequiredTopics`/
+                  `eventExploreTopics`; job surface: `jobRequiredTopics`/
+                  `jobExploreTopics`; paper surface: `researchTopics`).
+                  `aiTier` engaged via the LOCAL VERTEX PATH exactly as
+                  Phase 2 (`resolveProvider`'s local-dev branch, Ruling 66a)
+                  — `NODE_ENV=development` stub, `GOOGLE_VERTEX_PROJECT`
+                  boolean presence only (never `cat .env.local`), no BYOK
+                  override. `searchProvider: gemini` only — Tavily stays
+                  DISABLED this phase for a NEW reason recorded as fact: the
+                  user's own Tavily key returns HTTP 433 "exceeds the
+                  pay-as-you-go limit", so gemini now formally carries
+                  Tavily's role across all three surfaces (not just a test
+                  substitute). Enabling Tavily empties the pool and reddens
+                  `benchmark.test.ts` — do not enable it. Every future Phase
+                  3 census states this profile or an explicitly named
+                  deviation from it.
+PHASE 2 MEASUREMENT PROFILE (historical, Phase 2 is closed, kept for
+reference):
                   (Ruling 69 kickoff item 2, established by Phase 2 round 1 A
                   baseline, 2026-08-19.) Same `web/.local-data/profile.json`,
                   field-scoped per Ruling 95 (`researchTopics`, `softTopics`,
