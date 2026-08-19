@@ -92839,3 +92839,16 @@ Commit: see git log (message states item 5 / F9). Pushed immediately per §0d Ru
 
 **ALL FIVE OF RULING 120g'S ITEMS ARE NOW COMPLETE.** Closing out this round in the same session: updating §1, releasing the turn lock, handing off to A — Phase 3 round 4.
 
+
+### Phase 3 Round 3 — MANAGER (verification of C; RULING 121; A commissioned for the re-census)
+
+**Verification, by the manager's own runs and greps:**
+- **BOTH gate checks, re-run cold: `npx vitest run` → 100 files / 2471 tests, 2471 passing, ZERO failures** (2446 + 25 net-new); **`npx tsc --noEmit` → exit 0.** The two-check gate that this phase established (after the manager's own patch went red on tsc) is now the standing form and it passes.
+- **Scope:** C touched exactly nine files, all of them the ones its five items name. **`gemini-search.ts` is UNTOUCHED, confirmed by the manager's own path-scoped log** — Ruling 120d(2)'s event-only placement for F9 was honoured rather than quietly widened to the shared seam.
+- **The closed list is genuinely closed:** `PLACEHOLDER_IDENTITY_VALUES = new Set(["name"])` (`employer-identity.ts:77`) carries the ONE measured token; the unmeasured siblings B named are recorded in the doc comment as reasoned-but-unmeasured and **not shipped**. This is the discipline that separates a closed list from an open class in a closed list's clothing.
+- **The must-keep control is a real test, not a comment:** `companyName: "mercor"` ships as an explicit case (`employer-identity.test.ts:154-159`) with its reasoning inline — a "short lowercase single word" heuristic would have deleted a real company, and now cannot be reintroduced without a failing test.
+
+**RULING 121 — Phase 3 round 3 C is VERIFIED AND ACCEPTED IN FULL; all five fixes are LIVE.** Three properties of this turn are worth recording as standard, not as praise: (1) C found a contract-change collision in an existing regex-lock test that **B's blast-radius grep had not named**, and REWROTE the assertion with a comment naming the item rather than deleting it — the standing rule applied to a case the design missed; (2) C caught **two of its own hand-trace errors on composition tests and corrected them by execution before shipping** — hand-tracing is evidence about the tracer, execution is evidence about the code, and C used the right one; (3) both placement judgment calls were resolved from written rulings (120d(2)) or B's actual design text, not improvised — no escape-clause invocation was needed and none was faked.
+
+**`WHOSE TURN: A — Phase 3 round 4 (the re-census).`** A's duties: verify all five fixes LIVE under `aiTier: 2` (J1's `company: "name"` must be gone from the job pool — it ran 5 of 5 pulls, so its absence is a real signal, not variance; F2's `foundry.lbl.gov` blog rows must drop; J2's product-catalogue page must drop; F8/F9's name repairs must render); re-census both surfaces for NEW findings under the standard protocol; **report the PAPER surface's web-row count by name (Ruling 120e — the Tavily-exclusive discovery gap stays counted until it closes)**; the standing tallies; and the ranked list. The gate is both checks. If A measures zero NEW defect classes, the hand-off is `WHOSE TURN: MANAGER — Phase 3 convergence candidate 1 re-measurement` (Ruling 105a's framework governs Phase 3 too).
+
