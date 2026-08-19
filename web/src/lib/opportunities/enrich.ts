@@ -463,11 +463,15 @@ export async function enrichJobCandidates(
       ownedTexts: [item.description, pageText].filter((text): text is string => Boolean(text)),
       host,
     });
-    const company = employer.status === "ambiguous"
+    // J1 (Phase 3 round 3): this used to fall back to the raw, unvalidated
+    // `item.company` on "none" — the same bypass `himalayas.ts` had. Now
+    // `catalogLabel` above is a validated tier inside `resolveEmployerIdentity`
+    // itself (status `"catalog"`), so "none" means the label was absent or
+    // failed validation either way; there is no second, unguarded raw value
+    // left to fall back to.
+    const company = employer.status === "ambiguous" || employer.status === "none"
       ? undefined
-      : employer.status === "none"
-        ? item.company
-        : employer.company;
+      : employer.company;
     // B18-02: this line returned a bare `item` as shipped, which would
     // SILENTLY DISCARD the repair on any posting whose page yielded no other
     // new signal and no new company. Carrying the title here is defensive, and

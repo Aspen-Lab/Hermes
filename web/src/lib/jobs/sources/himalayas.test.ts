@@ -29,4 +29,54 @@ describe("himalayasJobToRawItem", () => {
     });
     expect(item?.company).toBe("Acme Materials");
   });
+
+  // J1 (Phase 3 round 3, Ruling 120g item 1). Phase 3 round 2 B fetched
+  // Himalayas' own live upstream API directly and found `companyName: "name"`
+  // verbatim on 20 of 200 sampled real job records (10%), spanning 18
+  // distinct real employers (Salesforce, ServiceNow, Lockheed Martin among
+  // them) — a platform-side data defect, not a per-employer anomaly. Before
+  // this item, `catalogLabel` was never read inside `resolveEmployerIdentity`
+  // at all, so this adapter's own raw fallback (`job.companyName?.trim() ||
+  // undefined`) rendered the literal word "name" as the company on real job
+  // cards. These two cases mirror B's own live-execution verification
+  // method, at this adapter's boundary rather than the raw API.
+  describe("J1 — the closed placeholder-token predicate", () => {
+    it("MUST-CATCH: drops the measured live placeholder value 'name' rather than rendering it", () => {
+      const item = himalayasJobToRawItem({
+        title: "Junior Development Engineer",
+        applicationLink: "https://himalayas.app/companies/esvolta/jobs/junior-development-engineer",
+        companyName: "name",
+        description: "esVolta, LP is a leading developer of battery storage systems.",
+      });
+      expect(item?.company).toBeUndefined();
+    });
+
+    // The second of B's two topic-relevant witnesses, re-confirmed live —
+    // same defect, different real employer and a non-English description, so
+    // this is not just a re-run of the esVolta shape above with new filler.
+    it("MUST-CATCH: drops the same placeholder value on the second named witness (Renergo)", () => {
+      const item = himalayasJobToRawItem({
+        title: "EPC Manager Owner's Engineer",
+        applicationLink: "https://himalayas.app/companies/renergo/jobs/epc-manager-owner-s-engineer",
+        companyName: "name",
+        description: "Die Renergo entwickelt Batteriespeicherprojekte in ganz Europa.",
+      });
+      expect(item?.company).toBeUndefined();
+    });
+
+    // MUST-KEEP CONTROL — the load-bearing witness from the SAME 200-row
+    // corpus that makes the predicate above safe. "mercor" is a real
+    // recruiting/AI-adjacent company styled as a bare lowercase word; the
+    // predicate is an exact closed-list match, never a shape heuristic, so
+    // this real employer must keep rendering exactly as today.
+    it("MUST-KEEP: still renders the real company 'mercor' from the same corpus, unaffected by the predicate", () => {
+      const item = himalayasJobToRawItem({
+        title: "Software Engineer",
+        applicationLink: "https://himalayas.app/companies/mercor/jobs/software-engineer",
+        companyName: "mercor",
+        description: "Join our team building the future of hiring.",
+      });
+      expect(item?.company).toBe("mercor");
+    });
+  });
 });

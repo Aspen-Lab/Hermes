@@ -74,11 +74,16 @@ export function himalayasJobToRawItem(job: HimalayasJob): RawJobItem | null {
     // fabricated placeholder Ruling 26 already rejected in jobweb.ts, copy-
     // pasted here unaudited. `company` is already optional; absence is
     // honest, a made-up string is not.
-    company: employer.status === "ambiguous"
+    // J1 (Phase 3 round 3): this used to fall back to the raw, unvalidated
+    // `job.companyName` on "none" — exactly the bypass that let Himalayas'
+    // own upstream placeholder value ("name", 20/200 sampled records) reach
+    // real job cards. `catalogLabel` above is now a validated tier inside
+    // `resolveEmployerIdentity` itself (status `"catalog"`), so "none" means
+    // the label was absent or failed validation either way; there is no
+    // second, unguarded raw value left to fall back to.
+    company: employer.status === "ambiguous" || employer.status === "none"
       ? undefined
-      : employer.status === "none"
-        ? job.companyName?.trim() || undefined
-        : employer.company,
+      : employer.company,
     location,
     place: parseStructuredLocation(locations.join(", ")),
     isRemote: true,

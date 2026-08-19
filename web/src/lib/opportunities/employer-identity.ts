@@ -4,11 +4,23 @@ import { looksLikeHostBrand } from "./shared";
 export type EmployerIdentityResolution =
   | { status: "structured"; company: string }
   | { status: "declared"; company: string }
+  | { status: "catalog"; company: string }
   | { status: "none" }
   | { status: "ambiguous" };
 
 export interface EmployerIdentityEvidence {
-  /** A source adapter's existing label; it is deliberately only a fallback. */
+  /**
+   * A source adapter's existing label. Lowest-priority tier: only used when
+   * neither `structuredOrganizations` nor `ownedTexts` yields a candidate.
+   * J1 (Phase 3 round 3, Ruling 120g item 1): before this item, this field
+   * was accepted by the type and populated by both callers but never read
+   * in the function body below — each caller re-implemented its own
+   * unvalidated raw fallback instead, which is how Himalayas' own upstream
+   * placeholder value `"name"` (see `isPlaceholderIdentityValue` below)
+   * reached real job cards. Now it is routed through the SAME cleaning and
+   * host-brand rejection the tiers above already get, plus the new
+   * placeholder check, so it is validated rather than merely trusted.
+   */
   catalogLabel?: string;
   /** Retained only from the selected JobPosting record. */
   structuredOrganizations?: string | readonly string[];
@@ -42,6 +54,32 @@ function uniqueNames(values: readonly string[]): string[] {
   return [...names.values()];
 }
 
+/**
+ * J1 (Phase 3 round 3, Ruling 120g item 1): a closed, EXACT full-string-match
+ * list of values that are themselves a form field's own generic label, not a
+ * real company name — never a shape/length/casing heuristic.
+ *
+ * Measured live against Himalayas' own upstream API (Phase 3 round 2 B,
+ * Deliverable 1): `companyName: "name"` appears verbatim on 20 of 200 sampled
+ * real job records (10%), spanning 18 distinct real employers (Salesforce,
+ * ServiceNow, Lockheed Martin among them) — a platform-side data defect, not
+ * a per-employer anomaly. Ruling out a shape heuristic is load-bearing, not
+ * theoretical: the SAME 200-row corpus also contains a real company styled as
+ * a bare lowercase word (`companyName: "mercor"`), which any "short lowercase
+ * single word" guess would have wrongly rejected.
+ *
+ * Only `"name"` ships. B named same-shape, unmeasured siblings (`company`,
+ * `employer`, `organization`, `n/a`, `tbd`, …) explicitly as reasoned-by-
+ * analogy, not observed this round; Ruling 120g's commission is explicit that
+ * they are not to be added blind. A future census can confirm and promote
+ * them one at a time.
+ */
+const PLACEHOLDER_IDENTITY_VALUES = new Set(["name"]);
+
+function isPlaceholderIdentityValue(value: string): boolean {
+  return PLACEHOLDER_IDENTITY_VALUES.has(normalized(value));
+}
+
 function directDeclarations(text: string): string[] {
   // The first paragraph/window is the only text an owned record may use for
   // identity. A later benefits mention is not a self-identification.
@@ -59,9 +97,17 @@ function directDeclarations(text: string): string[] {
 }
 
 /**
- * Resolves employer identity only from explicitly owned evidence. Callers keep
- * their catalog label when this returns `none`; ambiguity intentionally has no
- * fallback because a competing high-tier identity would otherwise be a lie.
+ * Resolves employer identity, preferring explicitly owned evidence over the
+ * source adapter's own catalog label; ambiguity intentionally has no fallback
+ * because a competing high-tier identity would otherwise be a lie.
+ *
+ * J1 (Phase 3 round 3): `catalogLabel` is a real, lowest-priority tier, not a
+ * caller-side afterthought — reached only when neither `structured` nor
+ * `declared` has a candidate, cleaned and host-brand-checked the same as
+ * those tiers, and additionally rejected when it is a closed-list placeholder
+ * value (`isPlaceholderIdentityValue`). When `catalogLabel` is absent or
+ * fails validation, `status` stays exactly `"none"`, unchanged from before
+ * this item — a miss here can only remove a value, never invent one.
  */
 export function resolveEmployerIdentity(
   evidence: EmployerIdentityEvidence,
@@ -84,5 +130,10 @@ export function resolveEmployerIdentity(
   }
   if (structured[0]) return { status: "structured", company: structured[0] };
   if (declared[0]) return { status: "declared", company: declared[0] };
+
+  const catalog = cleanJobSubtitlePart(evidence.catalogLabel);
+  if (catalog && !isOwnHostBrand(catalog) && !isPlaceholderIdentityValue(catalog)) {
+    return { status: "catalog", company: catalog };
+  }
   return { status: "none" };
 }
