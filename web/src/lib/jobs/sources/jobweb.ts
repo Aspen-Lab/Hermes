@@ -11,6 +11,10 @@ import {
   searchGemini,
 } from "@/lib/sources/gemini-search";
 import {
+  isVertexSearchAvailable,
+  searchVertex,
+} from "@/lib/sources/vertex-search";
+import {
   cleanJobDescription,
   cleanJobSubtitlePart,
   cleanJobTitle,
@@ -2084,6 +2088,31 @@ async function searchGeminiJobs(
     .filter((item): item is RawJobItem => item !== null);
 }
 
+/**
+ * The vertex branch — the credit-funded engine, same contract, same mapper.
+ *
+ * `denyHosts` is omitted for exactly the reason stated above `searchGeminiJobs`:
+ * this surface does not DENY `AGGREGATOR_HOSTS`, it REQUIRES a posting id on
+ * them, so pre-screening there would drop rows the shipped rule admits.
+ * `detectPageKind` is not set either — `pageKind` is an EVENT signal and this
+ * surface's mapper ignores it, so paying for a page fetch here would buy
+ * nothing.
+ */
+async function searchVertexJobs(
+  query: string,
+  limit: number,
+  deadlineAt: number,
+  topics: string[],
+): Promise<RawJobItem[]> {
+  const results = await searchVertex(query, {
+    maxResults: limit,
+    deadlineAt,
+  });
+  return results
+    .map((r) => webResultToRawJobItem({ title: r.title, url: r.url, snippet: r.snippet }, topics))
+    .filter((item): item is RawJobItem => item !== null);
+}
+
 function resolveKeys(query: JobsQuery): { tavily?: string; brave?: string } {
   return {
     tavily: query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY,
@@ -2098,11 +2127,12 @@ function resolveKeys(query: JobsQuery): { tavily?: string; brave?: string } {
  */
 export function resolveSearchProvider(
   query: JobsQuery,
-): "gemini" | "brave" | "tavily" | null {
+): "gemini" | "vertex" | "brave" | "tavily" | null {
   const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
   const keys = resolveKeys(query);
   return resolveWebSearchProvider(query.webSearch?.provider, {
     geminiAvailable: isGeminiSearchAvailable(),
+    vertexAvailable: isVertexSearchAvailable(),
     braveKeyPresent: Boolean(keys.brave),
     tavilyKeyPresent: Boolean(keys.tavily),
     requestTavilyKeyPresent: Boolean(requestTavilyKey),
@@ -2124,6 +2154,9 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
   const resultSets = await Promise.all(
     searches.map((q) => {
       const jobQuery = `${q} position opening apply`;
+      if (provider === "vertex") {
+        return searchVertexJobs(jobQuery, query.limit, deadlineAt, query.topics);
+      }
       if (provider === "gemini") {
         return searchGeminiJobs(jobQuery, query.limit, deadlineAt, query.topics);
       }

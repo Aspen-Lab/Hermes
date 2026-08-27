@@ -1,9 +1,10 @@
 import { bySourceId } from "@/lib/sources";
 import type { SourceId, RawItem } from "@/lib/sources/types";
+import { GEMINI_SOURCE_TIMEOUT_MS } from "@/lib/sources/gemini-search";
 import {
-  geminiWebSearchOptions,
-  GEMINI_SOURCE_TIMEOUT_MS,
-} from "@/lib/sources/gemini-search";
+  needsVertexSourceTimeout,
+  webSearchOptions,
+} from "@/lib/sources/vertex-search";
 import { withSourceTimeout } from "@/lib/opportunities/shared";
 import { scoreItems } from "@/lib/scoring";
 import type { ScoredItem } from "@/lib/scoring/types";
@@ -120,7 +121,11 @@ export async function runFeedPipeline(
         provider: "tavily" as const,
         tavilyApiKey: req.searchConnectors.tavily.apiKey,
       }
-    : geminiWebSearchOptions(req.searchConnectors);
+    // CREDIT MIGRATION — `webSearchOptions` prefers Vertex AI Search when a
+    // Search App is configured and otherwise returns exactly what
+    // `geminiWebSearchOptions` returned. With no Search App configured this
+    // line is behaviourally identical to the one it replaces.
+    : webSearchOptions(req.searchConnectors);
 
   const fetchPromise = Promise.allSettled(
     sources.map((s) =>
@@ -174,7 +179,10 @@ export async function runFeedPipeline(
         // source reporting zero fetched with a `source-timeout` reason after
         // this raise, the wall was not the binding constraint and something
         // else is.
-        s === "web" && paperWebSearch?.provider === "gemini"
+        // Both server-Vertex providers need the raised wall, for different
+        // reasons: grounding is slow in the search itself, vertex can spend the
+        // time on its page-kind fetch and its grounding backfill.
+        s === "web" && needsVertexSourceTimeout(paperWebSearch?.provider)
           ? GEMINI_SOURCE_TIMEOUT_MS
           : undefined,
       ),

@@ -192,12 +192,21 @@ export function resolveWebSearchProvider(
   preferred: WebSearchProvider | undefined,
   availability: {
     geminiAvailable: boolean;
+    /**
+     * Vertex AI Search availability — OPTIONAL so every caller written before
+     * the credit migration still type-checks and still resolves exactly as it
+     * did. Absent is treated as absent, never as available.
+     */
+    vertexAvailable?: boolean;
     braveKeyPresent: boolean;
     tavilyKeyPresent: boolean;
     /** A Tavily key the CALLER supplied — the signal that Tavily is enabled. */
     requestTavilyKeyPresent: boolean;
   },
 ): Exclude<WebSearchProvider, "auto"> | null {
+  if (preferred === "vertex") {
+    return availability.vertexAvailable ? "vertex" : null;
+  }
   if (preferred === "gemini") {
     return availability.geminiAvailable ? "gemini" : null;
   }
@@ -209,6 +218,15 @@ export function resolveWebSearchProvider(
   }
   // Auto. Gemini only displaces the shipped order when Tavily is NOT enabled,
   // which is precisely Ruling 75's wording.
+  //
+  // THE CREDIT MIGRATION ADDS ONE CLAUSE AHEAD OF IT, ON THE SAME CONDITION.
+  // Vertex AI Search and grounding are both spent from the server's own Vertex
+  // project, so they sit in the same slot of the order; when BOTH are wired,
+  // the one the trial credit pays for wins. An explicit `provider: "gemini"`
+  // still reaches grounding — this changes the DEFAULT, not the capability.
+  if (availability.vertexAvailable && !availability.requestTavilyKeyPresent) {
+    return "vertex";
+  }
   if (availability.geminiAvailable && !availability.requestTavilyKeyPresent) {
     return "gemini";
   }
@@ -226,6 +244,12 @@ export function resolveWebSearchProvider(
  * with `tavilyEnabled:false` the query carried no `webSearch` at all, both
  * adapters' `enabled()` returned false, and the paper surface returned `[]`.
  * The Tavily branch at each call site is left exactly as it shipped.
+ *
+ * **THE THREE PIPELINES NO LONGER CALL THIS DIRECTLY.** They call
+ * `sources/vertex-search.ts`'s `webSearchOptions`, which prefers Vertex AI
+ * Search when a Search App is configured and otherwise delegates here byte for
+ * byte. This function stays exported, unchanged, as the gemini-only path and
+ * for its own tests.
  */
 export function geminiWebSearchOptions(
   connectors: { gemini?: { enabled?: boolean } } | undefined,

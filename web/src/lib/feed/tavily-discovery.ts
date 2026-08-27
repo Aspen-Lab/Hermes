@@ -1,5 +1,6 @@
 import { webSearch } from "@/lib/sources";
 import { isGeminiSearchAvailable } from "@/lib/sources/gemini-search";
+import { isVertexSearchAvailable } from "@/lib/sources/vertex-search";
 import type { RawItem } from "@/lib/sources/types";
 import type { SearchBrief } from "./profile-compiler";
 import type { FeedRequest } from "./types";
@@ -64,7 +65,22 @@ export function canRunTavilyDiscovery(req: FeedRequest): boolean {
  */
 export function canRunGeminiDiscovery(req: FeedRequest): boolean {
   if (req.searchConnectors?.gemini?.enabled === false) return false;
-  return isGeminiSearchAvailable();
+  // CREDIT MIGRATION — a configured Vertex AI Search app is a server-Vertex
+  // search capability exactly as grounding credentials are, so it opens this
+  // gate too. The NAME is kept: `gemini.enabled` is the one opt-out covering
+  // every search this server pays for out of its own Vertex project, and
+  // splitting it would let a caller half-disable the side-channel.
+  return isGeminiSearchAvailable() || isVertexSearchAvailable();
+}
+
+/**
+ * CREDIT MIGRATION — which server-Vertex engine the side-channel runs on once
+ * `canRunGeminiDiscovery` has opened the gate. Vertex AI Search when a Search
+ * App is configured (cheaper per query, and billed to the trial credit),
+ * grounding otherwise.
+ */
+function serverSearchProvider(): "vertex" | "gemini" {
+  return isVertexSearchAvailable() ? "vertex" : "gemini";
 }
 
 export async function runTavilyDiscovery(
@@ -97,7 +113,7 @@ export async function runTavilyDiscovery(
           tavilyApiKey: connector!.apiKey,
           includeDomains: ACADEMIC_INCLUDE_DOMAINS,
         }
-      : { provider: "gemini" },
+      : { provider: serverSearchProvider() },
   });
 
   const academicResults = rawResults.filter(isAcademicLead);

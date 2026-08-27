@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Phase 3 round 6 C, ITEM 3 (Ruling 120e/122e item 3/123d/123g item 3). No
 // test file existed for this module before this item (confirmed absent —
@@ -19,6 +19,16 @@ afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
   fetchMock.mockReset();
+});
+
+// CREDIT MIGRATION — Vitest loads every `GOOGLE_` variable out of `.env.local`,
+// so without this the side-channel's dispatch cases would resolve to `vertex`
+// on any machine with a real Search App configured and this file would be
+// testing the machine rather than the code. Absence is STATED; the vertex case
+// gets its own test that states presence.
+beforeEach(() => {
+  vi.stubEnv("GOOGLE_VERTEX_SEARCH_ENGINE_ID", "");
+  vi.stubEnv("GOOGLE_VERTEX_SEARCH_DATA_STORE_ID", "");
 });
 
 function req(searchConnectors?: FeedRequest["searchConnectors"]): FeedRequest {
@@ -72,6 +82,19 @@ describe("runTavilyDiscovery dispatch (Phase 3 round 6 C, ITEM 3)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const query = fetchMock.mock.calls[0][0];
     expect(query.webSearch).toEqual({ provider: "gemini" });
+  });
+
+  // CREDIT MIGRATION — with a Search App configured the side-channel moves onto
+  // the credit-funded engine. Same gate, same fallback order, different engine.
+  it("requests the vertex provider once a Search App is configured", async () => {
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "probe-project");
+    vi.stubEnv("GOOGLE_VERTEX_SEARCH_ENGINE_ID", "peer-web");
+    fetchMock.mockResolvedValue([]);
+    const r = req({ tavily: { enabled: false }, gemini: { enabled: true } });
+
+    await runTavilyDiscovery(r, compileSearchBrief(r));
+
+    expect(fetchMock.mock.calls[0][0].webSearch).toEqual({ provider: "vertex" });
   });
 
   it("still prefers Tavily when both are available — dispatch order unchanged from today", async () => {

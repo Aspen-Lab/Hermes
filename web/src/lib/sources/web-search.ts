@@ -6,6 +6,7 @@ import {
   resolveWebSearchProvider,
   searchGemini,
 } from "./gemini-search";
+import { isVertexSearchAvailable, searchVertex } from "./vertex-search";
 
 interface BraveResult {
   title?: string;
@@ -42,8 +43,17 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
   const tavilyKey = requestTavilyKey || process.env.TAVILY_API_KEY;
   // RULING 75 — the key gate now admits the gemini provider too. Without this
-  // the paper surface returned `[]` here the moment Tavily was disabled.
-  if (!braveKey && !tavilyKey && !isGeminiSearchAvailable()) return [];
+  // the paper surface returned `[]` here the moment Tavily was disabled. The
+  // credit migration adds vertex on the same footing: a configured Search App
+  // is a usable search capability exactly as Vertex credentials are.
+  if (
+    !braveKey &&
+    !tavilyKey &&
+    !isGeminiSearchAvailable() &&
+    !isVertexSearchAvailable()
+  ) {
+    return [];
+  }
 
   const perQuery = Math.max(3, Math.ceil(Math.min(limit, 20) / searchQueries.length));
   const all: RawItem[] = [];
@@ -63,6 +73,7 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   const settled = await Promise.allSettled(
     searchQueries.map((searchQuery) => {
       const paperQuery = `${searchQuery} paper OR preprint OR arxiv`;
+      if (provider === "vertex") return fetchVertex(paperQuery, limit, deadlineAt, query.webSearch);
       if (provider === "gemini") return fetchGemini(paperQuery, limit, deadlineAt, query.webSearch);
       return provider === "brave"
         ? fetchBrave(paperQuery, perQuery, braveKey!)
@@ -165,6 +176,32 @@ async function fetchGemini(
     .filter((item): item is RawItem => item !== null);
 }
 
+/**
+ * The vertex branch of the paper surface's fan-out.
+ *
+ * Identical in shape to `fetchGemini` because `searchVertex` returns the same
+ * `{title, url, snippet}` contract — the ONLY difference that reaches this
+ * surface is which engine (and which bill) produced the rows. `venue` stays
+ * `"Web"` for the same reason it does on the Tavily and gemini branches: an
+ * indexed web row carries no publisher name, and inventing one from the
+ * hostname is the mistake Ruling 75 already refused.
+ */
+async function fetchVertex(
+  query: string,
+  limit: number,
+  deadlineAt: number,
+  options: SourceQuery["webSearch"],
+): Promise<RawItem[]> {
+  const results = await searchVertex(query, {
+    excludeDomains: options?.excludeDomains,
+    maxResults: limit,
+    deadlineAt,
+  });
+  return results
+    .map((result) => tavilyToRawItem({ title: result.title, url: result.url, content: result.snippet }))
+    .filter((item): item is RawItem => item !== null);
+}
+
 function braveToRawItem(result: BraveResult): RawItem | null {
   const title = cleanDisplayText(result.title);
   const url = cleanDisplayText(result.url);
@@ -216,9 +253,10 @@ function resolveProvider(
     tavilyKeyPresent: boolean;
     requestTavilyKeyPresent: boolean;
   },
-): "brave" | "tavily" | "gemini" | null {
+): "brave" | "tavily" | "gemini" | "vertex" | null {
   return resolveWebSearchProvider(query.webSearch?.provider, {
     geminiAvailable: isGeminiSearchAvailable(),
+    vertexAvailable: isVertexSearchAvailable(),
     ...availability,
   });
 }

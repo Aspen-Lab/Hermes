@@ -21,6 +21,10 @@ import {
   resolveWebSearchProvider,
   searchGemini,
 } from "@/lib/sources/gemini-search";
+import {
+  isVertexSearchAvailable,
+  searchVertex,
+} from "@/lib/sources/vertex-search";
 import { classifyEventType } from "../mapper";
 import { dateClaimEndMs } from "@/lib/format";
 
@@ -2689,6 +2693,35 @@ async function searchGeminiEvents(
   });
 }
 
+/**
+ * The vertex branch — the credit-funded engine, same contract, same mapper.
+ *
+ * **`detectPageKind` is set HERE AND ONLY HERE, and it is not optional for this
+ * surface.** `searchGemini` reads the page's `schema.org` `@type` for free off
+ * the HTML buffer it already holds for title recovery; `searchVertex` fetches
+ * no pages at all, so without this flag every vertex-sourced row would arrive
+ * with `pageKind` undefined and `webResultToRawEventItem`'s channel-L
+ * publisher-declaration admission would go silently dead — rows the shipped
+ * rule admits would simply stop existing, with nothing in the report saying so.
+ *
+ * `DENY_HOSTS` and the three excluded academic domains are forwarded exactly as
+ * the gemini branch forwards them, so the offered corpus stays comparable
+ * across providers.
+ */
+async function searchVertexEvents(
+  query: string,
+  limit: number,
+  deadlineAt: number,
+): Promise<WebResult[]> {
+  return searchVertex(query, {
+    denyHosts: DENY_HOSTS,
+    excludeDomains: ["arxiv.org", "openalex.org", "semanticscholar.org"],
+    maxResults: limit,
+    deadlineAt,
+    detectPageKind: true,
+  });
+}
+
 function resolveKeys(query: EventsQuery): { tavily?: string; brave?: string } {
   return {
     tavily: query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY,
@@ -2705,11 +2738,12 @@ function resolveKeys(query: EventsQuery): { tavily?: string; brave?: string } {
  */
 export function resolveSearchProvider(
   query: EventsQuery,
-): "gemini" | "brave" | "tavily" | null {
+): "gemini" | "vertex" | "brave" | "tavily" | null {
   const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
   const keys = resolveKeys(query);
   return resolveWebSearchProvider(query.webSearch?.provider, {
     geminiAvailable: isGeminiSearchAvailable(),
+    vertexAvailable: isVertexSearchAvailable(),
     braveKeyPresent: Boolean(keys.brave),
     tavilyKeyPresent: Boolean(keys.tavily),
     requestTavilyKeyPresent: Boolean(requestTavilyKey),
@@ -2741,11 +2775,13 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
   // cannot strand later, more specific queries.
   const resultSets = await Promise.all(
     searches.map((q) =>
-      provider === "gemini"
-        ? searchGeminiEvents(q, query.limit, deadlineAt)
-        : provider === "tavily"
-          ? searchTavily(q, keys.tavily!, perQuery)
-          : searchBrave(q, keys.brave!, perQuery),
+      provider === "vertex"
+        ? searchVertexEvents(q, query.limit, deadlineAt)
+        : provider === "gemini"
+          ? searchGeminiEvents(q, query.limit, deadlineAt)
+          : provider === "tavily"
+            ? searchTavily(q, keys.tavily!, perQuery)
+            : searchBrave(q, keys.brave!, perQuery),
     ),
   );
   for (const results of resultSets) {

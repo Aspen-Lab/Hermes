@@ -4,10 +4,11 @@
 // keyed sources and LLM query generation enable themselves via env/BYOK.
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
+import { GEMINI_SOURCE_TIMEOUT_MS } from "@/lib/sources/gemini-search";
 import {
-  GEMINI_SOURCE_TIMEOUT_MS,
-  geminiWebSearchOptions,
-} from "@/lib/sources/gemini-search";
+  needsVertexSourceTimeout,
+  webSearchOptions,
+} from "@/lib/sources/vertex-search";
 import { enrichJobCandidates } from "@/lib/opportunities/enrich";
 import {
   derivePoolCacheKey,
@@ -141,7 +142,9 @@ async function buildJobPool(
     // branch is untouched; the gemini branch is what turns this surface back on.
     webSearch: req.searchConnectors?.tavily?.enabled
       ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
-      : geminiWebSearchOptions(req.searchConnectors),
+      // CREDIT MIGRATION — prefers Vertex AI Search when a Search App is
+      // configured, otherwise byte-identical to `geminiWebSearchOptions`.
+      : webSearchOptions(req.searchConnectors),
     apiKeys: req.apiKeys,
   };
 
@@ -153,7 +156,8 @@ async function buildJobPool(
         source.fetch(query),
         // RULING 76a — per-source override for `jobweb` on the gemini provider
         // only. Never a global default change.
-        source.id === "jobweb" && query.webSearch?.provider === "gemini"
+        source.id === "jobweb" &&
+        needsVertexSourceTimeout(query.webSearch?.provider)
           ? GEMINI_SOURCE_TIMEOUT_MS
           : undefined,
       ),

@@ -5,10 +5,11 @@
 // available, with LLM-refined queries when a provider resolves.
 
 import { withSourceTimeout } from "@/lib/opportunities/shared";
+import { GEMINI_SOURCE_TIMEOUT_MS } from "@/lib/sources/gemini-search";
 import {
-  GEMINI_SOURCE_TIMEOUT_MS,
-  geminiWebSearchOptions,
-} from "@/lib/sources/gemini-search";
+  needsVertexSourceTimeout,
+  webSearchOptions,
+} from "@/lib/sources/vertex-search";
 import { enrichEventCandidates } from "@/lib/opportunities/enrich";
 import {
   derivePoolCacheKey,
@@ -165,7 +166,9 @@ async function buildEventPool(
     // entirely dark.
     webSearch: req.searchConnectors?.tavily?.enabled
       ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
-      : geminiWebSearchOptions(req.searchConnectors),
+      // CREDIT MIGRATION — prefers Vertex AI Search when a Search App is
+      // configured, otherwise byte-identical to `geminiWebSearchOptions`.
+      : webSearchOptions(req.searchConnectors),
   };
 
   const active = eventSources.filter((source) => source.enabled(query));
@@ -179,7 +182,8 @@ async function buildEventPool(
         // alone measured 10012 ms against the shipped 8000 ms wall, so at the
         // default this surface provably returns nothing. Every other source
         // keeps the 8 s it has always had.
-        source.id === "eventweb" && query.webSearch?.provider === "gemini"
+        source.id === "eventweb" &&
+        needsVertexSourceTimeout(query.webSearch?.provider)
           ? GEMINI_SOURCE_TIMEOUT_MS
           : undefined,
       ),

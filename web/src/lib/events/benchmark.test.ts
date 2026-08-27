@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { webSearchOptions } from "@/lib/sources/vertex-search";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import type { PreferenceLedger } from "@/types";
@@ -178,7 +179,14 @@ describe.skipIf(!hasLiveSearchPath)("events live relevance benchmark", () => {
       // actually took it. The corpus BREAKS at this round: Google's results are
       // not Tavily's, and no cross-provider row comparison is drift.
       console.info("EVENT_BENCHMARK_SEARCH_PROVIDER", {
-        searchProvider: tavilySearchLive ? "tavily" : "gemini",
+        // CREDIT MIGRATION — this line used to hard-code `"gemini"`, which
+        // silently became a FALSE method line the moment a Vertex AI Search app
+        // was configured: the run took `vertex` and the log still said
+        // `gemini`. The comment above already demands the provider be reported
+        // by the run rather than remembered, so it now reads the same
+        // resolution the pipeline itself uses.
+        searchProvider:
+          tavilySearchLive ? "tavily" : (webSearchOptions(undefined)?.provider ?? "none"),
         eventwebFetched: pool.fetched.eventweb ?? 0,
         eventwebError: pool.errors.eventweb ?? null,
       });

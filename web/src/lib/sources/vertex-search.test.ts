@@ -1,0 +1,388 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { resolveWebSearchProvider } from "./gemini-search";
+import {
+  discoveryResultToWebResult,
+  isVertexSearchAvailable,
+  needsVertexSourceTimeout,
+  searchEndpoint,
+  searchVertex,
+  webSearchOptions,
+  type DiscoveryResult,
+} from "./vertex-search";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE `vertex` PROVIDER — Vertex AI Search (Discovery Engine).
+//
+// The response fixtures below follow the documented `v1 …:search` shape for a
+// WEBSITE data store: every returned field lives under
+// `document.derivedStructData`, snippets arrive as an array of
+// `{snippet, snippet_status}` with `<b>` highlight markup around the matched
+// terms, and an unsnippetable page comes back as `NO_SNIPPET_AVAILABLE` with a
+// human-readable placeholder in the `snippet` slot.
+//
+// The env-dependent tests save and restore `process.env` themselves. Vitest is
+// configured to load only `GOOGLE_`-prefixed variables from `.env.local`, which
+// is exactly the prefix this provider's own configuration uses — so a developer
+// with a live Search App configured must not have these tests read it.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ENV_KEYS = [
+  "GOOGLE_VERTEX_PROJECT",
+  "GOOGLE_VERTEX_SEARCH_PROJECT",
+  "GOOGLE_VERTEX_SEARCH_ENGINE_ID",
+  "GOOGLE_VERTEX_SEARCH_DATA_STORE_ID",
+  "GOOGLE_VERTEX_SEARCH_LOCATION",
+  "GOOGLE_VERTEX_SEARCH_COLLECTION",
+  "GOOGLE_VERTEX_SEARCH_SERVING_CONFIG",
+  "GOOGLE_VERTEX_SEARCH_MIN_RESULTS",
+  "GOOGLE_VERTEX_SEARCH_FALLBACK",
+] as const;
+
+const saved = new Map<string, string | undefined>();
+
+function setEnv(values: Record<string, string | undefined>): void {
+  for (const key of ENV_KEYS) {
+    if (!saved.has(key)) saved.set(key, process.env[key]);
+    delete process.env[key];
+  }
+  for (const [key, value] of Object.entries(values)) {
+    if (!saved.has(key)) saved.set(key, process.env[key]);
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
+}
+
+afterEach(() => {
+  for (const [key, value] of saved) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
+  saved.clear();
+});
+
+function websiteResult(
+  overrides: Record<string, unknown> = {},
+): DiscoveryResult {
+  return {
+    document: {
+      derivedStructData: {
+        link: "https://example.edu/workshop-2026",
+        title: "Workshop on Molten Salt Reactors 2026",
+        displayLink: "example.edu",
+        snippets: [
+          {
+            snippet: "The <b>workshop</b> runs 12-14 May 2026 in Oak Ridge.",
+            snippet_status: "SUCCESS",
+          },
+        ],
+        ...overrides,
+      },
+    },
+  };
+}
+
+describe("isVertexSearchAvailable", () => {
+  it("is false with a project but no search app — nothing switches provider", () => {
+    setEnv({ GOOGLE_VERTEX_PROJECT: "peer-dev" });
+    expect(isVertexSearchAvailable()).toBe(false);
+  });
+
+  it("is false with a search app but no project", () => {
+    setEnv({ GOOGLE_VERTEX_SEARCH_ENGINE_ID: "peer-web_123" });
+    expect(isVertexSearchAvailable()).toBe(false);
+  });
+
+  it("is true once both are configured", () => {
+    setEnv({
+      GOOGLE_VERTEX_PROJECT: "peer-dev",
+      GOOGLE_VERTEX_SEARCH_ENGINE_ID: "peer-web_123",
+    });
+    expect(isVertexSearchAvailable()).toBe(true);
+  });
+
+  it("accepts a data-store id in place of an engine id", () => {
+    setEnv({
+      GOOGLE_VERTEX_PROJECT: "peer-dev",
+      GOOGLE_VERTEX_SEARCH_DATA_STORE_ID: "peer-sites_123",
+    });
+    expect(isVertexSearchAvailable()).toBe(true);
+  });
+});
+
+describe("searchEndpoint", () => {
+  it("uses the un-prefixed host for the global location", () => {
+    setEnv({
+      GOOGLE_VERTEX_PROJECT: "peer-dev",
+      GOOGLE_VERTEX_SEARCH_ENGINE_ID: "peer-web_123",
+    });
+    expect(searchEndpoint()).toBe(
+      "https://discoveryengine.googleapis.com/v1/projects/peer-dev/locations/global" +
+        "/collections/default_collection/engines/peer-web_123" +
+        "/servingConfigs/default_search:search",
+    );
+  });
+
+  it("prefixes the host for a regional location", () => {
+    setEnv({
+      GOOGLE_VERTEX_PROJECT: "peer-dev",
+      GOOGLE_VERTEX_SEARCH_ENGINE_ID: "peer-web_123",
+      GOOGLE_VERTEX_SEARCH_LOCATION: "us",
+    });
+    expect(searchEndpoint()).toContain("https://us-discoveryengine.googleapis.com/");
+    expect(searchEndpoint()).toContain("/locations/us/");
+  });
+
+  it("addresses a data store by its own collection path", () => {
+    setEnv({
+      GOOGLE_VERTEX_PROJECT: "peer-dev",
+      GOOGLE_VERTEX_SEARCH_DATA_STORE_ID: "peer-sites_123",
+    });
+    expect(searchEndpoint()).toContain("/dataStores/peer-sites_123/");
+  });
+
+  it("is null when nothing is configured", () => {
+    setEnv({});
+    expect(searchEndpoint()).toBeNull();
+  });
+});
+
+describe("discoveryResultToWebResult", () => {
+  it("returns the crawler's real title, link and de-marked-up snippet", () => {
+    expect(discoveryResultToWebResult(websiteResult())).toEqual({
+      title: "Workshop on Molten Salt Reactors 2026",
+      url: "https://example.edu/workshop-2026",
+      snippet: "The workshop runs 12-14 May 2026 in Oak Ridge.",
+    });
+  });
+
+  it("drops a row with no link — a row with no target is not a row", () => {
+    expect(discoveryResultToWebResult(websiteResult({ link: undefined }))).toBeNull();
+  });
+
+  it("drops a row with no title rather than falling back to the host", () => {
+    const row = websiteResult({ title: undefined, htmlTitle: undefined });
+    expect(discoveryResultToWebResult(row)).toBeNull();
+  });
+
+  it("treats NO_SNIPPET_AVAILABLE as an EMPTY snippet, not as page text", () => {
+    const row = websiteResult({
+      snippets: [
+        {
+          snippet: "No snippet is available for this page.",
+          snippet_status: "NO_SNIPPET_AVAILABLE",
+        },
+      ],
+    });
+    // The event mapper reads an empty snippet as "judge on the title alone".
+    // Letting the placeholder through would silently switch that branch off.
+    expect(discoveryResultToWebResult(row)?.snippet).toBe("");
+  });
+
+  it("falls back to an extractive answer when no snippet succeeded", () => {
+    const row = websiteResult({
+      snippets: [{ snippet: "", snippet_status: "NO_SNIPPET_AVAILABLE" }],
+      extractive_answers: [{ content: "Registration closes 1 April 2026." }],
+    });
+    expect(discoveryResultToWebResult(row)?.snippet).toBe(
+      "Registration closes 1 April 2026.",
+    );
+  });
+});
+
+describe("searchVertex", () => {
+  const search = (results: DiscoveryResult[]) => async () => results;
+
+  it("maps, caps and de-duplicates without any page fetch", async () => {
+    const rows = await searchVertex("molten salt reactor workshop", {
+      search: search([
+        websiteResult(),
+        websiteResult(), // same link — one row
+        websiteResult({ link: "https://example.edu/second", title: "Second" }),
+      ]),
+      maxResults: 2,
+      fallbackMinResults: 0,
+    });
+    expect(rows.map((row) => row.url)).toEqual([
+      "https://example.edu/workshop-2026",
+      "https://example.edu/second",
+    ]);
+    // No title recovery stage means no row can be dropped for lacking a title.
+    expect(rows.every((row) => Boolean(row.title))).toBe(true);
+  });
+
+  it("pre-screens denied hosts and excluded domains before returning them", async () => {
+    const rows = await searchVertex("q", {
+      search: search([
+        websiteResult({ link: "https://arxiv.org/abs/2601.00001" }),
+        websiteResult(),
+      ]),
+      excludeDomains: ["arxiv.org"],
+      fallbackMinResults: 0,
+    });
+    expect(rows.map((row) => row.url)).toEqual([
+      "https://example.edu/workshop-2026",
+    ]);
+  });
+
+  it("annotates pageKind from the page's own JSON-LD when asked", async () => {
+    const rows = await searchVertex("q", {
+      search: search([websiteResult()]),
+      detectPageKind: true,
+      fallbackMinResults: 0,
+      fetchPages: async () => [
+        '<html><script type="application/ld+json">{"@type":"Event"}</script></html>',
+      ],
+    });
+    expect(rows[0].pageKind).toBe("event");
+  });
+
+  it("leaves pageKind undefined when the fetch fails — the row survives", async () => {
+    const rows = await searchVertex("q", {
+      search: search([websiteResult()]),
+      detectPageKind: true,
+      fallbackMinResults: 0,
+      fetchPages: async () => [null],
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].pageKind).toBeUndefined();
+  });
+
+  it("does not fetch pages at all unless detectPageKind is set", async () => {
+    let fetched = 0;
+    await searchVertex("q", {
+      search: search([websiteResult()]),
+      fallbackMinResults: 0,
+      fetchPages: async (urls) => {
+        fetched += urls.length;
+        return urls.map(() => null);
+      },
+    });
+    expect(fetched).toBe(0);
+  });
+
+  it("backfills with grounding only when the index under-delivers", async () => {
+    let grounded = 0;
+    const rows = await searchVertex("obscure new host", {
+      search: search([websiteResult()]),
+      maxResults: 5,
+      fallbackMinResults: 3,
+      groundFallback: async () => {
+        grounded += 1;
+        return [
+          { title: "New host", url: "https://newhost.org/cfp", snippet: "" },
+        ];
+      },
+    });
+    expect(grounded).toBe(1);
+    // Vertex rows keep their position; grounding only tops the list up.
+    expect(rows.map((row) => row.url)).toEqual([
+      "https://example.edu/workshop-2026",
+      "https://newhost.org/cfp",
+    ]);
+  });
+
+  it("does not backfill when the index already filled the query", async () => {
+    let grounded = 0;
+    await searchVertex("well covered", {
+      search: search([
+        websiteResult(),
+        websiteResult({ link: "https://example.edu/b", title: "B" }),
+        websiteResult({ link: "https://example.edu/c", title: "C" }),
+      ]),
+      fallbackMinResults: 3,
+      groundFallback: async () => {
+        grounded += 1;
+        return [];
+      },
+    });
+    expect(grounded).toBe(0);
+  });
+
+  it("returns an empty array when the search itself throws", async () => {
+    setEnv({});
+    const rows = await searchVertex("q", {
+      search: async () => {
+        throw new Error("boom");
+      },
+      fallbackMinResults: 0,
+    });
+    expect(rows).toEqual([]);
+  });
+});
+
+describe("resolveWebSearchProvider with vertex", () => {
+  const base = {
+    geminiAvailable: true,
+    braveKeyPresent: false,
+    tavilyKeyPresent: false,
+    requestTavilyKeyPresent: false,
+  };
+
+  it("prefers vertex over gemini in auto when both are wired", () => {
+    expect(
+      resolveWebSearchProvider(undefined, { ...base, vertexAvailable: true }),
+    ).toBe("vertex");
+  });
+
+  it("still returns gemini when no Search App is configured", () => {
+    expect(resolveWebSearchProvider(undefined, base)).toBe("gemini");
+  });
+
+  it("honours an explicit gemini preference — this changes the default only", () => {
+    expect(
+      resolveWebSearchProvider("gemini", { ...base, vertexAvailable: true }),
+    ).toBe("gemini");
+  });
+
+  it("refuses an explicit vertex preference when no Search App exists", () => {
+    expect(resolveWebSearchProvider("vertex", base)).toBeNull();
+  });
+
+  it("keeps Tavily ahead of vertex when the caller supplied a Tavily key", () => {
+    expect(
+      resolveWebSearchProvider(undefined, {
+        ...base,
+        vertexAvailable: true,
+        tavilyKeyPresent: true,
+        requestTavilyKeyPresent: true,
+      }),
+    ).toBe("tavily");
+  });
+});
+
+describe("webSearchOptions", () => {
+  it("selects vertex when a Search App is configured", () => {
+    setEnv({
+      GOOGLE_VERTEX_PROJECT: "peer-dev",
+      GOOGLE_VERTEX_SEARCH_ENGINE_ID: "peer-web_123",
+    });
+    expect(webSearchOptions(undefined)).toEqual({ provider: "vertex" });
+  });
+
+  it("falls back to gemini when only Vertex model credentials exist", () => {
+    setEnv({ GOOGLE_VERTEX_PROJECT: "peer-dev" });
+    expect(webSearchOptions(undefined)).toEqual({ provider: "gemini" });
+  });
+
+  it("honours the existing gemini opt-out for both engines", () => {
+    setEnv({
+      GOOGLE_VERTEX_PROJECT: "peer-dev",
+      GOOGLE_VERTEX_SEARCH_ENGINE_ID: "peer-web_123",
+    });
+    expect(webSearchOptions({ gemini: { enabled: false } })).toBeUndefined();
+  });
+
+  it("is undefined when Vertex is absent entirely", () => {
+    setEnv({});
+    expect(webSearchOptions(undefined)).toBeUndefined();
+  });
+});
+
+describe("needsVertexSourceTimeout", () => {
+  it("covers both server-Vertex providers and nothing else", () => {
+    expect(needsVertexSourceTimeout("vertex")).toBe(true);
+    expect(needsVertexSourceTimeout("gemini")).toBe(true);
+    expect(needsVertexSourceTimeout("tavily")).toBe(false);
+    expect(needsVertexSourceTimeout(undefined)).toBe(false);
+  });
+});

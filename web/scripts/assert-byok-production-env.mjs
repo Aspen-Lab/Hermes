@@ -1,6 +1,12 @@
 const OPERATOR_AI_ENV_NAMES = [
   "PEER_DIGEST_PROVIDER",
   "GOOGLE_VERTEX_PROJECT",
+  // The Vertex AI Search app is operator-funded search, spent from the
+  // server's own project exactly as grounding is, so it belongs on this list
+  // for the same reason `GOOGLE_VERTEX_PROJECT` does.
+  "GOOGLE_VERTEX_SEARCH_PROJECT",
+  "GOOGLE_VERTEX_SEARCH_ENGINE_ID",
+  "GOOGLE_VERTEX_SEARCH_DATA_STORE_ID",
   "GOOGLE_APPLICATION_CREDENTIALS",
   "GOOGLE_API_KEY",
   "ANTHROPIC_API_KEY",

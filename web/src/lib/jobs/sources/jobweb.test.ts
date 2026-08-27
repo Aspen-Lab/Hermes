@@ -3029,6 +3029,12 @@ describe("RULING 75 — jobweb provider resolution", () => {
   function withoutKeys(): void {
     vi.stubEnv("TAVILY_API_KEY", "");
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
+    // CREDIT MIGRATION — stated, not inherited. Vitest loads every `GOOGLE_`
+    // variable out of `.env.local`, so once a developer configures a real
+    // Search App these cases would silently start resolving to `vertex` and
+    // this block would be testing the machine instead of the code.
+    vi.stubEnv("GOOGLE_VERTEX_SEARCH_ENGINE_ID", "");
+    vi.stubEnv("GOOGLE_VERTEX_SEARCH_DATA_STORE_ID", "");
   }
 
   it("was DARK before this item: no keys, no webSearch block, no source", () => {
@@ -3050,6 +3056,14 @@ describe("RULING 75 — jobweb provider resolution", () => {
     withoutKeys();
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
     expect(resolveSearchProvider(baseQuery)).toBe("gemini");
+  });
+
+  // CREDIT MIGRATION — the new default, pinned beside the old one.
+  it("picks vertex on auto once a Search App is configured", () => {
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    vi.stubEnv("GOOGLE_VERTEX_SEARCH_ENGINE_ID", "peer-web");
+    expect(resolveSearchProvider(baseQuery)).toBe("vertex");
   });
 
   it("still yields to a caller-supplied Tavily key", () => {
