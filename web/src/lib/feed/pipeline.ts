@@ -10,7 +10,7 @@ import { scoreItems } from "@/lib/scoring";
 import type { ScoredItem } from "@/lib/scoring/types";
 import { dedupItems } from "./dedup";
 import { applyTier1Rerank } from "./rerank";
-import { applyTier2Rerank } from "./tier2-rerank";
+import { applyRerankOrder, applyTier2Rerank } from "./tier2-rerank";
 import { briefToSeedTexts, compileSearchBrief } from "./profile-compiler";
 import type { FeedRequest, FeedResponse } from "./types";
 import {
@@ -22,7 +22,7 @@ import { fetchCitationNeighborhood } from "@/lib/affiliation/openalex";
 import {
   derivePoolCacheKey,
   getOrBuildCachedPool,
-  isCachedPaperDiscovery,
+  isCachedPaperPool,
   localCalendarDate,
   type PoolCache,
 } from "@/lib/opportunities/pool-cache";
@@ -53,51 +53,44 @@ export interface FeedPipelineOptions {
   now?: Date;
 }
 
-async function runDailyTavilyDiscovery(
-  req: FeedRequest,
-  brief: ReturnType<typeof compileSearchBrief>,
-  options: FeedPipelineOptions,
-): Promise<TavilyDiscoveryResult> {
-  const now = options.now ?? new Date();
-  const cache = options.cache ?? getDefaultOpportunityPoolCache();
-  const key = derivePoolCacheKey({
-    surface: "papers",
-    requiredTopics: req.topics,
-    exploreTopics: req.softTopics,
-    now,
-  });
-  const loaded = await getOrBuildCachedPool(
-    cache,
-    key,
-    isCachedPaperDiscovery,
-    async () => {
-      const discovery = await runTavilyDiscovery(req, brief);
-      return {
-        surface: "papers",
-        queryBoosts: discovery.queryBoosts,
-        resultCount: discovery.resultCount,
-        generatedAt: now.toISOString(),
-        localDate: localCalendarDate(now),
-      };
-    },
-  );
+/**
+ * Ceiling on candidates carried in one day's cached paper pool. Matches the
+ * events/jobs pool ceiling: large enough that read-time re-ranking, journal
+ * boosts and exclusions all have room to move, small enough that the cached
+ * blob stays a reasonable size with abstracts attached.
+ */
+const MAX_PAPER_POOL_ITEMS = 200;
 
-  return {
-    queryBoosts: loaded.pool.queryBoosts,
-    resultCount: loaded.pool.resultCount,
-  };
+type SearchBriefFor = ReturnType<typeof compileSearchBrief>;
+
+/** One local day's paper candidates, scored WITHOUT the preference ledger. */
+interface BuiltPaperPool {
+  items: ScoredItem[];
+  aiOrder: string[];
+  aiReasons: Record<string, string>;
+  queryBoosts: string[];
+  resultCount: number;
+  fetched: Partial<Record<SourceId, number>>;
+  errors: Partial<Record<SourceId, string>>;
+  beforeDedup: number;
+  afterDedup: number;
+  generatedAt: string;
+  localDate: string;
 }
 
-export async function runFeedPipeline(
+/**
+ * Everything a paper build PAYS for: the discovery side-channel's web searches,
+ * every academic source fetch, and — at Tier 2 — the LLM rerank. Called only on
+ * a cache miss, so it runs at most once per (topic set, AI tier) per local day.
+ */
+async function buildPaperPool(
   req: FeedRequest,
-  options: FeedPipelineOptions = {},
-): Promise<FeedResponse> {
-  const startedAt = Date.now();
+  brief: SearchBriefFor,
+  requestedTier: 0 | 1 | 2,
+  now: Date,
+): Promise<BuiltPaperPool> {
   const sources = req.sources ?? defaultSources();
-  const brief = compileSearchBrief(req);
   const perSourceLimit = req.perSourceLimit ?? 60;
-  const topN = req.topN ?? brief.controls.paperCount;
-  const requestedTier = req.aiTier ?? feedTierFromEnv();
   const includeNonPaperResults = shouldIncludeNonPaperResults(req);
 
   // Tavily discovery used to gate source fetch on its boost queries, but
@@ -105,9 +98,12 @@ export async function runFeedPipeline(
   // parallel — sources use the base generated queries, Tavily only feeds
   // connectorStats. Boost re-injection can come back as a 2nd wave if we
   // need it for relevance.
+  // The daily-cache wrapper moved OUT to `runFeedPipeline`, which now caches
+  // this whole function rather than just this one side-channel. Discovery is a
+  // plain call again because reaching it already means a cache miss.
   const tavilyPromise: Promise<TavilyDiscoveryResult> =
     requestedTier >= 1 && canRunTavilyDiscovery(req)
-      ? runDailyTavilyDiscovery(req, brief, options).catch(() => ({
+      ? runTavilyDiscovery(req, brief).catch(() => ({
           queryBoosts: [],
           resultCount: 0,
         }))
@@ -237,34 +233,121 @@ export async function runFeedPipeline(
   const deduped = dedupItems(paperItems);
   const afterDedup = deduped.length;
 
-  const seedTexts = briefToSeedTexts(req, brief);
+  // NEUTRAL SCORING, AND IT IS THE WHOLE REASON ONE POOL CAN SERVE A WHOLE DAY.
+  // `preferenceLedger` is deliberately absent here and supplied at read time
+  // instead: bake a user's likes into the stored scores and every later read
+  // that day would be ranked by a snapshot of their taste taken this morning.
+  // The jobs pool makes the same split for the same reason.
+  const scored = scorePaperCandidates(deduped, req, brief, false);
+
+  const tier1Ranked = requestedTier >= 1 ? applyTier1Rerank(scored, brief) : scored;
+  const tier2 = requestedTier >= 2
+    ? await applyTier2Rerank(tier1Ranked, brief, req.llmOverride)
+    : { items: tier1Ranked, orderedIds: [] as string[], reasons: {} };
+
+  return {
+    items: tier2.items.slice(0, MAX_PAPER_POOL_ITEMS),
+    aiOrder: tier2.orderedIds,
+    aiReasons: tier2.reasons,
+    queryBoosts: tavilyDiscovery.queryBoosts,
+    resultCount: tavilyDiscovery.resultCount,
+    fetched,
+    errors,
+    beforeDedup,
+    afterDedup,
+    generatedAt: now.toISOString(),
+    localDate: localCalendarDate(now),
+  };
+}
+
+/** Shared by the build and every read, so the two cannot score differently. */
+function scorePaperCandidates(
+  items: RawItem[],
+  req: FeedRequest,
+  brief: SearchBriefFor,
+  includePreferenceLedger: boolean,
+): ScoredItem[] {
   const userNegativeTopics = req.negativeTopics ?? [];
   const policyAvoidTopics = brief.avoid.filter(
     (topic) => !userNegativeTopics.includes(topic),
   );
-  const scored = scoreItems(
-    deduped,
+  return scoreItems(
+    items,
     {
       topics: req.topics,
       methods: req.methods,
       venues: req.venues,
-      seedTexts,
-      preferenceLedger: req.preferenceLedger,
+      seedTexts: briefToSeedTexts(req, brief),
+      preferenceLedger: includePreferenceLedger
+        ? req.preferenceLedger
+        : undefined,
       negativeTopics: policyAvoidTopics,
       legacyNegativeTopics: userNegativeTopics,
       sourceWeights: req.sourceWeights,
     },
     req.weights,
   );
+}
 
+export async function runFeedPipeline(
+  req: FeedRequest,
+  options: FeedPipelineOptions = {},
+): Promise<FeedResponse> {
+  const startedAt = Date.now();
+  const now = options.now ?? new Date();
+  const brief = compileSearchBrief(req);
+  const topN = req.topN ?? brief.controls.paperCount;
+  const requestedTier = req.aiTier ?? feedTierFromEnv();
+  const cache = options.cache ?? getDefaultOpportunityPoolCache();
+
+  // THE AI TIER IS PART OF THE KEY, unlike on the events and jobs surfaces.
+  // A Tier-2 pool carries an LLM ranking a Tier-0 pool does not have, so the
+  // two are genuinely different payloads rather than the same pool viewed
+  // differently — sharing one entry would mean whichever tier ran first that
+  // day silently decided the other's ordering for the rest of the day. The
+  // price is bounded and user-initiated: toggling the AI switch can cost one
+  // extra paper build per day, and a paper build is 4 web searches.
+  const key = derivePoolCacheKey({
+    surface: "papers",
+    requiredTopics: req.topics,
+    exploreTopics: req.softTopics,
+    aiTier: requestedTier,
+    now,
+  });
+
+  let built: BuiltPaperPool | undefined;
+  const loaded = await getOrBuildCachedPool(
+    cache,
+    key,
+    isCachedPaperPool,
+    async () => {
+      built = await buildPaperPool(req, brief, requestedTier, now);
+      return {
+        surface: "papers",
+        items: built.items,
+        aiOrder: built.aiOrder,
+        aiReasons: built.aiReasons,
+        queryBoosts: built.queryBoosts,
+        resultCount: built.resultCount,
+        generatedAt: built.generatedAt,
+        localDate: built.localDate,
+      };
+    },
+  );
+  const pool = loaded.pool;
+
+  // ── READ-TIME RANKING. Everything below is local, deterministic and free, so
+  // a user's likes, dismissals and preferred journals move today's pool without
+  // re-fetching a source or re-spending an LLM token.
+  const scored = scorePaperCandidates(pool.items, req, brief, true);
   const tier1Ranked = requestedTier >= 1 ? applyTier1Rerank(scored, brief) : scored;
-  const ranked = requestedTier >= 2
-    ? await applyTier2Rerank(tier1Ranked, brief, req.llmOverride)
-    : tier1Ranked;
+  // Replays the ranking the LLM produced when the pool was built. On a Tier-0
+  // pool `aiOrder` is empty and this is a no-op.
+  const aiRanked = applyRerankOrder(tier1Ranked, pool.aiOrder, pool.aiReasons);
   // Preferred-journal boost: applied LAST (after every rerank) so a paper
   // published in one of the user's preferred journals reliably floats up,
   // while an exceptionally strong non-journal match can still outrank it.
-  const journalRanked = applyJournalBoost(ranked, req.venues ?? []);
+  const journalRanked = applyJournalBoost(aiRanked, req.venues ?? []);
   // Don't show items the caller already showed this user recently. Run
   // AFTER ranking so the score reflects the full candidate pool, but BEFORE
   // slicing so we still return `topN` fresh items.
@@ -276,16 +359,21 @@ export async function runFeedPipeline(
     : journalRanked;
   const returned = fresh.slice(0, topN);
 
+  // Fetch diagnostics only exist for the request that actually built the pool.
+  // A cache hit reports the pool's size rather than inventing source counts it
+  // never saw — the same choice `buildDailyJobPool` makes.
+  const diagnostics = !loaded.cacheHit ? built : undefined;
+
   return {
     items: returned,
     meta: {
-      fetched,
-      errors,
-      beforeDedup,
-      afterDedup,
+      fetched: diagnostics?.fetched ?? {},
+      errors: diagnostics?.errors ?? {},
+      beforeDedup: diagnostics?.beforeDedup ?? pool.items.length,
+      afterDedup: diagnostics?.afterDedup ?? pool.items.length,
       returned: returned.length,
       latencyMs: Date.now() - startedAt,
-      generatedAt: new Date().toISOString(),
+      generatedAt: pool.generatedAt,
       searchBrief: brief,
       aiTierUsed: requestedTier,
       llmProviderUsed:
@@ -296,8 +384,8 @@ export async function runFeedPipeline(
         req.searchConnectors?.tavily?.enabled
           ? {
               tavily: {
-                results: tavilyDiscovery.resultCount,
-                queryBoosts: tavilyDiscovery.queryBoosts.length,
+                results: pool.resultCount,
+                queryBoosts: pool.queryBoosts.length,
               },
             }
           : undefined,

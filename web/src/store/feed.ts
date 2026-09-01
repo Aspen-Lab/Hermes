@@ -675,6 +675,7 @@ export const useFeedStore = create<FeedState>()(
           papers: displayedPapers,
           savedPapers,
           recentlyShownIds,
+          paperFeedback,
           eventFeedback,
           jobFeedback,
         } = get();
@@ -685,17 +686,29 @@ export const useFeedStore = create<FeedState>()(
         // the feed page's auto-load key so the page knows the feed is current.
         const topicsKey = activePaperTopicsKey(profile);
 
-        // Papers are consume-once: exclude any already shown recently (within
-        // TTL) so the briefing brings fresh reading each load. Saved papers are
-        // allowed back — the user bookmarked them.
-        const paperExcludeIds = Array.from(
-          new Set([
-            ...activeRecentlyShownIds(recentlyShownIds),
-            ...(advanceHistory
-              ? displayedPapers.map((paper) => paper.id)
-              : []),
-          ]),
-        ).filter((id) => !savedIds.has(id));
+        // Papers are a STANDING daily pool now, the same as events and jobs.
+        // The server builds one pool per local day and a plain load re-reads
+        // it, so opening the app a second time shows the SAME reading list
+        // instead of paying for another search — which is the whole point of
+        // the daily pool. Passing the recently-shown set on every load would
+        // undo that from the client side: the pool would be stable and the
+        // client would filter it away.
+        //
+        // A deliberate refresh / load-more is the one path that still asks for
+        // something new, so it alone carries the consume-once exclusions.
+        // Saved papers are allowed back either way — the user bookmarked them.
+        const dismissedPaperIds = Array.from(
+          dismissedOpportunityIds(paperFeedback),
+        );
+        const paperExcludeIds = advanceHistory
+          ? Array.from(
+              new Set([
+                ...activeRecentlyShownIds(recentlyShownIds),
+                ...displayedPapers.map((paper) => paper.id),
+                ...dismissedPaperIds,
+              ]),
+            ).filter((id) => !savedIds.has(id))
+          : dismissedPaperIds;
 
         // Events and jobs are STANDING opportunities, not consume-once items: a
         // conference is relevant every day until its deadline passes, so it

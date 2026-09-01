@@ -107,6 +107,11 @@ describe("combined daily search budget", () => {
     await runFeedPipeline(paperRequest, { cache, now });
 
     expect(searchFetch).toHaveBeenCalledTimes(firstDaySearches);
-    expect(academicFetch).toHaveBeenCalledTimes(2);
+    // ONE academic fetch across both paper builds. This assertion used to read
+    // `2`: the papers entry cached only the discovery side-channel, so every
+    // request re-fetched every academic source and, at Tier 2, re-ran the LLM
+    // rerank. The papers pool now holds the candidates themselves, so a second
+    // read the same day costs nothing at all.
+    expect(academicFetch).toHaveBeenCalledTimes(1);
   });
 });
