@@ -387,3 +387,89 @@ Spec §4 (the manager's lead list) is **not** cited as evidence anywhere in this
 | R-TEST-2 | **MET** | Gate run cold from `web/` this turn: tsc exit 0 · eslint **1 error** (the standing `quiz.tsx:46 react-hooks/set-state-in-effect`) · vitest **100 passed \| 1 skipped (101) files, 2552 passed \| 1 skipped (2553) tests, 0 failed**, 7.20s. Exactly the §3 baseline. `benchmark.test.ts` did not flake this run. |
 
 **Part 1 tally:** 31 items · **2 MET** (R-GUARD-2, R-TEST-2) · **1 PARTIAL** (R-SEC-4) · **28 NOT MET**.
+
+#### Part 2 — the five personas through the real routes
+
+**Harness.** A throwaway vitest file (`web/src/app/api/zz-persona-probe.test.ts`, **deleted before
+this turn's final commit** — reconstruct from this description) that imports each real route
+handler and calls it with a real `NextRequest`. Nothing about the routes was mocked. Only two
+things outside the routes were stubbed:
+
+1. `@/lib/supabase/server`'s `createClient`, so `auth.getUser()` returns either `null` (anonymous)
+   or `{ id: "probe-…" }` (signed in) — the routes' own auth code runs unchanged;
+2. `global.fetch`, replaced with a recorder that logs every outbound URL + body and returns an
+   empty 200 — so I can see **which key leaves the process** without a single live call.
+
+Runtime was stubbed to the shape D8 is about — a deployed instance: `VERCEL=1`,
+`VERCEL_ENV=production`, `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` set. Every
+key in the probe is a **fake sentinel string** (`PROBE-SENTINEL-TAVILY-NOT-A-REAL-KEY`,
+`PROBE-USER-OWN-TAVILY`, `PROBE-USER-OWN-LLM-KEY`); no real credential was read, written or sent.
+`GOOGLE_*` and `BRAVE_SEARCH_API_KEY` were stubbed empty so the Tavily branch is the one measured
+(vitest.config.ts injects `GOOGLE_*` from `.env.local`). 14 probe cases, all green.
+
+**Anything needing a live model is `BLOCKED: no key`** — `.env.local` carries no usable
+`GOOGLE_API_KEY` or `TAVILY_API_KEY`. Nothing below infers a model result.
+
+##### Per persona, per route — never averaged
+
+**Persona `anonymous`** (deployed runtime, no session)
+
+| Route | Result | Spec says |
+|---|---|---|
+| `POST /api/jobs/feed` (`aiTier: 0`) | **200 OK · 2 Tavily searches · the operator sentinel key was in the outgoing request body** | D8/R-ENT-4: no system spend on an unauthenticated request. **VIOLATED, live.** |
+| `POST /api/events/feed` (`aiTier: 0`) | **200 OK · 7 Tavily searches · operator sentinel key sent** | Same. **VIOLATED, live — and events is 3.5x the bill of jobs.** |
+| `POST /api/jobs/feed` (`aiTier: 2` + BYOK llmOverride) | **401** · 0 Tavily searches | Correct — and this is the diagnosis: the auth check works, but it only guards the **LLM** path. Sending `aiTier: 0` walks straight past it into operator-funded search. |
+| `POST /api/feed` (papers, `aiTier: 2`) | 200 OK · **0 Tavily searches** · `{items, meta}` | D3 (papers stay on free sources, zero paid search) — **holds**. |
+| `POST /api/papers/report` (`deepReport: true`) | 200 OK · `noLlm: true` · **no `quota` field** | LLM half correct for round 1 (no provider resolves in a deployed runtime). `quota` payload absent — R-QUOTA-1 NOT MET. |
+| `GET /api/figure` | **200 OK · no auth challenge of any kind** | R-SEC-1: must require a signed-in user. **VIOLATED, live.** |
+
+**Persona `free-no-key`** (deployed runtime, signed in, no BYOK LLM key, no BYOK Tavily key)
+
+| Route | Result | Spec says |
+|---|---|---|
+| `POST /api/jobs/feed` | **200 OK · 2 Tavily searches · operator sentinel key sent** | D2/R-KEY-3/R-POOL-3: a free user must **never** spend the system Tavily key. **VIOLATED, live.** |
+| `POST /api/events/feed` | **200 OK · 7 Tavily searches · operator sentinel key sent** | Same. **VIOLATED, live.** |
+| `POST /api/papers/report` (`deepReport: true`) | 200 OK · `noLlm: true` · no `quota` field | No counter, no remaining-count, no upgrade signal. R-QUOTA-1 NOT MET. |
+| `GET /api/figure` | 200 OK · no auth challenge | R-SEC-1 **VIOLATED**. |
+| LLM behaviour | **BLOCKED: no key** | D1 says this persona should get Peer's AI. Cannot be measured without `GOOGLE_API_KEY`; the *structural* reason it would fail anyway is R-KEY-1 (`registry.ts:106`). |
+
+**`anonymous` and `free-no-key` are byte-for-byte identical on every route measured.** Signing in
+changes nothing today.
+
+**Persona `free-byok-tavily`** (deployed runtime, signed in, `searchConnectors.tavily.apiKey` set)
+
+| Route | Result | Spec says |
+|---|---|---|
+| `POST /api/jobs/feed` | 200 OK · 2 Tavily searches · **user's key sent, operator sentinel NOT sent** | D3: builds on their own key. **CORRECT — the one persona/route pair that already behaves.** |
+| `POST /api/events/feed` | 200 OK · 7 Tavily searches · **user's key sent, operator sentinel NOT sent** | **CORRECT.** |
+| Cadence | daily, not weekly | R-POOL-1 NOT MET (see Part 1). |
+| LLM behaviour | **BLOCKED: no key** | — |
+
+**Persona `trial`** — **NOT MET (no entitlement exists to construct this persona).**
+`grep -rn "resolveEntitlement\|PEER_DEV_ENTITLEMENT" src/ scripts/` -> **0 hits**;
+`grep -n "plan" web/supabase/schema.sql` -> 1 hit, a prose comment on line 100, no column. There is
+no server-side input of any kind that could make a request behave as `trial`.
+
+**Persona `paid`** — **NOT MET (no entitlement exists to construct this persona).** Same greps.
+
+##### One extra runtime measured: local dev
+
+| Probe | Result |
+|---|---|
+| `POST /api/jobs/feed` `aiTier: 2`, **no session**, `NODE_ENV=development`, `GOOGLE_API_KEY` set to a sentinel | **200 OK**, the registry yields a system LLM provider (`true`), and 2 Tavily searches went out on the operator sentinel key. `protectAiRequest` returns `null` at `ai-request.ts:44` before it reads a user, so the local system provider is handed to an **unauthenticated** request. R-KEY-2 **VIOLATED**. |
+
+##### One CONSTRUCTION, labelled as such
+
+Calling `resolveProvider(null)` directly (this proves the **registry**, never a route): with both
+`GOOGLE_VERTEX_PROJECT` and `GOOGLE_API_KEY` set it returns the **Vertex singleton**
+(`=== geminiProvider` -> `true`); with `GOOGLE_API_KEY` alone it does not (`false`, i.e. the
+`createGeminiApiProvider` path). **Vertex takes precedence over `GOOGLE_API_KEY`** — the reverse of
+R-KEY-1.
+
+##### Part 2 verdict
+
+3 of 5 personas constructible. Of the 13 constructible persona/route pairs measured, **2 behave as
+the spec requires** (`free-byok-tavily` on jobs and events); 1 more is correct for a reason that
+disappears the moment R-KEY-1 lands (`anonymous` papers report returns `noLlm`); the rest differ.
+**The operator's Tavily key is spendable today by anyone on the internet with a `curl` and no
+account, at 2 searches per jobs request and 7 per events request.**
