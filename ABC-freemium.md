@@ -2859,3 +2859,51 @@ and found **none**, so nothing in the app relies on it.
 **GATE after 1-03:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
 failed**.
+
+---
+
+**1-04 · The tests for unit (a) — LANDED.** R-TEST-1 slice. Files:
+`web/src/lib/entitlement/resolve.test.ts` (new, 10 tests),
+`web/src/lib/usage/counters.test.ts` (new, 12 tests),
+`web/src/lib/llm/providers/metered.test.ts` (new, 8 tests). **30 new tests, 3 new files.**
+
+Every case B listed is present. Entitlement: trial active; trial expired (`effectivePlan: "free"`
+**and** `systemSearchAllowed: false`, at read time, no write); paid; the frozen anonymous constant
+(asserted with `toBe` **and** `Object.isFrozen`); the dev override honoured in development and
+**ignored** under `VERCEL_ENV`; an unrecognised value ignored rather than defaulted; and the
+schema-not-yet-migrated case (a `42703` error on `plan` resolves `free`, does not throw). Counter:
+`label` asserted in **both** directions on the env pair; 50 concurrent increments return exactly
+1..50 with no duplicate; both failure rules. Wrapper: the DeepSeek presence case; `id` preserved;
+re-throw plus `ok: false`; a successful call recording once with the reported token counts; and the
+serialised row carrying no property matching `/key|secret/i`.
+
+**Two tests beyond B's list, both earning their place:**
+- *"does not write a second row when the provider already logged the failure."* This is the
+  assertion that pins 1-03's deviation. Without it, restoring B's literal design would double-count
+  every provider-reported failure and nothing would notice.
+- *"attributes concurrent calls separately."* Two `meterProvider` instances, two different users,
+  interleaved. This is what a module-scope context variable would fail, and it is the reason
+  `context.ts` uses `AsyncLocalStorage`.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — six probes across the three modules, applied one at a
+time, each reverted from a backup outside the repo:
+| Probe (pre-fix behaviour restored) | Result |
+|---|---|
+| `resolve.ts`: `trialExpired = false` | FAIL — `expected 'trial' to be 'free'` |
+| `resolve.ts`: override cast instead of `asPlan` validation | FAIL — `expected 'Paid' to be 'free'` |
+| `counters.ts`: `await` between read and write in the in-memory increment | FAIL — 50 concurrent calls all returned 1 |
+| `counters.ts`: `underLimit` stops checking `ok` | FAIL — `expected false to be true` |
+| `counters.ts`: `breakerTripped` stops checking `ok` | FAIL — `expected false to be true` |
+| `metered.ts` + `usage-log.ts`: define both methods unconditionally · always write the wrapper's row · never read the context | **5 of 8 FAIL** — presence, attribution, BYOK, double-row, concurrency |
+Working tree verified clean of probes after each (`grep -c FALSIFICATION` → 0).
+
+**One test of mine was decoration and I rewrote it rather than banking it.** The first fail-open
+case asserted `underLimit({ value: 0, ok: false }, 60)`. It passed against the pre-fix probe too —
+0 is under every limit, so the assertion proved nothing. The rule is "when `ok` is false the answer
+is `true` **whatever the value says**", so the case now uses `{ value: 999, ok: false }`, which
+falsifies correctly. Recorded because it is exactly the "passes both ways" failure §2 warns about,
+and it survived my own first pass.
+
+**GATE after 1-04:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **104 files passed | 1 skipped (105)**, **2584 tests passed | 1 skipped (2585)**, **0
+failed**. Unit (a) closed: +4 files and +32 tests over the round's baseline.
