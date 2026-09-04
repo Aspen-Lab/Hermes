@@ -1747,3 +1747,233 @@ registry — but is heavily at risk from 1-14 and 1-24, where it is dealt with.
   user's; the storage-version bump makes every pre-existing key unreadable. Extraction is the
   minimum change that makes the requirement testable at all, and it is the same move
   `lib/feed/ai-tier.ts` documents at `:59-67` for the chip strings.
+
+---
+
+### Unit (d) — the migration, the one predicate, and what `"default"` means
+
+*The brief's order, unchanged. 1-13 first because 1-14's server half reads the columns; 1-15 last
+because it is a copy/semantics change that depends on 1-14's predicate existing.*
+
+---
+
+**1-13 · `profiles` has no plan, and `handle_new_user` sets none**
+**R-ENT-1, D7. A's item 6 (server half). Classification: `MISSING`.**
+
+**Verified.** `grep -n "plan" web/supabase/schema.sql` -> **1 hit, line 100, a prose comment**
+("Human-readable knobs for the paper-finding plan"). No `plan`, `trial_started_at`, `trial_ends_at`
+or `plan_updated_at` column. `handle_new_user` (`schema.sql:60-72`) inserts `(user_id)` only, `on
+conflict do nothing`. `ls supabase/migrations/` -> exactly two files,
+`20260727000000_opportunity_pools.sql` and `20260731000000_authorised_countries.sql`, neither
+related.
+
+**Fix direction — the file C writes, and nobody in this loop applies.** One new file,
+`web/supabase/migrations/<UTC timestamp>_profile_plan.sql`, following the two existing files' style
+(idempotent `add column if not exists`, `drop policy if exists` before `create policy`):
+
+1. `alter table public.profiles add column if not exists plan text not null default 'free' check (plan in ('free','trial','paid')), add column if not exists trial_started_at timestamptz, add column if not exists trial_ends_at timestamptz, add column if not exists plan_updated_at timestamptz;`
+   **Column default `'free'`, not `'trial'`** — the default governs *existing* rows being
+   back-filled, and silently converting every current user into a 14-day trial that started at
+   migration time is a decision D5 does not make. New users get `trial` from the trigger, which is
+   what D5 actually says.
+2. `create or replace function public.handle_new_user()` — the same body as `schema.sql:60-72` plus
+   `plan = 'trial'`, `trial_started_at = now()`, `trial_ends_at = now() + interval '14 days'`,
+   `plan_updated_at = now()`. **Replace the whole function, do not try to patch it**: it is
+   `security definer set search_path = public` (`schema.sql:63`) and re-declaring it is the only
+   safe edit. The `on_auth_user_created` trigger (`schema.sql:74-77`) needs no change.
+3. **RLS, the half R-ENT-1 is specific about.** The three existing policies (`schema.sql:44-56`) let
+   a user select/insert/update their own row — and the update policy would let a browser write its
+   own `plan`. Postgres RLS has no column-level grant inside a policy, so the correct instrument is
+   a column privilege: `revoke update (plan, trial_started_at, trial_ends_at, plan_updated_at) on public.profiles from anon, authenticated;`
+   leaving the row policy intact for every other column. The service role bypasses RLS and column
+   grants alike, which is what D7's "a column an admin sets by hand (service role)" means. **This is
+   the one place a wrong migration silently hands users a free upgrade — the test in 1-16 asserts
+   the server never writes `plan*` from a request path, since the SQL itself cannot be exercised
+   here.**
+4. **D7's documented Stripe hook.** A SQL comment on the `plan` column naming where a future webhook
+   would write it, and nothing more. No code, no route, no stub — D7 says "leave one documented
+   hook", and a stub route would be a payment surface that is explicitly out of scope (spec §3).
+
+**Server-side guard against the same hole.** `PUT /api/profile` (`route.ts:158`) upserts from a
+mapped body; `profileRowToProfile` (`:50`) and its `ProfileRow` interface (`:14-48`) have no plan
+fields, so **today the route cannot write them** — that is inherited safety, not designed safety.
+When 1-14 adds `plan` to the read mapping, C must **not** add it to the write mapping, and should
+say so in a comment. Note `GET /api/profile:145` uses `select("*")`, so the new columns arrive in
+`data` automatically; only `profileRowToProfile` decides what reaches the browser.
+
+**What the field shows before the migration is applied.** Everything keeps working at `free`:
+1-01's resolver treats a Supabase error on the `plan` column exactly as a missing row and returns
+the `free` default. **This is what lets units (a)-(g) all land and the gate stay green while the
+migration sits in `PENDING USER ACTION`.** Tests use the in-memory fallback (R-METER-4), per §3.
+
+**Blast radius.** The migration file itself touches nothing at runtime until applied. `select("*")`
+means an applied migration immediately changes what `GET /api/profile` fetches — harmless, since
+the mapper drops unknown columns.
+
+**Tests at risk.** `src/app/api/profile/route.test.ts` exists and exercises the GET/PUT mapping.
+**Nothing breaks from 1-13 alone**; it is 1-14's response-shape change that touches it, recorded
+there.
+
+---
+
+**1-14 · Four predicates, six browser-shipped `NODE_ENV` tests, and an entitlement the client never
+sees**
+**R-ENT-3 (as amended by Ruling 2 point 2), R-ENT-4. A's item 18. Classification: `WRONG DATA` (the
+predicates test BYOK where they should test entitlement) + `MISSING` (the client never receives an
+entitlement).**
+
+**The six dev flags, classified — the brief's question 7, answered by reading each one's use.**
+All twelve raw hits re-grepped; the six that ship to the browser are A's six. **Not one of them is
+an unrelated dev convenience. All six are in scope.**
+
+| # | File:line | What it gates | Verdict |
+|---|---|---|---|
+| 1 | `lib/feed/ai-tier.ts:45` | `hasLocalDeveloperProvider`, feeding `feedsUseAi` (`:56`) — the jobs/events `aiTier` **and** the dashboard chip | **AI availability.** Replace. |
+| 2 | `lib/opportunities/enrichment.ts:1001` | `canAttemptOpportunityEnrichment` — whether a job/event report even attempts enrichment (`:978` `return Promise.resolve(null)`) | **AI availability.** Replace. |
+| 3 | `store/feed.ts:266` | an **inline second copy** of #1 inside `paperFeedRequestBody`, ANDed with `aiPaperSearchEnabled`, feeding `aiTier` at `:293` | **AI availability.** Replace — and see the shadowing note below. |
+| 4 | `app/papers/[id]/page.tsx:685` | `localDeveloperProvider`, feeding `deepReportRequested` (`:691-693`) **and** the report cache key (`:695`) | **AI availability + an AI-dependent cache key.** Replace. |
+| 5 | `app/page.tsx:961` | which of two sentences the AI-key panel shows ("Local development may use the Vertex account…" vs "…stays on Tier 0 and makes no AI model call") | **AI-dependent UI state.** Replace. |
+| 6 | `app/page.tsx:988` | the same fork in the deep-report panel | **AI-dependent UI state.** Replace. |
+
+**No seventh exists** (Ruling 2 point 2's escape clause): the other six hits are server-only —
+`app/auth/callback/route.ts:17`, `lib/llm/providers/registry.ts:36`, `lib/security/ai-request.ts:30`,
+`lib/opportunities/pool-cache-disk.ts:42`, `lib/opportunities/pool-cache-runtime.ts:14`, and
+`lib/feed/ai-tier.ts:27` (prose inside a block comment, not code). **If C finds a seventh, stop and
+record — do not widen inline.**
+
+**The fourth predicate A missed, and why it matters more than the other three.**
+`store/feed.ts:260-266` re-implements **both** halves inline, and the local
+`const hasUserLlmOverride` at `:260` **shadows the function of the same name imported at `:20`**.
+So `paperFeedRequestBody` never calls the shared predicate; only `opportunityRequestBody` does
+(`:384`, `feedsUseAi(profile)`). A guide that collapses the three *named* predicates and stops there
+leaves the papers feed deciding AI availability from an inlined `NODE_ENV` test — and the shadowing
+means the leftover copy is invisible to anyone grepping for callers of the shared function.
+**Four predicates: `reportProviderConfigured` (`components/reports/provider-configured.ts:13`),
+`feedsUseAi` (`lib/feed/ai-tier.ts:55`), `canAttemptOpportunityEnrichment`
+(`lib/opportunities/enrichment.ts:997`), and the inline pair at `store/feed.ts:260-266`.**
+
+**Fix direction, three parts.**
+
+*(i) Deliver the entitlement.* `GET /api/profile` (`route.ts:134-156`) returns `{ profile }`. Extend
+to `{ profile, entitlement }`, computed by `resolveEntitlement(user.id)` from 1-01 — **never derived
+on the client from the raw row**, because D5 makes the server the authority and expiry is computed
+at read time. `select("*")` (`:145`) already fetches the new columns, so only `profileRowToProfile`
+(`:50`) and the response object change. **A signed-out caller already gets `401 { profile: null }`
+at `:140`** — leave that; the client's default is 1-01's anonymous entitlement, which is the same
+object shape, so no consumer needs a null branch. Hold it in the store next to the profile;
+`components/profile-sync.tsx:51` is the single fetch site.
+
+*(ii) One predicate.* A new `aiAvailability(profile, entitlement)` returning the **three-valued**
+`"byok" | "system" | "none"` — not a boolean. Three values because 1-11's cache keys need to tell
+system-AI from BYOK from nothing, and because R-UI-1's chip has to say which. The boolean the four
+old predicates returned is `mode !== "none"`. Body: `hasUserLlmOverride(profile)` -> `"byok"`;
+else `entitlement.userId !== null` -> `"system"` (D1: every signed-in user, free included — **not**
+`effectivePlan`, or a later round will "tighten" it to paid and break D1); else `"none"`. Keep it in
+`lib/feed/ai-tier.ts`, whose header comment (`:3-32`) already documents itself as **the** one place
+this decision lives; add to that comment that R-ENT-3 widened it from BYOK to entitlement.
+Re-point all four call-site families at it, **delete the inline copy at `store/feed.ts:260-266`**,
+and delete all six `NODE_ENV` tests — the dev override now enters server-side through
+`PEER_DEV_ENTITLEMENT` (1-01), which is the whole point of R-ENT-5 and the reason the browser no
+longer needs to know it is in development.
+
+*(iii) `reportProviderConfigured` and `canAttemptOpportunityEnrichment` become thin wrappers or go
+away.* Their five call sites (`papers/[id]/page.tsx:683`/`:1548`, `jobs/[id]/page.tsx:1658`/`:1674`/
+`:1675`, `events/[id]/page.tsx:2486`/`:2498`/`:2499`) all pass the result into `TierUpgradeBlock`'s
+`providerConfigured` prop or into an enrichment gate. **Do not rename the prop in this item** —
+1-26 is where `TierUpgradeBlock` becomes plan-aware, and changing the prop here would put half a
+UI change in unit (d).
+
+**What the field shows when the entitlement says no.** `"none"` is the existing tier-0 client state
+in every one of the four families: `aiTier: 0` in both request builders, `canAttemptOpportunityEnrichment`
+-> `false` -> `enrichment.ts:978` returns `null` and the report renders without it, and the deep-report
+toggle disables exactly as it does today for a keyless deployed user. **No new empty state, no new
+string, nothing to design.**
+
+**Blast radius.** `feedsUseAi` is imported by `app/page.tsx:14` and `store/feed.ts:20`;
+`canAttemptOpportunityEnrichment` by `jobs/[id]/page.tsx:25` and `events/[id]/page.tsx:39`;
+`reportProviderConfigured` by `papers/[id]/page.tsx:51`. Adding an `entitlement` argument makes all
+of them require a value the components must now have in scope — that is the real cost of this item
+and the reason it is one item rather than four. **A signature change on `feedsUseAi` also reaches
+`aiModeChip` (`ai-tier.ts:75`), which unit (g) rewrites; C should change the signature here and the
+strings there, not both in one place.**
+
+**Tests at risk — grepped, and this is the largest test surface in the guide.**
+- `src/lib/feed/ai-tier.test.ts` (159 lines, 9 tests) imports `aiModeChip`, `feedsUseAi`,
+  `hasLocalDeveloperProvider`, `hasUserLlmOverride` at `:4-9` and `opportunityRequestBody` at `:3`.
+  **`hasLocalDeveloperProvider` ceases to exist**, so the import alone breaks the file.
+  `:42-56` asserts `feedsUseAi(LOCAL) === true` under `NODE_ENV=development`; `:60-70` asserts it is
+  `false` in production — **both are assertions about the flag being deleted** and must be rewritten
+  to the entitlement contract (a signed-in free user is `"system"` in **both** runtimes; a signed-out
+  one is `"none"` in both), never deleted. `:104-159`'s anti-drift lock — "the chip's boolean and
+  both feeds' `aiTier` are computed from one predicate" — is the most valuable assertion in the
+  repo for this item and must **survive in spirit**: extend it to cover `paperFeedRequestBody` too,
+  which is exactly the drift A missed.
+- `src/store/feed-request-body.test.ts` — matched the `Tier 0|BYOK` scan, exercises the request
+  builders. `paperFeedRequestBody`'s `aiTier` now comes from the entitlement; **any case asserting
+  `aiTier: 2` from `NODE_ENV=development` alone breaks.**
+- `src/app/api/profile/route.test.ts` — the GET response gains a key. A `toEqual({ profile })`
+  assertion breaks; a `toMatchObject` one does not. C must read it before assuming.
+- `src/lib/opportunities/enrichment.test.ts` — matched the scan; `canAttemptOpportunityEnrichment`
+  is **not** directly asserted anywhere (`grep -rln "canAttemptOpportunityEnrichment|reportProviderConfigured" --include="*.test.ts"`
+  -> **0 files**), so the risk is indirect, through `loadOpportunityEnrichment`'s gate at `:978`.
+- `src/app/events/[id]/page.test.ts`, `src/app/jobs/[id]/page.test.ts` — both matched the scan and
+  both render report surfaces that read these predicates.
+- `src/app/welcome/completeness.test.ts` — at risk from 1-15, not here.
+
+---
+
+**1-15 · `"default"` still means "no AI" throughout the client**
+**R-KEY-4. A's item 17. Classification: `WRONG DATA`.**
+
+**Verified.** `src/components/profile/ai-setup.tsx:16` —
+`{ value: "default", label: "Tier 0 — no AI API" }`, the first entry of `FEED_AI_PROVIDER_OPTIONS`
+(`:15-22`) and the option a new user meets first. `src/app/welcome/completeness.ts:95-101` — the
+`ai` step counts as complete only when `profile.feedAiProvider !== "default" && Boolean(profile.feedAiApiKey?.trim())`,
+with a comment (`:96-97`) explaining that both halves are required.
+
+**Fix direction.** Two edits, both small, both semantic rather than cosmetic:
+- `ai-setup.tsx:16` label -> **`"Peer's AI (included)"`**, the exact string R-UI-2 names. The rest of
+  1-25 (the five body-copy sentences at `:81`, `:283`, `:284`, `:327`, `:388`) belongs to unit (g);
+  **only the option label moves here**, because it is what makes `"default"` mean something rather
+  than nothing.
+- `completeness.ts:99-100` -> the `ai` step is complete when the user has AI **at all**, i.e. when
+  `aiAvailability(...) !== "none"` — which for any signed-in user is now always true. Rewrite the
+  `:96-97` comment: the two halves were required because `"default"` meant no AI; under D1 it means
+  Peer's AI, so a user who never opens the panel has a complete step. **State it, or the next reader
+  will read the deletion as a bug.**
+
+**What the field shows.** The onboarding checklist's `ai` step arrives already complete for a
+signed-in user. That is the intended D1 consequence — "add a key" stops being a prerequisite and
+becomes an upgrade — and A should expect the `welcome` completeness count to move by one.
+
+**Blast radius.** `FEED_AI_PROVIDER_OPTIONS` is the shared dropdown used by **both** the feed
+command bar and `/welcome` (`ai-setup.tsx:3-5` says so), so one label change lands in two places.
+`completeness.ts` drives the onboarding progress UI.
+
+**Tests at risk.** `src/app/welcome/completeness.test.ts` exists and asserts step completion —
+**the `ai` case changes and its assertion must be rewritten, not removed**, with a comment naming
+1-15. `src/components/reports/plate-type-system.test.ts` and the two `[id]/page.test.ts` files
+matched the `Tier 0` scan and may assert on the label string; C must grep the literal
+`"Tier 0 — no AI API"` across `src/` before editing and fix every hit in the same commit.
+
+---
+
+**1-16 · The tests for unit (d)** — **R-TEST-1 slice. Classification: `MISSING`.**
+
+- **The predicate:** one signed-in free user resolves to `"system"` in **development and
+  production alike** — the assertion that proves the six `NODE_ENV` flags are gone and cannot come
+  back. A signed-out user is `"none"` in both. A BYOK user is `"byok"` even when entitled, so the
+  cache keys of 1-11 stay distinct.
+- **The anti-drift lock, extended:** `ai-tier.test.ts:104-159`'s loop currently covers
+  `opportunityRequestBody` for jobs and events. Add `paperFeedRequestBody` to the same loop. **That
+  single addition is what would have caught the fourth predicate A missed**, and it is the most
+  valuable test in this unit.
+- **The profile route:** `GET /api/profile` returns an `entitlement` alongside `profile`; an expired
+  trial arrives as `effectivePlan: "free"`; and **`PUT /api/profile` cannot write `plan`** — send a
+  body containing `plan: "paid"` and assert the upsert payload has no such field. That is the
+  request-path half of 1-13's RLS, and it is testable here where the SQL is not.
+- **`completeness.ts`:** the `ai` step is complete for a signed-in user with no key, and the other
+  step cases are unchanged (assert them, so a broad edit cannot quietly move `radar` or
+  `connectors`).
+- **No test may assert a `NODE_ENV === "development"` branch in client code.** Worth one explicit
+  scan-shaped test: A's scan 2 is a grep, and a grep is not a gate.
