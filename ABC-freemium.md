@@ -118,32 +118,49 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          B-round1 @ 2026-09-04T20:51Z
+HELD BY:          free
 ROUND:            1
-WHOSE TURN:       B
-STOPPED BECAUSE:  finished the turn @ 2026-09-04T20:45Z
-STATUS:           A measured round 1. 2 MET, 1 PARTIAL, 28 NOT MET of 31. The wallet finding is
-                  live, not theoretical: an anonymous request spends the operator Tavily key on
-                  all three feed routes (7 searches on events, 2 on jobs, 1 on papers via
-                  sources:["web"]) because the auth guard sits behind `aiTier >= 2 && aiProvider`
-                  and a tier-0 request never meets it. GET /api/figure has no auth at all.
-                  free-no-key is byte-for-byte identical to anonymous. trial and paid cannot be
-                  constructed — no entitlement exists anywhere.
+WHOSE TURN:       C
+STOPPED BECAUSE:  finished the turn @ 2026-09-04T21:17Z
+STATUS:           B wrote the round-1 fix guide: 27 items, 1-01..1-27, in the seven units of
+                  Ruling 2 point 4. 20 substantive + 7 test items. Primary classification of the
+                  20: 10 MISSING, 7 WRONG DATA, 2 WRONG ORDER, 1 WRONG SHAPE, 0 EXTRA; six carry
+                  a second class. Two reorders WITHIN units, both stated: 1-05 before 1-06 (the
+                  key gate is what stops the spend; at aiTier 0 the route order closes nothing),
+                  1-10 before 1-11 (the guard bans GOOGLE_API_KEY today, so the resolver alone
+                  fails the next Vercel build). Five corrections to A's list, incl. a FOURTH
+                  predicate A missed (store/feed.ts:260-266 re-implements both halves inline and
+                  shadows the imported function) and the pool key carrying the date TWICE.
 LAST DIFFERENCE:  93.5% (29/31; exclusions: none)
 GATE (0% unexplained, both measurements):  NOT MET
 
-DONE:      Round 1 A, all three parts: fixture checklist (31 items), five persona passes through
-           the real route handlers, five static scans, 20-item ranked difference list.
+DONE:      Round 1 A (three parts). Round 1 B, all seven units committed and pushed separately.
 GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 100 passed / 1 skipped (101) files,
-           2552 passed / 1 skipped (2553) tests, 0 failed — exactly baseline.
-TODO:      B writes the round-1 fix guide from A's 20-item list (§4, "The numbered difference
-           list"), grouped into the units of Ruling 2 point 4, shared helpers first.
+           2552 passed / 1 skipped (2553) tests, 0 failed — A's measurement; B changed no code
+           and ran no gate.
+TODO:      C works the round-1 guide from unit (a) item 1-01, top down, one commit per item,
+           pushed. HARD CROSS-UNIT DEPENDENCY: 1-06 (unit b) must land BEFORE 1-11 (unit c) —
+           digest/jobs-report/events-report return their degraded payload before reaching
+           protectAiRequest today, so the moment a provider always resolves all three start
+           authenticating for the first time. MONEY RISK: vitest.config.ts:22 injects every
+           GOOGLE_-prefixed variable from .env.local into all 101 suites; after 1-11 an unmocked
+           resolveProvider() in a test returns a live provider on the owner's real key.
 PENDING USER ACTION: (1) DO NOT set TAVILY_API_KEY on Vercel until Ruling 2 point 3 is satisfied
            (R-SEC-2/3 + R-KEY-3 landed and re-measured at zero operator searches for anonymous
-           and free-no-key). (2) Register GOOGLE_API_KEY + TAVILY_API_KEY into local .env.local
-           when ready — live-model passes stay BLOCKED until then. (3) R-ENT-1 migration will
-           need applying in Supabase once C writes it.
-OPEN FOR MANAGER:  none — both round-1 questions ruled in §1c (Ruling 2 points 1–2).
+           and free-no-key). Note 1-10 makes it *required* for the build to pass, so the order
+           matters: land the gates first, then set all four Vercel variables. (2) Register
+           GOOGLE_API_KEY + TAVILY_API_KEY into local .env.local when ready — live-model passes
+           stay BLOCKED until then. (3) R-ENT-1 migration will need applying in Supabase once C
+           writes it (1-13); until then everything resolves at plan `free` by design.
+OPEN FOR MANAGER:  Two POLICY items from B, neither blocking C. (1) R-QUOTA-1 specifies a Chinese
+           UI string ("本月 deep report 已用完…") and B measured zero CJK characters anywhere in
+           src/ — the whole product is English. Rule on the literal vs an English equivalent; the
+           mechanism is identical either way. (2) The local-dev entitlement when
+           PEER_DEV_ENTITLEMENT is unset: B recommends `free` (D1 still gives a free user the
+           system LLM, and it closes A's finding 9 rather than renaming it); `paid` would keep
+           today's convenience. One constant either way; C implements `free` unless told
+           otherwise. Plus one visible consequence, not a question: after 1-05 the papers `web`
+           source returns [] in production permanently, which is D3 working as written.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
