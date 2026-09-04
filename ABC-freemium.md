@@ -121,23 +121,26 @@ lock by rebasing onto the holder's head.
 HELD BY:          C-round1 @ 2026-09-04T21:22Z
 ROUND:            1
 WHOSE TURN:       C
-STOPPED BECAUSE:  finished the turn @ 2026-09-04T21:17Z
-STATUS:           B wrote the round-1 fix guide: 27 items, 1-01..1-27, in the seven units of
-                  Ruling 2 point 4. 20 substantive + 7 test items. Primary classification of the
-                  20: 10 MISSING, 7 WRONG DATA, 2 WRONG ORDER, 1 WRONG SHAPE, 0 EXTRA; six carry
-                  a second class. Two reorders WITHIN units, both stated: 1-05 before 1-06 (the
-                  key gate is what stops the spend; at aiTier 0 the route order closes nothing),
-                  1-10 before 1-11 (the guard bans GOOGLE_API_KEY today, so the resolver alone
-                  fails the next Vercel build). Five corrections to A's list, incl. a FOURTH
-                  predicate A missed (store/feed.ts:260-266 re-implements both halves inline and
-                  shadows the imported function) and the pool key carrying the date TWICE.
+STOPPED BECAUSE:  IN PROGRESS — C is working the guide right now (lock held).
+STATUS:           C: unit (a) CLOSED. Landed 1-00, 1-01, 1-02, 1-03, 1-04 — one commit each,
+                  pushed. Next unlanded item: 1-05 (unit b, the operator Tavily key).
+                  Three deviations from B's guide, all traced and logged in §4: (i) 1-00 puts the
+                  vitest env allow-list in its own module (a config with a named export makes
+                  Vitest print MIXED_EXPORTS on every run); (ii) 1-02 uses B's option (ii), an
+                  RPC, because PostgREST upsert CANNOT express value = table.value +
+                  excluded.value — B's recommended shape would have overwritten the counter
+                  instead of adding to it; (iii) 1-03 writes the usage row from logLlmUsage with
+                  an AsyncLocalStorage context rather than from the wrapper, because B's literal
+                  design would write TWO rows per failure (every provider already logs its own
+                  error path) and neither place alone holds all of R-METER-1's fields.
+                  TWO MIGRATIONS WRITTEN, NOT APPLIED — see PENDING USER ACTION.
 LAST DIFFERENCE:  93.5% (29/31; exclusions: none)
 GATE (0% unexplained, both measurements):  NOT MET
 
-DONE:      Round 1 A (three parts). Round 1 B, all seven units committed and pushed separately.
-GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 100 passed / 1 skipped (101) files,
-           2552 passed / 1 skipped (2553) tests, 0 failed — A's measurement; B changed no code
-           and ran no gate.
+DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: 1-00, 1-01, 1-02,
+           1-03, 1-04 (unit (a) closed).
+GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 104 passed / 1 skipped (105) files,
+           2584 passed / 1 skipped (2585) tests, 0 failed — C's measurement after 1-04.
 TODO:      C works the round-1 guide from unit (a) item 1-01, top down, one commit per item,
            pushed. RULING 3 (§1d) ADDS: item 1-00 (structural vitest fix: allow-list + global
            setup deleting GOOGLE_API_KEY/TAVILY_API_KEY + protective test) lands BEFORE 1-11;
@@ -149,7 +152,15 @@ TODO:      C works the round-1 guide from unit (a) item 1-01, top down, one comm
            authenticating for the first time. MONEY RISK: vitest.config.ts:22 injects every
            GOOGLE_-prefixed variable from .env.local into all 101 suites; after 1-11 an unmocked
            resolveProvider() in a test returns a live provider on the owner's real key.
-PENDING USER ACTION: (1) DO NOT set TAVILY_API_KEY on Vercel until Ruling 2 point 3 is satisfied
+PENDING USER ACTION: (0) THREE MIGRATION FILES ARE WRITTEN AND NOT APPLIED. Nobody in this loop
+           can run them. web/supabase/migrations/20260904000000_usage_counters.sql (1-02, the
+           shared counter table + increment_usage_counter RPC) and
+           web/supabase/migrations/20260904000100_usage_events.sql (1-03, the usage table).
+           Everything works without them today — locally the in-memory counter is selected and
+           usage rows are a no-op. ORDER MATTERS: the R-QUOTA-2 breakers of 1-21 fail CLOSED, so
+           a deployed runtime that has Supabase but not the usage_counters table would degrade
+           every paid user to no-LLM. Apply both before or with the deploy that lands unit (f).
+           (1) DO NOT set TAVILY_API_KEY on Vercel until Ruling 2 point 3 is satisfied
            (R-SEC-2/3 + R-KEY-3 landed and re-measured at zero operator searches for anonymous
            and free-no-key). Note 1-10 makes it *required* for the build to pass, so the order
            matters: land the gates first, then set all four Vercel variables. (2) Register
