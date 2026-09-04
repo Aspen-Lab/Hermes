@@ -48,6 +48,29 @@ export function hasLocalDeveloperProvider(profile: UserProfile): boolean {
 }
 
 /**
+ * ABC-freemium 1-11 · R-UI-4 — **which model, if any, produced a cached answer.**
+ *
+ * Three values, not a boolean, because the report and digest caches have to be
+ * able to tell "the reader's own key" from "Peer's key" from "no model at all".
+ * A boolean would let a no-AI report be served as the AI report for six hours
+ * after the system key went live, which is exactly the poisoning R-UI-4 exists
+ * to stop.
+ *
+ * **This is an interim body and 1-14 replaces it.** Until the entitlement
+ * reaches the browser, `"system"` is inferred from the same predicate the rest
+ * of the client already uses; in unit (d) `aiAvailability(profile, entitlement)`
+ * takes over and the two cache keys do not change again. The *shape* of the key
+ * is what has to land in this commit (Ruling 1 point 7); the *value* improves in
+ * unit (d).
+ */
+export type AiMode = "byok" | "system" | "none";
+
+export function aiModeFor(profile: UserProfile): AiMode {
+  if (hasUserLlmOverride(profile)) return "byok";
+  return feedsUseAi(profile) ? "system" : "none";
+}
+
+/**
  * True when the job and event feeds will ask for tier 2. **The chip's tier text
  * and the request builder's `aiTier` are both this value** — that identity is
  * the fix, and `ai-tier.test.ts` asserts it rather than trusting it.

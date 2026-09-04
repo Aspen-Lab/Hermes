@@ -3294,3 +3294,104 @@ pass. Land the gates first, then set all four together.
 **GATE after 1-10:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **109 files passed | 1 skipped (110)**, **2641 tests passed | 1 skipped (2642)**, **0
 failed**.
+
+---
+
+**1-11 + 1-12 · The system provider resolves everywhere, Vertex stops outranking it, and the two
+caches learn to tell AI from no-AI — LANDED IN ONE COMMIT.** R-KEY-1, R-KEY-2, R-UI-4, R-TEST-1,
+R-GUARD-1 slice. A's items 7 + 12. Ruling 1 point 7 and Ruling 3 point 4 both require the single
+commit. **UNIT (c) CLOSED.**
+
+Files: `web/src/lib/llm/providers/registry.ts`, `web/src/lib/llm/providers/registry.test.ts`
+(rewritten), `web/src/lib/feed/ai-tier.ts` (adds `aiModeFor`),
+`web/src/lib/papers/report-cache-key.ts` (new),
+`web/src/components/digest/digest-cache-key.ts` (new),
+`web/src/lib/papers/report-cache-key.test.ts` (new, 8 tests),
+`web/src/app/papers/[id]/page.tsx`, `web/src/components/digest/daily-digest.tsx`.
+
+**B'S PRE-LANDING CHECK, RUN AND RECORDED.** Test files mentioning `resolveProvider`: **12**. Of
+those, **5 do not mock the registry**: `registry.test.ts` (which deletes every server credential in
+`afterEach` and asserts on sentinels), `test-support/env-isolation.test.ts` (names them only inside
+assertions; never calls the resolver), and the three route suites 1-09 added — `api/figure`,
+`api/jobs/feed`, `api/events/feed`. B expected only the first. The three new ones are safe by
+**three independent layers**: (i) `vitest.setup.ts` deletes `GOOGLE_API_KEY` before every suite and
+before every test, and `env-isolation.test.ts` asserts it is `undefined` inside the test process —
+this is exactly why Ruling 3 ordered 1-00 before 1-11; (ii) each calls `deleteSpendableKeys()` in
+its own `beforeEach`; (iii) each replaces `global.fetch` with a recorder, so even a resolved
+provider could not reach a model host. **The structural guarantee is (i)**: with the key absent from
+every suite, step 3 of the new resolution order cannot fire anywhere in the gate.
+
+**The order, exactly as B derived it.** BYOK → local opt-in (`PEER_DIGEST_PROVIDER`, local runtimes
+only) → `GOOGLE_API_KEY` via `createGeminiApiProvider` → null. The reasoning for the middle step is
+in the code: R-KEY-1 states three steps *and* says Vertex stays reachable by an explicit local
+opt-in, and both sentences can only hold if the opt-in sits **between** BYOK and the system key —
+after D1 the system key is always present, so an opt-in placed after it would be permanently
+unreachable.
+
+**What became of the two helpers, stated as B required.** `resolveLocalServerProvider` is renamed
+`resolveLocalOptInProvider` and loses six of its seven steps: `GOOGLE_VERTEX_PROJECT` is **no longer
+a trigger at all**, and the four other operator keys are reachable only by naming them through
+`PEER_DIGEST_PROVIDER`. **`canUseLocalServerProvider` is kept exported and is NOT deleted** — it is
+imported by `registry.test.ts`, and a silently removed export is what turns a test rewrite into a
+test deletion. Its *meaning* is narrowed and the narrowing is documented at the function: it used to
+answer "may a server-owned provider be used at all" (the BYOK-only lock) and now answers "may this
+runtime honour a local operator opt-in". The system key is read in exactly one place,
+`resolveSystemProvider`.
+
+**R-UI-4, same commit, with B's sharper mechanism.** Papers: `paperReportCacheKey` gains
+`|ai=${aiMode}` and `PAPER_REPORT_CACHE_STORAGE_KEY` goes `-v3` → **`-v4`**. The harm is traced in
+the module's own comment: `finishWithReport` writes **unconditionally** (the `reveal` argument
+controls the animation, not the write), so a `noLlm: true` report is cached under the 6-hour
+fallback TTL, and every other component of the old key is constant across the deploy — so a report
+computed with no model would have been served as *the AI report* for six hours after Peer's AI went
+live. Digest: the `"tier0"` literal becomes the reader's actual mode and `CACHE_KEY` becomes
+**`peer-digest-cache-v2`**; the comment records B's correction that this surface's risk is the
+*reverse* one (it never caches a no-AI digest, so what it can do is serve a system-AI digest for
+twelve hours after an entitlement changes).
+
+**The version bumps are not belt-and-braces and the tests say so.** A key change alone leaves every
+*existing* entry readable under its own old key, so the poisoned reports would have survived the
+fix.
+
+**`aiModeFor` is deliberately interim, and 1-14 replaces its body.** Three values (`byok` /
+`system` / `none`), derived for now from what the client already has, because the entitlement does
+not reach the browser until unit (d). The **shape** of both keys lands here (Ruling 1 point 7); the
+**value** improves in 1-14 without either key changing again. Stated in the function's doc comment
+so a later reader does not take the interim body for the contract.
+
+**Both cache keys are now pure functions in their own modules** — `lib/papers/report-cache-key.ts`
+and `components/digest/digest-cache-key.ts`. They were inline inside client components, which is
+why neither had ever been tested: the components are not renderable in a unit test without their
+whole store graph. This is the same move `lib/feed/ai-tier.ts` documents for the chip strings, and
+it is the minimum change that makes R-UI-4 testable at all.
+
+**`registry.test.ts` rewritten to the new contract — 5 tests → 10, none deleted.** B's four verdicts
+were all correct. *"ignores every server-owned provider credential in production"* became false by
+design and is rewritten as *"uses the system key in production and ignores every other operator
+credential"*, which asserts the same split from the other side. *"keeps the existing local Vertex
+development path"* is rewritten to name the opt-in. The Vercel-preview and BYOK-in-production cases
+survived unchanged, as B predicted, as did the override-validation case. **Four new:** Vertex must
+never outrank the system key (the inversion this round exists to fix); BYOK beats the system key
+when both are present; no system key and no override resolves nothing (D1's last clause); an
+*unusable* override falls through to the system key (B's adversarial case 2, now a stated contract).
+
+**Assertions are on `.id` and on which factory ran, never on object identity** — 1-03's wrapper
+returns a fresh object every call. Telling "the system key path ran" from "the Vertex singleton was
+returned" needs more than the id, since both report `gemini`, so the suite spies on
+`createGeminiApiProvider` through a partial module mock and asserts it was called with the sentinel.
+**Round-2 A: this is the replacement for the `=== geminiProvider` probe.**
+
+**PROOF THAT THE TESTS TEST THE FIX** — one probe restoring the pre-1-11 world (the
+`canUseLocalServerProvider` gate back in front of the system key, `GOOGLE_VERTEX_PROJECT` back as a
+bare trigger ahead of it) plus the two cache keys reverted (no `ai=` segment, `"tier0"` back, both
+storage versions un-bumped): **10 tests fail** across the two files, including *"never lets
+GOOGLE_VERTEX_PROJECT outrank the system key"*, *"gives the three AI modes three different keys"*
+(`expected 1 to be 3`, twice) and both version-bump cases. Probes reverted; tree clean.
+
+**Standing regression locks re-verified**, run together: `ai-tier.test.ts`, `feed/route.test.ts`,
+`jobs/report/route.test.ts`, `events/report/route.test.ts`, `pool-cache.test.ts`,
+`daily-pool-cache.test.ts`, `env-isolation.test.ts` — **7 files, 45 passed**.
+
+**GATE after 1-11 + 1-12:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **110 files passed | 1 skipped (111)**, **2654 tests passed | 1 skipped (2655)**, **0
+failed**. Unit (c) closed.

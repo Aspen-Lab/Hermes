@@ -29,13 +29,22 @@ const USER_PROVIDER_IDS = new Set<ProviderOverrideConfig["provider"]>([
 ]);
 
 /**
- * Server-owned model credentials are a local-development convenience only.
- * Preview, production, tests, and `vercel dev` must all fail closed so a
- * deployed Peer instance can never spend the operator's model account.
+ * **May this runtime honour a local operator opt-in?**
  *
- * ABC-freemium 1-01 — the three-condition body moved to `lib/env/local-dev.ts`
- * so entitlement resolution, the AI-request guard and this all read one
- * predicate. The exported name and its meaning are unchanged.
+ * ABC-freemium 1-11 · R-KEY-1 — the name is kept and the body is unchanged, but
+ * its *meaning* has narrowed and the change matters. It used to answer "may a
+ * server-owned provider be used at all", and it was the single lock that made a
+ * deployed Peer BYOK-only. D1 removes that lock: the system Gemini key is the
+ * default model for every signed-in user in **every** environment.
+ *
+ * What it still decides is the one thing that stays local: whether
+ * `PEER_DIGEST_PROVIDER` may point the resolver at an operator-owned provider
+ * (Vertex, Anthropic, OpenAI and the rest). The build guard bans that name on
+ * Vercel, and this refuses it at runtime.
+ *
+ * **Deliberately not deleted.** It is exported, `registry.test.ts` imports it,
+ * and a silently removed export is what turns a test rewrite into a test
+ * deletion. Body lives in `lib/env/local-dev.ts` (1-01).
  */
 export function canUseLocalServerProvider(): boolean {
   return isLocalDevRuntime();
@@ -73,31 +82,69 @@ function resolveUserProvider(
   }
 }
 
-function resolveLocalServerProvider(): DigestProvider | null {
+/**
+ * ABC-freemium 1-11 · R-KEY-1 — **the explicit local opt-in, and nothing else.**
+ *
+ * This used to be a seven-step ladder that turned any operator credential into a
+ * provider, with `GOOGLE_VERTEX_PROJECT` **ahead of** `GOOGLE_API_KEY` — so with
+ * both set, Vertex won. R-KEY-1 says the system key must never be outranked, and
+ * that Vertex stays "reachable only by an explicit local opt-in".
+ *
+ * Six of those seven steps are gone. What is left is `PEER_DIGEST_PROVIDER`,
+ * which names the provider outright: `PEER_DIGEST_PROVIDER=gemini` is how a
+ * developer reaches the Vertex singleton now, and the other operator keys are
+ * reached the same way through the `providers` record. The build guard bans that
+ * variable on Vercel.
+ */
+function resolveLocalOptInProvider(): DigestProvider | null {
   const explicit = process.env.PEER_DIGEST_PROVIDER as ProviderId | undefined;
   if (explicit && explicit in providers) {
     return providers[explicit];
   }
-
-  if (process.env.GOOGLE_VERTEX_PROJECT) return geminiProvider;
-  if (process.env.GOOGLE_API_KEY) {
-    return createGeminiApiProvider(process.env.GOOGLE_API_KEY);
-  }
-  if (process.env.ANTHROPIC_API_KEY) return anthropicProvider;
-  if (process.env.OPENAI_API_KEY) return openaiProvider;
-  if (process.env.QWEN_API_KEY || process.env.DASHSCOPE_API_KEY) return qwenProvider;
-  if (process.env.DEEPSEEK_API_KEY) return deepseekProvider;
   return null;
 }
 
 /**
- * Resolve a provider without ever giving deployed users an operator-funded
- * fallback.
+ * Steps 2 and 3 of the order documented on `resolveProvider`.
  *
- * Resolution order:
- *   1. Valid per-request BYOK override supplied by the current user.
- *   2. Local `next dev` server credentials (developer convenience only).
- *   3. null (Tier 0 fallback everywhere else).
+ * The system key is read here and **only** here in this module, so "which
+ * runtimes have a model" has one answer: every runtime where the key is set.
+ */
+function resolveSystemProvider(): DigestProvider | null {
+  if (canUseLocalServerProvider()) {
+    const optIn = resolveLocalOptInProvider();
+    if (optIn) return optIn;
+  }
+  if (process.env.GOOGLE_API_KEY) {
+    return createGeminiApiProvider(process.env.GOOGLE_API_KEY);
+  }
+  return null;
+}
+
+/**
+ * Resolve the model this request should use.
+ *
+ * ABC-freemium 1-11 · R-KEY-1 · D1 — **the system key resolves in EVERY
+ * environment.** Before this, `canUseLocalServerProvider()` gated the whole
+ * server-provider branch, so a deployed Peer had no model at all unless the
+ * reader supplied their own; that is the lock D1 removes.
+ *
+ * Resolution order, and why the middle step sits where it does:
+ *   1. **A valid BYOK override**, in any environment. The reader's own key wins
+ *      over the operator's — R-KEY-1 and R-KEY-2 both say so.
+ *   2. **The explicit local opt-in** (`PEER_DIGEST_PROVIDER`, local runtimes
+ *      only, banned on Vercel by the build guard). R-KEY-1 says three steps
+ *      *and* says Vertex stays reachable by an explicit local opt-in; those two
+ *      sentences can only both be true if the opt-in sits **between** BYOK and
+ *      the system key, because after D1 the system key is always present and an
+ *      opt-in placed after it would be permanently unreachable.
+ *   3. **The system key** (`GOOGLE_API_KEY` via `createGeminiApiProvider`).
+ *      `GOOGLE_VERTEX_PROJECT` no longer outranks it — it is no longer a trigger
+ *      at all.
+ *   4. **null** — the existing tier-0 path, which D1 says stays. Every one of the
+ *      thirteen call sites already handles it (`provider?.generateJsonText`
+ *      guards in digest and the report routes, `return null` in the two figure
+ *      matchers), and 1-11 touches none of them.
  *
  * ABC-freemium 1-03 · R-METER-1 — the result is wrapped by `meterProvider` at
  * this single return point, so all thirteen acquisition sites are metered
@@ -117,9 +164,7 @@ export function resolveProvider(
   const byok = hasUsableProviderOverride(override);
   const provider = byok
     ? resolveUserProvider(override)
-    : canUseLocalServerProvider()
-      ? resolveLocalServerProvider()
-      : null;
+    : resolveSystemProvider();
   if (!provider) return null;
   return meterProvider(provider, {
     userId: ctx?.userId ?? null,

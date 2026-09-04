@@ -49,6 +49,11 @@ import {
 } from "@/lib/papers/report-stream";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
 import { reportProviderConfigured } from "@/components/reports/provider-configured";
+import {
+  PAPER_REPORT_CACHE_STORAGE_KEY,
+  paperReportCacheKey,
+} from "@/lib/papers/report-cache-key";
+import { aiModeFor } from "@/lib/feed/ai-tier";
 
 const WORDS_PER_MINUTE = 220;
 const PAPER_TIER_UPGRADE_ITEMS = [
@@ -68,7 +73,6 @@ const PAPER_TIER_UPGRADE_ITEMS = [
       "Turn the findings into testable follow-up ideas grounded in the paper.",
   },
 ];
-const PAPER_REPORT_CACHE_STORAGE_KEY = "peer-paper-report-cache-v3";
 const PAPER_REPORT_CACHE_MAX_ENTRIES = 40;
 // TTL keeps deep-mode cache fresh enough that a transient failure (network
 // blip, paywall flap, LLM hiccup) self-heals on the next open. Successful
@@ -691,8 +695,19 @@ export default function PaperDetailPage({
   const deepReportRequested =
     Boolean(profile.deepReportEnabled) &&
     (userProviderConfigured || localDeveloperProvider);
+  // ABC-freemium 1-11 · R-UI-4 — the key gains an AI-mode segment so a report
+  // computed with no model cannot be served as the AI report once Peer's own AI
+  // goes live. Built by a pure function so it is testable at all; the storage
+  // version is bumped in the same commit so old entries are not re-read.
   const reportKey = paper
-    ? `${paper.id}|${contextHint}|deep=${deepReportRequested}|p=${profile.feedAiProvider}|byok=${userProviderConfigured}`
+    ? paperReportCacheKey({
+        paperId: paper.id,
+        contextHint,
+        deepReportRequested,
+        feedAiProvider: profile.feedAiProvider,
+        userProviderConfigured,
+        aiMode: aiModeFor(profile),
+      })
     : "";
   const cachedReport = useMemo(
     () => readCachedPaperReport(reportKey),

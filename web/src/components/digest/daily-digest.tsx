@@ -6,6 +6,12 @@ import { apiFetch } from "@/lib/api";
 import { ScrambleText } from "@/components/scramble-text";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useFeedStore } from "@/store/feed";
+import { useProfileStore } from "@/store/profile";
+import { aiModeFor } from "@/lib/feed/ai-tier";
+import {
+  DIGEST_CACHE_STORAGE_KEY,
+  digestCacheKey,
+} from "./digest-cache-key";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 
 interface DailyDigestProps {
@@ -33,7 +39,6 @@ interface DigestProgressStep {
   label: string;
 }
 
-const CACHE_KEY = "peer-digest-cache";
 const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 export const DIGEST_PROGRESS_STEPS = [
   { afterMs: 0, pct: 10, label: "Reviewing today\u2019s papers" },
@@ -54,7 +59,7 @@ function simpleHash(text: string): string {
 
 function readCache(paperKey: string): DigestPayload | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(DIGEST_CACHE_STORAGE_KEY);
     if (!raw) return null;
     const entry = JSON.parse(raw) as DigestCache;
     if (entry.paperKey !== paperKey) return null;
@@ -70,14 +75,14 @@ function readCache(paperKey: string): DigestPayload | null {
 function writeCache(paperKey: string, payload: DigestPayload) {
   try {
     const entry: DigestCache = { paperKey, payload, fetchedAt: Date.now() };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(entry));
+    localStorage.setItem(DIGEST_CACHE_STORAGE_KEY, JSON.stringify(entry));
   } catch {
     // localStorage full or unavailable — silently skip
   }
 }
 
 function clearCache() {
-  try { localStorage.removeItem(CACHE_KEY); } catch { /* noop */ }
+  try { localStorage.removeItem(DIGEST_CACHE_STORAGE_KEY); } catch { /* noop */ }
 }
 
 interface PaperDigestState {
@@ -97,16 +102,29 @@ export function usePaperDigest(
   const [loading, setLoading] = useState(false);
   const [revealBullets, setRevealBullets] = useState(false);
   const setPaperSummaries = useFeedStore((state) => state.setPaperSummaries);
+  // ABC-freemium 1-11 · R-UI-4 — which model, if any, produced a cached digest.
+  const aiMode = useProfileStore((state) => aiModeFor(state.profile));
 
   // Order-insensitive (a pure re-shuffle of the same papers must still hit the
   // cache) and context-aware (a profile-context change must invalidate a stale
   // digest). Bullets are matched to papers by paperId downstream, so sorting the
   // ids here has no display effect.
+  // ABC-freemium 1-11 · R-UI-4 — the `"tier0"` literal becomes the reader's
+  // actual AI mode, so a digest written on Peer's model is not served after
+  // their entitlement changes and two plans cannot collide in one browser
+  // profile. Built by a pure function so it is testable; the storage version is
+  // bumped in the same commit.
   const paperKey = useMemo(() => {
     const ids = papers.map((p) => p.id).sort().join("|");
     const ctx = contextHint ?? "";
-    return `${ids}::${ctx.length}:${simpleHash(ctx)}::${llmOverride?.provider ?? "tier0"}`;
-  }, [papers, contextHint, llmOverride?.provider]);
+    return digestCacheKey({
+      paperIds: ids,
+      contextLength: ctx.length,
+      contextHash: simpleHash(ctx),
+      overrideProvider: llmOverride?.provider,
+      aiMode,
+    });
+  }, [papers, contextHint, llmOverride?.provider, aiMode]);
 
   const storePaperSummaries = useCallback((payload: DigestPayload) => {
     if (payload.noLlm || !payload.bullets?.length) return;
