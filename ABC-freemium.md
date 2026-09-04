@@ -3157,3 +3157,22 @@ build, which is how the two `getFigurePool` callers surfaced within seconds.
 **GATE after 1-07:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **105 files passed | 1 skipped (106)**, **2601 tests passed | 1 skipped (2602)**, **0
 failed**.
+
+---
+
+**1-08 · `dispatch-digests` does the right thing, and now says why — LANDED.** R-SEC-4. A's item 19.
+File: `web/src/app/api/jobs/dispatch-digests/route.ts`, comment only, **zero behaviour change**.
+
+The old two lines gave a BYOK-era reason ("scheduled jobs cannot safely access a browser user's
+private BYOK key"), which stops being the reason the moment a system key exists — the cron could
+now afford a model. The replacement names **D9** and states the real reason: users who never open
+the app must cost nothing. Both halves of B's instruction are in the same paragraph: the `aiTier: 0`
+and the fact that this call passes **no `systemSearchAllowed`** and therefore takes 1-05's `false`
+default, so a future reader removing one sees the other.
+
+**Standing lock re-verified**: `dispatch-digests/route.test.ts`, **1 passed**. It asserts route
+behaviour and nothing here changed behaviour, exactly as B predicted.
+
+**GATE after 1-08:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **105 files passed | 1 skipped (106)**, **2601 tests passed | 1 skipped (2602)**, **0
+failed**.
