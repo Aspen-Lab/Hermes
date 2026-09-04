@@ -1561,9 +1561,10 @@ export default function PaperDetailPage({
 
         <TierUpgradeBlock
           items={PAPER_TIER_UPGRADE_ITEMS}
-          // ABC-freemium 1-14 — same value as before (BYOK). 1-26 is where
-          // this block becomes plan-aware and the prop changes meaning.
-          providerConfigured={userProviderConfigured}
+          // ABC-freemium 1-26 · R-UI-3 — plan-aware. A paid or trial reader
+          // never sees it, and neither does one running on their own key.
+          aiMode={readerAiMode}
+          effectivePlan={entitlement.effectivePlan}
         />
       </PageContainer>
     </>

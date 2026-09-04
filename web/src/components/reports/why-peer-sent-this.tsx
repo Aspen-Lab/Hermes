@@ -1,6 +1,6 @@
 "use client";
 
-import { ReportBadge } from "@/components/reports/report-badge";
+import { NO_MODEL_BADGE, ReportBadge } from "@/components/reports/report-badge";
 import { highlightSegments } from "@/lib/jobs/summarize";
 
 /**
@@ -72,7 +72,7 @@ export function WhyPeerSentThis({
           The badge component already existed and worked — the Skills section
           used it correctly — it simply wasn't applied here. */}
       <p className="mt-2 flex flex-wrap items-center gap-2">
-        <ReportBadge tone="accent">Tier 0</ReportBadge>
+        <ReportBadge tone="accent">{NO_MODEL_BADGE}</ReportBadge>
       </p>
       <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 px-5 py-4">
         {/* V26-J02 / V26-E02, element 3 — ONE edit, BOTH surfaces, because this

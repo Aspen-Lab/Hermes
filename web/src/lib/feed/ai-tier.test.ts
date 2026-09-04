@@ -108,12 +108,26 @@ describe("aiAvailability — the ONE predicate", () => {
 });
 
 describe("aiModeChip — what the mode chip actually says", () => {
-  it("reads Tier 2 with the papers toggle OFF — THE BUG, STATED AS A CONTRACT", () => {
-    // **THIS IS THE USER'S REPORT, TURNED INTO AN ASSERTION.** Papers toggle
-    // off, provider reachable: the chip used to read `Tier 0` and its tooltip
-    // used to say "no AI API", while the job and event feeds sent `aiTier: 2`.
-    const chip = aiModeChip({ feedsUseAi: true, aiSearchActive: false });
-    expect(chip.tier).toBe("Tier 2");
+  // ABC-freemium 1-24 · R-UI-1, D6 — REWRITTEN, NOT DELETED. Every assertion
+  // below used to pin the literal strings "Tier 2" and "Tier 0", which is the
+  // vocabulary D6 removes from every rendered string. The field is renamed
+  // `tier` -> `plan` so the compiler finds the one call site rather than
+  // leaving a stale word there, and the chip now says TWO things the tier
+  // number said neither of: which plan, and whether AI is on.
+  const NOW = new Date("2026-09-04T12:00:00.000Z");
+
+  it("says AI is on with the papers toggle OFF — the old bug, still a contract", () => {
+    // THE USER'S ORIGINAL REPORT, kept as an assertion. Papers toggle off,
+    // model reachable: the chip used to read "Tier 0" and say "no AI API"
+    // while the job and event feeds ran on a model.
+    const chip = aiModeChip({
+      feedsUseAi: true,
+      aiSearchActive: false,
+      entitlement: SIGNED_IN,
+      now: NOW,
+    });
+
+    expect(chip.ai).toBe("AI on");
     expect(chip.title).not.toContain("no AI API");
     expect(chip.title).toContain("Job and event search already use AI");
     // The LABEL still reports this button's own pressed state — that half was
@@ -121,32 +135,99 @@ describe("aiModeChip — what the mode chip actually says", () => {
     expect(chip.label).toBe("Auto");
   });
 
-  it("reads Tier 2 with the papers toggle ON", () => {
-    const chip = aiModeChip({ feedsUseAi: true, aiSearchActive: true });
-    expect(chip.tier).toBe("Tier 2");
+  it("says AI is on with the papers toggle ON", () => {
+    const chip = aiModeChip({
+      feedsUseAi: true,
+      aiSearchActive: true,
+      entitlement: SIGNED_IN,
+      now: NOW,
+    });
+
+    expect(chip.ai).toBe("AI on");
     expect(chip.label).toBe("AI search");
     expect(chip.title).toContain("job and event search use AI too");
   });
 
-  it("reads Tier 0 and keeps today's wording when no provider is reachable", () => {
-    // THE UNCHANGED STATE. A reader with no key sees exactly what they saw
-    // before Ruling 68a, which is what makes this a truth-telling fix rather
-    // than a new claim.
-    const chip = aiModeChip({ feedsUseAi: false, aiSearchActive: false });
-    expect(chip.tier).toBe("Tier 0");
+  it("says AI is off when no model is reachable, and points at the two ways in", () => {
+    const chip = aiModeChip({
+      feedsUseAi: false,
+      aiSearchActive: false,
+      entitlement: SIGNED_OUT,
+      now: NOW,
+    });
+
+    expect(chip.ai).toBe("AI off");
     expect(chip.label).toBe("Auto");
-    expect(chip.title).toBe("Add your own AI key to enable AI search.");
+    expect(chip.title).toBe("Sign in to use Peer's AI, or add your own key.");
   });
 
-  it("never lets the papers toggle move the tier text", () => {
-    // The predicate the chip's tier reads must be independent of the papers
-    // toggle in BOTH directions. This is the assertion that goes red if a
-    // later change points `tier` back at `aiSearchActive`.
+  it("renders R-UI-1's three plan strings", () => {
+    const plan = (
+      effectivePlan: Entitlement["effectivePlan"],
+      trialEndsAt: string | null = null,
+    ) =>
+      aiModeChip({
+        feedsUseAi: true,
+        aiSearchActive: false,
+        entitlement: { effectivePlan, trialEndsAt },
+        now: NOW,
+      }).plan;
+
+    expect(plan("free")).toBe("Free");
+    expect(plan("paid")).toBe("Pro");
+    expect(plan("trial", "2026-09-07T12:00:00.000Z")).toBe("Trial · 3 days left");
+    expect(plan("trial", "2026-09-05T12:00:00.000Z")).toBe("Trial · 1 day left");
+  });
+
+  it("reads Free for a signed-out visitor, never a blank", () => {
+    // The anonymous entitlement is a real object, so the chip always has a
+    // value — there is no empty state to design.
+    expect(
+      aiModeChip({
+        feedsUseAi: false,
+        aiSearchActive: false,
+        entitlement: SIGNED_OUT,
+        now: NOW,
+      }).plan,
+    ).toBe("Free");
+  });
+
+  it("contains no tier vocabulary in any state", () => {
+    for (const feedsUseAi of [true, false]) {
+      for (const aiSearchActive of [true, false]) {
+        for (const entitlement of [SIGNED_IN, SIGNED_OUT]) {
+          const chip = aiModeChip({
+            feedsUseAi,
+            aiSearchActive,
+            entitlement,
+            now: NOW,
+          });
+          const all = `${chip.label} ${chip.plan} ${chip.ai} ${chip.title}`;
+          expect(all).not.toMatch(/Tier [012]|BYOK/);
+        }
+      }
+    }
+  });
+
+  it("never lets the papers toggle move the plan text", () => {
+    // The predicate the chip's plan reads must be independent of the papers
+    // toggle in BOTH directions. Goes red if a later change points `plan` back
+    // at `aiSearchActive`.
     for (const feeds of [true, false]) {
-      const on = aiModeChip({ feedsUseAi: feeds, aiSearchActive: true });
-      const off = aiModeChip({ feedsUseAi: feeds, aiSearchActive: false });
-      expect(`${feeds}: ${on.tier} / ${off.tier}`).toBe(
-        `${feeds}: ${on.tier} / ${on.tier}`,
+      const on = aiModeChip({
+        feedsUseAi: feeds,
+        aiSearchActive: true,
+        entitlement: SIGNED_IN,
+        now: NOW,
+      });
+      const off = aiModeChip({
+        feedsUseAi: feeds,
+        aiSearchActive: false,
+        entitlement: SIGNED_IN,
+        now: NOW,
+      });
+      expect(`${feeds}: ${on.plan} / ${off.plan}`).toBe(
+        `${feeds}: ${on.plan} / ${on.plan}`,
       );
     }
   });

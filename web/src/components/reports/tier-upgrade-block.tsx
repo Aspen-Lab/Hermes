@@ -2,20 +2,50 @@
 
 import Link from "next/link";
 import { REPORT_LABEL_STEP } from "./report-section";
+import type { AiMode } from "@/lib/feed/ai-tier";
+import type { Plan } from "@/lib/entitlement/types";
 
 export interface TierUpgradeItem {
   title: string;
   description: string;
 }
 
+/**
+ * ABC-freemium 1-26 · R-UI-3, D7 — **a plan-aware upsell, and it never renders
+ * for a paid reader.**
+ *
+ * It used to be keyed on `providerConfigured`, a BYOK test with no notion of a
+ * plan — so once D1 gave every signed-in reader a model, a **paid** reader with
+ * no key of their own would have been shown an upsell for something they
+ * already have.
+ *
+ * Who sees it, and why:
+ *  - **free, no key of their own** — yes. They are the only reader for whom the
+ *    locked rows are genuinely locked.
+ *  - **free, own key** — no. They can already run those rows on their own key;
+ *    that is today's behaviour, preserved.
+ *  - **trial** — no. A trial already has paid behaviour, and an upsell for
+ *    something you currently have reads as a bug.
+ *  - **paid** — no. R-UI-3 says so in as many words.
+ *  - **no locked rows** (`items.length === 0`) — no. The existing guard, kept.
+ *
+ * **D7's price is display only.** No checkout link: spec §3 puts payment out of
+ * scope, and a dead link is worse than no link. The CTA points at the existing
+ * key panel, which is a real thing a reader can do today.
+ */
 export function TierUpgradeBlock({
   items,
-  providerConfigured = false,
+  aiMode,
+  effectivePlan,
 }: {
   items: TierUpgradeItem[];
-  providerConfigured?: boolean;
+  /** `aiAvailability(profile, entitlement)` — whose model, if any. */
+  aiMode: AiMode;
+  /** From the entitlement. `trial` reads as paid behaviour (D5). */
+  effectivePlan: Plan;
 }) {
-  if (providerConfigured || items.length === 0) return null;
+  const upgradeWouldHelp = effectivePlan === "free" && aiMode !== "byok";
+  if (!upgradeWouldHelp || items.length === 0) return null;
 
   return (
     <aside className="mt-14 overflow-hidden rounded-2xl border border-border bg-bg-secondary/50">
@@ -24,8 +54,11 @@ export function TierUpgradeBlock({
             report label (`REPORT_LABEL_STEP`, not the old `text-micro`), and
             the colour is `text-accent` — the token this label's plate
             counterpart already resolves to (V26-E05), not a fixed hex. */}
+        {/* ABC-freemium 1-26 — the heading said "with an AI key", which is no
+            longer what these rows are about: the reader already has Peer's AI.
+            What they do not have is the plan that unlocks these. */}
         <p className={`${REPORT_LABEL_STEP} text-accent`}>
-          Also in this report with an AI key
+          Also in this report on Peer Pro
         </p>
       </div>
       <div className="divide-y divide-border">
@@ -56,11 +89,17 @@ export function TierUpgradeBlock({
         ))}
       </div>
       <div className="border-t border-border px-5 py-4 sm:px-6">
+        {/* D7 — display only. $12/month, $6 for students. No checkout link:
+            payment is out of scope, and a dead link is worse than none. */}
+        <p className="text-body-sm text-text-muted">
+          <span className="font-semibold text-heading">Peer Pro is $12/month</span>
+          , or $6 for students.
+        </p>
         <Link
           href="/welcome?step=ai"
-          className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-accent transition-colors hover:text-heading"
+          className="mt-2 inline-flex items-center gap-1.5 text-body-sm font-semibold text-accent transition-colors hover:text-heading"
         >
-          Connect a key
+          Or use your own AI key
           <span aria-hidden>→</span>
         </Link>
       </div>

@@ -90,7 +90,8 @@ function renderJob(job: Job = plateJob()): string {
       isInterested: false,
       nowMs: NOW,
       enrichment: null,
-      providerConfigured: false,
+      aiMode: "system" as const,
+      effectivePlan: "free" as const,
       onToggleSave: () => undefined,
       onAppliedChange: () => undefined,
       onDismiss: () => undefined,
@@ -108,7 +109,8 @@ function renderEvent(
       careerStage,
       enrichment: null,
       enrichmentLoading: false,
-      providerConfigured: false,
+      aiMode: "system" as const,
+      effectivePlan: "free" as const,
       isSaved: false,
       isRegistered: false,
       isSubmitted: false,
@@ -514,7 +516,8 @@ describe("V28-01 — the label-step residue: labels V26-J10's own sweep could no
         isInterested: false,
         nowMs: NOW,
         enrichment,
-        providerConfigured: false,
+        aiMode: "system" as const,
+        effectivePlan: "free" as const,
         onToggleSave: () => undefined,
         onAppliedChange: () => undefined,
         onDismiss: () => undefined,
@@ -528,7 +531,7 @@ describe("V28-01 — the label-step residue: labels V26-J10's own sweep could no
     const classes = classesOfTagContaining(
       renderJob(),
       "p",
-      "Also in this report with an AI key",
+      "Also in this report on Peer Pro",
     );
     expect(classes).toContain("text-caption");
     expect(classes).toContain("tracking-[0.18em]");
@@ -620,7 +623,7 @@ describe("V28-02 — the locked-block label takes the accent token, not a new he
     const classes = classesOfTagContaining(
       renderJob(),
       "p",
-      "Also in this report with an AI key",
+      "Also in this report on Peer Pro",
     );
     expect(classes).toContain("text-accent");
     expect(classes).not.toContain("text-text-faint");
@@ -1654,7 +1657,8 @@ describe("Ruling 111b — the serif doctrine completed (A1, A2, A3/B2, B1)", () 
         isInterested: false,
         nowMs: NOW,
         enrichment,
-        providerConfigured: false,
+        aiMode: "system" as const,
+        effectivePlan: "free" as const,
         onToggleSave: () => undefined,
         onAppliedChange: () => undefined,
         onDismiss: () => undefined,

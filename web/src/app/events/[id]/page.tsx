@@ -21,6 +21,8 @@ import type {
 import { eventTypes } from "@/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
+import { aiAvailability, type AiMode } from "@/lib/feed/ai-tier";
+import type { Plan } from "@/lib/entitlement/types";
 import {
   daysUntil,
   formatDate,
@@ -65,7 +67,7 @@ import {
   ReportFactTile,
   type ReportFact,
 } from "@/components/reports/fact-tile";
-import { ReportBadge } from "@/components/reports/report-badge";
+import { MODEL_WRITTEN_BADGE, NO_MODEL_BADGE, ReportBadge } from "@/components/reports/report-badge";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -1548,7 +1550,7 @@ function RosterSection({
               >
                 Organisations
                 {organisationsAllTier0 && (
-                  <ReportBadge tone="accent">Tier 0</ReportBadge>
+                  <ReportBadge tone="accent">{NO_MODEL_BADGE}</ReportBadge>
                 )}
               </h3>
             )}
@@ -1585,7 +1587,7 @@ function RosterSection({
                       {!organisationsAllTier0 && (
                         <p className="mt-1.5">
                           <ReportBadge tone="accent">
-                            {judgment ? "Tier 2" : "Tier 0"}
+                            {judgment ? MODEL_WRITTEN_BADGE : NO_MODEL_BADGE}
                           </ReportBadge>
                         </p>
                       )}
@@ -1635,7 +1637,7 @@ function RosterSection({
                 className={`flex flex-wrap items-center gap-2 ${REPORT_LABEL_CLASS}`}
               >
                 People
-                {peopleAllTier0 && <ReportBadge tone="accent">Tier 0</ReportBadge>}
+                {peopleAllTier0 && <ReportBadge tone="accent">{NO_MODEL_BADGE}</ReportBadge>}
               </h3>
             )}
             <div className="mt-3 grid gap-2">
@@ -1680,7 +1682,7 @@ function RosterSection({
                       {!peopleAllTier0 && (
                         <p className="mt-1.5">
                           <ReportBadge tone="accent">
-                            {judgment ? "Tier 2" : "Tier 0"}
+                            {judgment ? MODEL_WRITTEN_BADGE : NO_MODEL_BADGE}
                           </ReportBadge>
                         </p>
                       )}
@@ -1742,6 +1744,10 @@ export function EventReport({
   isInterested = false,
   nowMs,
   providerConfigured = false,
+  // ABC-freemium 1-26 · R-UI-3 — the upsell is plan-aware now, so the view
+  // needs the reader's plan as well as whether a model is reachable.
+  aiMode = "none",
+  effectivePlan = "free",
   enrichmentLoading = false,
   onToggleStar,
   onToggleSave,
@@ -1771,6 +1777,8 @@ export function EventReport({
    */
   nowMs: number;
   providerConfigured?: boolean;
+  aiMode?: AiMode;
+  effectivePlan?: Plan;
   enrichmentLoading?: boolean;
   onToggleStar: (key: string) => void;
   onToggleSave: () => void;
@@ -2286,7 +2294,7 @@ export function EventReport({
             {/* B2-07 / Ruling 11. Plate 03 badges this heading TIER 0, same
                 as "Why Peer sent this to you". */}
             <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
-              <ReportBadge tone="accent">Tier 0</ReportBadge>
+              <ReportBadge tone="accent">{NO_MODEL_BADGE}</ReportBadge>
             </p>
             <CostsTable
               fees={fees}
@@ -2303,12 +2311,22 @@ export function EventReport({
           facetReason={event.facetPreferenceReason}
         />
 
+        {/* ABC-freemium 1-26 — `hasEnrichment` still suppresses the block, and
+            it is not about plans: if the enriched rows are already on the page
+            there is nothing locked to advertise. It reaches the block through
+            the existing `items.length === 0` guard rather than through a prop
+            that would blur "already has it" into "already paid". */}
         <TierUpgradeBlock
-          items={buildEventTierUpgradeItems(
-            roster.organisations.length,
-            roster.organisationTail.length,
-          )}
-          providerConfigured={providerConfigured || hasEnrichment}
+          items={
+            hasEnrichment
+              ? []
+              : buildEventTierUpgradeItems(
+                  roster.organisations.length,
+                  roster.organisationTail.length,
+                )
+          }
+          aiMode={aiMode}
+          effectivePlan={effectivePlan}
         />
       </div>
     </PageContainer>
@@ -2499,6 +2517,8 @@ export default function EventDetailPage({
       pageReadingReason={pageReadingReason}
       enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile, entitlement)}
       providerConfigured={canAttemptOpportunityEnrichment(profile, entitlement)}
+      aiMode={aiAvailability(profile, entitlement)}
+      effectivePlan={entitlement.effectivePlan}
       starredKeys={starredKeys}
       isSaved={isSaved}
       isRegistered={isRegistered}

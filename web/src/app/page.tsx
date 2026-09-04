@@ -504,7 +504,11 @@ function DiscoveryPage() {
   const aiSearchActive = aiPaperSearchEnabled && canUseAiTools;
   // RULING 68a. The chip's three strings are computed in `lib/feed/ai-tier.ts`
   // so they can be asserted; the JSX below only places them.
-  const aiChip = aiModeChip({ feedsUseAi: canUseAiTools, aiSearchActive });
+  const aiChip = aiModeChip({
+    feedsUseAi: canUseAiTools,
+    aiSearchActive,
+    entitlement,
+  });
   const shouldLoadPaperDigest =
     !isSearchMode &&
     activeType === "papers" &&
@@ -846,7 +850,10 @@ function DiscoveryPage() {
                   `aiSearchActive`, the papers toggle ANDed with that, so it
                   showed "Tier 0" while jobs and events ran Tier 2. */}
               <span className="font-medium">{aiChip.label}</span>
-              <span className="opacity-60 text-micro">{aiChip.tier}</span>
+              {/* ABC-freemium 1-24 · R-UI-1 — the plan, and whether AI is on.
+                  Two facts, because the tier number said neither. */}
+              <span className="opacity-60 text-micro">{aiChip.plan}</span>
+              <span className="opacity-60 text-micro">{aiChip.ai}</span>
             </button>
 
             {/* AI key hookup */}
@@ -964,7 +971,7 @@ function DiscoveryPage() {
               className={`px-3.5 pb-3.5 space-y-3 border-t border-border/50 pt-3 ${aiSearchActive ? "" : "opacity-60"}`}
             >
               <p className="text-caption leading-relaxed text-text-muted">
-                Tier 0 uses no AI API. To turn on Tier 2 reranking, choose an AI company and add your own key.
+                Peer&apos;s AI is included. Choose an AI company and add your own key to send these calls to your own account instead.
               </p>
               <AiKeyFields
                 provider={profile.feedAiProvider}

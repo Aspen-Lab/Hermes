@@ -1,6 +1,12 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import {
+  MODEL_WRITTEN_BADGE,
+  NO_MODEL_BADGE,
+} from "@/components/reports/report-badge";
+import type { AiMode } from "@/lib/feed/ai-tier";
+import type { Plan } from "@/lib/entitlement/types";
 import type {
   CareerStage,
   Event,
@@ -43,6 +49,13 @@ function renderReport(
   isInterested = false,
   pageReadingReason?: OpportunityPageReadingReason,
   enrichmentLoading = false,
+  // ABC-freemium 1-26 — the upsell is plan-aware now. This harness's
+  // `providerConfigured` argument has always meant "this reader has their own
+  // key", so its faithful translation is `aiMode: "byok"` — which is what makes
+  // every existing case that passed `true` keep asserting the same thing. A
+  // case that wants a different plan passes it explicitly.
+  aiMode: AiMode = providerConfigured ? "byok" : "none",
+  effectivePlan: Plan = "free",
 ): string {
   return renderToStaticMarkup(
     createElement(EventReport, {
@@ -52,6 +65,8 @@ function renderReport(
       pageReadingReason,
       enrichmentLoading,
       providerConfigured,
+      aiMode,
+      effectivePlan,
       isSaved: false,
       isRegistered: completion.registered,
       isSubmitted: completion.submitted,
@@ -344,7 +359,7 @@ describe("EventReport", () => {
     // no data attribute of its own to anchor a regex on, so this checks a
     // window right after the heading rather than the whole rest of the page.
     const costsIndex = html.indexOf("What it costs you");
-    expect(html.slice(costsIndex, costsIndex + 500)).toContain("Tier 0");
+    expect(html.slice(costsIndex, costsIndex + 500)).toContain(NO_MODEL_BADGE);
   });
 
   it("names the travel grant and never signs off with the higher price", () => {
@@ -1004,12 +1019,12 @@ describe("EventReport", () => {
     // facetReason's "Because ..." lower-cases into a trailing clause.
     expect(html).toContain("because you often view battery summits.");
     expect(html).not.toContain("Because you often view battery summits");
-    expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
+    expect(why).toBeLessThan(html.indexOf("Also in this report on Peer Pro"));
     // B2-07 / Ruling 11. Plate 03 badges this heading TIER 0, same as the job report.
     const whySection = html.match(
       /<section[^>]*data-report-section="why-peer-sent-this"[^>]*>[\s\S]*?<\/section>/,
     )?.[0];
-    expect(whySection).toContain("Tier 0");
+    expect(whySection).toContain(NO_MODEL_BADGE);
   });
 
   it("hides Why Peer sent this to you when there is no reason to show", () => {
@@ -1237,7 +1252,7 @@ describe("EventReport", () => {
     // This fixture returns no plan, so nothing renders here.
     expect(talks).toBeLessThan(poster);
     expect(html).not.toContain("A day-by-day plan for you");
-    expect(html).not.toContain("Also in this report with an AI key");
+    expect(html).not.toContain("Also in this report on Peer Pro");
   });
 
   // ════════════════════════════════════════════════════════════════════════
@@ -1286,8 +1301,8 @@ describe("EventReport", () => {
         ],
       }),
     );
-    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 0"]);
-    expect(badgesUnder(html, "People")).toEqual(["Tier 0"]);
+    expect(badgesUnder(html, "Organisations")).toEqual([NO_MODEL_BADGE]);
+    expect(badgesUnder(html, "People")).toEqual([NO_MODEL_BADGE]);
   });
 
   it("withdraws the heading badge and labels the card when the model wrote its reason", () => {
@@ -1306,7 +1321,7 @@ describe("EventReport", () => {
     // The model's prose is on the page …
     expect(html).toContain("Relevant interface work.");
     // … and it is NOT under a blanket `Tier 0` claim any more.
-    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 2"]);
+    expect(badgesUnder(html, "Organisations")).toEqual([MODEL_WRITTEN_BADGE]);
   });
 
   it("labels a mixed roster card by card, not by section", () => {
@@ -1329,7 +1344,7 @@ describe("EventReport", () => {
       },
     );
     // Sorted Tier 0 first by `byPriority`, so: the kept card, then the judged one.
-    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 0", "Tier 2"]);
+    expect(badgesUnder(html, "Organisations")).toEqual([NO_MODEL_BADGE, MODEL_WRITTEN_BADGE]);
   });
 
   it("decides each roster section's provenance independently", () => {
@@ -1350,8 +1365,8 @@ describe("EventReport", () => {
         ],
       },
     );
-    expect(badgesUnder(html, "Organisations")).toEqual(["Tier 2"]);
-    expect(badgesUnder(html, "People")).toEqual(["Tier 0"]);
+    expect(badgesUnder(html, "Organisations")).toEqual([MODEL_WRITTEN_BADGE]);
+    expect(badgesUnder(html, "People")).toEqual([NO_MODEL_BADGE]);
   });
 
   it("renders the day plan in order, between the talks and the poster fit", () => {
@@ -1418,7 +1433,7 @@ describe("EventReport", () => {
       false,
       "read-failed",
     );
-    expect(withKeyNoResult).not.toContain("Also in this report with an AI key");
+    expect(withKeyNoResult).not.toContain("Also in this report on Peer Pro");
     expect(withKeyNoResult).toContain(
       "Peer could not finish reading the programme page this time.",
     );
@@ -1432,7 +1447,7 @@ describe("EventReport", () => {
       false,
       "no-provider",
     );
-    expect(withoutKey).toContain("Also in this report with an AI key");
+    expect(withoutKey).toContain("Also in this report on Peer Pro");
     // The block already says it. Do not say it twice.
     expect(withoutKey).not.toContain("data-page-reading-note");
   });
@@ -1549,7 +1564,7 @@ describe("EventReport", () => {
     expect(html).not.toContain("Download Brochure");
     // P10.9: a configured key that produced nothing gets the explanation, not
     // an upgrade pitch.
-    expect(html).not.toContain("Also in this report with an AI key");
+    expect(html).not.toContain("Also in this report on Peer Pro");
     expect(html.match(/data-page-reading-note="event"/g)).toHaveLength(1);
   });
 

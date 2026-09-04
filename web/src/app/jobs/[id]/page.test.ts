@@ -1,6 +1,9 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { NO_MODEL_BADGE } from "@/components/reports/report-badge";
+import type { AiMode } from "@/lib/feed/ai-tier";
+import type { Plan } from "@/lib/entitlement/types";
 import type { Job } from "@/types";
 import type {
   JobEnrichment,
@@ -18,6 +21,13 @@ function renderReport(
   providerConfigured = false,
   isInterested = false,
   pageReadingReason?: OpportunityPageReadingReason,
+  // ABC-freemium 1-26 — the upsell is plan-aware now. This harness's
+  // `providerConfigured` argument has always meant "this reader has their own
+  // key", so its faithful translation is `aiMode: "byok"` — which is what makes
+  // every existing case that passed `true` keep asserting the same thing. A
+  // case that wants a different plan passes it explicitly.
+  aiMode: AiMode = providerConfigured ? "byok" : "none",
+  effectivePlan: Plan = "free",
 ): string {
   return renderToStaticMarkup(
     createElement(JobReport, {
@@ -29,6 +39,8 @@ function renderReport(
       enrichment,
       pageReadingReason,
       providerConfigured,
+      aiMode,
+      effectivePlan,
       onToggleSave: () => undefined,
       onAppliedChange: () => undefined,
       onDismiss: () => undefined,
@@ -145,13 +157,13 @@ describe("JobReport", () => {
     // it follows body text, rather than starting a fresh sentence.
     expect(html).toContain("because you often view California roles.");
     expect(html).not.toContain("Because you often view California roles");
-    expect(why).toBeLessThan(html.indexOf("Also in this report with an AI key"));
+    expect(why).toBeLessThan(html.indexOf("Also in this report on Peer Pro"));
     expect(html.indexOf("To apply, have ready")).toBeLessThan(why);
     // B2-07 / Ruling 11. Plate 02 badges this heading TIER 0.
     const whySection = html.match(
       /<section[^>]*data-report-section="why-peer-sent-this"[^>]*>[\s\S]*?<\/section>/,
     )?.[0];
-    expect(whySection).toContain("Tier 0");
+    expect(whySection).toContain(NO_MODEL_BADGE);
   });
 
   it("hides Why Peer sent this to you when the scoring layer produced nothing", () => {
@@ -666,7 +678,7 @@ describe("JobReport", () => {
       "Design and run solid-state interface experiments.",
     );
     expect(html).toContain("Peer inference — verify with the employer");
-    expect(html).not.toContain("Also in this report with an AI key");
+    expect(html).not.toContain("Also in this report on Peer Pro");
   });
 
   it("does not render or unlock empty quoted-specific sections", () => {
@@ -680,7 +692,7 @@ describe("JobReport", () => {
     expect(html).not.toContain('data-job-section="specific-requirements"');
     expect(html).not.toContain('data-job-section="specific-duties"');
     // P10.9: the reader has a key, so no upgrade pitch — an explanation instead.
-    expect(html).not.toContain("Also in this report with an AI key");
+    expect(html).not.toContain("Also in this report on Peer Pro");
   });
 
   it("renders and unlocks either quoted-specific section independently", () => {
@@ -704,14 +716,14 @@ describe("JobReport", () => {
     expect(requirementsHtml).toContain("What this employer actually asks for");
     expect(requirementsHtml).toContain("A doctorate in chemistry is required.");
     expect(requirementsHtml).not.toContain('data-job-section="specific-duties"');
-    expect(requirementsHtml).not.toContain("Also in this report with an AI key");
+    expect(requirementsHtml).not.toContain("Also in this report on Peer Pro");
     expect(requirementsHtml).not.toContain("data-page-reading-note");
     expect(dutiesHtml).toContain("What the person would actually do");
     expect(dutiesHtml).toContain("Lead weekly cell-testing reviews.");
     expect(dutiesHtml).not.toContain(
       'data-job-section="specific-requirements"',
     );
-    expect(dutiesHtml).not.toContain("Also in this report with an AI key");
+    expect(dutiesHtml).not.toContain("Also in this report on Peer Pro");
     expect(dutiesHtml).not.toContain("data-page-reading-note");
   });
 
@@ -720,13 +732,13 @@ describe("JobReport", () => {
     // an upgrade pitch — the old screen told the reader to connect a key at the
     // exact moment they were checking whether their key worked.
     const withKey = renderReport(baseJob(), false, null, true, false, "read-failed");
-    expect(withKey).not.toContain("Also in this report with an AI key");
+    expect(withKey).not.toContain("Also in this report on Peer Pro");
     expect(withKey).toContain(
       "Peer could not finish reading the job posting this time.",
     );
 
     const withoutKey = renderReport(baseJob(), false, null, false, false, "no-provider");
-    expect(withoutKey).toContain("Also in this report with an AI key");
+    expect(withoutKey).toContain("Also in this report on Peer Pro");
     expect(withoutKey).not.toContain("data-page-reading-note");
   });
 

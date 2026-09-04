@@ -480,13 +480,16 @@ export default function WelcomePage() {
                 <StepFrame
                   kicker="Optional power-up"
                   title="Connect an AI key (optional)."
-                  subtitle="Peer works fully free with zero setup. Adding a key unlocks sharper, AI-written briefings and Deep report — and you can always do this later."
+                  subtitle="Peer works fully free with zero setup, and its AI is included. Adding your own key is optional — it sends the model calls to your account instead, and you can always do this later."
                 >
+                  {/* ABC-freemium 1-24 · R-UI-1, D1 — this said a key is what
+                      unlocks AI. Peer's AI is included now, so a key is an
+                      alternative rather than an unlock. */}
                   <Callout variant="accent">
-                    <strong>Peer runs significantly better with an API key.</strong>{" "}
-                    One key powers smarter Tier 1/2 ranking and full Deep reports
-                    across Papers, Events, and Jobs. Without one, you still get a
-                    complete free Tier 0 briefing.
+                    <strong>Peer&apos;s AI is included — no key needed.</strong>{" "}
+                    Ranking, summaries and Deep reports across Papers, Events and
+                    Jobs all run on it. Adding your own key sends those calls to
+                    your own account instead, on whichever model you prefer.
                   </Callout>
                   <div className="mt-4 space-y-3">
                     <ApiKeyHelp provider={profile.feedAiProvider} />

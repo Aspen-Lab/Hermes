@@ -3825,3 +3825,101 @@ paid-breaker cases, the breaker-row case and the fail-closed case. Probes revert
 **GATE after unit (f):** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **115 files passed | 1 skipped (116)**, **2705 tests passed | 1 skipped (2706)**, **0
 failed**.
+
+---
+
+### Unit (g) — what the user sees
+
+**1-24 + 1-25 + 1-26 + 1-27 · The tier vocabulary is gone, the chip shows a plan, and the upsell
+knows who it is talking to — LANDED. UNIT (g) CLOSED. ALL 28 ITEMS LANDED.**
+R-UI-1, R-UI-2, R-UI-3, R-KEY-4, D6, D7. A's items 15 + 16 + 17. Files:
+`web/src/components/reports/report-badge.tsx`, `web/src/lib/feed/ai-tier.ts`,
+`web/src/app/page.tsx`, `web/src/app/welcome/page.tsx`, `web/src/app/events/[id]/page.tsx`,
+`web/src/app/jobs/[id]/page.tsx`, `web/src/app/papers/[id]/page.tsx`,
+`web/src/components/reports/why-peer-sent-this.tsx`,
+`web/src/components/reports/tier-upgrade-block.tsx`,
+`web/src/components/profile/ai-setup.tsx`, plus five test files and
+`web/src/lib/feed/ui-vocabulary.test.ts` (new).
+
+**A'S SCAN 1, RE-RUN: 4 hits, and they are exactly A's four hand-exclusions.** Three are inside JSX
+comment blocks (`jobs/[id]/page.tsx` ×2, `page.tsx`) and one is a `console.warn`
+(`tier2-rerank.ts`). **Every rendered occurrence is gone** — the seven provenance badges, the two
+chip strings, the eight body-copy sentences of 1-24 and the five of 1-25.
+
+**(i) The seven badges use one shared constant.** `NO_MODEL_BADGE = "No model used"`, with
+`MODEL_WRITTEN_BADGE = "AI written"` for the two sites that contrast a model-written judgement with
+a computed one. B warned that seven near-synonyms would be worse than the tier number they replace;
+a test asserts the constant is **used** rather than re-typed, so a future site cannot drift into an
+eighth wording. `organisationsAllTier0` and the other internal names stay — D6 keeps `aiTier` and
+the tier-0 code paths.
+
+**(ii) The chip.** `aiModeChip`'s output goes from `{ label, tier, title }` to
+`{ label, plan, ai, title }`. Renaming `tier` → `plan` is what made the compiler find the one call
+site rather than leaving a stale word in the JSX, exactly as B predicted. `plan` renders R-UI-1's
+three strings verbatim — **"Free" / "Trial · N days left" / "Pro"** — with N computed on the client
+for display only (D5: the server is the authority). `ai` says whether AI is on, which is the fact
+the tier number was standing in for. **`label` and the `aiSearchActive` split are untouched**:
+`ai-tier.ts` records that `label` is the button's own pressed state and that changing it "would be a
+different lie".
+
+**(iii) The body copy.** Eight sentences in 1-24 (`page.tsx`, `welcome/page.tsx`) and five in 1-25
+(`ai-setup.tsx`). Every one said the same false thing under D1 — that without your own key Peer
+makes no AI call. `welcome/page.tsx` was the sharpest ("Without one, you still get a complete free
+Tier 0 briefing") and now leads with **"Peer's AI is included — no key needed"**, with a key
+presented as an alternative rather than an unlock.
+
+**1-26 — the upsell is plan-aware, and this is where the old prop would have lied.**
+`TierUpgradeBlock` took `providerConfigured`, a BYOK test with no notion of a plan; once D1 gave
+every signed-in reader a model, a **paid** reader with no key of their own would have been shown an
+upsell for what they already have. It now takes `aiMode` and `effectivePlan` and renders **only**
+for a free reader who is not on their own key. D7's price is display only — **$12/month, $6 for
+students, and no checkout link**, because payment is out of scope and a dead link is worse than
+none; the CTA points at the key panel, which is a real thing a reader can do today.
+
+**A BEHAVIOUR I ALMOST DROPPED, caught by the existing suites and restored.** The two opportunity
+views passed `providerConfigured={providerConfigured || hasEnrichment}` — the second half meaning
+"the enriched rows are already on the page, so there is nothing locked to advertise". That is not a
+plan question, and folding it into the new props would have blurred "already has it" into "already
+paid". It now reaches the block through the **existing** `items.length === 0` guard
+(`items={hasEnrichment ? [] : …}`), with the reason written at both call sites. Four tests failed
+until it was restored.
+
+**Tests at risk — B named twelve files; five actually needed work, and B's reasoning holds for all
+of them.** `ai-tier.test.ts`'s four literal-string assertions **rewritten, not deleted**, and its
+"never lets the papers toggle move the tier text" case survives as "…move the plan text".
+`tier-upgrade-block.test.tsx` rewritten from two cases to seven: R-UI-3's "never renders for paid"
+is now three explicit assertions across all three AI modes, plus trial, plus free-with-BYOK, plus
+the empty-items guard, plus a no-tier-vocabulary check. `plate-type-system.test.ts` and the two
+`[id]/page.test.ts` suites had the literal strings swapped for the shared constants.
+
+**The two report harnesses translate the old flag rather than dropping it.** `renderReport`'s
+`providerConfigured` argument has always meant "this reader has their own key", so its faithful
+translation is `aiMode: providerConfigured ? "byok" : "none"` — which is what keeps every existing
+positional call asserting the same thing, and lets a new case pass a plan explicitly. Stated in a
+comment in both files.
+
+**1-27 — A'S SCAN 1 IS NOW A GATE.** `src/lib/feed/ui-vocabulary.test.ts` walks every non-test
+source file, applies A's own mechanical filter, and asserts the survivors are **only** the four
+hand-exclusions — each carrying, in the file, the reason it can never be seen by a reader. B calls
+this the single highest-value test in the unit and the reasoning is right: R-UI-1 is the one
+requirement a future edit can silently reopen. **Exclusions are matched by TEXT, not by line
+number** — my first version pinned line numbers and broke the moment an import shifted them, which
+turns a gate into a nuisance and invites the next reader to loosen it. A second case keeps the list
+honest in both directions.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — two probes: one badge reverted to the literal
+`Tier 0` → the vocabulary gate FAILS naming the exact file and line; the upsell's plan test dropped
+(`aiMode !== "byok"` alone) → **"NEVER renders for a paid reader"** and the trial case FAIL. Both
+reverted; tree clean.
+
+**Two lint problems I introduced and fixed inside the item**, recorded so the figure is honest: an
+unescaped apostrophe in new JSX copy (`react/no-unescaped-entities`) and an unused import left after
+the jobs suite needed only one of the two badge constants. Lint is back to the single standing error.
+
+**Standing regression locks re-verified**, run together: `registry.test.ts`, `ai-tier.test.ts`,
+`feed/route.test.ts`, `jobs/report/route.test.ts`, `events/report/route.test.ts`,
+`pool-cache.test.ts`, `daily-pool-cache.test.ts` — **7 files, 67 passed**.
+
+**GATE after unit (g):** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **116 files passed | 1 skipped (117)**, **2716 tests passed | 1 skipped (2717)**, **0
+failed**.

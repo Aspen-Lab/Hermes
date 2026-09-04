@@ -6,6 +6,8 @@ import type { Job, RoleKind } from "@/types";
 import type { JobSourceId } from "@/lib/jobs/types";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
+import { aiAvailability, type AiMode } from "@/lib/feed/ai-tier";
+import type { Plan } from "@/lib/entitlement/types";
 import {
   daysUntil,
   formatDate,
@@ -43,7 +45,7 @@ import {
   ReportSection as SharedReportSection,
 } from "@/components/reports/report-section";
 import { ReportFactTile } from "@/components/reports/fact-tile";
-import { ReportBadge } from "@/components/reports/report-badge";
+import { NO_MODEL_BADGE, ReportBadge } from "@/components/reports/report-badge";
 import { CompletionPill } from "@/components/opportunities/completion-pill";
 import { OpportunityFeedbackPair } from "@/components/opportunities/feedback-pair";
 import { BackToFeedLink } from "@/components/navigation/back-to-feed-link";
@@ -948,6 +950,10 @@ export function JobReport({
   enrichment = null,
   pageReadingReason,
   providerConfigured = false,
+  // ABC-freemium 1-26 · R-UI-3 — the upsell is plan-aware now, so the view
+  // needs the reader's plan as well as whether a model is reachable.
+  aiMode = "none",
+  effectivePlan = "free",
   enrichmentLoading = false,
   onToggleSave,
   onAppliedChange,
@@ -964,6 +970,8 @@ export function JobReport({
   pageReadingReason?: OpportunityPageReadingReason;
   /** Legacy test seam: provider availability alone must not hide the locked block. */
   providerConfigured?: boolean;
+  aiMode?: AiMode;
+  effectivePlan?: Plan;
   enrichmentLoading?: boolean;
   onToggleSave: () => void;
   onAppliedChange: (next: boolean) => void;
@@ -1252,7 +1260,7 @@ export function JobReport({
         >
           <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2">
             <ReportBadge>New</ReportBadge>
-            <ReportBadge tone="accent">Tier 0</ReportBadge>
+            <ReportBadge tone="accent">{NO_MODEL_BADGE}</ReportBadge>
           </p>
           {/* V26-J07 / Ruling 72b. The bar, on B's extracted geometry: one
               track and one fill, the fill at the matched fraction — the
@@ -1521,9 +1529,12 @@ export function JobReport({
         matchedTerms={job.matchedTerms}
       />
 
+      {/* ABC-freemium 1-26 — see the matching note in the events report:
+          nothing locked means nothing to advertise. */}
       <TierUpgradeBlock
-        items={JOB_TIER_UPGRADE_ITEMS}
-        providerConfigured={providerConfigured || hasEnrichment}
+        items={hasEnrichment ? [] : JOB_TIER_UPGRADE_ITEMS}
+        aiMode={aiMode}
+        effectivePlan={effectivePlan}
       />
     </PageContainer>
   );
@@ -1675,6 +1686,8 @@ export default function JobDetailPage({
       pageReadingReason={pageReadingReason}
       enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile, entitlement)}
       providerConfigured={canAttemptOpportunityEnrichment(profile, entitlement)}
+      aiMode={aiAvailability(profile, entitlement)}
+      effectivePlan={entitlement.effectivePlan}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}
       onInterested={() => moreLikeJob(job)}

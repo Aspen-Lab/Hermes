@@ -103,18 +103,53 @@ export function feedsUseAi(
  * reach `tier`.
  */
 export function aiModeChip(options: {
-  /** `feedsUseAi(profile)` — the predicate the job and event feeds send from. */
+  /** `feedsUseAi(profile, entitlement)` — the predicate the feeds send from. */
   feedsUseAi: boolean;
   /** The PAPERS toggle, ANDed with the above. Governs the papers surface only. */
   aiSearchActive: boolean;
-}): { label: string; tier: string; title: string } {
+  /**
+   * ABC-freemium 1-24 · R-UI-1 — the reader's plan, for the chip's plan text.
+   * Display only: D5 makes the server the authority and this is the "client
+   * only displays" half.
+   */
+  entitlement: Pick<Entitlement, "effectivePlan" | "trialEndsAt">;
+  /** Stubbed by tests; the trial's day count is relative to it. */
+  now?: Date;
+}): { label: string; plan: string; ai: string; title: string } {
   return {
     label: options.aiSearchActive ? "AI search" : "Auto",
-    tier: options.feedsUseAi ? "Tier 2" : "Tier 0",
+    // ABC-freemium 1-24 — `tier` is renamed `plan`, which is what makes the
+    // compiler find the one call site rather than leaving a stale string there.
+    plan: planChipText(options.entitlement, options.now),
+    ai: options.feedsUseAi ? "AI on" : "AI off",
     title: !options.feedsUseAi
-      ? "Add your own AI key to enable AI search."
+      ? "Sign in to use Peer's AI, or add your own key."
       : options.aiSearchActive
         ? "AI search is on for papers, and job and event search use AI too."
-        : "Paper search is on Tier 0 fixed scoring. Job and event search already use AI — turn this on to use it for papers as well.",
+        : "Paper search is on fixed scoring. Job and event search already use AI — turn this on to use it for papers as well.",
   };
+}
+
+/**
+ * R-UI-1's three plan strings, verbatim: "Free" / "Trial · N days left" / "Pro".
+ *
+ * A signed-out reader reads **"Free"**, not a blank — the anonymous entitlement
+ * is a real object, so the chip always has a value.
+ */
+export function planChipText(
+  entitlement: Pick<Entitlement, "effectivePlan" | "trialEndsAt">,
+  now: Date = new Date(),
+): string {
+  if (entitlement.effectivePlan === "paid") return "Pro";
+  if (entitlement.effectivePlan === "trial" && entitlement.trialEndsAt) {
+    const days = Math.max(
+      0,
+      Math.ceil(
+        (new Date(entitlement.trialEndsAt).getTime() - now.getTime()) /
+          86_400_000,
+      ),
+    );
+    return `Trial · ${days} ${days === 1 ? "day" : "days"} left`;
+  }
+  return "Free";
 }

@@ -83,7 +83,7 @@ const PROVIDER_GUIDES: Record<UserCloudAiProvider, ProviderGuide> = {
     verdict: "Lowest-cost text-only option",
     dropdownTitle: "Why DeepSeek is the lowest-cost text-only option",
     bestFor:
-      "Tier 1/2 text ranking, summaries, and report writing when you do not need figures, charts, or other images analyzed.",
+      "Text ranking, summaries, and report writing when you do not need figures, charts, or other images analyzed.",
     estimatedMonthly: "about $7/month",
     keyUrl: "https://platform.deepseek.com/api_keys",
     keyLinkLabel: "Create a DeepSeek API key",
@@ -284,9 +284,15 @@ export function AiProviderGuide({ provider }: { provider: UserAiProvider }) {
   if (provider === "default") {
     return (
       <div className="rounded-xl bg-bg-secondary/35 p-4 text-meta leading-relaxed text-text-muted shadow-[inset_0_0_0_1px_rgba(20,20,20,0.05)]">
-        <span className="font-semibold text-heading">No key is okay.</span>{" "}
-        Peer&apos;s free Tier 0 briefing still works. Choose a company above only
-        when you want Tier 1/2 AI ranking, richer summaries, and Deep reports.
+        {/* ABC-freemium 1-25 · R-UI-2, D1 — this said the alternative to a key
+            was a no-AI briefing. It is not: Peer's AI is included, and a key
+            means your own model and your own bill. */}
+        <span className="font-semibold text-heading">
+          No key is needed.
+        </span>{" "}
+        Peer&apos;s AI is included, and everything above runs on it. Choose a
+        company here only if you would rather use your own model and be billed
+        for it yourself.
       </div>
     );
   }
@@ -329,9 +335,9 @@ export function AiProviderGuide({ provider }: { provider: UserAiProvider }) {
           <strong className="text-heading">
             Important: DeepSeek cannot process images in Peer.
           </strong>{" "}
-          It can power Tier 1/2 text work and text Deep reports across Papers,
-          Events, and Jobs, but Peer will skip figure, chart, diagram, and other
-          image analysis.
+          It can power text ranking, summaries and text Deep reports across
+          Papers, Events, and Jobs, but Peer will skip figure, chart, diagram,
+          and other image analysis.
         </div>
       )}
 
@@ -390,8 +396,8 @@ export function AiProviderGuide({ provider }: { provider: UserAiProvider }) {
 
           <p className="text-micro leading-relaxed text-text-faint">
             Estimate assumes about 40 opened Deep reports per day (10 papers, 15
-            events, and 15 jobs), plus normal daily Tier 1/2 use. Actual billing
-            is usage-based and can be much lower.
+            events, and 15 jobs), plus normal daily ranking and summary use.
+            Actual billing is usage-based and can be much lower.
           </p>
         </div>
       )}
