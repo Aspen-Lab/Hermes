@@ -1179,3 +1179,355 @@ Written **inside** this unit, per Ruling 2 point 4(h). New files
 
 **Proof obligation from §2 (C's contract):** revert each source change and re-run — the new test
 must fail. Worth stating here because three of these would pass vacuously against a stub.
+
+---
+
+### Unit (b) — close the wallet
+
+*The brief's order, with one reorder inside the unit and a stated reason: **1-05 (the key) comes
+before 1-06 (the route order)** because 1-05 is what actually stops the spend. A's items 1 and 2 are
+live today at `aiTier: 0`, where 1-06's block never runs — so shipping 1-06 first would close
+nothing and would read, in the log, like the wallet was closed. Ship the key first.*
+
+---
+
+**1-05 · The operator's Tavily key is spendable by anyone with a `curl` and no account**
+**R-KEY-3, R-POOL-3, R-ENT-4, R-METER-2, and the key half of R-SEC-2. A's items 1 + 2 (one
+mechanism). Classification: `MISSING` (the gate), on top of `WRONG DATA` (the key that is sent).**
+
+**This is the highest-ranked item in the round and the one C should land first.**
+
+**The mechanism, verified.** Three readers, identical in shape, each `request key || env key`:
+
+- `src/lib/jobs/sources/jobweb.ts:2116-2121` — `resolveKeys(query)` returns
+  `{ tavily: query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY, brave: process.env.BRAVE_SEARCH_API_KEY }`.
+  Called at `:2132` (inside `resolveSearchProvider`) and `:2143` (inside `fetchImpl`).
+- `src/lib/events/sources/eventweb.ts:2725-2730` — the same function, same body. Called at `:2743`
+  and `:2754`.
+- `src/lib/sources/web-search.ts:44` — `const tavilyKey = requestTavilyKey || process.env.TAVILY_API_KEY;`
+  (papers).
+
+`resolveSearchProvider` then returns `"tavily"` purely on `Boolean(keys.tavily)`
+(`jobweb.ts:2136-2140`, `eventweb.ts:2745-2751`), and `fetchImpl` spends it
+(`jobweb.ts:2163-2165`, `searchTavily(jobQuery, keys.tavily!, ...)`). **Nothing in that path reads
+`aiTier`, a session, or an entitlement.** That is why A's `aiTier: 0` anonymous request came back
+200 with 7 outgoing searches on events and 2 on jobs: it never entered the LLM branch the guard sits
+in.
+
+**Two corrections to A's account of it, both material:**
+
+- **The free-user leak is wider than A wrote.** `query.webSearch` is only shaped as
+  `{ tavilyApiKey }` when `searchConnectors.tavily.enabled` is true (`jobs/pipeline.ts:143-147`,
+  `events/pipeline.ts:167-171`). With the connector **off**, `webSearch` is `{ provider }` or
+  `undefined` — and `resolveKeys` still returns the operator key. **A user who deliberately turned
+  the Tavily connector off still spends the owner's key.**
+- **On papers, gating the key on entitlement is not the fix.** `feed/pipeline.ts:118` builds the
+  papers web options with `webSearchOptions(req.searchConnectors)` (`sources/vertex-search.ts:211`),
+  which returns `{ provider }` and **never a `tavilyApiKey`**; `store/feed.ts` sends no
+  `searchConnectors` for papers at all (its own comment at `:295-298` says the paper surface "has
+  nothing left to spend it on"). So the only Tavily key `web-search.ts:44` can ever reach is the
+  operator's, for every persona including `paid`. **D3 makes the papers surface's
+  `systemSearchAllowed` permanently `false`** — that is implementing D3, not reversing it.
+
+**The fix direction.**
+
+*The shared helper, written first.* New `web/src/lib/search/system-key.ts`:
+
+```
+resolveSystemSearchKeys(opts: {
+  requestTavilyKey?: string;      // the user's own, from query.webSearch
+  systemSearchAllowed: boolean;   // from the entitlement, threaded by the route
+}): { tavily?: string; brave?: string; provenance: "byok" | "system" | "none" }
+```
+
+Order, exactly R-KEY-3: request BYOK Tavily -> (`systemSearchAllowed` ? `process.env.TAVILY_API_KEY`
+: none) -> `process.env.BRAVE_SEARCH_API_KEY` -> none. **This is the single gated resolver A's scan
+3 counts against**: after it lands, `process.env.TAVILY_API_KEY` appears in exactly one file, and
+`grep -rn "process.env.TAVILY_API_KEY" src/ | grep -v "lib/search/system-key.ts"` must return **0**.
+Have C run that grep in the commit message.
+
+*The threading, and the rule that stops it leaking.* Add `systemSearchAllowed?: boolean` to the
+three parallel `webSearch` blocks — `src/lib/jobs/types.ts:103-107`,
+`src/lib/events/types.ts:61-65`, `src/lib/sources/types.ts:34-36` (they are three copies of the same
+shape; extracting one shared type is optional and C's call). The three `resolveKeys` bodies become
+one call to the helper. **The default when the field is absent must be `false`, never `true`.**
+That is not a style preference: `grep -rn "runFeedPipeline|runJobsPipeline|runEventsPipeline" src/`
+finds **two callers outside the AI feed routes** — `api/jobs/dispatch-digests/route.ts:202` and
+`api/test-digest/route.ts:104` — and a default of `true` would hand the cron job the operator key on
+behalf of every enrolled user, silently, at scale, which is precisely D9's nightmare.
+
+*Where the flag is set.* In the three feed routes, from `entitlement.systemSearchAllowed` (1-06
+resolves the entitlement; this item consumes it). **Papers passes a hard `false`** with a comment
+naming D3. `dispatch-digests` and `test-digest` pass nothing and therefore get `false`.
+
+*R-METER-2's search row (deferred here from 1-03).* `fetchImpl` in `jobweb.ts:2142` and
+`eventweb.ts:2753` is the one place that knows surface, provenance and query count — it already
+computes `searches` (`jobweb.ts:2147`, `eventweb.ts:2758`). One `recordUsageEvent({ kind: "search",
+surface, query_count: searches.length, user_id })` there, **only when `provenance === "system"`**
+(R-METER-2 says "every system-Tavily search"; a BYOK search costs the owner nothing and attributing
+it would be noise). `user_id` reaches `fetchImpl` on the same query object as
+`systemSearchAllowed` — add it to the same block, one field.
+
+**What the field shows when every candidate is rejected — and it is already built.**
+`resolveSearchProvider` returns `null`, `fetchImpl` returns `[]` at `jobweb.ts:2144` /
+`eventweb.ts:2755` (`if (!provider) return [];`), and the pipeline serves the structured sources it
+already has. **That is exactly R-POOL-3's requirement** ("jobs and events still respond from the
+free structured sources immediately") and it is today's behaviour for a keyless user — no new
+code, no new response shape, no error. On papers, `web-search.ts:47-55` already returns `[]` when no
+key and no Vertex/Gemini search is available. **C must not add an error branch here.**
+
+**A visible consequence the manager should see, not a policy block.** On Vercel, D2 bans Brave and
+bans the Vertex/Gemini search env names, so after 1-05 the papers `web` source returns `[]` for
+everyone, permanently. That is D3 working as written. Whether the `web` source should then be
+removed from `parseSources` (`feed/route.ts:29`) is **outside spec §2** — record it, leave it, and
+let A report the papers operator-search count as 0.
+
+**Blast radius.** `resolveSearchProvider` is exported from both `jobweb.ts` and `eventweb.ts` and is
+consumed by the pipelines and by `sources/gemini-search.ts`'s shared `resolveWebSearchProvider`
+(`jobweb.ts:2134`, `eventweb.ts:2747`). Its **signature does not change** — only what `resolveKeys`
+returns — so nothing downstream needs editing. The `webSearch` type widening touches three type
+files and three pipeline construction sites and nothing else.
+
+**Tests at risk — grepped, and A named none of these.**
+`grep -rln "resolveSearchProvider|TAVILY_API_KEY|tavilyApiKey" src/ --include="*.test.ts"` returns
+**five** files: `src/lib/jobs/sources/jobweb.test.ts`, `src/lib/events/sources/eventweb.test.ts`,
+`src/lib/opportunities/query-budget.test.ts`, `src/app/welcome/completeness.test.ts`, and
+`src/lib/events/benchmark.test.ts`. The first two are the ones that pin today's contract — **any
+case that sets `process.env.TAVILY_API_KEY` and expects `resolveSearchProvider` to return
+`"tavily"` without a request key now needs `systemSearchAllowed: true` added to its query fixture.**
+Per §2 the assertion is **rewritten to state the new contract, never deleted**, with a comment
+naming 1-05. `benchmark.test.ts` is the standing live-search flake (§3) — record and proceed, do not
+touch it. `completeness.test.ts` matches only on the profile's own `tavilyApiKey` field and is
+unaffected.
+
+---
+
+**1-06 · The entitlement check runs after the provider, in eight routes; and the downgrade line
+tests the wrong thing**
+**R-SEC-2, R-SEC-3, R-KEY-2. A's items 10 + 11 (one mechanism). Classification: `WRONG ORDER`
+(the sequence) + `WRONG DATA` (what the downgrade predicate reads).**
+
+**Verified, and A's count of seven is right but its list is one route short.** The pairs, all
+re-grepped:
+
+| Route | `resolveProvider` | `protectAiRequest` | Note |
+|---|---|---|---|
+| `api/feed/route.ts` | `:151` | `:155` | guard inside `if (aiTier >= 2 && aiProvider)` `:154` |
+| `api/jobs/feed/route.ts` | `:146` | `:150` | same condition `:149` |
+| `api/events/feed/route.ts` | `:131` | `:135` | same condition `:134` |
+| `api/digest/route.ts` | `:67` | `:73` | **early `return emptyResponse(true)` at `:70` when no provider — the guard is skipped entirely** |
+| `api/jobs/report/route.ts` | `:61` | `:73` | same early `noLlm` return at `:62-71` |
+| `api/events/report/route.ts` | `:113` | `:136` | same early `noLlm` return at `:114-122`, plus a second at `:125-130` |
+| `api/papers/report/route.ts` | `:377` (also `:132`, `:197`, `:395`) | `:379` | guard inside `if (provider?.generateJsonText)` `:378` |
+| **`api/test-digest/route.ts`** | none | **none** | its own `getUser()` 401 at `:72-79`; **no `protectAiRequest`, no entitlement, and it calls `runFeedPipeline` at `:104`.** R-SEC-2 names it and A's tally omitted it. |
+
+**The consequence A did not draw, and it is the biggest single behaviour change in the round.** In
+`digest`, `jobs/report` and `events/report` the "no provider" early return fires **before**
+`protectAiRequest` — so those three routes are *public* today and answer a stranger with a clean
+`noLlm: true`. **The moment R-KEY-1 (1-11) makes a provider always resolve, that early return stops
+firing and all three start calling `protectAiRequest` for the first time**, i.e. they become 401 for
+anonymous users. That is what D8 wants. But it means these three routes change behaviour *because of
+an edit in a different unit*, and their existing tests assert the old shape. **C must land 1-06
+before 1-11, not after** — otherwise unit (c) breaks three suites that unit (b) was supposed to have
+already re-contracted.
+
+**The fix direction.**
+
+*The shared helper, before the routes that call it.* Extend `lib/security/ai-request.ts` with
+
+```
+requireEntitledAiRequest(scope: string, limitPerHour?: number):
+  Promise<{ user: { id: string } | null; entitlement: Entitlement } | NextResponse>
+```
+
+It does, in order: (1) the deployed-runtime auth test that `protectAiRequest` already performs
+(`:20-26`, `:46-53`, `:55-64` — reuse them verbatim, do not rewrite the 503/401 shapes); (2)
+`resolveEntitlement(user?.id ?? null)` from 1-01; (3) the rate bucket, now on 1-02's store. **One
+`supabase.auth.getUser()` per request, not two** — `getUser()` is a network round trip, and calling
+it in both the guard and the route would double it on every feed load. `protectAiRequest` stays
+exported with its current signature (seven routes call it and `ai-request.test.ts` tests it) and
+becomes a thin wrapper that discards the entitlement.
+
+*The new sequence in every AI route*, replacing today's:
+
+```
+current:  resolveProvider(...) -> downgrade-if-no-provider -> maybe protectAiRequest -> pipeline
+target:   requireEntitledAiRequest(scope, limit) -> (NextResponse ? return it)
+          -> derive aiTier from the entitlement, not from the body
+          -> resolveProvider(override, { userId, byok })   // 1-03's second argument
+          -> pipeline, carrying entitlement.systemSearchAllowed   // 1-05
+```
+
+*R-SEC-3, stated precisely.* Today's line is identical in all three feeds —
+`const aiTier = requestedAiTier >= 2 && !aiProvider ? 0 : requestedAiTier;` (`feed:152`,
+`jobs/feed:147`, `events/feed:132`). It downgrades on **"no provider resolved"**. Replace with a
+downgrade on **"not entitled"**: the requested tier is an upper bound, never a grant —
+`const aiTier = Math.min(requestedAiTier, entitlementAllowsAi ? 2 : 0)`. Under D1 every signed-in
+user has AI, so `entitlementAllowsAi` is `entitlement.userId !== null` — **not** `effectivePlan`,
+because free users get the model too. Say that in the comment, or a later round will "tighten" it to
+`paid` and break D1.
+
+**I adversarially tested the ordering for elevation paths. Four found, all closed by the above:**
+1. `aiTier: 0` + `sources:["web"]` on `POST /api/feed` — walks past today's guard entirely. Closed
+   by 1-05 (the key), **not** by this item; that is the whole point of Q4's answer.
+2. `llmOverride` with a deliberately invalid key — `hasUsableProviderOverride` (`registry.ts:42-52`)
+   returns false, so the request falls through to the system provider. Harmless *only* because the
+   route authenticated first; with the old order it was an anonymous system-LLM grant.
+3. `searchConnectors: { tavily: { enabled: true, apiKey: "" } }` — `parseSearchConnectors`
+   (`jobs/feed:62`) drops an empty key via `cleanOptionalString`, and `resolveKeys` then falls
+   through to the env key. Closed by 1-05's explicit flag, which no body can set.
+4. `PEER_DEV_ENTITLEMENT` set in a Vercel environment — closed twice over: the runtime check in 1-01
+   requires `!VERCEL && !VERCEL_ENV`, and R-GUARD-1 (1-10) bans the name at build time. **Keep
+   both**; the guard runs at build and the runtime check is what holds if a variable is added to a
+   running deployment.
+
+**What the field shows when the entitlement rejects.** Two different answers, and both already
+exist:
+- **Anonymous, deployed:** the existing `401 { error: "Sign in before using an AI feature" }` with
+  `Cache-Control: no-store` (`ai-request.ts:60-63`) — unchanged, byte for byte.
+- **Signed in but not entitled to *this* capability:** never a 401. `aiTier` degrades to 0 and the
+  route returns its **existing** payload — `{ items, meta }` from the tier-0 pipeline on the feeds,
+  `noLlm: true` on digest and the reports. The user gets a working feed built from structured
+  sources, which is what free is. **A guard that 401s a signed-in free user would be the wrong
+  fix.**
+
+**Blast radius.** Eight route files. Every one of them is on the request path of a surface the user
+looks at, so a mistake here is visible immediately — which is the argument for doing it as one item
+with one shape rather than eight ad-hoc edits.
+
+**Tests at risk — grepped; A named the route tests but not what specifically breaks.**
+- `src/lib/security/ai-request.test.ts` (2 tests). `:9-16` "keeps local next dev available without
+  cloud auth" asserts `protectAiRequest` resolves `null` under `NODE_ENV=development`. It **still
+  passes** if the local-dev early return stays; 1-01's synthesised `dev-local` user is what carries
+  the entitlement in that runtime, so the early return does **not** need removing. `:18-26` (503 with
+  no auth config) is untouched. **Both survive** — but C must re-read them before assuming so, and
+  must add a third asserting the new helper returns an entitlement rather than `null`.
+- `src/app/api/digest/route.test.ts:32`, `src/app/api/jobs/report/route.test.ts:70`,
+  `src/app/api/events/report/route.test.ts:58` all do `mocks.resolveProvider.mockReturnValue(null)`
+  and assert the `noLlm` payload **without any auth stub**. These pass today because the early
+  return precedes the guard. After 1-06 they reach `requireEntitledAiRequest` and need a stubbed
+  `createClient` — **the same stub A used in its probe (Ruling 2 point 7), which is the argument for
+  extracting it once in 1-09 rather than five times.**
+- `src/app/api/feed/route.test.ts:33-48` — asserts `resolveProvider` is called with the override.
+  Survives; the call moves later but still happens.
+- `src/app/api/events/report/route.test.ts:328` asserts `resolveProvider` is invoked **before**
+  `fetch`. Putting the entitlement check even earlier does not disturb that ordering. **Survives.**
+- `src/app/api/papers/report/route.test.ts` — mocks the registry; the `deepReport` cases are at risk
+  from 1-20, not from here.
+- `src/app/api/jobs/dispatch-digests/route.test.ts` — that route gains nothing here; it passes no
+  `systemSearchAllowed` and keeps `aiTier: 0`. **Survives.**
+
+---
+
+**1-07 · `GET /api/figure` has no authentication of any kind**
+**R-SEC-1. A's item 3. Classification: `MISSING`.**
+
+**Verified.** `src/app/api/figure/route.ts` is 43 lines. `GET` at `:14` reads six query parameters,
+calls `extractFigure` at `:26`, returns. `grep -n "protectAiRequest|getUser" src/app/api/figure/route.ts`
+-> **0 hits**. It reaches a provider through `extractFigure` -> `chooseCandidate` ->
+`matchFigureSemantically` (`lib/figures/semantic-match.ts:53`, `const provider = resolveProvider();`)
+and `matchFigureVisually` (`lib/figures/vision-match.ts:134`, same). These are A's scan-4 pair, and
+they are the **only** two no-argument acquisitions in the tree.
+
+**Fix direction, two halves.**
+
+*The route.* Add `requireEntitledAiRequest("figure", 60)` as the first statement after the `id`
+validation at `:22-24`, before `extractFigure`. Limit 60/h matches the feed scopes; the route is hit
+once per card, so a lower number would break a normal page of results.
+
+*The matchers.* R-SEC-1's second sentence is the load-bearing half: they "never resolve a server
+provider without an authenticated request context passed in explicitly". Add a required
+`ctx: { userId: string; byok: boolean; override?: ProviderOverrideConfig | null }` argument to
+`matchFigureSemantically` and `matchFigureVisually`, thread it from the route through
+`extractFigure`'s `ExtractInput` (`lib/figures/extract.ts:1320`) and `chooseCandidate`, and change
+both call sites to `resolveProvider(ctx.override ?? null, ctx)`. **Make it required, not optional** —
+that is what makes A's scan 4 permanently zero instead of zero-until-someone-adds-a-caller. It is a
+narrow thread: `extractFigure` has one non-test caller (this route).
+
+**What the field shows when the request is rejected or the provider is absent.** Two layers, both
+already built. Unauthenticated: the existing 401 from the shared guard. Authenticated but no
+provider: `semantic-match.ts:54` and `vision-match.ts:135` already `return null` when
+`provider?.generateJsonText` / `generateVisionJsonText` is missing, and `extractFigure` falls back
+to its deterministic candidate pool — `extract.ts:1332-1335` calls this out as a **hard guarantee**
+("if we have ANY candidates, never return a placeholder"). **So the degraded figure path is a real
+figure chosen without a model, not an empty card.** C must not change that guarantee.
+
+**Blast radius.** The figure route is called per card on the papers surface, so a 401 here is
+visible as missing images for a signed-out visitor. That is the intended D8 behaviour and A should
+expect it on the `anonymous` persona. `extractFigure` and the two matchers are used nowhere else
+(`grep -rn "extractFigure|matchFigureSemantically|matchFigureVisually" src/ --include="*.ts" | grep -v "\.test\."`
+-> the route plus the definitions plus `chooseCandidate`).
+
+**Tests at risk.** **None exist.** There is no `route.test.ts` for `api/figure` (confirmed by
+listing every `*.test.ts` under `src/app/api/`), and no test imports either matcher. 1-09 creates the
+first.
+
+---
+
+**1-08 · `dispatch-digests` does the right thing for an unrecorded reason**
+**R-SEC-4. A's item 19. Classification: `MISSING` (the citation, not the behaviour).**
+
+**Verified, and A's score of PARTIAL is right.** `api/jobs/dispatch-digests/route.ts:213` passes
+`aiTier: 0` and it is the only `aiTier` in the file. The comment above it (`:211-212`) reads
+"Scheduled jobs cannot safely access a browser user's private BYOK key, so email/in-app digests are
+always deterministic Tier 0" — a **BYOK-era** reason that stops being the reason the moment a system
+key exists. R-SEC-4 requires the comment to name D9.
+
+**Fix direction.** Replace those two comment lines with one that names D9 and states the new reason:
+users who never open the app must cost nothing, so the cron stays no-LLM even though a system key is
+now available. **Also add, in the same comment, that the route passes no `systemSearchAllowed` and
+therefore gets 1-05's `false` default** — the two facts belong together, and a future reader
+removing one should see the other. One-line code change, zero behaviour change.
+
+**Blast radius / tests at risk.** `src/app/api/jobs/dispatch-digests/route.test.ts` exists and
+asserts route behaviour, not comments. **Nothing at risk.** Landing it inside unit (b) rather than
+alone is correct: it is the one place in the tree that already does what D8/D9 want, and the comment
+is the only reason a later round would not know that.
+
+---
+
+**1-09 · The permanent route tests for the three unguarded routes**
+**R-TEST-1, Ruling 2 point 7. Classification: `MISSING`.**
+
+**Verified.** Listing every `*.test.ts` under `src/app/api/` gives seven files: `digest`,
+`events/report`, `feed`, `jobs/dispatch-digests`, `jobs/report`, `papers/report`, `profile`. **The
+three routes differences 1-3 are about — `api/figure`, `api/jobs/feed`, `api/events/feed` — are
+exactly the three with no route test.**
+
+**Fix direction.** Rebuild A's Part-2 harness as permanent files:
+`src/app/api/figure/route.test.ts`, `src/app/api/jobs/feed/route.test.ts`,
+`src/app/api/events/feed/route.test.ts`. A's description is complete enough to reconstruct: import
+the real handler; call it with a real `NextRequest`; stub exactly two things —
+`@/lib/supabase/server`'s `createClient` (so `auth.getUser()` returns `null` or `{ id }`) and
+`global.fetch` (a recorder that logs every outbound URL and body and returns an empty 200); set
+`VERCEL=1`, `VERCEL_ENV=production`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`;
+use **sentinel** key strings only, never a real credential.
+
+**Extract the stub once.** Five existing suites will need the same `createClient` stub after 1-06
+(listed there). Put it in `src/test-support/route-harness.ts` — a non-`.test.ts` file so vitest's
+`include: ["src/**/*.test.{ts,tsx}"]` (`vitest.config.ts:31`) does not try to run it as a suite.
+
+**The assertions that make these worth having** — each is a difference from A's list turned into a
+contract:
+- `anonymous` + `POST /api/jobs/feed` with **no `aiTier` at all**: **zero** outbound requests
+  carrying the operator sentinel. (Today: 2.)
+- `anonymous` + `POST /api/events/feed`: zero. (Today: 7 — the largest single leak in the round.)
+- `free-no-key`, signed in: zero operator-sentinel searches, and a **200 with items**, not a 401 —
+  R-POOL-3's "still respond from the free structured sources immediately".
+- `free-byok-tavily`: the **user's** sentinel is sent and the operator's is not. This pair is the
+  one thing A measured as already correct; pin it so 1-05 cannot regress it.
+- `trial` / `paid` via `PEER_DEV_ENTITLEMENT`: the operator key **is** sent. This is the first time
+  those two personas can be constructed at all.
+- `GET /api/figure` anonymous: 401. Signed in, no provider: 200 with a figure from the deterministic
+  pool and **no** model call.
+
+**The trap C will hit here, restated because this is where it bites.** `vitest.config.ts:22` injects
+`GOOGLE_API_KEY` from `.env.local` into every suite. These three new files do **not** mock the
+registry. Once 1-11 lands, an unmocked `resolveProvider()` inside them returns a live provider on
+the owner's real key. **Each of the three must delete `GOOGLE_API_KEY` in `beforeEach` (the pattern
+`registry.test.ts:21-24` already uses) or `vi.mock` the registry.** State it in a comment in each
+file, not just in the commit.
+
+**Tests at risk.** None — three new files. But they must be written to the **post-1-05/1-06**
+contract, so they go in at the end of unit (b), and A should be told they are the re-runnable form
+of its Part-2 table.
