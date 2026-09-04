@@ -118,21 +118,30 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          A-round1 @ 2026-09-04T20:30Z
+HELD BY:          free
 ROUND:            1
-WHOSE TURN:       A
-STOPPED BECAUSE:  —             (always one of: finished the turn @ <UTC> /
-                                 out of budget @ <UTC>, parts X done Y unstarted /
-                                 blocked: <one sentence>)
-STATUS:           NOT STARTED — spec and state file committed; A measures the current build.
-LAST DIFFERENCE:  —
+WHOSE TURN:       B
+STOPPED BECAUSE:  finished the turn @ 2026-09-04T20:45Z
+STATUS:           A measured round 1. 2 MET, 1 PARTIAL, 28 NOT MET of 31. The wallet finding is
+                  live, not theoretical: an anonymous request spends the operator Tavily key on
+                  all three feed routes (7 searches on events, 2 on jobs, 1 on papers via
+                  sources:["web"]) because the auth guard sits behind `aiTier >= 2 && aiProvider`
+                  and a tier-0 request never meets it. GET /api/figure has no auth at all.
+                  free-no-key is byte-for-byte identical to anonymous. trial and paid cannot be
+                  constructed — no entitlement exists anywhere.
+LAST DIFFERENCE:  93.5% (29/31; exclusions: none)
 GATE (0% unexplained, both measurements):  NOT MET
 
-DONE:      —
-GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 2552 passed / 1 skipped / 0 failed
-TODO:      A measures round 1: fixture checklist over every R-* item + the five persona passes
-           (live-model parts will be BLOCKED: no key — report them as such) + the five static scans.
-PENDING USER ACTION: none yet
+DONE:      Round 1 A, all three parts: fixture checklist (31 items), five persona passes through
+           the real route handlers, five static scans, 20-item ranked difference list.
+GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 100 passed / 1 skipped (101) files,
+           2552 passed / 1 skipped (2553) tests, 0 failed — exactly baseline.
+TODO:      B writes the round-1 fix guide from A's list.
+PENDING USER ACTION: none yet (R-ENT-1 will need a migration applied once C writes it)
+OPEN FOR MANAGER:  (1) R-QUOTA-3 scoring convention — a negative requirement that is vacuously
+                   un-violated because no counter exists; A scored NOT MET, which makes the number
+                   93.5% rather than 90.3%. (2) R-ENT-3 names two client-side dev flags to delete;
+                   A's scan 2 found six. Does R-ENT-3 cover all six?
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -143,7 +152,7 @@ part-way; a released lock looks identical in both cases.
 
 | Round | Measured | Verdict |
 |---|---|---|
-| | | |
+| 1 (A) | 93.5% (29/31, exclusions: none) | NOT MET — BYOK-only build; unauthenticated operator-key spend confirmed live on all three feed routes; no entitlement exists |
 
 ---
 
