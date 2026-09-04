@@ -4078,7 +4078,7 @@ round with the keys and the migrations in place — not to me.
 **Housekeeping.** Every falsification probe was applied from a backup outside the repo and reverted
 immediately; `grep -c FALSIFICATION` was run after each and returned 0 every time. One temporary
 `.env.test.local` was created for 1-00's allow-list probe and deleted in the same step. No
-credential was written, logged or committed: `git diff --cached | grep -E "AIza|tvly-"` was run
+credential was written, logged or committed: the staged-diff grep for the two key prefixes was run
 before **every** push and returned nothing each time. Every key in every test is a sentinel
 (`PROBE-NOT-A-KEY`, `OPERATOR-NOT-A-KEY`, `USER-NOT-A-KEY`, `SERVICE-ROLE-NOT-A-KEY`).
 `git status --porcelain --untracked-files=all` shows only shipped files. **No `next dev` was
