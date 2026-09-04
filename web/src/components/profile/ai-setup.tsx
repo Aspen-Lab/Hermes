@@ -13,7 +13,12 @@ import {
 } from "@/lib/llm/provider-models";
 
 export const FEED_AI_PROVIDER_OPTIONS: { value: UserAiProvider; label: string }[] = [
-  { value: "default", label: "Tier 0 — no AI API" },
+  // ABC-freemium 1-15 · R-UI-2, R-KEY-4 — **`"default"` now MEANS something.**
+  // It read "Tier 0 — no AI API", which under D1 is simply false: a signed-in
+  // reader who never opens this panel is on Peer's model. This is the exact
+  // string R-UI-2 names. The other five options are the "use my own key"
+  // choice R-UI-2 says remains. (1-25 owns the body copy in this file.)
+  { value: "default", label: "Peer's AI (included)" },
   { value: "gemini", label: "Google Gemini — recommended: best value" },
   { value: "openai", label: "OpenAI (ChatGPT models) — recommended: easiest" },
   { value: "qwen", label: "Alibaba Qwen — low-cost alternative" },

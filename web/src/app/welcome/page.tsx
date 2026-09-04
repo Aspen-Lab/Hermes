@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useProfileStore } from "@/store/profile";
+import type { Entitlement } from "@/lib/entitlement/types";
 import { careerStages, industryPreferences } from "@/types";
 import type { UserProfile } from "@/types";
 import {
@@ -84,6 +85,8 @@ const readRequestedStep = () => {
 export default function WelcomePage() {
   const router = useRouter();
   const profile = useProfileStore((s) => s.profile);
+  // ABC-freemium 1-15 — the `ai` step is complete when the reader has AI at all.
+  const entitlement = useProfileStore((s) => s.entitlement);
   const store = useProfileStore();
   const topicMirroringRef = useRef<TopicMirroringController | null>(null);
   const completeOnboarding = useProfileStore((s) => s.completeOnboarding);
@@ -117,7 +120,7 @@ export default function WelcomePage() {
   if (settled && autoStart === null) {
     setAutoStart(
       stepIndexFromKey(requestedStep) ??
-        firstIncompleteStep(profile, readPersonaDone()),
+        firstIncompleteStep(profile, readPersonaDone(), entitlement),
     );
   }
   const step = manualStep ?? autoStart;
@@ -137,9 +140,12 @@ export default function WelcomePage() {
   const done = useMemo(
     () =>
       Object.fromEntries(
-        STEP_META.map((m) => [m.key, isStepDone(m.key, profile, personaDone)]),
+        STEP_META.map((m) => [
+          m.key,
+          isStepDone(m.key, profile, personaDone, entitlement),
+        ]),
       ) as Record<StepKey, boolean>,
-    [profile, personaDone],
+    [profile, personaDone, entitlement],
   );
 
   // Jumping is free among the first steps and everywhere once the topics
@@ -590,7 +596,11 @@ export default function WelcomePage() {
                     </div>
                   </div>
 
-                  <ReviewList profile={profile} onJump={setStep} />
+                  <ReviewList
+                    profile={profile}
+                    entitlement={entitlement}
+                    onJump={setStep}
+                  />
                 </StepFrame>
               )}
             </div>
@@ -736,15 +746,17 @@ function StepRail({
 // confirms at a glance instead of paging back through steps.
 function ReviewList({
   profile,
+  entitlement,
   onJump,
 }: {
   profile: UserProfile;
+  entitlement: Pick<Entitlement, "userId">;
   onJump: (i: number) => void;
 }) {
   const rows = STEP_META.slice(0, -1).map((m, i) => ({
     index: i,
     label: m.label,
-    summary: summarizeStep(m.key, profile),
+    summary: summarizeStep(m.key, profile, entitlement),
   }));
   return (
     <div>
@@ -775,7 +787,11 @@ function ReviewList({
   );
 }
 
-function summarizeStep(key: StepKey, profile: UserProfile): string {
+function summarizeStep(
+  key: StepKey,
+  profile: UserProfile,
+  entitlement: Pick<Entitlement, "userId">,
+): string {
   switch (key) {
     case "basics": {
       const name =
@@ -808,7 +824,7 @@ function summarizeStep(key: StepKey, profile: UserProfile): string {
     case "radar":
       return isStepDone("radar", profile, false) ? "Customized" : "Defaults";
     case "ai":
-      return isStepDone("ai", profile, false)
+      return isStepDone("ai", profile, false, entitlement)
         ? `${providerShortLabel(profile.feedAiProvider)} key connected`
         : "Not connected — works free";
     case "connectors": {

@@ -3528,3 +3528,49 @@ model (D1)"* and both anti-drift cases. Probes reverted; tree clean.
 **GATE after 1-14:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **110 files passed | 1 skipped (111)**, **2658 tests passed | 1 skipped (2659)**, **0
 failed**.
+
+---
+
+**1-15 · `"default"` stops meaning "no AI" — LANDED.** R-KEY-4, and the option-label half of
+R-UI-2. A's item 17. Files: `web/src/components/profile/ai-setup.tsx`,
+`web/src/app/welcome/completeness.ts`, `web/src/app/welcome/page.tsx`,
+`web/src/app/welcome/completeness.test.ts`.
+
+**The label.** `{ value: "default", label: "Tier 0 — no AI API" }` becomes
+**`"Peer's AI (included)"`** — R-UI-2's exact string. Under D1 the old label was simply false: a
+signed-in reader who never opens the panel is on Peer's model. `FEED_AI_PROVIDER_OPTIONS` is the
+shared dropdown for both the feed command bar and `/welcome`, so the one change lands in two places,
+as B noted. **B's "land it once and say so in the other's commit" is honoured: this is the single
+edit, and 1-25 owns the five body-copy sentences in the same file.**
+
+**B'S GREP RUN BEFORE EDITING**, as required: `grep -rn "Tier 0 — no AI API" src/` returned
+**exactly one hit**, the option itself. The three candidates B flagged
+(`plate-type-system.test.ts`, the two `[id]/page.test.ts` files) do **not** assert this literal, so
+nothing else needed touching in the same commit.
+
+**The onboarding step.** `isStepDone("ai", …)` is now `aiAvailability(profile, entitlement) !==
+"none"`, with the reason written in place — the two halves were required *because* `"default"` meant
+no AI, and stating that is what stops the next reader seeing a removed check and calling it a bug.
+`isStepDone` and `firstIncompleteStep` take the entitlement as an **optional** last argument
+defaulting to anonymous, so every existing caller keeps its old answer for a signed-out reader.
+
+**What A should expect to measure:** the `welcome` completeness count moves by one for a signed-in
+reader — "add a key" stops being a prerequisite and becomes an upgrade, which is the intended D1
+consequence and also why 1-25 rewrites the panel's copy.
+
+**Tests at risk.** `completeness.test.ts`'s `ai` case is **rewritten, not deleted**, with a comment
+naming 1-15: the signed-out assertions are kept verbatim (their answer is genuinely unchanged) and
+retitled to say so, and a new case asserts a signed-in reader is complete with **no key at all**.
+That new case also asserts `radar`, `connectors` and `topics` are still **not** done for the same
+reader — without those three, a broad edit that made every step complete would pass.
+
+**PROOF THAT THE NEW TEST TESTS THE FIX:** the old two-halves predicate restored →
+**FAIL, `expected false to be true`** on the signed-in case. Probe reverted.
+
+**One lint warning I introduced and fixed inside the item:** the `done` map in `welcome/page.tsx` is
+a `useMemo` and gained a dependency; eslint's `exhaustive-deps` caught it and `entitlement` is now
+in the array. Recorded so the gate figure is honest — lint is back to the single standing error.
+
+**GATE after 1-15:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **110 files passed | 1 skipped (111)**, **2659 tests passed | 1 skipped (2660)**, **0
+failed**.
