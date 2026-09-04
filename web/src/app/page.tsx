@@ -482,7 +482,8 @@ function DiscoveryPage() {
   // expression, and a copy is exactly what let the chip and the feeds disagree.
   // Same value, one home — `lib/feed/ai-tier.ts` — so the chip's tier text and
   // the feeds' `aiTier` are now provably the same boolean.
-  const canUseAiTools = feedsUseAi(profile);
+  const entitlement = useProfileStore((state) => state.entitlement);
+  const canUseAiTools = feedsUseAi(profile, entitlement);
   const aiSearchActive = aiPaperSearchEnabled && canUseAiTools;
   // RULING 68a. The chip's three strings are computed in `lib/feed/ai-tier.ts`
   // so they can be asserted; the JSX below only places them.
@@ -956,13 +957,16 @@ function DiscoveryPage() {
                 idPrefix="feed-ai"
               />
               <p className="text-micro leading-relaxed text-text-faint">
+                {/* ABC-freemium 1-14 · R-ENT-3 — this fork asked the BROWSER
+                    whether it had been built in development, which Next inlines
+                    at build time. It now asks what the reader actually has. */}
                 {aiSearchActive
                   ? profile.feedAiProvider === "default"
-                    ? process.env.NODE_ENV === "development"
-                      ? "Local development may use the Vertex account in your .env.local file. Deployed copies cannot use it."
-                      : "No user key is connected, so Peer stays on Tier 0 and makes no AI model call."
-                    : "Peer sends Tier 2 model calls only to the AI key you entered here."
-                  : "Tier 0 is active. It does not call an AI model or spend any AI account."}
+                    ? canUseAiTools
+                      ? "Peer's AI is included, so search uses it without a key of your own."
+                      : "Sign in to use Peer's AI. Until then search runs on fixed scoring and makes no AI model call."
+                    : "Peer sends model calls only to the AI key you entered here."
+                  : "Fixed scoring is active. It does not call an AI model or spend any AI account."}
               </p>
             </div>
           )}
@@ -985,9 +989,9 @@ function DiscoveryPage() {
               </div>
               <p className="text-micro leading-relaxed text-text-faint">
                 {profile.feedAiProvider === "default"
-                  ? process.env.NODE_ENV === "development"
-                    ? "Local development may use the Vertex account in .env.local. Preview and production deployments always ignore that account."
-                    : "Add your own AI provider and key first. Without one, Peer shows the Tier 0 report and makes no AI model call."
+                  ? canUseAiTools
+                    ? "Deep report runs on Peer's included AI. Adding your own key sends these calls to your account instead."
+                    : "Sign in to use Peer's AI, or add your own key. Without either, Peer shows the report it can build without a model."
                   : !profile.feedAiApiKey?.trim()
                   ? "Set your own AI provider and key in the AI key panel first. Deep report uses your key — both a cheap model (classify) and a smart model (extract) get called per paper."
                   : "When on, Peer downloads each paper's HTML or legal PDF, runs a two-pass read (cheap classify + smart extract), and grounds every result in the body text. Paywalled papers fall back to the abstract with a notice."}

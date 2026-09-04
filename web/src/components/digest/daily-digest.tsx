@@ -7,7 +7,7 @@ import { ScrambleText } from "@/components/scramble-text";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useFeedStore } from "@/store/feed";
 import { useProfileStore } from "@/store/profile";
-import { aiModeFor } from "@/lib/feed/ai-tier";
+import { aiAvailability } from "@/lib/feed/ai-tier";
 import {
   DIGEST_CACHE_STORAGE_KEY,
   digestCacheKey,
@@ -103,7 +103,9 @@ export function usePaperDigest(
   const [revealBullets, setRevealBullets] = useState(false);
   const setPaperSummaries = useFeedStore((state) => state.setPaperSummaries);
   // ABC-freemium 1-11 · R-UI-4 — which model, if any, produced a cached digest.
-  const aiMode = useProfileStore((state) => aiModeFor(state.profile));
+  const aiMode = useProfileStore((state) =>
+    aiAvailability(state.profile, state.entitlement),
+  );
 
   // Order-insensitive (a pure re-shuffle of the same papers must still hit the
   // cache) and context-aware (a profile-context change must invalidate a stale

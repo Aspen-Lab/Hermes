@@ -6,6 +6,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { resolveEntitlement } from "@/lib/entitlement/resolve";
 import type { UserProfile } from "@/types";
 import { cleanPreferenceLedger } from "@/lib/preferences/ledger";
 
@@ -150,8 +151,21 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // ABC-freemium 1-14 · R-ENT-3 — the entitlement is delivered here, computed
+  // by the server. **Never derived on the client from the raw row**: D5 makes
+  // the server the authority and expiry is computed at read time.
+  //
+  // A signed-out caller already gets `401 { profile: null }` above, and the
+  // client's default is the frozen anonymous entitlement — the same object
+  // shape — so no consumer needs a null branch.
+  //
+  // **`plan` is deliberately NOT added to `profileRowToProfile`.** It reaches
+  // the browser as part of the entitlement and nowhere else, and 1-13's column
+  // grants mean a browser could not write it back even if it tried. See the
+  // matching note on `profilePatchToRow`.
   return NextResponse.json({
     profile: data ? profileRowToProfile(data as ProfileRow) : null,
+    entitlement: await resolveEntitlement(user.id),
   });
 }
 

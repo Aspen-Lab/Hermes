@@ -20,6 +20,7 @@
 import { useEffect, useRef } from "react";
 import { create } from "zustand";
 import { apiFetch } from "@/lib/api";
+import type { Entitlement } from "@/lib/entitlement/types";
 import { supabase } from "@/lib/supabase/client";
 import { useProfileStore } from "@/store/profile";
 import type { UserProfile } from "@/types";
@@ -45,16 +46,24 @@ function hasAnySignal(p: UserProfile): boolean {
   );
 }
 
-async function fetchRemote(): Promise<Partial<UserProfile> | null> {
+/**
+ * ABC-freemium 1-14 · R-ENT-3 — the single fetch site, so the single place the
+ * entitlement enters the browser. A failed or signed-out fetch leaves the store
+ * on its frozen anonymous default, which is the honest value.
+ */
+async function fetchRemote(): Promise<{
+  profile: Partial<UserProfile> | null;
+  entitlement: Entitlement | null;
+}> {
   try {
-    const data = await apiFetch<{ profile: Partial<UserProfile> | null }>(
-      "/api/profile",
-      { cache: "no-store" },
-    );
-    return data.profile;
+    const data = await apiFetch<{
+      profile: Partial<UserProfile> | null;
+      entitlement?: Entitlement;
+    }>("/api/profile", { cache: "no-store" });
+    return { profile: data.profile, entitlement: data.entitlement ?? null };
   } catch (err) {
     console.warn("[ProfileSync] GET failed", err);
-    return null;
+    return { profile: null, entitlement: null };
   }
 }
 
@@ -108,6 +117,7 @@ async function pushRemote(patch: Partial<UserProfile>): Promise<boolean> {
 export function ProfileSync() {
   const profile = useProfileStore((s) => s.profile);
   const hydrateFromRemote = useProfileStore((s) => s.hydrateFromRemote);
+  const setEntitlement = useProfileStore((s) => s.setEntitlement);
   const isSignedInRef = useRef(false);
   const didInitialPullRef = useRef(false);
   const pullInFlightRef = useRef(false);
@@ -138,7 +148,10 @@ export function ProfileSync() {
       pullInFlightRef.current = true;
 
       try {
-        const remote = await fetchRemote();
+        const { profile: remote, entitlement } = await fetchRemote();
+        // ABC-freemium 1-14 — hold it next to the profile. Set before the
+        // branch below so it lands even when the server has no profile row yet.
+        if (entitlement) setEntitlement(entitlement);
         const local = useProfileStore.getState().profile;
 
         if (!remote || !hasAnySignal({ ...local, ...remote } as UserProfile)) {
@@ -176,7 +189,7 @@ export function ProfileSync() {
     });
 
     return () => sub.subscription.unsubscribe();
-  }, [hydrateFromRemote]);
+  }, [hydrateFromRemote, setEntitlement]);
 
   // 2. Push local changes to server, debounced and diffed. Only when signed
   //    in and after the initial pull has settled.

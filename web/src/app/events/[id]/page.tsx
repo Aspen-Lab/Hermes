@@ -2352,6 +2352,8 @@ export default function EventDetailPage({
   const moreLikeEvent = useFeedStore((state) => state.moreLikeEvent);
   const feedback = useFeedStore((state) => state.eventFeedback[id]);
   const profile = useProfileStore((state) => state.profile);
+  // ABC-freemium 1-14 — what the server says this reader may use.
+  const entitlement = useProfileStore((state) => state.entitlement);
   const [starredKeys, toggleStar] = useRosterStars();
   const [nowMs] = useState(Date.now);
   const [enrichmentResult, setEnrichmentResult] = useState<{
@@ -2483,7 +2485,7 @@ export default function EventDetailPage({
   const pageReadingReason = currentEnrichmentDone
     ? opportunityPageReadingReason(
         currentEnrichmentResult,
-        canAttemptOpportunityEnrichment(profile),
+        canAttemptOpportunityEnrichment(profile, entitlement),
       )
     : undefined;
 
@@ -2495,8 +2497,8 @@ export default function EventDetailPage({
       rosterContext={rosterContext}
       enrichment={currentEnrichmentResult?.enrichment ?? null}
       pageReadingReason={pageReadingReason}
-      enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile)}
-      providerConfigured={canAttemptOpportunityEnrichment(profile)}
+      enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile, entitlement)}
+      providerConfigured={canAttemptOpportunityEnrichment(profile, entitlement)}
       starredKeys={starredKeys}
       isSaved={isSaved}
       isRegistered={isRegistered}

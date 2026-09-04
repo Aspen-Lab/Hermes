@@ -23,6 +23,10 @@ import type {
 } from "@/types";
 import { defaultProfile } from "@/types";
 import {
+  ANONYMOUS_ENTITLEMENT,
+  type Entitlement,
+} from "@/lib/entitlement/types";
+import {
   applyOpportunityFacetPreferenceSignal,
   applyPreferenceSignal,
   conceptsFromEvent,
@@ -37,6 +41,23 @@ type PersistedUserProfile = Omit<Partial<UserProfile>, "colorTheme"> & {
 
 interface ProfileState {
   profile: UserProfile;
+  /**
+   * ABC-freemium 1-14 · R-ENT-3 — what the server says this reader may use.
+   *
+   * **Never derived on the client from the raw row.** D5 makes the server the
+   * authority and expiry is computed at read time, so a browser that worked out
+   * its own plan from `trial_ends_at` would be a second source of truth that
+   * drifts. `GET /api/profile` computes it; the client only displays it.
+   *
+   * Defaults to the frozen anonymous entitlement, which is a real object rather
+   * than a null — so every consumer takes its degraded branch by ordinary logic
+   * and a forgotten null check cannot fail open.
+   *
+   * **Deliberately NOT persisted** (see `partialize`): a `paid` entitlement
+   * cached in localStorage would survive a downgrade.
+   */
+  entitlement: Entitlement;
+  setEntitlement: (entitlement: Entitlement) => void;
   /** Replace the whole profile from an exported document. */
   importProfile: (document: unknown) => boolean;
   updateDisplayName: (name: string) => void;
@@ -330,6 +351,9 @@ export const useProfileStore = create<ProfileState>()(
   persist(
     (set) => ({
       profile: defaultProfile,
+      entitlement: ANONYMOUS_ENTITLEMENT,
+
+      setEntitlement: (entitlement) => set({ entitlement }),
 
       updateDisplayName: (name) =>
         set((s) => ({
@@ -672,6 +696,11 @@ export const useProfileStore = create<ProfileState>()(
     {
       name: "peer-profile",
       skipHydration: true,
+      // ABC-freemium 1-14 — the entitlement is server-authoritative and must
+      // NOT be written to localStorage; a cached `paid` would survive a
+      // downgrade. This is byte-identical to what was persisted before, because
+      // `profile` was already the only non-function field in the state.
+      partialize: (state) => ({ profile: state.profile }) as ProfileState,
       // v2: colorTheme became a "mode:accent" composite.
       // v3: Events and Jobs gained independent Required/Explore topic fields.
       // v4: work-authorisation countries became a persisted profile signal.

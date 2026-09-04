@@ -16,8 +16,16 @@ import type {
 // battery-research demo data as the user's feed. Removed.
 import { apiFetch } from "@/lib/api";
 import { useProfileStore } from "@/store/profile";
+import {
+  ANONYMOUS_ENTITLEMENT,
+  type Entitlement,
+} from "@/lib/entitlement/types";
 import { scoredItemToPaper } from "@/lib/feed/mapper";
-import { feedsUseAi, hasUserLlmOverride } from "@/lib/feed/ai-tier";
+import {
+  aiAvailability,
+  feedsUseAi,
+  hasUserLlmOverride,
+} from "@/lib/feed/ai-tier";
 import type { FeedResponse } from "@/lib/feed/types";
 import type { EventsFeedResponse } from "@/lib/events/types";
 import type { JobsFeedResponse } from "@/lib/jobs/types";
@@ -245,6 +253,10 @@ export function paperFeedRequestBody(
   advisorSeeds: { seedTexts: string[]; seedWorkIds: string[] },
   aiPaperSearchEnabled = false,
   excludeIds: string[] = [],
+  // ABC-freemium 1-14 — passed in rather than read from the store inside, so a
+  // test can construct any persona. Defaults to anonymous, which is the safe
+  // direction: no entitlement means no AI.
+  entitlement: Pick<Entitlement, "userId"> = ANONYMOUS_ENTITLEMENT,
 ): Record<string, unknown> {
   const { topics, softTopics } = activeSurfaceTopics(profile, "papers");
   const seedTexts = [
@@ -257,14 +269,16 @@ export function paperFeedRequestBody(
   );
   const preferenceLedger = profile.preferenceLedger ?? {};
   const feedAiApiKey = profile.feedAiApiKey?.trim();
-  const hasUserLlmOverride =
-    aiPaperSearchEnabled &&
-    profile.feedAiProvider !== "default" &&
-    Boolean(feedAiApiKey);
-  const hasLocalDeveloperProvider =
-    aiPaperSearchEnabled &&
-    process.env.NODE_ENV === "development" &&
-    profile.feedAiProvider === "default";
+  // ABC-freemium 1-14 · R-ENT-3 — **this used to re-implement both halves of
+  // the shared predicate inline, and the local `hasUserLlmOverride` SHADOWED the
+  // imported function of the same name.** So the papers request builder never
+  // called the shared predicate at all, and the leftover copy was invisible to
+  // anyone grepping for callers. It now reads `aiAvailability` like everything
+  // else; the papers toggle stays ANDed on top, because that is a separate
+  // choice the reader makes about this surface.
+  const aiMode = aiAvailability(profile, entitlement);
+  const paperAiAvailable = aiPaperSearchEnabled && aiMode !== "none";
+  const useOwnKey = aiPaperSearchEnabled && aiMode === "byok";
 
   return {
     topics,
@@ -290,12 +304,12 @@ export function paperFeedRequestBody(
           }
         : undefined,
     topN: profile.paperCount,
-    aiTier: hasUserLlmOverride || hasLocalDeveloperProvider ? 2 : 0,
+    aiTier: paperAiAvailable ? 2 : 0,
     // NO `searchConnectors`. The Tavily toggle stays in the profile because
     // events and jobs still need it — their listings only exist on the open
     // web — but the paper surface has nothing left to spend it on, so it does
     // not ask for the key. `opportunityRequestBody` is where it is still sent.
-    llmOverride: hasUserLlmOverride
+    llmOverride: useOwnKey
       ? {
           provider: profile.feedAiProvider,
           apiKey: feedAiApiKey,
@@ -337,6 +351,7 @@ async function fetchRealFeed(
           advisorSeeds,
           aiPaperSearchEnabled,
           excludeIds,
+          useProfileStore.getState().entitlement,
         ),
       ),
     });
@@ -353,6 +368,7 @@ export function opportunityRequestBody(
   profile: UserProfile,
   surface: "events" | "jobs",
   excludeIds: string[],
+  entitlement: Pick<Entitlement, "userId"> = ANONYMOUS_ENTITLEMENT,
 ): Record<string, unknown> {
   const { topics, softTopics } = activeSurfaceTopics(profile, surface);
   const activeInputs = profile.activeSearchInputs;
@@ -381,7 +397,7 @@ export function opportunityRequestBody(
       : {}),
     currentProject: profile.currentProject,
     topN: DEFAULT_OPPORTUNITY_TOP_N,
-    aiTier: feedsUseAi(profile) ? 2 : 0,
+    aiTier: feedsUseAi(profile, entitlement) ? 2 : 0,
     searchConnectors: profile.tavilyEnabled
       ? { tavily: { enabled: true, apiKey: tavilyApiKey || undefined } }
       : undefined,
@@ -415,7 +431,12 @@ async function fetchRealEvents(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(
-        opportunityRequestBody(profile, "events", excludeIds),
+        opportunityRequestBody(
+          profile,
+          "events",
+          excludeIds,
+          useProfileStore.getState().entitlement,
+        ),
       ),
     });
     if (!res.ok) {
@@ -445,7 +466,14 @@ async function fetchRealJobs(
     const res = await fetch("/api/jobs/feed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(opportunityRequestBody(profile, "jobs", excludeIds)),
+      body: JSON.stringify(
+        opportunityRequestBody(
+          profile,
+          "jobs",
+          excludeIds,
+          useProfileStore.getState().entitlement,
+        ),
+      ),
     });
     if (!res.ok) {
       console.error("[feed] /api/jobs/feed returned", res.status);

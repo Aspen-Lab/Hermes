@@ -1,4 +1,5 @@
 import type { UserProfile } from "@/types";
+import type { Entitlement } from "@/lib/entitlement/types";
 
 /**
  * RULING 66a / 68a — **THE ONE PREDICATE THAT DECIDES WHETHER THE JOB AND
@@ -39,44 +40,50 @@ export function hasUserLlmOverride(profile: UserProfile): boolean {
   );
 }
 
-/** A developer running locally against the machine's own provider. Never true in production. */
-export function hasLocalDeveloperProvider(profile: UserProfile): boolean {
-  return (
-    process.env.NODE_ENV === "development" &&
-    profile.feedAiProvider === "default"
-  );
-}
-
 /**
- * ABC-freemium 1-11 · R-UI-4 — **which model, if any, produced a cached answer.**
+ * Which model, if any, this reader gets.
  *
- * Three values, not a boolean, because the report and digest caches have to be
- * able to tell "the reader's own key" from "Peer's key" from "no model at all".
- * A boolean would let a no-AI report be served as the AI report for six hours
- * after the system key went live, which is exactly the poisoning R-UI-4 exists
- * to stop.
+ * ABC-freemium 1-14 · R-ENT-3, R-ENT-4 — **the one predicate.** Four separate
+ * ones decided this before: `reportProviderConfigured`, `feedsUseAi`,
+ * `canAttemptOpportunityEnrichment`, and a fourth written out inline inside
+ * `store/feed.ts` that shadowed the shared function it sat next to. All four
+ * tested BYOK, and three of them ORed in a `process.env.NODE_ENV ===
+ * "development"` test that Next inlines at build time — so the browser decided
+ * whether AI was available by asking whether it had been built in development.
  *
- * **This is an interim body and 1-14 replaces it.** Until the entitlement
- * reaches the browser, `"system"` is inferred from the same predicate the rest
- * of the client already uses; in unit (d) `aiAvailability(profile, entitlement)`
- * takes over and the two cache keys do not change again. The *shape* of the key
- * is what has to land in this commit (Ruling 1 point 7); the *value* improves in
- * unit (d).
+ * **Three values, not a boolean** (1-11 · R-UI-4): the report and digest caches
+ * have to tell "the reader's own key" from "Peer's key" from "no model at all",
+ * and R-UI-1's chip has to say which. The boolean the four old predicates
+ * returned is `aiAvailability(...) !== "none"`.
+ *
+ * **The system test is `entitlement.userId !== null`, NOT `effectivePlan`.**
+ * D1 gives Peer's model to *every signed-in user*, free included. A later round
+ * will be tempted to "tighten" this to `paid`; that would break D1.
+ *
+ * The dev override did not disappear — it moved server-side, to
+ * `PEER_DEV_ENTITLEMENT` (R-ENT-5, item 1-01). That is the whole point: the
+ * browser no longer needs to know it is running in development.
  */
 export type AiMode = "byok" | "system" | "none";
 
-export function aiModeFor(profile: UserProfile): AiMode {
+export function aiAvailability(
+  profile: UserProfile,
+  entitlement: Pick<Entitlement, "userId">,
+): AiMode {
   if (hasUserLlmOverride(profile)) return "byok";
-  return feedsUseAi(profile) ? "system" : "none";
+  return entitlement.userId !== null ? "system" : "none";
 }
 
 /**
- * True when the job and event feeds will ask for tier 2. **The chip's tier text
- * and the request builder's `aiTier` are both this value** — that identity is
+ * True when the job and event feeds will ask for tier 2. **The chip's text and
+ * all three request builders' `aiTier` are this same value** — that identity is
  * the fix, and `ai-tier.test.ts` asserts it rather than trusting it.
  */
-export function feedsUseAi(profile: UserProfile): boolean {
-  return hasUserLlmOverride(profile) || hasLocalDeveloperProvider(profile);
+export function feedsUseAi(
+  profile: UserProfile,
+  entitlement: Pick<Entitlement, "userId">,
+): boolean {
+  return aiAvailability(profile, entitlement) !== "none";
 }
 
 /**

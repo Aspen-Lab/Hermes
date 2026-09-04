@@ -3450,3 +3450,81 @@ it drops unknown columns. Nothing breaks before or after the migration runs.
 **GATE after 1-13:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **110 files passed | 1 skipped (111)**, **2654 tests passed | 1 skipped (2655)**, **0
 failed**. Unchanged, as a migration-only item must be.
+
+---
+
+**1-14 · Four predicates become one, six browser-shipped dev flags are gone, and the entitlement
+reaches the client — LANDED.** R-ENT-3 (as amended by Ruling 2 point 2), R-ENT-4. A's item 18.
+Files: `web/src/lib/feed/ai-tier.ts`, `web/src/store/profile.ts`,
+`web/src/components/profile-sync.tsx`, `web/src/app/api/profile/route.ts`,
+`web/src/store/feed.ts`, `web/src/app/page.tsx`, `web/src/app/papers/[id]/page.tsx`,
+`web/src/app/jobs/[id]/page.tsx`, `web/src/app/events/[id]/page.tsx`,
+`web/src/lib/opportunities/enrichment.ts`, `web/src/components/digest/daily-digest.tsx`,
+`web/src/components/reports/provider-configured.ts` (**deleted**), plus three test files.
+
+**A'S SCAN 2, RE-RUN: the six browser-shipped `NODE_ENV === "development"` tests are ZERO.**
+`grep -rn 'process.env.NODE_ENV === "development"' src/ --include="*.ts" --include="*.tsx" | grep -v "\.test\."`
+now returns **4 hits, every one server-only** and every one on B's own list of things to leave:
+`app/auth/callback/route.ts:17`, `lib/opportunities/pool-cache-disk.ts:42`,
+`lib/opportunities/pool-cache-runtime.ts:14`, and `lib/env/local-dev.ts:23` — the last being the
+single shared predicate 1-01 extracted, which replaced the copies in `registry.ts` and
+`ai-request.ts`. **No seventh browser-shipped flag exists** (Ruling 2 point 2's escape clause: not
+triggered, nothing to record).
+
+**All four predicates collapsed, including the one A missed.**
+`aiAvailability(profile, entitlement)` returns `"byok" | "system" | "none"`, and the boolean the old
+four returned is `!== "none"`. `hasLocalDeveloperProvider` **ceases to exist**;
+`reportProviderConfigured` and its module are **deleted**; `canAttemptOpportunityEnrichment` becomes
+a thin wrapper (kept by name because the name says what its five call sites mean, and 1-26 changes
+what they do); and **the fourth, inline, shadowing predicate at `store/feed.ts` is gone** — its local
+`const hasUserLlmOverride` shadowed the imported function of the same name, which is why it was
+invisible to anyone grepping for callers.
+
+**The system test is `entitlement.userId !== null`, not `effectivePlan`**, with D1's warning written
+at the function and asserted by a test whose entitlement is deliberately `plan: "free"`.
+
+**Delivery.** `GET /api/profile` now returns `{ profile, entitlement }`, computed server-side by
+`resolveEntitlement(user.id)` — never derived on the client from the raw row, because D5 makes the
+server the authority and expiry is computed at read time. `profile-sync.tsx` is still the single
+fetch site. The store holds it next to the profile, defaulting to the frozen anonymous constant.
+
+**One thing B's guide did not raise, and it would have been a real defect: the entitlement must NOT
+be persisted.** The profile store is `persist`ed with no `partialize`, so anything added to state
+goes to `localStorage` — and a cached `paid` entitlement would survive a downgrade indefinitely,
+which is exactly the "client is not the authority" rule D5 exists for. Added
+`partialize: (state) => ({ profile: state.profile })`. **Verified byte-identical to what was
+persisted before**: `profile` was already the only non-function field on `ProfileState`, and
+functions are dropped by JSON serialisation anyway, so no migration and no version bump is needed.
+
+**`plan` is deliberately NOT added to `profileRowToProfile`.** It reaches the browser inside the
+entitlement and nowhere else, and adding it to the read mapping would have invited a later round to
+add it to the write mapping too — which is 1-13's RLS hole reopened from the request path. Stated in
+a comment at both ends.
+
+**Both request builders take the entitlement as an argument** rather than reading the store inside,
+so a test can construct any persona; both default to the anonymous entitlement, which is the safe
+direction. The papers toggle stays ANDed on top of the predicate for papers only — it is a separate
+choice the reader makes about one surface, and a test pins that collapsing the predicates did not
+collapse the toggle.
+
+**Tests at risk — B called this the largest test surface in the guide and was right.**
+- `ai-tier.test.ts` **rewritten, 9 tests → 12, none deleted.** The two cases asserting
+  `feedsUseAi(LOCAL)` in development and production were assertions *about the flag being deleted*;
+  they are replaced by one that runs the predicate in **both** runtimes and asserts the answer is
+  the same — the single assertion that would have caught all six flags. `aiModeChip`'s cases are
+  untouched here (unit (g) owns those strings).
+- **The anti-drift lock is extended to `paperFeedRequestBody`**, which is exactly the drift A missed,
+  and its persona loop now covers signed-in and signed-out as well as the two runtimes.
+- `jobs/report/route.test.ts` and `events/report/route.test.ts` each had a case named *"lets local
+  development resolve the default server Vertex provider"*. Both **rewritten, not deleted**, to the
+  honest input — a signed-in reader with no key of their own, in **production** — plus a new case
+  that a signed-out reader gets `null` and no call (R-ENT-4's degraded path).
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — two probes (the browser-side dev flag restored inside
+`aiAvailability`; the papers builder drifted back to a BYOK-only predicate): **6 tests fail**,
+including *"is the SAME in development and in production"*, *"gives a signed-in FREE user Peer's
+model (D1)"* and both anti-drift cases. Probes reverted; tree clean.
+
+**GATE after 1-14:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **110 files passed | 1 skipped (111)**, **2658 tests passed | 1 skipped (2659)**, **0
+failed**.

@@ -241,8 +241,15 @@ describe("POST /api/events/report", () => {
     expect(requestReport).not.toHaveBeenCalled();
   });
 
-  it("lets local development resolve the default server Vertex provider", async () => {
-    vi.stubEnv("NODE_ENV", "development");
+  // ABC-freemium 1-14 · R-ENT-3 — REWRITTEN, NOT DELETED. This case asserted
+  // that enrichment ran because the BROWSER had been built in development. Next
+  // inlines that test into the client bundle, which is precisely what the
+  // requirement removes; the dev override moved server-side to
+  // `PEER_DEV_ENTITLEMENT`. The gate is now "does this reader have AI at all",
+  // so the case asserts the same outcome from the honest input — a signed-in
+  // reader on Peer's included model, in EITHER runtime.
+  it("lets a signed-in reader with no key of their own run enrichment", async () => {
+    vi.stubEnv("NODE_ENV", "production");
     const requestReport = vi.fn().mockResolvedValue({
       posterFit: { fits: true, points: ["The supplied scope overlaps.", "Second point."] },
     });
@@ -253,11 +260,30 @@ describe("POST /api/events/report", () => {
       requestReport,
       Date.UTC(2026, 6, 31),
       new MemoryStorage(),
+      { userId: "reader-1" },
     );
 
     expect(result).not.toBeNull();
     expect(requestReport).toHaveBeenCalledTimes(1);
+    // No override leaves the client: the call runs on Peer's key, server-side.
     expect(requestReport).toHaveBeenCalledWith(undefined);
+  });
+
+  it("does NOT run enrichment for a signed-out reader with no key", () => {
+    // R-ENT-4 — the degraded path is the same `null` it always was, and the
+    // report renders without enrichment rather than showing an error.
+    const requestReport = vi.fn();
+
+    return loadConfiguredOpportunityEnrichment(
+      defaultProfile,
+      "opportunity:signed-out",
+      requestReport,
+      Date.UTC(2026, 6, 31),
+      new MemoryStorage(),
+    ).then((result) => {
+      expect(result).toBeNull();
+      expect(requestReport).not.toHaveBeenCalled();
+    });
   });
 
   it("uses one large-tier call and returns parsed enrichment", async () => {

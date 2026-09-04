@@ -1555,6 +1555,8 @@ export default function JobDetailPage({
   const moreLikeJob = useFeedStore((state) => state.moreLikeJob);
   const feedback = useFeedStore((state) => state.jobFeedback[id]);
   const profile = useProfileStore((state) => state.profile);
+  // ABC-freemium 1-14 — what the server says this reader may use.
+  const entitlement = useProfileStore((state) => state.entitlement);
   const [nowMs] = useState(Date.now);
   const [enrichmentResult, setEnrichmentResult] = useState<{
     key: string;
@@ -1655,7 +1657,7 @@ export default function JobDetailPage({
   const pageReadingReason = currentEnrichmentDone
     ? opportunityPageReadingReason(
         currentEnrichmentResult,
-        canAttemptOpportunityEnrichment(profile),
+        canAttemptOpportunityEnrichment(profile, entitlement),
       )
     : undefined;
 
@@ -1671,8 +1673,8 @@ export default function JobDetailPage({
       nowMs={nowMs}
       enrichment={currentEnrichmentResult?.enrichment ?? null}
       pageReadingReason={pageReadingReason}
-      enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile)}
-      providerConfigured={canAttemptOpportunityEnrichment(profile)}
+      enrichmentLoading={!currentEnrichmentDone && canAttemptOpportunityEnrichment(profile, entitlement)}
+      providerConfigured={canAttemptOpportunityEnrichment(profile, entitlement)}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}
       onInterested={() => moreLikeJob(job)}

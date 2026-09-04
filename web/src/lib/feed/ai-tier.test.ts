@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defaultProfile, type UserProfile } from "@/types";
-import { opportunityRequestBody } from "@/store/feed";
+import { opportunityRequestBody, paperFeedRequestBody } from "@/store/feed";
 import {
+  ANONYMOUS_ENTITLEMENT,
+  type Entitlement,
+} from "@/lib/entitlement/types";
+import {
+  aiAvailability,
   aiModeChip,
   feedsUseAi,
-  hasLocalDeveloperProvider,
   hasUserLlmOverride,
 } from "./ai-tier";
 
@@ -29,49 +33,77 @@ const BYOK: UserProfile = {
   feedAiProvider: "openai",
   feedAiApiKey: "  not-a-real-key  ",
 };
-const LOCAL: UserProfile = {
+const NO_KEY: UserProfile = {
   ...defaultProfile,
   feedAiProvider: "default",
   feedAiApiKey: "",
 };
 
+/**
+ * ABC-freemium 1-14 / 1-16 — the two entitlements that matter here. D1 gives
+ * Peer's model to **every signed-in user**, so `plan` is deliberately `free`:
+ * if a later change tightens the predicate to `effectivePlan`, these tests go
+ * red.
+ */
+const SIGNED_IN: Entitlement = {
+  ...ANONYMOUS_ENTITLEMENT,
+  userId: "user-1",
+  deepReportsRemaining: 5,
+};
+const SIGNED_OUT: Entitlement = ANONYMOUS_ENTITLEMENT;
+
+const ADVISOR_SEEDS = { seedTexts: [], seedWorkIds: [] };
+
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("feedsUseAi — the predicate the chip's tier text renders from", () => {
-  it("is TRUE for a developer running locally against the machine's own provider", () => {
-    // THE USER'S OWN STATE, and the one the chip got wrong: `feedAiProvider`
-    // is `default` and no user key is set, yet the feeds ask for tier 2.
-    vi.stubEnv("NODE_ENV", "development");
-    expect(feedsUseAi(LOCAL)).toBe(true);
-    expect(hasLocalDeveloperProvider(LOCAL)).toBe(true);
-    // and no override may be sent on this path — that is what keeps the key
-    // on the server.
-    expect(hasUserLlmOverride(LOCAL)).toBe(false);
+describe("aiAvailability — the ONE predicate", () => {
+  // ABC-freemium 1-14 · R-ENT-3 — REWRITTEN, NOT DELETED. Every case below used
+  // to turn on `process.env.NODE_ENV === "development"`, which Next inlines into
+  // the browser bundle: the client decided whether AI was available by asking
+  // how it had been built. The dev override moved server-side to
+  // `PEER_DEV_ENTITLEMENT` (R-ENT-5), so the runtime no longer appears here at
+  // all — and the pair of assertions below is what proves it cannot come back.
+  it("is the SAME in development and in production", () => {
+    // The single assertion that would have caught all six deleted flags.
+    for (const env of ["development", "production"] as const) {
+      vi.stubEnv("NODE_ENV", env);
+      expect(aiAvailability(NO_KEY, SIGNED_IN)).toBe("system");
+      expect(aiAvailability(NO_KEY, SIGNED_OUT)).toBe("none");
+      expect(aiAvailability(BYOK, SIGNED_IN)).toBe("byok");
+      expect(aiAvailability(BYOK, SIGNED_OUT)).toBe("byok");
+    }
   });
 
-  it("is TRUE when the reader brought their own provider and key", () => {
-    vi.stubEnv("NODE_ENV", "production");
-    expect(feedsUseAi(BYOK)).toBe(true);
+  it("gives a signed-in FREE user Peer's model (D1)", () => {
+    // The ceiling is `userId !== null`, never `effectivePlan`. A later round
+    // will be tempted to tighten this to `paid`; that would break D1.
+    expect(SIGNED_IN.effectivePlan).toBe("free");
+    expect(aiAvailability(NO_KEY, SIGNED_IN)).toBe("system");
+    expect(feedsUseAi(NO_KEY, SIGNED_IN)).toBe(true);
+  });
+
+  it("gives a signed-out reader nothing", () => {
+    expect(aiAvailability(NO_KEY, SIGNED_OUT)).toBe("none");
+    expect(feedsUseAi(NO_KEY, SIGNED_OUT)).toBe(false);
+  });
+
+  it("keeps a BYOK reader on their own key even when entitled", () => {
+    // The three cache keys of R-UI-4 depend on this staying distinct from
+    // "system": a BYOK report and a Peer-AI report must not share an entry.
+    expect(aiAvailability(BYOK, SIGNED_IN)).toBe("byok");
     expect(hasUserLlmOverride(BYOK)).toBe(true);
+    expect(hasUserLlmOverride(NO_KEY)).toBe(false);
   });
 
-  it("is FALSE for a deployed reader with no key — deployed-user safety, unchanged", () => {
-    // **THE RECORDED DECISION THIS FIX MAY NOT WIDEN.** A deployed user must
-    // never get an operator-funded fallback. `canUseLocalServerProvider` and
-    // the provider registry are untouched by Ruling 68a; this is the assertion
-    // that catches a later change trying to widen the local branch past
-    // development.
-    vi.stubEnv("NODE_ENV", "production");
-    expect(feedsUseAi(LOCAL)).toBe(false);
-    expect(hasLocalDeveloperProvider(LOCAL)).toBe(false);
-  });
-
-  it("is FALSE when a provider is chosen but the key is blank or whitespace", () => {
-    vi.stubEnv("NODE_ENV", "production");
-    expect(feedsUseAi({ ...BYOK, feedAiApiKey: "   " })).toBe(false);
-    expect(feedsUseAi({ ...BYOK, feedAiApiKey: undefined })).toBe(false);
+  it("is not BYOK when a provider is chosen but the key is blank", () => {
+    expect(aiAvailability({ ...BYOK, feedAiApiKey: "   " }, SIGNED_OUT)).toBe(
+      "none",
+    );
+    expect(
+      aiAvailability({ ...BYOK, feedAiApiKey: undefined }, SIGNED_IN),
+    ).toBe("system");
   });
 });
 
@@ -121,35 +153,75 @@ describe("aiModeChip — what the mode chip actually says", () => {
 });
 
 describe("the chip and the feeds cannot disagree again", () => {
-  it("computes the chip's boolean and both feeds' aiTier from one predicate", () => {
-    // **THIS IS THE ANTI-DRIFT LOCK.** It fails the moment either side starts
-    // deriving the tier from anything else — including the papers toggle,
-    // which is what it derived from before Ruling 68a.
+  it("computes the chip's boolean and ALL THREE request builders' aiTier from one predicate", () => {
+    // **THE ANTI-DRIFT LOCK, EXTENDED.** It used to cover the jobs and events
+    // builders only, and the papers builder was the one that drifted: round-1 B
+    // found `store/feed.ts` re-implementing both halves inline, with a local
+    // `hasUserLlmOverride` that SHADOWED the imported function of the same name.
+    // Adding `paperFeedRequestBody` here is what would have caught it.
+    //
+    // The environment loop stays, and now proves the opposite of what it used
+    // to: the answer must be the same in both runtimes, because no client code
+    // may decide AI availability from `NODE_ENV` any more (R-ENT-3 as amended).
     for (const env of ["development", "production"] as const) {
       for (const [label, profile] of [
-        ["local-dev", LOCAL],
+        ["no-key", NO_KEY],
         ["byok", BYOK],
       ] as const) {
-        vi.stubEnv("NODE_ENV", env);
-        const expected = feedsUseAi(profile) ? 2 : 0;
-        for (const surface of ["jobs", "events"] as const) {
-          const body = opportunityRequestBody(profile, surface, []);
-          expect(`${env}/${label}/${surface} -> ${body.aiTier}`).toBe(
-            `${env}/${label}/${surface} -> ${expected}`,
+        for (const [who, entitlement] of [
+          ["signed-in", SIGNED_IN],
+          ["signed-out", SIGNED_OUT],
+        ] as const) {
+          vi.stubEnv("NODE_ENV", env);
+          const expected = feedsUseAi(profile, entitlement) ? 2 : 0;
+          const where = `${env}/${label}/${who}`;
+
+          for (const surface of ["jobs", "events"] as const) {
+            const body = opportunityRequestBody(profile, surface, [], entitlement);
+            expect(`${where}/${surface} -> ${body.aiTier}`).toBe(
+              `${where}/${surface} -> ${expected}`,
+            );
+          }
+
+          // The papers builder ANDs its own surface toggle on top, so it is
+          // compared with that toggle ON — the question is whether the
+          // underlying predicate is the same one, not whether the toggle works.
+          const papers = paperFeedRequestBody(
+            profile,
+            ADVISOR_SEEDS,
+            true,
+            [],
+            entitlement,
+          );
+          expect(`${where}/papers -> ${papers.aiTier}`).toBe(
+            `${where}/papers -> ${expected}`,
           );
         }
       }
     }
   });
 
+  it("keeps the papers toggle able to turn papers OFF without moving the others", () => {
+    // The toggle is a real, separate choice about one surface. Collapsing the
+    // predicates must not collapse that too.
+    const papers = paperFeedRequestBody(
+      NO_KEY,
+      ADVISOR_SEEDS,
+      false,
+      [],
+      SIGNED_IN,
+    );
+    expect(papers.aiTier).toBe(0);
+    expect(opportunityRequestBody(NO_KEY, "jobs", [], SIGNED_IN).aiTier).toBe(2);
+  });
+
   it("still sends an override only on the bring-your-own-key path", () => {
-    vi.stubEnv("NODE_ENV", "development");
-    // Local developer: tier 2, but NO override leaves the client.
-    const local = opportunityRequestBody(LOCAL, "jobs", []);
-    expect(local.aiTier).toBe(2);
-    expect(local.llmOverride).toBeUndefined();
+    // A signed-in reader on Peer's model: tier 2, but NO key leaves the client.
+    const system = opportunityRequestBody(NO_KEY, "jobs", [], SIGNED_IN);
+    expect(system.aiTier).toBe(2);
+    expect(system.llmOverride).toBeUndefined();
     // BYOK: tier 2 and the reader's own override.
-    const byok = opportunityRequestBody(BYOK, "jobs", []);
+    const byok = opportunityRequestBody(BYOK, "jobs", [], SIGNED_IN);
     expect(byok.aiTier).toBe(2);
     expect(byok.llmOverride).toEqual({
       provider: "openai",

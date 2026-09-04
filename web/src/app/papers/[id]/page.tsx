@@ -48,12 +48,11 @@ import {
   type StageId,
 } from "@/lib/papers/report-stream";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
-import { reportProviderConfigured } from "@/components/reports/provider-configured";
 import {
   PAPER_REPORT_CACHE_STORAGE_KEY,
   paperReportCacheKey,
 } from "@/lib/papers/report-cache-key";
-import { aiModeFor } from "@/lib/feed/ai-tier";
+import { aiAvailability } from "@/lib/feed/ai-tier";
 
 const WORDS_PER_MINUTE = 220;
 const PAPER_TIER_UPGRADE_ITEMS = [
@@ -578,6 +577,7 @@ export default function PaperDetailPage({
   const markRead = useFeedStore((s) => s.markRead);
   const { savePaper, unsavePaper, notInterestedPaper, moreLikePaper } = useFeedStore();
   const profile = useProfileStore((s) => s.profile);
+  const entitlement = useProfileStore((s) => s.entitlement);
 
   const [fetchResult, setFetchResult] = useState<{
     id: string;
@@ -684,17 +684,18 @@ export default function PaperDetailPage({
       profile.preferredMethods,
     ],
   );
-  const userProviderConfigured = reportProviderConfigured(profile);
-  const localDeveloperProvider =
-    process.env.NODE_ENV === "development" &&
-    profile.feedAiProvider === "default";
-  // Deep-report is opt-in. Deployed copies require the user's own key; local
-  // next dev may use the developer's explicit Vertex configuration.
-  // The provider id is included in the cache key so flipping toggles
-  // invalidates the cached report and triggers a re-fetch.
+  // ABC-freemium 1-14 · R-ENT-3 — `reportProviderConfigured` is gone; this is
+  // the one predicate. `userProviderConfigured` keeps its exact old meaning
+  // ("the reader chose a provider and supplied its key"), which is now just the
+  // `byok` case of it — the cache key's `byok=` segment must not change value.
+  //
+  // The deep-report gate's second half used to be a browser-side
+  // `NODE_ENV === "development"` test. It now needs AI *from anywhere*: the
+  // reader's own key, or Peer's.
+  const readerAiMode = aiAvailability(profile, entitlement);
+  const userProviderConfigured = readerAiMode === "byok";
   const deepReportRequested =
-    Boolean(profile.deepReportEnabled) &&
-    (userProviderConfigured || localDeveloperProvider);
+    Boolean(profile.deepReportEnabled) && readerAiMode !== "none";
   // ABC-freemium 1-11 · R-UI-4 — the key gains an AI-mode segment so a report
   // computed with no model cannot be served as the AI report once Peer's own AI
   // goes live. Built by a pure function so it is testable at all; the storage
@@ -706,7 +707,7 @@ export default function PaperDetailPage({
         deepReportRequested,
         feedAiProvider: profile.feedAiProvider,
         userProviderConfigured,
-        aiMode: aiModeFor(profile),
+        aiMode: readerAiMode,
       })
     : "";
   const cachedReport = useMemo(
@@ -1560,7 +1561,9 @@ export default function PaperDetailPage({
 
         <TierUpgradeBlock
           items={PAPER_TIER_UPGRADE_ITEMS}
-          providerConfigured={reportProviderConfigured(profile)}
+          // ABC-freemium 1-14 — same value as before (BYOK). 1-26 is where
+          // this block becomes plan-aware and the prop changes meaning.
+          providerConfigured={userProviderConfigured}
         />
       </PageContainer>
     </>
