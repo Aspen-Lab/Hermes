@@ -118,76 +118,181 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          C-round1 @ 2026-09-04T21:22Z
+HELD BY:          free
 ROUND:            1
-WHOSE TURN:       C
-STOPPED BECAUSE:  IN PROGRESS — C is working the guide right now (lock held).
-STATUS:           C: units (a), (b), (c) CLOSED — 13 of 28 items landed (1-00 .. 1-12), one
-                  commit each, pushed. THE WHOLE HARD-ORDERED CRITICAL PATH IS DONE:
-                  1-00 → 1-05 → 1-06 → 1-10 → (1-11 + 1-12 in one commit), exactly as
-                  Ruling 3 point 4 requires. Next unlanded item: 1-13 (unit d, the migration).
-                  MANAGER, ONE DECISION TO REVIEW (logged in full at 1-06 in §4): the three FEED
-                  routes DEGRADE a signed-out visitor to tier 0 instead of answering 401. B's
-                  sketch returned the guard's 401 from every route; R-ENT-4 ("signed-out users get
-                  tier-0 behaviour everywhere ... unchanged"), R-SEC-3 ("downgraded", not
-                  rejected) and Ruling 3 point 7 (which names ONLY digest, jobs/report and
-                  events/report as becoming 401) all point the other way. Anonymous feed requests
-                  reach neither a provider nor the system key. Side effect A must expect: an
-                  anonymous caller with their OWN valid BYOK key on a feed is now capped at tier 0
-                  in a deployed runtime.
-                  Other traced deviations, all in §4: 1-02 uses an RPC because PostgREST upsert
-                  cannot add to a column; 1-03 writes the usage row from logLlmUsage through an
-                  AsyncLocalStorage context (B's literal design wrote TWO rows per failure);
-                  1-07 splits the figure input type after the compiler found two extractFigure-
-                  family callers B said did not exist; 1-09 builds trial/paid by stubbing the
-                  stored row because PEER_DEV_ENTITLEMENT and a deployed runtime are mutually
-                  exclusive by design.
-                  A'S SCANS 3 AND 4 ARE NOW ZERO in non-test source (scan 3 must exclude
-                  *.test.ts; scan 4's three remaining hits are comment lines A's own filter drops).
-                  The 1-09 route suites reproduce A's round-1 counts exactly when the fix is
-                  reverted: 2 on jobs/feed, 7 on events/feed.
-                  FOR ROUND-2 A: the `=== geminiProvider` identity probe is dead (the metering
-                  wrapper returns a fresh object); registry.test.ts now spies on
-                  createGeminiApiProvider instead — copy that pattern.
-                  TWO MIGRATIONS WRITTEN, NOT APPLIED — see PENDING USER ACTION.
+WHOSE TURN:       A
+STOPPED BECAUSE:  finished the turn @ 2026-09-04T23:31Z
+STATUS:           C FINISHED ALL 28 ITEMS (1-00 .. 1-27), units (a)-(g) closed, one commit per
+                  item, each pushed. The hard order of Ruling 3 point 4 was honoured exactly:
+                  1-00 -> 1-05 -> 1-06 -> 1-10 -> (1-11 + 1-12 in ONE commit).
+                  THREE MIGRATIONS WRITTEN, NONE APPLIED - see PENDING USER ACTION.
+
+                  TWO DECISIONS FOR THE MANAGER TO RULE ON. Both are landed, both are
+                  reversible in one line, and both are argued in full in the named §4 entries.
+                  (1) [1-06] The three FEED routes DEGRADE a signed-out visitor to tier 0
+                      instead of answering 401. B's sketch returned the guard's 401 from every
+                      route. R-ENT-4 ("signed-out users get tier-0 behaviour everywhere ...
+                      unchanged"), R-SEC-3 ("downgraded", not rejected) and Ruling 3 point 7
+                      (which names ONLY digest, jobs/report and events/report as becoming 401)
+                      all point the other way. An anonymous feed request reaches neither a
+                      provider nor the system key. SIDE EFFECT A MUST EXPECT: an anonymous
+                      caller with their OWN valid BYOK key on a feed is now capped at tier 0 in
+                      a deployed runtime, where today they would get tier 2 on their own key.
+                  (2) [1-20] The deep-report monthly allowance FAILS CLOSED. D4 does not say
+                      which way. I gave a spend cap the breaker's direction; the cost is
+                      bounded (the reader still gets a complete deterministic report). If an
+                      outage should not cost readers their deep reports, it is one line.
+
+                  SEVEN TRACED DEVIATIONS FROM B'S GUIDE, each with its reason in §4:
+                  1-00 the vitest env allow-list lives in its own module (a config with a named
+                       export makes Vitest print MIXED_EXPORTS on every run);
+                  1-02 an RPC, not a PostgREST upsert - upsert CANNOT express
+                       value = table.value + excluded.value, so B's shape would have
+                       OVERWRITTEN the counter instead of adding to it;
+                  1-03 the usage row is written from logLlmUsage through an AsyncLocalStorage
+                       context - B's literal design wrote TWO rows per failure, because every
+                       provider already logs its own error path;
+                  1-06 see decision (1) above, plus: the feed routes no longer call
+                       resolveProvider at all (the value was only ever used for the downgrade
+                       R-SEC-3 replaces), and a "no sign-in mechanism" runtime synthesises a
+                       local-no-auth user rather than resolving anonymous - without that, BYOK
+                       silently stopped working for self-hosters and for every route test;
+                  1-07 the figure input type is SPLIT, after the compiler found two
+                       extractFigure-family callers B said did not exist (getFigurePool, twice
+                       in papers/report). Narrowed what needs the guard rather than loosening
+                       the guard;
+                  1-09 trial/paid are built by stubbing the stored row - PEER_DEV_ENTITLEMENT
+                       and a deployed runtime are mutually exclusive by design;
+                  1-18 B says "do not reuse feed-more-tile.tsx, it is papers". It is NOT: the
+                       same component renders on the jobs and events surfaces as the
+                       alternative to "show more", so those surfaces already had a Refresh now
+                       button - and 1-17's weekly cadence had just turned it into a NO-OP. It
+                       now asks for a rebuild there and stays a plain refetch on papers.
+
+                  FOR ROUND-2 A, THINGS THAT WILL LOOK LIKE REGRESSIONS AND ARE NOT:
+                  - digest, jobs/report and events/report now answer a stranger 401 (Ruling 3
+                    point 7 predicted exactly this). The three FEEDS do not - see decision (1).
+                  - api/figure answers a signed-out visitor 401 and fetches nothing.
+                  - The first jobs/events load per user after deploy is a rebuild (every pool
+                    key changed at once), then a week of hits. Expected once, not a cadence bug.
+                  - The welcome completeness count moves by one for a signed-in reader: the
+                    `ai` step is complete with no key, because Peer's AI is included.
+                  - The `=== geminiProvider` identity probe is DEAD - the metering wrapper
+                    returns a fresh object every call. registry.test.ts now spies on
+                    createGeminiApiProvider; copy that pattern.
+                  - A mid-week topic change is still a cache miss on the user's own key (D3
+                    says that in as many words).
 LAST DIFFERENCE:  93.5% (29/31; exclusions: none)
 GATE (0% unexplained, both measurements):  NOT MET
 
-DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: 1-00 .. 1-12
-           (units (a), (b) and (c) closed).
-GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 110 passed / 1 skipped (111) files,
-           2654 passed / 1 skipped (2655) tests, 0 failed — C's measurement after 1-11/1-12.
-TODO:      C works the round-1 guide from unit (a) item 1-01, top down, one commit per item,
-           pushed. RULING 3 (§1d) ADDS: item 1-00 (structural vitest fix: allow-list + global
-           setup deleting GOOGLE_API_KEY/TAVILY_API_KEY + protective test) lands BEFORE 1-11;
-           local-dev default entitlement = free; quota string in English; hard order 1-00 →
-           … 1-05 → 1-06 → 1-10 → (1-11 + 1-12 one commit). HARD CROSS-UNIT DEPENDENCY: 1-06
-           (unit b) must land BEFORE 1-11 (unit c) —
-           digest/jobs-report/events-report return their degraded payload before reaching
-           protectAiRequest today, so the moment a provider always resolves all three start
-           authenticating for the first time. MONEY RISK: vitest.config.ts:22 injects every
-           GOOGLE_-prefixed variable from .env.local into all 101 suites; after 1-11 an unmocked
-           resolveProvider() in a test returns a live provider on the owner's real key.
-PENDING USER ACTION: (0) THREE MIGRATION FILES ARE WRITTEN AND NOT APPLIED. Nobody in this loop
-           can run them. web/supabase/migrations/20260904000000_usage_counters.sql (1-02, the
-           shared counter table + increment_usage_counter RPC),
-           web/supabase/migrations/20260904000100_usage_events.sql (1-03, the usage table), and
-           web/supabase/migrations/20260904000200_profile_plan.sql (1-13, the plan columns, the
-           14-day trial in handle_new_user, and the column-level revoke that stops a browser
-           writing its own plan).
-           Everything works without them today — locally the in-memory counter is selected and
-           usage rows are a no-op. ORDER MATTERS: the R-QUOTA-2 breakers of 1-21 fail CLOSED, so
-           a deployed runtime that has Supabase but not the usage_counters table would degrade
-           every paid user to no-LLM. Apply both before or with the deploy that lands unit (f).
-           (1) DO NOT set TAVILY_API_KEY on Vercel until Ruling 2 point 3 is satisfied
-           (R-SEC-2/3 + R-KEY-3 landed and re-measured at zero operator searches for anonymous
-           and free-no-key). Note 1-10 makes it *required* for the build to pass, so the order
-           matters: land the gates first, then set all four Vercel variables. (2) Register
-           GOOGLE_API_KEY + TAVILY_API_KEY into local .env.local when ready — live-model passes
-           stay BLOCKED until then. (3) R-ENT-1 migration will need applying in Supabase once C
-           writes it (1-13); until then everything resolves at plan `free` by design.
-OPEN FOR MANAGER:  none — B's two questions ruled in §1d (Ruling 3 points 1–2); item 1-00 added
-           (Ruling 3 point 3).
+DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 28 ITEMS,
+           1-00 1-01 1-02 1-03 1-04 | 1-05 1-06 1-07 1-08 1-09 | 1-10 1-11 1-12 |
+           1-13 1-14 1-15 1-16 | 1-17 1-18 1-19 | 1-20 1-21 1-22 1-23 | 1-24 1-25 1-26 1-27.
+GATE NOW:  tsc exit 0 · eslint 1 error (the standing quiz.tsx:46) · vitest 116 files passed /
+           1 skipped (117), 2716 tests passed / 1 skipped (2717), 0 failed. Cold run after the
+           last item. Baseline was 100/1 files and 2552/1 tests, so C added 16 files and 164
+           tests and regressed nothing. benchmark.test.ts is the standing skip.
+TODO:      ROUND-2 A MEASURES. Every requirement in spec §2 now has a mechanism, so score it
+           against behaviour, not against the commit log.
+
+           THE FIVE STATIC SCANS, as C left them (A re-runs and re-reports each):
+           1. Rendered tier vocabulary: 4 - and they are exactly A's own four hand-exclusions
+              (three inside JSX comment blocks, one console.warn). Every rendered occurrence is
+              gone. `src/lib/feed/ui-vocabulary.test.ts` is now this scan AS A GATE.
+           2. Browser-shipped NODE_ENV development tests: 0. Four remain in non-test source and
+              all four are SERVER-only (local-dev.ts, auth/callback, pool-cache-disk,
+              pool-cache-runtime). `src/lib/env/no-client-dev-flags.test.ts` is this scan as a
+              gate, with an allow-list naming each.
+           3. process.env.TAVILY_API_KEY outside the one gated resolver: 0 in non-test source.
+              ONE hit remains, in `src/test-support/route-harness.ts`, and it DELETES the key -
+              the opposite of a read. NOTE FOR A: this scan must exclude test-support as well as
+              *.test.ts, or it reports 1 forever.
+           4. No-argument resolveProvider(): 0. The two figure matchers now take a REQUIRED
+              context, so a new caller cannot compile without saying whose request it is.
+           5. Routes that can spend an operator key without a guard: 0. All nine AI routes call
+              requireEntitledAiRequest; dispatch-digests deliberately has none (D9, aiTier 0,
+              no systemSearchAllowed - 1-08 documents both facts together).
+
+           ROUTES CALLING resolveProvider BEFORE the guard: 0 (was 7). Two greps look like hits
+           and are not - api/figure's is a comment line, and papers/report's is inside
+           generateShallowReport, a function DEFINED above POST but only ever REACHED from
+           inside it, after the guard, with the context threaded.
+
+           OPERATOR-KEY SEARCHES ON `anonymous` + `free-no-key`: C's route suites assert ZERO on
+           both surfaces, by reading the bodies of the recorded outgoing requests. Reverting the
+           fix makes them 2 on jobs/feed and 7 on events/feed - A's own round-1 counts,
+           reproduced from the other side. A re-measures independently.
+           PAPERS OPERATOR-KEY SEARCHES: 0, and permanently so - `feed/pipeline.ts` passes a
+           hard `false` with D3 written at the call site (Ruling 3 point 5).
+           PERSONA/ROUTE PAIRS BEHAVING PER SPEC: was 2 of 13. C did not re-measure this; it is
+           A's number. The three new route suites (`api/figure`, `api/jobs/feed`,
+           `api/events/feed`) are the re-runnable form of A's Part-2 table - USE THEM rather
+           than rebuilding a probe. They construct all five personas, including trial and paid,
+           which could not be constructed at all before this round.
+
+           QUESTIONS A FIXTURE CANNOT SETTLE - what to watch for on real inputs:
+           - Does the system provider actually resolve and bill correctly once GOOGLE_API_KEY
+             is real? Every test in this repo runs with that key DELETED (item 1-00), by
+             design. Nothing here has ever made a live model call, so "the wrapper meters a
+             real call" and "createGeminiApiProvider works on a real key" are both unverified.
+             BLOCKED: no key.
+           - Do the counters behave against real Supabase? The three migrations are unapplied,
+             so every counter in this round ran on the in-memory fallback. Atomicity under two
+             concurrent instances is asserted in-process only; the RPC's `on conflict do update`
+             has never executed. This is the single largest unverified surface.
+           - Does the weekly pool key hold on a server whose timezone is not UTC? The ISO-week
+             calculation is asserted with a stubbed TZ across four zones, but Vercel runs UTC
+             and this machine does not - a real deploy is the only place the two meet.
+           - Does a real trial actually expire? `handle_new_user` sets the dates and expiry is
+             computed at read time, but no row has ever been written by the trigger.
+
+           NOT VERIFIABLE BY C, LEFT OPEN DELIBERATELY: anything needing a live model or an
+           applied migration. Where C could not close an item, the §4 entry says so and says
+           what the replacement value is.
+PENDING USER ACTION: THE ROUND IS CODE-COMPLETE AND WAITING ON YOU FOR THREE THINGS. Nobody in
+           this loop can do any of them. Do them in this order.
+
+           (1) APPLY THE THREE MIGRATIONS, all under web/supabase/migrations/:
+                 20260904000000_usage_counters.sql - the shared counter table and the
+                     increment_usage_counter function (1-02).
+                 20260904000100_usage_events.sql   - the usage table (1-03). No column on it
+                     can hold a credential, and the file says so.
+                 20260904000200_profile_plan.sql   - the plan columns, the 14-day trial in
+                     handle_new_user, and the column-level revoke that stops a browser writing
+                     its own plan (1-13).
+               Everything works without them TODAY: locally the in-memory counter is selected,
+               usage rows are a no-op, and every signed-in user resolves `free` by design.
+               ORDER MATTERS ON DEPLOY: the R-QUOTA-2 breakers fail CLOSED, so a deployed
+               runtime that HAS Supabase but NOT usage_counters would degrade every paid user
+               to no-LLM. Apply all three before or with the deploy.
+
+           (2) SET THE FOUR VERCEL VARIABLES - but only after (1), and only together.
+               GOOGLE_API_KEY, TAVILY_API_KEY, NEXT_PUBLIC_SUPABASE_URL,
+               SUPABASE_SERVICE_ROLE_KEY. Two things now bear on the timing and they point the
+               same way:
+                 - Ruling 2 point 3's do-not-yet on TAVILY_API_KEY is SATISFIED as of this
+                   round: R-SEC-2, R-SEC-3 and R-KEY-3 have landed (1-05, 1-06) and C's route
+                   suites assert zero operator-key searches for `anonymous` and `free-no-key`.
+                   Round-2 A still re-measures independently before the gate closes.
+                 - 1-10 makes all four REQUIRED: the first Vercel build after this round FAILS
+                   until every one of them is set. That is the interlock working, not a
+                   regression. The build message names each missing variable and never prints a
+                   value.
+
+           (3) REGISTER GOOGLE_API_KEY + TAVILY_API_KEY into local .env.local when you want
+               live-model passes. Until then they stay BLOCKED: no key, and that is the honest
+               status, not a failure. Note the test process now DELETES both keys before every
+               suite (1-00), so adding them locally cannot make the gate spend money.
+OPEN FOR MANAGER:  TWO, both landed and both reversible in one line - see the STATUS block above
+           for the full argument, and §4 items 1-06 and 1-20 for the traced reasoning.
+           (a) 1-06 - the three FEED routes degrade a signed-out visitor to tier 0 rather than
+               answering 401. If the intent is that they 401, it is one argument to remove, and
+               R-ENT-4 needs amending in the same ruling.
+           (b) 1-20 - the deep-report monthly allowance fails CLOSED. If an outage should not
+               cost readers their deep reports, it is one line.
+           Also for the record, not a question: 1-01's `deepReportsRemaining` is the plan's
+           BUDGET, not budget-minus-used - the counter that knows what has been spent is 1-02
+           and the comparison is 1-20. The field keeps R-ENT-2's name and the type says so.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -3923,3 +4028,59 @@ the jobs suite needed only one of the two badge constants. Lint is back to the s
 **GATE after unit (g):** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **116 files passed | 1 skipped (117)**, **2716 tests passed | 1 skipped (2717)**, **0
 failed**.
+
+---
+
+## Round 1 — Agent C: close-out
+
+**ALL 28 ITEMS LANDED (1-00 … 1-27), one commit per item, each pushed before the next began.**
+Units (a) through (g) closed in B's order. Ruling 3 point 4's hard order was honoured exactly:
+**1-00 → 1-05 → 1-06 → 1-10 → (1-11 + 1-12 in ONE commit)**, and 1-06 landed before 1-11 as the
+cross-unit dependency requires.
+
+**FINAL GATE (cold, after the last item):** `tsc` exit **0** · `eslint` **1 error** — the standing
+`quiz.tsx:46` `react-hooks/set-state-in-effect`, untouched · `vitest` **116 files passed | 1 skipped
+(117)**, **2716 tests passed | 1 skipped (2717)**, **0 failed**. Baseline was 100/1 files and 2552/1
+tests, so this round added **16 test files and 164 tests and regressed nothing**.
+`benchmark.test.ts` is the standing skip (no Vertex credentials); it was never touched.
+
+**Proof obligations, discharged.** Every item that added tests was falsified against pre-fix code
+before being banked — the source change reverted, the suite re-run, the failure recorded in that
+item's entry. Twenty-two probes in total. **Two of my own tests passed both ways and were rewritten
+rather than banked**: the fail-open counter case (asserted with a value of 0, which is under every
+limit whether or not the rule exists) and the jobs-feed refresh case (which stopped discriminating
+once 1-21 made the ordinary fan-out charge the same counter). Both are recorded where they happened.
+
+**Seven traced deviations from B's guide.** Each is argued at its item; the STATUS block in §1 lists
+them by number. Three were forced by facts B had wrong — a PostgREST upsert cannot add to a column
+(1-02); every provider already logs its own error path, so B's design wrote two rows per failure
+(1-03); and `feed-more-tile.tsx` is **not** papers-only, so the jobs and events surfaces already had
+a "Refresh now" button that 1-17 had just turned into a no-op (1-18). Two were found by the compiler
+rather than by grep: two `extractFigure`-family callers B said did not exist (1-07), and a
+`local-no-auth` regression that silently stopped BYOK working for self-hosters and every route test
+(1-06). One is cosmetic (1-00's module split, to silence a per-run bundler warning). One is a
+genuine reading disagreement, flagged for the manager rather than settled by me (1-06's feed
+degrade).
+
+**Two decisions left OPEN FOR MANAGER**, both landed, both one line to reverse: the feed routes
+degrade rather than 401 a signed-out visitor (1-06), and the deep-report allowance fails closed
+(1-20). Neither is a guess — each has the requirement text that points at it written out at the
+item.
+
+**What I could not verify, stated rather than implied.** Nothing in this round has made a live model
+call or touched a real Supabase table, by design: item 1-00 deletes `GOOGLE_API_KEY` and
+`TAVILY_API_KEY` from every suite, and the three migrations are written and unapplied. So the
+metering wrapper's row has never been written by a real call, the atomic increment's
+`on conflict do update` has never executed, and no row has ever been created by the new
+`handle_new_user`. Those are §1's "questions a fixture cannot settle", and closure belongs to a
+round with the keys and the migrations in place — not to me.
+
+**Housekeeping.** Every falsification probe was applied from a backup outside the repo and reverted
+immediately; `grep -c FALSIFICATION` was run after each and returned 0 every time. One temporary
+`.env.test.local` was created for 1-00's allow-list probe and deleted in the same step. No
+credential was written, logged or committed: `git diff --cached | grep -E "AIza|tvly-"` was run
+before **every** push and returned nothing each time. Every key in every test is a sentinel
+(`PROBE-NOT-A-KEY`, `OPERATOR-NOT-A-KEY`, `USER-NOT-A-KEY`, `SERVICE-ROLE-NOT-A-KEY`).
+`git status --porcelain --untracked-files=all` shows only shipped files. **No `next dev` was
+started** (Ruling 2 point 5) and no process was killed — a hook did report another session's dev
+server running in this folder, and it was left alone.
