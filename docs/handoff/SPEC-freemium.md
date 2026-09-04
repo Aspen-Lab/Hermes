@@ -100,6 +100,10 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
 - **R-ENT-2.** A server helper `resolveEntitlement(userId)` returns at least: `plan`,
   `effectivePlan` (trial past `trial_ends_at` → `free`), `deepReportsRemaining`,
   `systemSearchAllowed`, `poolRefreshAllowed`, `trialEndsAt`. Expiry is computed at read time.
+  **Amendment 2026-09-04 (Ruling 4, binding):** the resolver's plan-level figure is named
+  `deepReportsBudget`. `deepReportsRemaining` means **budget minus used**, read from the counter
+  store, and is what the client summary (R-ENT-3) carries; when the store is unreachable it is
+  `null` with `reason: "unavailable"` — never a guessed or constant number.
 - **R-ENT-3.** The entitlement summary is delivered to the client (extend `GET /api/profile` or
   equivalent) and held in the store. `feedsUseAi`, `reportProviderConfigured` and
   `canAttemptOpportunityEnrichment` collapse into **one** predicate reading
@@ -150,6 +154,12 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   **Amendment 2026-09-04 (Ruling 3, binding):** the original text here gave the message in
   Chinese; that was the manager's shorthand, not a product decision. The product is English-only
   (B measured zero CJK characters under `web/src`), so the string ships in English as above.
+  **Amendment 2026-09-04 (Ruling 4, binding):** the quota check fails closed when the counter
+  store is unreachable (D4's breaker direction), and that state must be distinguishable from
+  exhaustion: the payload carries `reason: "exhausted" | "unavailable"` (or an equivalent third
+  `kind`); for `unavailable` the UI shows *"Deep reports are temporarily unavailable — your
+  allowance is unchanged. Try again shortly."*, never the exhaustion sentence; and the server
+  writes one error-level log line prefixed `[quota] store unavailable`.
 - **R-QUOTA-2.** Trial cap 20 total; paid breaker 200/day; system-search breaker 500/day. A trip
   writes an error-level log line and a `usage_events` row (`kind = breaker`).
 - **R-QUOTA-3.** Shallow (abstract-only) paper reports, ranking, digest and query generation are

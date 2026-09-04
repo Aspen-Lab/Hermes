@@ -119,10 +119,14 @@ lock by rebasing onto the holder's head.
 
 ```
 HELD BY:          free
-ROUND:            1
+ROUND:            2
 WHOSE TURN:       A
 STOPPED BECAUSE:  finished the turn @ 2026-09-04T23:31Z
-STATUS:           C FINISHED ALL 28 ITEMS (1-00 .. 1-27), units (a)-(g) closed, one commit per
+STATUS:           ROUND 2 — A MEASURES. The manager accepted round-1 C after independent checks
+                  (Ruling 4, §1e) and ruled on C's two open decisions: 1-06 accepted, 1-20
+                  accepted with a required reason/copy fix (round-2 item), plus the
+                  budget-vs-remaining rename (round-2 item). Round-1 C's own summary follows.
+                  C FINISHED ALL 28 ITEMS (1-00 .. 1-27), units (a)-(g) closed, one commit per
                   item, each pushed. The hard order of Ruling 3 point 4 was honoured exactly:
                   1-00 -> 1-05 -> 1-06 -> 1-10 -> (1-11 + 1-12 in ONE commit).
                   THREE MIGRATIONS WRITTEN, NONE APPLIED - see PENDING USER ACTION.
@@ -193,7 +197,11 @@ GATE NOW:  tsc exit 0 · eslint 1 error (the standing quiz.tsx:46) · vitest 116
            last item. Baseline was 100/1 files and 2552/1 tests, so C added 16 files and 164
            tests and regressed nothing. benchmark.test.ts is the standing skip.
 TODO:      ROUND-2 A MEASURES. Every requirement in spec §2 now has a mechanism, so score it
-           against behaviour, not against the commit log.
+           against behaviour, not against the commit log. RULING 4 (§1e) ADDS: R-QUOTA-1 is
+           PARTIAL until the outage/exhaustion distinction lands; R-ENT-2/R-ENT-3 are PARTIAL
+           until `deepReportsRemaining` is a real remainder; verify `local-no-auth` is
+           unreachable in a deployed runtime (point 4, state presence OR absence); scan 3
+           excludes `src/test-support/`; three new standing tallies (point 7).
 
            THE FIVE STATIC SCANS, as C left them (A re-runs and re-reports each):
            1. Rendered tier vocabulary: 4 - and they are exactly A's own four hand-exclusions
@@ -249,8 +257,13 @@ TODO:      ROUND-2 A MEASURES. Every requirement in spec §2 now has a mechanism
            NOT VERIFIABLE BY C, LEFT OPEN DELIBERATELY: anything needing a live model or an
            applied migration. Where C could not close an item, the §4 entry says so and says
            what the replacement value is.
-PENDING USER ACTION: THE ROUND IS CODE-COMPLETE AND WAITING ON YOU FOR THREE THINGS. Nobody in
-           this loop can do any of them. Do them in this order.
+PENDING USER ACTION: MANAGER'S ORDER (Ruling 4 points 5–6): apply the three migrations now
+           (safe, additive); DECIDE whether existing users get a backfilled 14-day trial (the
+           migration gives them `free`); save a profile once afterwards to confirm sync still
+           works; do NOT set the four Vercel variables until round-2 A confirms zero operator
+           searches for anonymous and free-no-key; local .env.local keys whenever ready.
+           C's fuller notes follow. THE ROUND IS CODE-COMPLETE AND WAITING ON YOU FOR THREE
+           THINGS. Nobody in this loop can do any of them. Do them in this order.
 
            (1) APPLY THE THREE MIGRATIONS, all under web/supabase/migrations/:
                  20260904000000_usage_counters.sql - the shared counter table and the
@@ -283,16 +296,8 @@ PENDING USER ACTION: THE ROUND IS CODE-COMPLETE AND WAITING ON YOU FOR THREE THI
                live-model passes. Until then they stay BLOCKED: no key, and that is the honest
                status, not a failure. Note the test process now DELETES both keys before every
                suite (1-00), so adding them locally cannot make the gate spend money.
-OPEN FOR MANAGER:  TWO, both landed and both reversible in one line - see the STATUS block above
-           for the full argument, and §4 items 1-06 and 1-20 for the traced reasoning.
-           (a) 1-06 - the three FEED routes degrade a signed-out visitor to tier 0 rather than
-               answering 401. If the intent is that they 401, it is one argument to remove, and
-               R-ENT-4 needs amending in the same ruling.
-           (b) 1-20 - the deep-report monthly allowance fails CLOSED. If an outage should not
-               cost readers their deep reports, it is one line.
-           Also for the record, not a question: 1-01's `deepReportsRemaining` is the plan's
-           BUDGET, not budget-minus-used - the counter that knows what has been spent is 1-02
-           and the comparison is 1-20. The field keeps R-ENT-2's name and the type says so.
+OPEN FOR MANAGER:  none — C's two decisions ruled in §1e (Ruling 4 points 1–2); two round-2 fix
+           items added (points 2–3); one product question flagged to the owner (point 5).
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -415,6 +420,64 @@ part-way; a released lock looks identical in both cases.
    The `=== geminiProvider` identity probe stops working once the metering wrapper (1-03) is in —
    assert on `.id` plus env preconditions instead. The first jobs/events load per user after
    1-17 is a rebuild — expected once, not a cadence bug.
+
+---
+
+## §1e. RULING 4 — after round-1 C (2026-09-04, BINDING)
+
+**What the manager checked independently before accepting the round** (safety checks, not
+closure — round-2 A re-measures every closure): the gate re-run cold — tsc 0 · eslint 1
+(standing) · vitest 116/1 files, 2716/1 tests, 0 failed — matches C; `resolveProvider` read in
+source (BYOK → system → null, wrapped by the meter); the guard's require and ban lists read in
+source (match R-GUARD-1 verbatim); the three new route suites run alone (3 files, 19 tests,
+green) and their key assertion read (`requestsCarrying(OPERATOR_SENTINEL)` is empty for
+`anonymous` and `free-no-key`); all three migrations read in full.
+
+1. **1-06 accepted.** The three feed routes degrade a signed-out visitor to tier 0; digest and
+   the three reports answer 401. R-ENT-4 says exactly this. "Anonymous with their own BYOK key
+   on a feed" is an unsupported persona (R-KEY-2 honours BYOK for **signed-in** users) —
+   recorded, not a defect. A adds a one-line tally: anonymous-BYOK feed requests observed →
+   tier 0, never a provider.
+2. **1-20 fail-closed accepted for the operator-funded path — with one correction that is a
+   round-2 fix item.** The landed payload is `{ kind: "deep_report" | "breaker", remaining,
+   resetsAt }`, and a counter-store outage shows the exhaustion sentence. That states something
+   false during an outage. Required: the payload carries `reason: "exhausted" | "unavailable"`
+   (or a third `kind`); the `unavailable` copy is *"Deep reports are temporarily unavailable —
+   your allowance is unchanged. Try again shortly."*; an outage also writes one error-level log
+   line with the stable prefix `[quota] store unavailable` so A can count it. A scores R-QUOTA-1
+   `PARTIAL` until this lands. Spec amended in place (dated).
+3. **`deepReportsRemaining` holds the plan's budget, not the remainder** (C's own note). A
+   field named "remaining" that never decreases will be displayed as a wrong number. Round-2 fix
+   item: the resolver's field becomes `deepReportsBudget`; the summary sent to the client
+   (R-ENT-3) carries a real `deepReportsRemaining` = budget − used from the counter store, or
+   `null` with `reason: "unavailable"` when the store is down — **never a guessed number**. Spec
+   R-ENT-2 amended (dated). A scores R-ENT-2 and R-ENT-3 `PARTIAL` until this lands.
+4. **The `local-no-auth` synthesized user (1-06) must be unreachable in a deployed runtime.**
+   A verifies by execution: with `VERCEL_ENV` set and no Supabase config, every AI route answers
+   503 (the pre-existing `deployedRuntimeNeedsAuth` path), never a synthesized user; in local
+   dev it resolves `free`. If either fails → wrong-data class, top of B's round-2 list. State
+   presence **or** absence explicitly — this check cannot fire on silence.
+5. **The three migrations are approved for the owner to apply now** — additive, service-role
+   only, no behaviour change until this branch deploys. One product question is **flagged to the
+   owner, not ruled**: `20260904000200_profile_plan.sql` gives existing rows `plan = 'free'` with
+   no trial; only new sign-ups get 14 days. Backfilling existing users with a trial at launch is
+   the owner's call (the manager recommends yes; D5's literal text says "from first sign-in").
+   After applying, the owner saves a profile in the app once — the column-level revoke must not
+   break the existing profile sync, and nobody in this loop can test that.
+6. **Ruling 2 point 3's do-not-yet on `TAVILY_API_KEY` in Vercel stays until round-2 A
+   re-measures `anonymous` and `free-no-key` at zero operator searches.** C's suites say zero;
+   the closure is A's to confirm. The four Vercel variables go in together when this branch is
+   ready to deploy, not before.
+7. **Standing tallies for round 2** — Ruling 2 point 6 carried forward, plus: anonymous-BYOK
+   feed requests (point 1); `[quota] store unavailable` occurrences (point 2, expected 0 until
+   the fix lands and then counted); `local-no-auth` reachability in a deployed runtime (point
+   4). **Scan 3 excludes `src/test-support/` as well as `*.test.ts`** (C's note) — the one
+   remaining hit there deletes the key rather than reading it.
+8. **Reading notes for round-2 A** — C's list in §1 stands: 401s on digest/reports are the fix
+   working; `api/figure` 401 for signed-out; the first jobs/events load is a rebuild; welcome
+   completeness moves by one; the `=== geminiProvider` probe is dead — spy on
+   `createGeminiApiProvider`; a mid-week topic change on a BYOK key is a miss by D3.
+   **Use C's three route suites as the persona harness** — do not rebuild a probe.
 
 ---
 
