@@ -3236,3 +3236,61 @@ rather than rebuilding a probe. They do not replace the live-model persona pass,
 **GATE after 1-09:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **108 files passed | 1 skipped (109)**, **2618 tests passed | 1 skipped (2619)**, **0
 failed**. Unit (b) closed: 1-05 … 1-09 all landed.
+
+---
+
+### Unit (c) — the key unit
+
+**1-10 · The prebuild guard banned the key the product now needs — LANDED.** R-GUARD-1, R-GUARD-2.
+A's item 8. Files: `web/scripts/assert-byok-production-env.mjs` (rewritten),
+`web/src/scripts/assert-byok-production-env.test.ts` (new, **23 tests — the script's first ever**).
+
+Two arrays, both checked on a Vercel build. `REQUIRED_ON_VERCEL` is R-GUARD-1's four names verbatim.
+`FORBIDDEN_ON_VERCEL` is the old list **minus `GOOGLE_API_KEY`, plus `BRAVE_SEARCH_API_KEY` and
+`PEER_DEV_ENTITLEMENT`**; the three `GOOGLE_VERTEX_SEARCH_*` names stay with the file's own
+explanation, and `PEER_FEED_AI_TIER > 0` keeps its separate numeric test. `auditVercelEnv` builds
+**both** lists in full before anything is printed — R-GUARD-1 says the message names *every* missing
+and *every* forbidden variable, and a build that fails four times naming one more each time is four
+wasted deploys.
+
+**R-GUARD-2 kept, and it is the easy thing to break here.** Nothing indexes `env` for output;
+`missing` and `forbidden` hold names filtered from literal arrays. The reasoning is in a comment at
+the top of the file, and a test sets two forbidden variables to a recognisable sentinel and asserts
+the sentinel **does not appear** in stdout or stderr.
+
+**B'S PLACEMENT WARNING HEEDED AND CHECKED.** B said a test under `scripts/` would never run because
+vitest's `include` is `src/**/*.test.{ts,tsx}`, and that C must check this "or the test is green by
+absence". The file is at `src/scripts/assert-byok-production-env.test.ts` and it **spawns** the
+script by absolute path with `spawnSync`. Spawning rather than importing is not a style choice: the
+script's whole contract is an exit code plus stderr, and its body calls `process.exit(1)` — an
+import would kill the test process.
+
+**The child gets a controlled environment**, not the parent's: only `PATH`, `SystemRoot`, `PATHEXT`
+and `COMSPEC` are carried over, plus what the case sets. So a developer's own shell cannot make a
+case pass, and no real credential is ever handed to the child.
+
+**Coverage:** all four required present and nothing forbidden → exit 0; each required name missing
+in turn → exit 1 naming it (4 cases); all four named at once when all four are missing; each of the
+13 forbidden names set in turn → exit 1 naming it; `PEER_FEED_AI_TIER=2` → exit 1; **not on Vercel →
+exit 0 whatever the environment holds**; the R-GUARD-2 sentinel case; and one that pins the
+inversion directly — *"no longer bans `GOOGLE_API_KEY` — D1 makes it required"*.
+
+**PROOF THAT THE TEST TESTS THE FIX:** the old script stashed and the suite re-run against it —
+**9 of 23 fail**, including "passes a correctly configured Vercel build" (`expected 1 to be +0`,
+i.e. the old guard rejected a correct deployment because `GOOGLE_API_KEY` was set) and every missing
+-required case (`expected +0 to be 1` — the old guard required nothing). Script restored.
+
+**A one-line type note, recorded because it looks like carelessness otherwise:** the spawn env is
+cast `as unknown as NodeJS.ProcessEnv`. Next's ambient typing makes `NODE_ENV` required on
+`ProcessEnv`, and deliberately *not* passing it is the point of the controlled environment.
+
+**THE INTERLOCK THE OWNER MUST KNOW ABOUT.** `prebuild` runs on every `npm run build`, so **the
+first Vercel build after this commit fails until all four required variables are set.** That is the
+intended behaviour, not a regression — and it sharpens the ordering already in §1 PENDING USER
+ACTION: `TAVILY_API_KEY` must not be set on Vercel until R-SEC-2/3 and R-KEY-3 have landed (they now
+have, in 1-05 and 1-06) and A has re-measured, but once 1-10 ships it is *required* for the build to
+pass. Land the gates first, then set all four together.
+
+**GATE after 1-10:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **109 files passed | 1 skipped (110)**, **2641 tests passed | 1 skipped (2642)**, **0
+failed**.
