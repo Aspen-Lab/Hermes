@@ -791,3 +791,391 @@ npx tsc --noEmit -p tsconfig.json && npm run lint --silent && npx vitest run --r
 
 Exactly the §3 baseline. `benchmark.test.ts` did not flake this run. Both throwaway probe files
 were deleted before this commit; `git status --porcelain --untracked-files=all` is clean.
+
+---
+
+### Round 1 — Agent B
+
+**Everything below was re-derived on `freemium-system-key @ 3b8fd1f`.** Every line number was
+obtained by a grep or a file read I ran this turn; where A's citation was off I say so and give the
+verified one. Spec §4 is never cited as evidence. **B changed no code.** Two throwaway harnesses
+were written outside the repo (in the session scratchpad) and are named where their results are
+used; the working tree stays clean.
+
+#### 0. What I checked of A's list before writing anything
+
+| A's claim | Verdict |
+|---|---|
+| `registry.ts:106` `canUseLocalServerProvider() ? resolveLocalServerProvider() : null` | **Confirmed**, verbatim. |
+| `resolveLocalServerProvider` order `PEER_DIGEST_PROVIDER:75` -> `GOOGLE_VERTEX_PROJECT:80` -> `GOOGLE_API_KEY:81` | **Confirmed**, verbatim. |
+| `ai-request.ts:10` module-scope `Map`, `:44` local-dev early return, `:67` `${scope}:${user.id}` | **Confirmed.** |
+| `usage-log.ts` `console.log` only, no `user_id`/`byok`/`kind` | **Confirmed** (`logLlmUsage` at `:26`, `LlmUsage` at `:12`). |
+| guard bans `GOOGLE_API_KEY` at `:11`, no require list, `problems.join` at `:39`, wired `prebuild` at `package.json:9` | **Confirmed**, all four. |
+| `api/figure/route.ts` has no auth | **Confirmed** — the whole file is 43 lines, `GET` at `:14`, straight to `extractFigure` at `:26`. |
+| the three feed routes' 5-line block (`resolveProvider` -> downgrade -> `if (aiTier >= 2 && aiProvider)` guard) | **Confirmed** at `feed:150-157`, `jobs/feed:145-152`, `events/feed:130-137`. |
+| `resolveKeys` unconditional env fallback at `jobweb:2118` / `eventweb:2727`, and `web-search.ts:44` | **Confirmed**, all three identical in shape. |
+| six browser-shipped `NODE_ENV === "development"` tests | **Confirmed** — 12 raw hits, the same six client ones. |
+| no `route.test.ts` for `api/figure`, `api/jobs/feed`, `api/events/feed` | **Confirmed** — route tests exist only for `digest`, `events/report`, `feed`, `jobs/dispatch-digests`, `jobs/report`, `papers/report`, `profile`. |
+| `derivePoolCacheKey` at `pool-cache.ts:149`, `CACHE_KEY_VERSION = 5` at `:137` | **Confirmed**, with one correction below. |
+
+**Five things A got wrong, missed, or understated.** Each changes what C has to do.
+
+1. **A's item 18 says "three predicates". There are four.** `store/feed.ts:260-266` **re-implements
+   both halves inline** inside `paperFeedRequestBody` — and the local `const hasUserLlmOverride` at
+   `:260` **shadows the function of the same name imported at `:20`**. So the papers request
+   builder does not use the shared predicate at all; only `opportunityRequestBody` (`:384`,
+   `feedsUseAi(profile)`) does. A fix that collapses the three named predicates and leaves this one
+   ships a papers feed that still decides AI availability from an inlined `NODE_ENV` test.
+2. **A's `derivePoolCacheKey` citation is one line early, and the date appears twice, not once.**
+   `derivePoolCacheKey` is declared at `:149`; `const date = localCalendarDate(input.now)` is at
+   `:150`; `date` then appears **both** inside the hashed signature (`:161`) **and** as a plaintext
+   segment of the returned key (`:164`, `peer-pool-v{V}-{surface}-{date}-{digest}`). A weekly fix
+   that changes only the signature leaves a daily string in the key and rebuilds daily anyway.
+3. **A's papers-surface finding is right for the wrong reason, and the fix is different.** A counted
+   1 operator-key Tavily search on `POST /api/feed` with `sources:["web"]`. Confirmed structurally:
+   `parseSources` accepts `"web"` (`feed/route.ts:29`) and `feed/pipeline.ts:139` wires the `web`
+   source. But `feed/pipeline.ts:118` builds the papers web options as
+   `webSearchOptions(req.searchConnectors)` (`sources/vertex-search.ts:211`), which returns only
+   `{ provider }` and **never a `tavilyApiKey`** — and `store/feed.ts` deliberately sends no
+   `searchConnectors` for papers. So on the papers surface a user's own Tavily key **cannot** be
+   threaded: the only key `web-search.ts:44` can ever reach is the operator's. Gating that read on
+   entitlement is therefore not enough; D3 ("papers ... zero paid search") makes the papers
+   surface's `systemSearchAllowed` **permanently false**. See 1-05.
+4. **A's item 2 understates the free-user leak.** `resolveKeys` reads
+   `query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY`, and `query.webSearch` is
+   only shaped as `{ tavilyApiKey }` when `searchConnectors.tavily.enabled` is true
+   (`jobs/pipeline.ts:143-147`, `events/pipeline.ts:167-171`). When the connector is **off**,
+   `webSearch` becomes `{ provider }` or `undefined` — and `resolveKeys` still returns the operator
+   key. **A user who explicitly turned the Tavily connector off still spends the operator's key.**
+5. **A did not report the largest blast radius in the round: `vitest.config.ts` injects every
+   `GOOGLE_`-prefixed variable from `.env.local` into `process.env` for all 101 suites**
+   (`vitest.config.ts:22`, `loadEnv("test", cwd, "GOOGLE_")`). That prefix catches `GOOGLE_API_KEY`.
+   Today it is inert because `canUseLocalServerProvider()` is false under `NODE_ENV=test`. **The
+   moment R-KEY-1 deletes that gate, `resolveProvider()` with no override returns a live
+   `createGeminiApiProvider` built on the owner's real key inside the test process.** The seven
+   suites that `vi.mock` the registry are safe; `registry.test.ts` is safe only because it deletes
+   `GOOGLE_API_KEY` in `afterEach` and never invokes the provider. **Every new test C writes must
+   either mock the registry or delete `GOOGLE_API_KEY` — a test that calls `generateJsonText` on an
+   unmocked `resolveProvider()` result would make a real billed call.** Called out again in 1-11.
+
+#### 1. The design questions the brief put to me — answered by execution
+
+**Q2 first, because everything in unit (a) rests on it. Does a wrapper at `resolveProvider` count
+every LLM call?** **Yes, and I proved it by exclusion.** `grep -rn "createGeminiApiProvider|geminiProvider"`
+over `src/` (non-test) returns hits in exactly two files: `providers/gemini.ts` (the definitions)
+and `providers/registry.ts` (`:7`, `:14`, `:18`, `:62`, `:80`, `:82`). The same holds for the other
+four factories — **no module outside `src/lib/llm/providers/` constructs a provider.** The thirteen
+non-test acquisition sites are all `resolveProvider`: `digest:67`, `events/feed:131`,
+`events/report:113`, `feed:151`, `jobs/feed:146`, `jobs/report:61`, `papers/report:132/197/377/395`,
+`feed/tier2-rerank.ts:65`, `figures/semantic-match.ts:53`, `figures/vision-match.ts:134`,
+`opportunities/query-gen.ts:319`. **A's scan 4 counted only the two no-argument calls and so missed
+that `tier2-rerank.ts:65` and `query-gen.ts:319` are library-level acquisitions too** — they take an
+override and are correct today, but they are two more callers the wrapper must not break.
+(`sources/web-search.ts:249` declares an unrelated local `resolveProvider` for *search* providers —
+not a match, as A said.)
+
+**What `logLlmUsage` already receives, so the wrapper reuses it rather than inventing a shape.**
+`LlmUsage` (`usage-log.ts:12-23`) is `{ provider, model, path?, inputTokens?, outputTokens?,
+thinkingTokens?, latencyMs, ok }`. R-METER-1 asks for exactly those plus `user_id`, `kind`, `byok`.
+So the row is `LlmUsage` + three fields; **`logLlmUsage` keeps its console line unchanged and gains
+a second sink**, and the providers that already call it (`{anthropic,deepseek,gemini,openai,qwen}.ts`)
+need no edit. It has **no test** (`grep -rln "logLlmUsage" --include="*.test.ts"` -> 0), so changing
+it breaks nothing and is also unprotected — 1-04 adds the first one.
+
+**The one hard constraint on the wrapper, which nothing in the spec states.** `DigestProvider`
+(`providers/types.ts:41-66`) declares `generateJsonText?` and `generateVisionJsonText?` **optional**,
+and **eleven call sites branch on their presence** — `provider?.generateJsonText` decides the
+degraded path in `digest:68`, `jobs/report:62`, `events/report:114`,
+`papers/report:134/198/378/396`. `deepseek.ts` deliberately omits `generateVisionJsonText` (its `:5`
+comment says so). **A wrapper that unconditionally defines both methods silently turns every
+DeepSeek user's vision path from "degrade cleanly" into "call a method the provider cannot serve".**
+The wrapper must copy method presence, not assume it. Stated as an acceptance test in 1-04.
+
+**Q4 — are A's items 1, 2, 10 and 11 one mechanism or several? Two mechanisms, and the pairing is
+not the obvious one.** Items 1 and 2 (anonymous spend, free-user spend) are **one mechanism seen
+through two personas**: the unconditional `|| process.env.TAVILY_API_KEY` in the three key readers.
+Items 10 and 11 (the downgrade line, the resolve-before-protect order) are **one mechanism** living
+in the same 5-line block of the three feed routes. **But 10/11 and 1/2 are not the same mechanism,
+and fixing either alone leaves the other live.** The search key is read deep inside the pipeline
+from `query.webSearch`/env and is **not a function of `aiTier` at all** — reordering the route and
+rewriting the downgrade predicate does not remove one Tavily search. Conversely, gating the key does
+not stop a lying client from being handed the system LLM. They get one entry each: **1-05** (the
+key) and **1-06** (the order), sharing 1-01 as a prerequisite.
+
+**Q1, Q3, Q5, Q6, Q7 are answered inside the items that implement them** — 1-01 (resolver shape and
+dev override), 1-02 (counter and fallback rule), 1-17 (the weekly key, with the harness result),
+1-11 (the new `resolveProvider` order and what happens to the two local-server helpers), 1-14 (the
+six dev flags, classified).
+
+---
+
+### Unit (a) — foundations
+
+*Order within the unit is the brief's, unchanged: the resolver is the input to the counter's quota
+fields, and both are inputs to the wrapper's row.*
+
+---
+
+**1-01 · `resolveEntitlement` — the server helper that does not exist**
+**R-ENT-2, R-ENT-5. Classification: `MISSING`.**
+
+**Verified absent.** `grep -rn "resolveEntitlement|PEER_DEV_ENTITLEMENT|effectivePlan|deepReportsRemaining|systemSearchAllowed|poolRefreshAllowed" src/ scripts/`
+-> **0 hits for every one of the six**. `grep -n "plan" supabase/schema.sql` -> 1 hit, line 100, a
+prose comment. There is no server-side input of any kind that can make a request behave as `trial`
+or `paid`, which is why A could not construct two of the five personas.
+
+**Where it lives.** New file `web/src/lib/entitlement/resolve.ts`. **Not** in `lib/security/` — it is
+read by routes, by the profile route, and by the counter store, and `lib/security/ai-request.ts`
+already imports `next/server`, which would drag `NextResponse` into anything that only wants the
+plan. Companion `web/src/lib/entitlement/types.ts` for the shape, so client code (1-14) can import
+the type without importing the Supabase server client.
+
+**Exact return shape** (R-ENT-2's minimum plus the two fields the later units need — say so in a
+comment so a later reader knows which are contractual):
+
+```
+Plan = "free" | "trial" | "paid"
+
+Entitlement = {
+  plan: Plan;                   // the stored column, verbatim
+  effectivePlan: Plan;          // trial past trial_ends_at -> "free"; computed at read time
+  deepReportsRemaining: number; // free 5/month, trial 20 total, paid Number.POSITIVE_INFINITY
+  systemSearchAllowed: boolean; // effectivePlan !== "free"
+  poolRefreshAllowed: boolean;  // effectivePlan !== "free"
+  trialEndsAt: string | null;   // ISO, null unless effectivePlan === "trial"
+  // not in R-ENT-2's minimum; needed by 1-06 and 1-11, keep them:
+  userId: string | null;        // null only for the anonymous entitlement
+  source: "supabase" | "dev-override" | "anonymous";  // R-METER-4's labelling rule, applied here too
+}
+```
+
+**The anonymous entitlement is the answer to "what does the field show when every candidate is
+rejected".** `resolveEntitlement(null)` returns a **frozen constant**, not a throw and not a null:
+`{ plan: "free", effectivePlan: "free", deepReportsRemaining: 0, systemSearchAllowed: false,
+poolRefreshAllowed: false, trialEndsAt: null, userId: null, source: "anonymous" }`. Every consumer
+then reads a real object and takes the degraded branch by ordinary logic — no consumer needs a
+null-check, and a forgotten null-check cannot fail open. **Confirm this is the existing no-LLM
+plumbing and not a new one:** `systemSearchAllowed: false` lands on the same `resolveSearchProvider`
+-> `null` -> `return []` path that a keyless user already takes today (`jobweb.ts:2144`,
+`eventweb.ts:2755`, both `if (!provider) return [];`), and `deepReportsRemaining: 0` lands on the
+existing `noLlm: true` payloads (`digest:21`, `jobs/report:66`, `events/report:118`, and
+`papers/report` via `lib/papers/report.ts:287`). **No new response shape is introduced anywhere in
+this guide.**
+
+**Signature.** `resolveEntitlement(userId: string | null, now = new Date()): Promise<Entitlement>`.
+Takes a **user id**, never a request body and never a profile object — that is the whole of R-SEC-3's
+"a request body cannot elevate access" at this layer. The caller obtains the id from
+`supabase.auth.getUser()` and from nowhere else.
+
+**How `PEER_DEV_ENTITLEMENT` plugs in (R-ENT-5), and the trap in it.** The check is
+`process.env.NODE_ENV === "development" && !process.env.VERCEL && !process.env.VERCEL_ENV` — the
+**same three conditions** as `registry.ts:34-40` and `ai-request.ts:28-34`. There are now three
+copies of that expression in the tree; make this the fourth **or** extract it once — C's call, but
+say which in the commit. When it applies, the override supplies `plan` and the rest is computed
+exactly as for a stored row, with `source: "dev-override"`; when the value is not one of the three
+plan strings it is **ignored, not defaulted** (a typo must not silently grant `paid`).
+
+**The decision the spec leaves open, and my answer.** *What is the local-dev entitlement when
+`PEER_DEV_ENTITLEMENT` is unset?* Today local dev behaves as unlimited-everything
+(`ai-request.ts:44` returns `null` before reading a user; `registry.ts:106` hands over the system
+provider) — that is A's finding 9. **Recommendation: unset means `free`, with a synthesised
+`userId: "dev-local"`.** Reasoning, not preference: D1 gives the system LLM to *every signed-in
+user*, so a `free` local developer still gets the model and the day-to-day loop is unchanged; what
+they lose is the system Tavily key, which is exactly the leak R-KEY-3 exists to close and which a
+developer restores with one line (`PEER_DEV_ENTITLEMENT=trial`). Defaulting to `paid` would keep A's
+finding 9 alive under a new name. **This is a reading of D1 + R-ENT-5, not a reversal of anything —
+but it does change what a developer sees on day one, so: `POLICY — manager decides` if the manager
+prefers `paid`. C should implement `free` unless told otherwise; it is a one-constant change either
+way.**
+
+**Blast radius.** New file, no existing importer. The only pre-existing behaviour it *reads* is the
+`profiles` row, which does not have the columns yet — so **1-01 must ship against a schema that
+lacks `plan`**, and the query must treat "column missing" the same as "row missing" (Supabase
+returns an error, not a null) and fall through to the `free` default. That is what lets unit (a)
+land before the 1-13 migration is applied, which it must, because nobody in this loop can apply it.
+
+**Tests at risk — grepped, not remembered.** `grep -rln "resolveEntitlement" src/ --include="*.test.ts"`
+-> **0**. Nothing existing breaks. The tests C adds are in 1-04.
+
+---
+
+**1-02 · The shared counter — the module-scope `Map` that dies on every cold start**
+**R-METER-3, R-METER-4. Classification: `WRONG SHAPE`.**
+
+**Verified.** `lib/security/ai-request.ts:10` — `const rateBuckets = new Map<string, RateBucket>();`
+at module scope, window `RATE_WINDOW_MS = 60 * 60 * 1000` (`:9`), keyed `${scope}:${user.id}`
+(`:67`), incremented at `:88-89`. `grep -rn "deep_reports_month|deep_reports_today|searches_today" src/`
+-> **0 each**. The `Map` never consults the Supabase env, so R-METER-4's "never selected when
+Supabase is present" has nothing to select between.
+
+**Where it lives.** New `web/src/lib/usage/counters.ts` exporting an interface plus two
+implementations, in the shape the codebase already uses for exactly this problem — **copy
+`pool-cache-supabase.ts` almost verbatim, it is the precedent**: `pool-cache-runtime.ts:11-19` picks
+an implementation once and memoises it; `pool-cache-supabase.ts:35-47` `configuredAdminClient()`
+returns `null` unless **both** `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set,
+wrapped in try/catch; `createAdminClient` (`lib/supabase/admin.ts:7`) throws when they are missing.
+**R-METER-4's selection rule is therefore already written in this codebase — reuse the predicate, do
+not write a new one.** The one difference from the pool cache: `pool-cache-runtime.ts:14` selects on
+`NODE_ENV === "development"`, which is the wrong test here (R-METER-4 says "never when the Supabase
+env is present", not "never in dev"). **Select on the env pair, exactly as `configuredAdminClient`
+does; ignore `NODE_ENV`.**
+
+**Shape.**
+
+```
+CounterStore {
+  // atomic: returns the value AFTER the increment, so a caller can test the
+  // limit and the increment in one round trip and two instances cannot both
+  // see "59" and both proceed.
+  increment(key: string, windowEndsAt: Date, by?: number): Promise<number>;
+  read(key: string): Promise<number>;
+  readonly label: "supabase" | "in-memory";   // R-METER-4's "clearly labelled"
+}
+```
+
+**Atomicity — the part that must not be hand-waved.** A `select` then `update` is two round trips
+and two instances race exactly where it matters (the 200/day and 500/day breakers of R-QUOTA-2).
+Two shapes are actually atomic in Postgres and both are one statement: (i) `insert ... on conflict
+(key) do update set value = usage_counters.value + excluded.value returning value` — a **single-row
+upsert with a returning clause**, no RPC needed, reachable through `supabase-js`'s
+`.upsert(...).select()`; (ii) a `create function increment_usage_counter(...) returns bigint` called
+with `.rpc()`. **Recommend (i)** — R-METER-3 explicitly allows either, and (i) needs no second
+migration object and no `security definer` review. Whichever C picks, the **test** is the same and
+is not optional: fire N concurrent `increment` calls at the in-memory implementation and assert the
+returned values are exactly 1..N with no duplicates (1-04).
+
+**Key layout, and how today's buckets migrate without changing the limits.** The existing key is
+`${scope}:${user.id}` with a rolling one-hour window computed per bucket (`:69-72`). Keep the
+**limits exactly as they are** — 60/h on `paper-feed`/`job-feed`/`event-feed`/`digest`, 20/h on
+`paper-report`/`job-report`/`event-report`, all passed at the call sites, none of them changed by
+this guide. Move the window from "rolling from first hit" to a **fixed boundary encoded in the key**
+— `rate:${scope}:${userId}:${YYYY-MM-DDTHH}` — because a shared store cannot carry a per-instance
+`resetAt`. **This is a real, small behaviour change and C must state it in the commit:** a user who
+sends 60 requests at 10:59 can send 60 more at 11:00, where today they would wait a full hour from
+their first request. It is the standard trade for surviving a cold start, and R-METER-3 asks for the
+survival. The quota keys R-QUOTA needs later are the same idea with different periods:
+`deep:${userId}:${YYYY-MM}`, `deep:${userId}:${YYYY-MM-DD}`, `search:${userId}:${YYYY-MM-DD}`.
+**Use UTC for the day and month segments** — D4 says "the rest of the UTC day" in as many words, and
+`localCalendarDate` is the server's local zone, which on Vercel is UTC but on this machine is not.
+**Do not reuse `localCalendarDate` for quota keys.** (It *is* the right helper for the pool key —
+1-17.)
+
+**What the field shows when the store is unreachable.** `increment` must **fail open, not closed**:
+on any Supabase error behave as "under the limit" and log once at warn level. Rationale: this
+counter sits in front of the feed for every signed-in user, and a Supabase outage that returns 429
+to everyone is a worse failure than an hour of unmetered use. **The breakers of R-QUOTA-2 are the
+exception and must fail closed** — they exist to protect the owner's wallet, so an unreadable
+breaker counter degrades to the no-LLM path. Two different answers on purpose; C should put both
+rules in the module's header comment.
+
+**Blast radius — larger than it looks.** `protectAiRequest` is the only consumer today
+(`grep -rn "protectAiRequest"` -> 8 call sites in 7 route files plus the definition), and it is
+`async` already, so making it `await` a store is free. But **`ai-request.ts` currently imports
+`next/server` and `@/lib/supabase/server`**; the counter store must not import either, or every test
+that imports it drags in `next/headers` and the Next request scope. Keep `counters.ts`
+framework-free.
+
+**Tests at risk.** `grep -rln "protectAiRequest" src/ --include="*.test.ts"` -> exactly one file,
+`src/lib/security/ai-request.test.ts` (27 lines, 2 tests). Neither test touches a bucket — one
+asserts local dev returns `null` (`:9-16`), one asserts a 503 when a deployment has no auth config
+(`:18-26`). **Both survive 1-02 unchanged**, and both are at risk from 1-06 instead, where the
+local-dev early return is what changes. No other suite reaches the `Map`.
+
+---
+
+**1-03 · The metering wrapper and `usage_events` — nothing that is spent is recorded**
+**R-METER-1, R-METER-2. Classification: `MISSING`.**
+
+**Verified absent.** `grep -rn "usage_events" src/ supabase/` -> **0 hits**. `logLlmUsage`
+(`usage-log.ts:26`) writes one `console.log` line and nothing else; searches are not logged at all.
+
+**Two pieces, in this order.**
+
+*(i) The sink.* `web/src/lib/usage/events.ts` exporting `recordUsageEvent(row): void` —
+fire-and-forget, never awaited on a request's critical path, wrapped in try/catch, a no-op when the
+admin client is unconfigured (the same `configuredAdminClient` predicate as 1-02). Row shape from
+R-METER-1 verbatim: `user_id`, `kind` (`"llm" | "search" | "breaker"`), `path`, `provider`, `model`,
+`input_tokens`, `output_tokens`, `thinking_tokens`, `latency_ms`, `ok`, plus `byok boolean` and, for
+`kind: "search"`, `surface` and `query_count`. **`logLlmUsage` gains one line that calls it and
+keeps its existing console output byte-for-byte** — that console line is the API-efficiency
+measurement layer its header comment describes, and removing it would delete an unrelated
+capability. **Never the key**: the row has no field that could hold one, and `LlmUsage` never
+carried one; say so in the header comment so a later round does not add `apiKey` for debugging.
+
+*(ii) The wrapper.* A function `meterProvider(provider, ctx): DigestProvider` in
+`web/src/lib/llm/providers/metered.ts`, applied **inside `resolveProvider` at the single return
+point**, so all thirteen acquisition sites are covered without threading a user id through any of
+them (R-METER-1 says this in as many words). `ctx` is `{ userId: string | null; byok: boolean;
+path?: string }`. **`resolveProvider` is synchronous and must stay synchronous** — eleven call sites
+use its result without `await`; the wrapper is pure object construction, and the recording inside
+each method is fire-and-forget, so nothing becomes async.
+
+**The three things the wrapper must not break, each an acceptance test in 1-04.**
+1. **Method presence is copied, never assumed.** Build the returned object by testing
+   `typeof provider.generateJsonText === "function"` and only then defining it. DeepSeek has no
+   `generateVisionJsonText` (`deepseek.ts:5`) and seven call sites branch on that.
+2. **`id` is preserved.** `registry.test.ts:55/65` and `feed/route.test.ts:43` assert on
+   `provider.id`; `providers/types.ts:42` makes it part of the contract.
+3. **A throw still throws.** The wrapper records `ok: false` and **re-throws** — `digest:76-82`, the
+   report routes and `papers/report` all rely on the existing catch/degrade behaviour.
+
+**Where the user id comes from.** `resolveProvider` has no request context today. Threading one
+through every call site is exactly what R-METER-1 says to avoid, so: **the route resolves the
+entitlement first (1-06) and passes `{ userId, byok }` as `resolveProvider`'s second argument**,
+optional and defaulting to `{ userId: null, byok: hasUsableProviderOverride(override) }`. A call
+site that does not pass it still meters — the row simply has a null `user_id`, which is the honest
+value for `tier2-rerank.ts:65` and `query-gen.ts:319` (both are called from inside a pipeline the
+route has already authenticated). **Do not make the second argument required**: that would be a
+13-site edit inside unit (a) and would collide with 1-06 and 1-07.
+
+*R-METER-2's search rows* are written where the search actually happens, not here — the single gated
+key resolver of **1-05** is the one place that knows the surface, the key's provenance and the query
+count, so the `kind: "search"` call belongs there. Recorded in 1-05 so C does not write it twice.
+
+**What the field shows when recording fails.** Nothing. A usage row is observability, never a gate;
+`recordUsageEvent` swallows its own errors and the user's response is unaffected. The **only**
+consumer that must not be fire-and-forget is R-QUOTA-2's breaker row, which is written alongside a
+counter increment that has already decided the outcome — the decision is the counter's, never the
+row's.
+
+**Blast radius.** `resolveProvider` is imported by 9 non-test modules and 7 test files. Wrapping at
+its return point changes the **identity** of the returned object: `registry.test.ts` currently
+asserts `resolveProvider()?.id`, which survives, but any future `toBe(geminiProvider)` identity
+check would not — and A's Part-2 "one CONSTRUCTION" probe used exactly such an identity comparison
+(`=== geminiProvider`). **A must be told the identity probe stops working once 1-03 lands and should
+assert on `.id` plus the env preconditions instead.**
+
+**Tests at risk — grepped.** `logLlmUsage` -> **0 test files**. `resolveProvider` -> 7 test files, of
+which **all seven `vi.mock` the registry module** (`digest`, `events/report`, `feed`, `jobs/report`,
+`papers/report` route tests, `feed/paper-daily-cache.test.ts`, `opportunities/query-gen.test.ts`),
+so the wrapper is invisible to them. **`registry.test.ts` does not mock and is the only suite that
+sees the real return value** — it is rewritten in 1-11, not here.
+
+---
+
+**1-04 · The tests for unit (a)** — **R-TEST-1 slice. Classification: `MISSING`.**
+
+Written **inside** this unit, per Ruling 2 point 4(h). New files
+`src/lib/entitlement/resolve.test.ts`, `src/lib/usage/counters.test.ts`,
+`src/lib/llm/providers/metered.test.ts`.
+
+- **Entitlement (R-TEST-1 names this one explicitly):** trial active; trial **expired** — stored
+  `plan: "trial"` with `trial_ends_at` in the past must yield `effectivePlan: "free"` **and**
+  `systemSearchAllowed: false`, computed at read time with no write; paid; `resolveEntitlement(null)`
+  returns the frozen anonymous constant; the dev override honoured under
+  development-and-not-Vercel and **ignored** when `VERCEL_ENV` is set (use `vi.stubEnv`, as
+  `registry.test.ts:28-35` already does); an unrecognised override value ignored rather than
+  defaulted; and the **schema-not-yet-migrated** case — a Supabase error on the `plan` column falls
+  through to `free` rather than throwing.
+- **Counter:** `label` is `"in-memory"` with the Supabase env absent and `"supabase"` with both
+  variables present (R-METER-4's rule, asserted in both directions); N concurrent increments return
+  1..N with no duplicate; a store error leaves `increment` under the limit (fail-open) while the
+  breaker helper reports exhausted (fail-closed).
+- **Wrapper:** a provider **without** `generateVisionJsonText` still lacks it after wrapping (the
+  DeepSeek case); `id` survives; a rejected inner call re-throws **and** records `ok: false`; a
+  successful call records once with the token counts the provider reported; the recorded row carries
+  **no key-shaped field** (assert the serialised row has no property whose name matches
+  `/key|secret/i`).
+
+**Proof obligation from §2 (C's contract):** revert each source change and re-run — the new test
+must fail. Worth stating here because three of these would pass vacuously against a stub.
