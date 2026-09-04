@@ -145,8 +145,11 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
 
 - **R-QUOTA-1.** Each deep-report route checks and increments the monthly counter atomically. On
   exhaustion it returns the existing degraded (no-LLM) payload plus a machine-readable
-  `quota: { kind: "deep_report", remaining: 0, resetsAt }`; the UI shows "本月 deep report 已用完，
-  N 天后重置" and an upgrade prompt.
+  `quota: { kind: "deep_report", remaining: 0, resetsAt }`; the UI shows an English message —
+  "You've used this month's deep reports. Resets in N days." — and an upgrade prompt.
+  **Amendment 2026-09-04 (Ruling 3, binding):** the original text here gave the message in
+  Chinese; that was the manager's shorthand, not a product decision. The product is English-only
+  (B measured zero CJK characters under `web/src`), so the string ships in English as above.
 - **R-QUOTA-2.** Trial cap 20 total; paid breaker 200/day; system-search breaker 500/day. A trip
   writes an error-level log line and a `usage_events` row (`kind = breaker`).
 - **R-QUOTA-3.** Shallow (abstract-only) paper reports, ranking, digest and query generation are

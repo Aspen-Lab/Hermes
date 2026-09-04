@@ -139,7 +139,11 @@ GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 100 passed / 1 ski
            2552 passed / 1 skipped (2553) tests, 0 failed — A's measurement; B changed no code
            and ran no gate.
 TODO:      C works the round-1 guide from unit (a) item 1-01, top down, one commit per item,
-           pushed. HARD CROSS-UNIT DEPENDENCY: 1-06 (unit b) must land BEFORE 1-11 (unit c) —
+           pushed. RULING 3 (§1d) ADDS: item 1-00 (structural vitest fix: allow-list + global
+           setup deleting GOOGLE_API_KEY/TAVILY_API_KEY + protective test) lands BEFORE 1-11;
+           local-dev default entitlement = free; quota string in English; hard order 1-00 →
+           … 1-05 → 1-06 → 1-10 → (1-11 + 1-12 one commit). HARD CROSS-UNIT DEPENDENCY: 1-06
+           (unit b) must land BEFORE 1-11 (unit c) —
            digest/jobs-report/events-report return their degraded payload before reaching
            protectAiRequest today, so the moment a provider always resolves all three start
            authenticating for the first time. MONEY RISK: vitest.config.ts:22 injects every
@@ -152,15 +156,8 @@ PENDING USER ACTION: (1) DO NOT set TAVILY_API_KEY on Vercel until Ruling 2 poin
            GOOGLE_API_KEY + TAVILY_API_KEY into local .env.local when ready — live-model passes
            stay BLOCKED until then. (3) R-ENT-1 migration will need applying in Supabase once C
            writes it (1-13); until then everything resolves at plan `free` by design.
-OPEN FOR MANAGER:  Two POLICY items from B, neither blocking C. (1) R-QUOTA-1 specifies a Chinese
-           UI string ("本月 deep report 已用完…") and B measured zero CJK characters anywhere in
-           src/ — the whole product is English. Rule on the literal vs an English equivalent; the
-           mechanism is identical either way. (2) The local-dev entitlement when
-           PEER_DEV_ENTITLEMENT is unset: B recommends `free` (D1 still gives a free user the
-           system LLM, and it closes A's finding 9 rather than renaming it); `paid` would keep
-           today's convenience. One constant either way; C implements `free` unless told
-           otherwise. Plus one visible consequence, not a question: after 1-05 the papers `web`
-           source returns [] in production permanently, which is D3 working as written.
+OPEN FOR MANAGER:  none — B's two questions ruled in §1d (Ruling 3 points 1–2); item 1-00 added
+           (Ruling 3 point 3).
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -241,6 +238,48 @@ part-way; a released lock looks identical in both cases.
    (correct). C turns that harness into the route tests R-TEST-1 requires for `api/figure`,
    `api/jobs/feed` and `api/events/feed` — A found none exist — so the persona pass is
    re-runnable by anyone, not reconstructed from prose each round.
+
+---
+
+## §1d. RULING 3 — after round-1 B (2026-09-04, BINDING)
+
+1. **The quota message ships in English.** Spec R-QUOTA-1 amended in place (dated). The Chinese
+   text was the manager's shorthand, not a product decision; B measured zero CJK characters under
+   `web/src`. C uses: *"You've used this month's deep reports. Resets in N days."* plus the
+   upgrade prompt.
+2. **Local dev with `PEER_DEV_ENTITLEMENT` unset resolves to `free`**, with a synthesised
+   `userId: "dev-local"`. B's recommendation, adopted for B's reason: D1 still gives a free user
+   the system LLM, so the developer loop is unchanged, and it closes A's finding 9 instead of
+   renaming it. A developer who wants paid behaviour sets the variable.
+3. **New item 1-00 — a structural fix for the billable-test trap, landed before 1-11** (first in
+   unit (c), or in unit (a) if C prefers). B's mitigation — every test deletes the key or mocks
+   the registry, plus a grep before landing 1-11 — guards instances; this loop's standing lesson
+   is that an unguarded path re-inserts what the guard rejected. Required: (a) `vitest.config.ts`
+   injects **only** the three names its own comment says it was written for —
+   `GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_LOCATION`, `GOOGLE_APPLICATION_CREDENTIALS` — by an
+   explicit allow-list, never a prefix; (b) a global `setupFiles` entry deletes `GOOGLE_API_KEY`
+   and `TAVILY_API_KEY` from `process.env` before every suite, and a protective test asserts both
+   are `undefined` inside the test process; (c) `benchmark.test.ts` still SKIPs cleanly when the
+   Vertex trio is absent and still runs when present. B's per-test discipline stays as
+   belt-and-braces. **Escape clause:** if C finds a test that legitimately needs `GOOGLE_API_KEY`
+   (there should be none), stop and record.
+4. **Hard order, ratified.** 1-00 before 1-11 · 1-05 before 1-06 (B's stated reorder) · **1-06
+   before 1-11** · **1-10 before 1-11** (guard before resolver, or the next Vercel build fails) ·
+   **1-11 and 1-12 in one commit** (Ruling 1 point 7). C does not skip ahead; a C that runs out
+   of budget stops at an item boundary and the next C resumes at the first unlanded item.
+5. **B's correction 3 is D3 working as written.** On the papers surface a user's own Tavily key
+   cannot be threaded, so after gating the papers `web` source returns `[]` in production for
+   every plan. Accepted, not a fix item. A tallies **papers operator-key searches** every round
+   (must be 0). Design lead, not authorised: whether `"web"` leaves `parseSources` — after the gate.
+6. **B's other four corrections to A stand.** The manager re-read two in source: the fourth,
+   inline, shadowing predicate at `store/feed.ts:260-266`, and the date at both `pool-cache.ts:159`
+   (signature) and `:162` (key string). Round-2 A scores against B's corrected mechanisms, not
+   A's round-1 citations.
+7. **Reading note for round-2 A.** `digest`, `jobs/report` and `events/report` will start
+   answering **401** to strangers once 1-06 lands — that is the fix working, not a regression.
+   The `=== geminiProvider` identity probe stops working once the metering wrapper (1-03) is in —
+   assert on `.id` plus env preconditions instead. The first jobs/events load per user after
+   1-17 is a rebuild — expected once, not a cadence bug.
 
 ---
 
