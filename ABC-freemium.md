@@ -4147,3 +4147,122 @@ before **every** push and returned nothing each time. Every key in every test is
 `git status --porcelain --untracked-files=all` shows only shipped files. **No `next dev` was
 started** (Ruling 2 point 5) and no process was killed — a hook did report another session's dev
 server running in this folder, and it was left alone.
+
+---
+
+### Round 2 — Agent A
+
+**Round 2 measures the build after C landed all 28 items. Every score below is backed by a route I
+drove, a test I ran, or a file I read on `freemium-system-key @ ff98ace`. No score cites a commit
+message or C's §4 claim.** Exclusions: **none**.
+
+**Two things constrain every measurement in this entry, stated once.**
+
+1. **No keys.** `grep -c "^GOOGLE_API_KEY=." web/.env.local` -> **0**;
+   `grep -c "^TAVILY_API_KEY=." web/.env.local` -> **0**. Every pass that needs a live model or a
+   live Tavily call is `BLOCKED: no key`, reported as such and never inferred. `.env.local` was
+   never `cat`-ed and no env value was printed. The test process also deletes both names before
+   every suite (1-00), so a live pass would have to be a separate script outside vitest — **I ran
+   no such script; there was no key to run it with.**
+2. **Nothing in this repo can reach a real Supabase table.** The three migrations are written and
+   unapplied by design. **Every counter and entitlement measurement below is on the in-memory
+   fallback or on a stubbed admin client**, and the real-Supabase questions are reported
+   `BLOCKED: migrations unapplied`.
+
+**Harness.** C's three route suites (`api/figure`, `api/jobs/feed`, `api/events/feed`) plus
+`src/test-support/route-harness.ts`, run as they stand — **3 files, 19 tests, all green** — and
+three **throwaway** extensions of them for the pairs they do not cover, all deleted before this
+turn's final commit:
+`zz-round2-persona.test.ts` (43 cases: the papers feed, digest, the three report routes, figure and
+`GET /api/profile`, five personas each, plus the `local-no-auth` and quota-outage probes),
+`zz-round2-provider.test.ts` (14 cases: is a **model provider** constructed, per persona; the
+R-KEY-1 order; the weekly pool key), `zz-round2-meter.test.ts` (8 cases: does a real route write a
+usage row). C's suites were **copied from, never edited**.
+
+#### Part 1 — fixture checklist (all 31 R-* items)
+
+**R-SEC — no unauthenticated or unentitled spend**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-SEC-1 | **MET** | Drove the real handler: `GET /api/figure` signed-out -> **401**, `{"error":"Sign in before using an AI feature"}`, `Cache-Control: no-store`, and **0 outgoing fetches**. Signed-in (free/trial/paid) -> 200. A request with no `id` still gets 400 **before** the guard, so a malformed request is not answered as an auth problem. Scan 4 = **0** no-argument `resolveProvider()`; both matchers now take a required context (`figures/semantic-match.ts:66`, `figures/vision-match.ts:137`, both `resolveProvider(args.ctx.override ?? null, {…})`). |
+| R-SEC-2 | **MET** | Enumerated every `route.ts` under `src/app/api` (21 files). **Nine** carry `requireEntitledAiRequest`: the three feeds, digest, the three reports, figure, test-digest. In each, the guard call precedes every `resolveProvider` on the file's execution path — checked at all eleven real call sites. `dispatch-digests` deliberately has none (D9, see R-SEC-4). Companion tally: **routes calling `resolveProvider` before the guard = 0** (was 7). |
+| R-SEC-3 | **MET** | `entitledAiTier(requested, entitlement)` caps on `entitlement.userId !== null`, not on provider presence (`security/ai-request.ts:213-220`). Observed: an anonymous `POST /api/jobs/feed` carrying `aiTier: 2` **and** `searchConnectors.tavily.enabled` produced **0 system providers** and **0 operator-key searches**. C's "cannot be elevated by the request body" case is green on both feeds. |
+| R-SEC-4 | **MET** | `api/jobs/dispatch-digests/route.ts:211` — the comment now reads `ABC-freemium 1-08 · R-SEC-4 · **D9.**` and `:223` passes `aiTier: 0`. It passes **no** `systemSearchAllowed`, and `search/system-key.ts` defaults that flag to `false`, so the cron cannot reach the operator's search key either. (Round 1 scored this PARTIAL for the missing D9 reference — closed.) |
+
+**R-METER — every operator-funded call is recorded**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-METER-1 | **MET** | Observed end-to-end through a **real route** with an injected recorder: `POST /api/jobs/report` as a signed-in free user wrote exactly one row — `{"user_id":"u-free","kind":"llm","path":"job-report","provider":…,"model":…,"input_tokens":11,"output_tokens":22,"thinking_tokens":3,"latency_ms":5,"ok":true,"byok":false}`. Every field R-METER-1 names, **no key anywhere in the row**, and the `user_id` arrives from the wrapper's async-local scope rather than from a threaded argument. Mechanism note (C's traced deviation 1-03): the wrapper is applied at `resolveProvider`'s single return point and writes a row itself **only** when a call throws before logging; the success row is written by `logLlmUsage`, which is where the token counts are. `BLOCKED: no key` — no live model has ever exercised it. `BLOCKED: migrations unapplied` — no row has ever reached a real table. |
+| R-METER-2 | **MET** | Observed: a **paid** user's `POST /api/jobs/feed` wrote `{"user_id":"u-paid","kind":"search","surface":"jobs","query_count":2,"provider":"tavily","ok":true,"byok":false}`. The same request as a **free** user wrote **0** search rows, because no system search happened. Attribution is to the user whose request triggered the build. |
+| R-METER-3 | **MET** | The module-scope `Map` is gone. `security/ai-request.ts:156` increments the shared store on `rate:${scope}:${userId}:${utcHour}` and compares the **post-increment** value, so two instances cannot both see 59. Limits unchanged and passed per route (60/h feeds, 20/h reports) — observed: forcing the rate counter to 99 returned **429** with `Retry-After`. Counter keys `deep:` / `search:` / `rate:` are separate namespaces (verified by routing a stub on the key prefix). `BLOCKED: migrations unapplied` — cross-instance atomicity is asserted in-process only; the RPC's `on conflict do update` has never executed. |
+| R-METER-4 | **MET** | Two labelled stores (`label = "supabase"` and the in-memory one), and the selection predicate is the **env pair** — `NEXT_PUBLIC_SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY` (`usage/counters.ts:231-243`) — not `NODE_ENV`. So the fallback is never selected when Supabase is configured, which is what the requirement asks. |
+
+**R-ENT — entitlement is a server concept**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-ENT-1 | **MET** (file) · behaviour `BLOCKED: migrations unapplied` | `supabase/migrations/20260904000200_profile_plan.sql` read in full: the four columns with `check (plan in ('free','trial','paid'))`, `handle_new_user` inserting `'trial', now(), now() + interval '14 days', now()`, and `revoke update (plan, trial_started_at, trial_ends_at, plan_updated_at) … from anon, authenticated` — a column privilege, which is the correct instrument because RLS has no column-level grant. **The trigger has never run**, so "a real trial is created at first sign-in" is unobserved and stays on the blocked list. **Scoring note for the manager, flagged not assumed:** I score the *file* MET because writing it is the whole of what this loop can do (§0b point 5) and the consuming half is observed under R-ENT-2. Round 1 scored this NOT MET. If the manager rules that an unapplied migration cannot score MET, the number rises from 16.1% to 19.4% and no other item moves. |
+| R-ENT-2 | **PARTIAL** | Standing PARTIAL by Ruling 4 point 3, and **the defect is still present, observed**. What works: `resolveEntitlement(userId)` returns `plan`, `effectivePlan`, `systemSearchAllowed`, `poolRefreshAllowed`, `trialEndsAt`, and expiry is computed at read time — a stored `plan:"trial"` with `trial_ends_at:"2020-01-01"` behaved as **free** on the very next request (0 operator searches). What does not: the resolver's field is still named `deepReportsRemaining` and still carries the **plan's budget** (`resolve.ts:124` -> `deepReportBudget(effectivePlan)`), never budget-minus-used; `types.ts:38-42` says so in a comment. **New, and worse than the ruling anticipated:** for `paid` the value is `Number.POSITIVE_INFINITY`, and `NextResponse.json` serialises that to **`null`** — so a paid reader's client receives `"deepReportsRemaining":null`, which is the exact sentinel the R-ENT-2 amendment reserves for "the counter store is unreachable". Observed on `GET /api/profile`. |
+| R-ENT-3 | **PARTIAL** | Standing PARTIAL by Ruling 4 point 3. What works, observed: `GET /api/profile` returns the summary for all four signed-in personas and 401 for a stranger; the three predicates collapsed into one — `aiAvailability(profile, entitlement)` (`feed/ai-tier.ts:69-75`), with `feedsUseAi` and `canAttemptOpportunityEnrichment` now one-line delegates and `components/reports/provider-configured.ts` **deleted**; the two named client dev-flags are gone and scan 2 is 0. What does not: the summary carries the budget, not a remainder, and carries no `reason` — the same defect as R-ENT-2, delivered to the browser. |
+| R-ENT-4 | **MET** | Signed-out, deployed runtime, per route: three feeds **200** at tier 0 with **0** operator-key searches and **0** system providers constructed; papers feed **200**, 0 searches; digest, all three reports and figure **401**. Nothing operator-funded is reachable without a session. |
+| R-ENT-5 | **MET** | `PEER_DEV_ENTITLEMENT` is read only inside `devEntitlement`, reached only when `isLocalDevRuntime()` (all three conditions: `NODE_ENV === "development" && !VERCEL && !VERCEL_ENV`). In my deployed-runtime harness every persona resolved from the stored row, never from the environment. An unrecognised value is ignored, not defaulted (`asPlan`). The guard bans the name on Vercel. |
+
+**R-POOL — weekly cadence**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-POOL-1 | **MET** | Called `derivePoolCacheKey` across an ISO-week boundary. `jobs` and `events`: `peer-pool-v6-jobs-2026-W37-…` — **identical** for Mon 2026-09-07 and Sun 2026-09-13, **different** for Mon 2026-09-14. `papers`: `peer-pool-v6-papers-2026-09-07-…` — changes daily, as D3 requires. `CACHE_KEY_VERSION` bumped 5 -> **6**, visible in the key as `v6`. |
+| R-POOL-2 | **MET** | `poolRefresh: body.poolRefresh === true && entitlement.poolRefreshAllowed` in both feed routes (`jobs/feed/route.ts:201`, `events/feed/route.ts:183`) — the body may ask, only the entitlement grants. Observed in C's suite: a **free** user's forced rebuild is refused, still answers **200**, and charges **0** search increments; a **paid** user's granted refresh charges **exactly one** more than the same request without the flag. |
+| R-POOL-3 | **MET** | `free-no-key` on jobs and events: **200**, 0 operator-key searches, structured sources served. Same for `anonymous`. |
+
+**R-KEY — the system keys**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-KEY-1 | **MET** | Order observed by spying on `createGeminiApiProvider` (Ruling 4 point 8 — the `=== geminiProvider` probe is dead). In a **deployed** runtime with **both** `GOOGLE_VERTEX_PROJECT` and `GOOGLE_API_KEY` set, `resolveProvider(null)` returns the `createGeminiApiProvider` object, not the Vertex singleton — **Vertex no longer outranks the system key**, the reverse of round 1. With `PEER_DIGEST_PROVIDER=gemini` set in a deployed runtime it is **ignored** (`canUseLocalServerProvider()` gates it and is `isLocalDevRuntime()`). With no key: **null**. A valid BYOK override still wins. `BLOCKED: no key` — that `createGeminiApiProvider` works against a real key is unverified. |
+| R-KEY-2 | **MET** | Observed per persona on `POST /api/jobs/feed` with `GOOGLE_API_KEY` set to a sentinel: `anonymous` -> **0** system providers constructed; `anonymous` + own Tavily key -> **0**; `free-no-key`, `trial`, `paid` -> **1** each. On `POST /api/papers/report` (deep): `anonymous` -> 401 and **0**; the three signed-in personas -> 200 and a provider. D1 holds — free gets Peer's model. |
+| R-KEY-3 | **PARTIAL** | The **gate** is right and observed: `search/system-key.ts` is the one place `process.env.TAVILY_API_KEY` is read, it is read only under `input.systemSearchAllowed`, the flag is passed in and defaults `false`, and it is never parsed from a body. Per persona on jobs and events: `anonymous` 0, `free-no-key` 0, `free-byok-tavily` 0 operator with the user's own key sent, `trial` 2, `paid` 2. **What differs from the requirement's stated order:** R-KEY-3 writes `BYOK Tavily -> system Tavily -> Brave -> none`, but the preference is realised in `sources/gemini-search.ts:233-235` as `BYOK Tavily -> Brave -> system Tavily`, so **Brave outranks the operator's Tavily key**. Low severity — Brave is env-only and the guard bans it on Vercel, so this can only bite a developer's machine — but it is a real difference and I am not reclassifying it away. **If the manager rules the arrow chain describes the key resolver rather than the provider preference, this becomes MET and the number drops from 16.1% to 12.9%.** |
+| R-KEY-4 | **MET** | `components/profile/ai-setup.tsx:21` — `{ value: "default", label: "Peer's AI (included)" }`. `app/welcome/completeness.ts:112` — the `ai` step is now `aiAvailability(profile, entitlement) !== "none"`, so `"default"` no longer reads as incomplete. |
+
+**R-QUOTA — counting deep reports**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-QUOTA-1 | **PARTIAL** | Standing PARTIAL by Ruling 4 point 2, and **the defect is still present, observed**. What works: one counter across all three surfaces, check-and-increment in one round trip, boundaries exact — a free user at **5** used gets the report, at **6** gets the degraded payload plus `{"kind":"deep_report","remaining":0,"resetsAt":"2026-10-01T00:00:00.000Z"}`, no error status and no new shape; the English copy is verbatim — `"You've used this month's deep reports. Resets in 27 days."`. What does not: **a counter-store outage and an exhausted budget produce byte-identical payloads.** Forcing the `deep:` RPC to error returned exactly the same object as the exhausted case, and `[quota] store unavailable` log lines = **0** (all error-level lines = 0). So during an outage the reader is told they have used up an allowance they have not used. No `reason` field exists on `QuotaSignal` (`deep-report-quota.ts:58-63`). |
+| R-QUOTA-2 | **MET** | Observed: a **paid** user past 200/day -> `{"kind":"breaker","remaining":0,"resetsAt":<end of UTC day>}`, **1** `usage_events` row with `kind:"breaker"`, **1** error-level line, and the degraded payload. A **trial** user at 20 is allowed, at 21 refused with `resetsAt = trialEndsAt` (honest — a trial's twenty do not come back monthly). The 500/day system-search breaker has the same shape (`usage/search-breaker.ts:52-67`: error line, awaited `kind:"breaker"` row, returns `[]`, which is the same degraded value a keyless reader already gets). |
+| R-QUOTA-3 | **MET** | `usage/quota-exemptions.test.ts` run: `consumeDeepReport` is reachable from **only** the three deep-report routes; the papers **deep** branch counts and the shallow branch does not; ranking, digest and query generation do not; and every exempt path stays **metered** — uncounted is not unmetered. Round 1 scored this NOT MET as a vacuous case under Ruling 2 point 1; the counter now exists, so the property is observable and it passes. |
+
+**R-UI — what the user sees**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-UI-1 | **MET** | Scan 1 = **0 rendered occurrences** (the four survivors read individually — three are inside JSX comment blocks, one is a `console.warn`; full working in Part 3). The chip now returns `{label, plan, ai, title}` and `planChipText` yields R-UI-1's three strings verbatim — "Free" / "Trial · N days left" / "Pro" — rendered next to the AI state at `app/page.tsx:852-855`. |
+| R-UI-2 | **MET** | The `"Tier 0 — no AI API"` option is gone; the default option reads `"Peer's AI (included)"`; the "use my own key" providers remain (`ai-setup.tsx:21-26`). |
+| R-UI-3 | **MET** | `components/reports/tier-upgrade-block.tsx` takes a `Plan` and an AI-availability mode and returns `null` when an upgrade would not help — **paid and trial never render it** (`:14-48`). It is no longer keyed on whether a BYOK key is configured. |
+| R-UI-4 | **MET** | Both keys gained an AI-mode segment and are built by pure, testable functions: `paperReportCacheKey({…})` at `app/papers/[id]/page.tsx:703` and `digestCacheKey({…})` at `components/digest/daily-digest.tsx:119`; the `"tier0"` literal is gone and the storage version is bumped in the same commit as R-KEY-1. A report computed with no model can no longer be served as the AI report. |
+
+**R-GUARD — the build refuses to ship the wrong shape**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-GUARD-1 | **PARTIAL** | The require list is **exact** — `GOOGLE_API_KEY`, `TAVILY_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`; `GOOGLE_API_KEY` has moved off the ban list; `PEER_FEED_AI_TIER > 0` is handled; both lists are reported together rather than one failure at a time; it exits 1 on a Vercel build. **What differs:** R-GUARD-1 bans `GOOGLE_VERTEX_*`; the script bans **4** hard-coded `GOOGLE_VERTEX_` names while the tree reads **11** — `GOOGLE_VERTEX_LOCATION`, `GOOGLE_VERTEX_ALLOW_GLOBAL_FALLBACK`, `GOOGLE_VERTEX_SEARCH_COLLECTION`, `GOOGLE_VERTEX_SEARCH_FALLBACK`, `GOOGLE_VERTEX_SEARCH_LOCATION`, `GOOGLE_VERTEX_SEARCH_MIN_RESULTS` and `GOOGLE_VERTEX_SEARCH_SERVING_CONFIG` are unbanned. **Sized honestly so B does not over-react:** none of the seven, alone, enables anything — `isVertexSearchAvailable()` needs a project **and** an app id and all four of those names are banned, and `isGeminiSearchAvailable()` is `Boolean(GOOGLE_VERTEX_PROJECT)`, also banned. So D2's "never enabled in a deployment" holds today. The gap is defence in depth against a name the guard has not heard of, and the fix is a prefix test rather than a longer list. |
+| R-GUARD-2 | **MET** | Read in full. `formatAuditMessage` interpolates only `missing.join(", ")` and `forbidden.join(", ")`, both built by `filter` over literal name arrays (`:66-72`). Nothing indexes `env` for output, so no value can reach the message. `src/scripts/assert-byok-production-env.test.ts` spawns the real script as a child process with a sentinel and asserts it. |
+
+**R-TEST — the gate**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-TEST-1 | **MET** | Every new suite the requirement names exists and runs: entitlement resolution incl. trial active/expired/paid (`lib/entitlement/resolve.test.ts`), quota increment and exhaustion (`lib/usage/deep-report-quota.test.ts`, `counters.test.ts`), breaker trip (both, plus `pool-refresh-gates.test.ts`), figure-route auth (`app/api/figure/route.test.ts`), the guard script's require/ban lists (`src/scripts/assert-byok-production-env.test.ts`, spawned as a child process), and the weekly pool key (`lib/opportunities/pool-cache.test.ts`). The three named existing suites were rewritten, not deleted. Two of A's scans now ship **as gates**: `lib/feed/ui-vocabulary.test.ts` (scan 1) and `lib/env/no-client-dev-flags.test.ts` (scan 2). |
+| R-TEST-2 | **MET** | Gate run cold from `web/` this turn — figures verbatim in the close-out below. |
+
+**Part 1 tally:** 31 items · **26 MET** · **5 PARTIAL** (R-ENT-2, R-ENT-3, R-QUOTA-1, R-KEY-3,
+R-GUARD-1) · **0 NOT MET**. Exclusions: **none**.
+
+**Questions the fixture cannot settle, carried forward unchanged and each holding the gate open on
+its own:** does the system provider bill correctly on a real `GOOGLE_API_KEY` (`BLOCKED: no key`);
+do the counters behave against real Supabase, including the RPC's `on conflict do update` under two
+concurrent instances (`BLOCKED: migrations unapplied`); does `handle_new_user` actually create a
+14-day trial (same); does the ISO-week key hold on a non-UTC server (asserted across four stubbed
+zones, but a real deploy is the only place Vercel's UTC and this machine's zone meet).
