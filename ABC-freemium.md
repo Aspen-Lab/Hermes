@@ -3176,3 +3176,52 @@ behaviour and nothing here changed behaviour, exactly as B predicted.
 **GATE after 1-08:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **105 files passed | 1 skipped (106)**, **2601 tests passed | 1 skipped (2602)**, **0
 failed**.
+
+---
+
+**1-09 · The permanent route tests for the three unguarded routes — LANDED. UNIT (b) CLOSED.**
+R-TEST-1, Ruling 2 point 7. Files: `web/src/app/api/jobs/feed/route.test.ts` (new, 7 tests),
+`web/src/app/api/events/feed/route.test.ts` (new, 7 tests),
+`web/src/app/api/figure/route.test.ts` (new, 3 tests). The shared harness
+(`web/src/test-support/route-harness.ts`) landed in 1-06, where five suites needed it first.
+
+All three drive the **real** handler with a real `NextRequest`, stub exactly the session and
+`global.fetch`, and assert on the **recorded outgoing requests** — URL and body — rather than on a
+return value. Every key is a sentinel (`OPERATOR-NOT-A-KEY`, `USER-NOT-A-KEY`). Each file deletes
+`GOOGLE_API_KEY` and `TAVILY_API_KEY` in `beforeEach` on top of 1-00's global setup, and says so in
+a header comment, as B required.
+
+**The assertions, each a difference from A's list turned into a contract:** anonymous → **zero**
+operator-sentinel requests and a **200**; signed-in free with no key → zero and a 200 (R-POOL-3, not
+a 401); free with their own Tavily key → the **user's** sentinel is sent and the operator's is not;
+**paid** → the operator's key **is** sent; **trial** → sent; **expired trial** → **not** sent (D5,
+computed at read time); and a forged body (`aiTier: 2` plus `tavily.enabled` with an empty key) →
+not sent. Figure: no `id` → 400 **before** the guard runs (a malformed request is not an
+authentication problem); signed-out → 401 with the exact error string and `Cache-Control: no-store`
+and **zero** outgoing fetches; signed-in with no provider → 200 and no request to any model host.
+
+**DEVIATION FROM B, stated: `trial` and `paid` are constructed by stubbing the stored row, not by
+`PEER_DEV_ENTITLEMENT`.** B's 1-09 says to build those two personas with the dev override. They
+cannot be: R-ENT-5 honours that variable only when `NODE_ENV === "development"` and not on Vercel,
+while these cases need `VERCEL=1` and `VERCEL_ENV=production` to have a session to read at all — the
+two conditions are mutually exclusive by design. The suites `vi.mock("@/lib/supabase/admin")` and
+return a `plan` row instead, which is closer to production anyway: it exercises the same code path a
+real paid user takes. `SUPABASE_SERVICE_ROLE_KEY` is stubbed **only** in the suites that mock that
+module, and the shared `deployedRuntimeEnv` deliberately does not set it — with it set and the
+module unmocked, `resolveEntitlement` would construct a real Supabase client and attempt a real
+network call.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX — and it independently reproduces A's round-1 numbers.**
+Two probes at once (the ungated env-key read restored, and the figure guard removed): **9 of 17
+tests fail**, and the failure output shows the recorded operator-key requests as
+**2 on `jobs/feed`** and **7 on `events/feed`** — exactly the counts A measured live in round 1,
+arrived at independently, from the other side of the fix. The figure route answers **200 instead of
+401** to a signed-out visitor. Probes reverted; `grep -c FALSIFICATION` → 0 in both files.
+
+**These three files are the re-runnable form of A's Part-2 table**, and round-2 A should use them
+rather than rebuilding a probe. They do not replace the live-model persona pass, which stays
+`BLOCKED: no key`.
+
+**GATE after 1-09:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **108 files passed | 1 skipped (109)**, **2618 tests passed | 1 skipped (2619)**, **0
+failed**. Unit (b) closed: 1-05 … 1-09 all landed.
