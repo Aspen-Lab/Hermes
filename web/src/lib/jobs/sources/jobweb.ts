@@ -1,4 +1,6 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
+import { resolveSystemSearchKeys } from "@/lib/search/system-key";
+import { recordUsageEvent } from "@/lib/usage/events";
 import { looksLikeHostBrand, urlHashId } from "@/lib/opportunities/shared";
 import {
   JOB_QUERY_BUDGET,
@@ -2113,11 +2115,22 @@ async function searchVertexJobs(
     .filter((item): item is RawJobItem => item !== null);
 }
 
-function resolveKeys(query: JobsQuery): { tavily?: string; brave?: string } {
-  return {
-    tavily: query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY,
-    brave: process.env.BRAVE_SEARCH_API_KEY,
-  };
+/**
+ * ABC-freemium 1-05 · R-KEY-3 — this used to be
+ * a bare "the request key, or else the operator's environment key", which
+ * handed the operator's key to anyone who could reach the route, signed in or
+ * not. The gate now lives in one shared resolver; see `lib/search/system-key.ts`
+ * for why the flag defaults to `false`.
+ */
+function resolveKeys(query: JobsQuery): {
+  tavily?: string;
+  brave?: string;
+  provenance: "byok" | "system" | "none";
+} {
+  return resolveSystemSearchKeys({
+    requestTavilyKey: query.webSearch?.tavilyApiKey,
+    systemSearchAllowed: query.webSearch?.systemSearchAllowed === true,
+  });
 }
 
 /**
@@ -2165,6 +2178,22 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
         : searchBrave(jobQuery, keys.brave!, perQuery, query.topics);
     }),
   );
+  // ABC-freemium 1-05 · R-METER-2 — one row per system-Tavily fan-out. This is
+  // the one place that knows the surface, the key's provenance and the query
+  // count. Only `system`: a BYOK search costs the operator nothing, so
+  // attributing it would be noise.
+  if (keys.provenance === "system" && provider === "tavily") {
+    recordUsageEvent({
+      user_id: query.webSearch?.userId ?? null,
+      kind: "search",
+      surface: "jobs",
+      query_count: searches.length,
+      provider: "tavily",
+      ok: true,
+      byok: false,
+    });
+  }
+
   const all: RawJobItem[] = [];
   for (const items of resultSets) {
     all.push(...items);

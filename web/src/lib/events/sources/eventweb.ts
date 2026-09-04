@@ -1,5 +1,7 @@
 import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
+import { resolveSystemSearchKeys } from "@/lib/search/system-key";
+import { recordUsageEvent } from "@/lib/usage/events";
 import {
   DATE_TOKEN_PATTERN,
   DAY_PATTERN,
@@ -2722,11 +2724,22 @@ async function searchVertexEvents(
   });
 }
 
-function resolveKeys(query: EventsQuery): { tavily?: string; brave?: string } {
-  return {
-    tavily: query.webSearch?.tavilyApiKey?.trim() || process.env.TAVILY_API_KEY,
-    brave: process.env.BRAVE_SEARCH_API_KEY,
-  };
+/**
+ * ABC-freemium 1-05 · R-KEY-3 — this used to be
+ * a bare "the request key, or else the operator's environment key". This
+ * surface was the largest single leak in the round: an unauthenticated request
+ * produced seven outgoing searches on the operator's key. See
+ * `lib/search/system-key.ts`.
+ */
+function resolveKeys(query: EventsQuery): {
+  tavily?: string;
+  brave?: string;
+  provenance: "byok" | "system" | "none";
+} {
+  return resolveSystemSearchKeys({
+    requestTavilyKey: query.webSearch?.tavilyApiKey,
+    systemSearchAllowed: query.webSearch?.systemSearchAllowed === true,
+  });
 }
 
 /**
@@ -2784,6 +2797,20 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
             : searchBrave(q, keys.brave!, perQuery),
     ),
   );
+  // ABC-freemium 1-05 · R-METER-2 — one row per system-Tavily fan-out. Only
+  // `system`: a BYOK search costs the operator nothing.
+  if (keys.provenance === "system" && provider === "tavily") {
+    recordUsageEvent({
+      user_id: query.webSearch?.userId ?? null,
+      kind: "search",
+      surface: "events",
+      query_count: searches.length,
+      provider: "tavily",
+      ok: true,
+      byok: false,
+    });
+  }
+
   for (const results of resultSets) {
     for (const result of results) {
       const item = webResultToRawEventItem(result, now);

@@ -2616,12 +2616,31 @@ describe("RULING 75 — eventweb provider resolution", () => {
     ).toBe("brave");
   });
 
-  it("keeps the shipped behaviour exactly when Vertex is absent", () => {
+  // ABC-freemium 1-05 · R-KEY-3 — REWRITTEN, NOT DELETED. This case asserted
+  // that the operator's environment Tavily key alone resolved `"tavily"`. On
+  // this surface that was the largest leak in the round: an unauthenticated
+  // request produced seven outgoing searches on the operator's key. The env key
+  // now requires `systemSearchAllowed`, which only the route can set and only
+  // from the entitlement.
+  it("spends the operator's env Tavily key only when the request is entitled", () => {
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
     vi.stubEnv("TAVILY_API_KEY", "env-tavily");
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
-    expect(resolveSearchProvider(baseQuery)).toBe("tavily");
-    expect(eventweb.enabled(baseQuery)).toBe(true);
+
+    expect(resolveSearchProvider(baseQuery)).toBeNull();
+    expect(eventweb.enabled(baseQuery)).toBe(false);
+
+    const entitled = {
+      ...baseQuery,
+      webSearch: { systemSearchAllowed: true },
+    };
+    expect(resolveSearchProvider(entitled)).toBe("tavily");
+    expect(eventweb.enabled(entitled)).toBe(true);
+  });
+
+  it("keeps the shipped Brave behaviour exactly when Vertex is absent", () => {
+    // Brave is env-only and D2 bans it on Vercel, so R-KEY-3 leaves it ungated.
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
     vi.stubEnv("TAVILY_API_KEY", "");
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "env-brave");
     expect(resolveSearchProvider(baseQuery)).toBe("brave");

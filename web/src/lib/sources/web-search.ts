@@ -1,4 +1,5 @@
 import type { SourceAdapter, SourceQuery, RawItem } from "./types";
+import { resolveSystemSearchKeys } from "@/lib/search/system-key";
 import { cleanDisplayText, cleanDisplayTextOrUndefined } from "@/lib/text/clean";
 import {
   geminiSearchDeadline,
@@ -39,9 +40,26 @@ async function fetchImpl(query: SourceQuery): Promise<RawItem[]> {
   if (searchQueries.length === 0) return [];
 
   const limit = query.limit ?? 20;
-  const braveKey = process.env.BRAVE_SEARCH_API_KEY;
+  // ABC-freemium 1-05 · R-KEY-3 · D3 — this used to be
+  // "the request key, or else the operator's environment key", unconditionally.
+  //
+  // **On this surface the flag is always `false`, and gating alone is not the
+  // whole fix.** A user's own Tavily key cannot reach here at all:
+  // `feed/pipeline.ts` builds the papers web options with
+  // `webSearchOptions(req.searchConnectors)`, which returns only `{ provider }`
+  // and never a `tavilyApiKey`, and `store/feed.ts` sends no `searchConnectors`
+  // for papers by design. So the only Tavily key this line could ever have
+  // reached was the operator's — for every plan, including paid. D3 says the
+  // papers surface costs zero paid search, which makes its
+  // `systemSearchAllowed` permanently false. That is D3 implemented, not
+  // reversed.
+  const keys = resolveSystemSearchKeys({
+    requestTavilyKey: query.webSearch?.tavilyApiKey,
+    systemSearchAllowed: query.webSearch?.systemSearchAllowed === true,
+  });
+  const braveKey = keys.brave;
   const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
-  const tavilyKey = requestTavilyKey || process.env.TAVILY_API_KEY;
+  const tavilyKey = keys.tavily;
   // RULING 75 — the key gate now admits the gemini provider too. Without this
   // the paper surface returned `[]` here the moment Tavily was disabled. The
   // credit migration adds vertex on the same footing: a configured Search App

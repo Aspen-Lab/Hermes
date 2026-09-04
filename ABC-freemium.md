@@ -2918,3 +2918,72 @@ and it survived my own first pass.
 **GATE after 1-04:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **104 files passed | 1 skipped (105)**, **2584 tests passed | 1 skipped (2585)**, **0
 failed**. Unit (a) closed: +4 files and +32 tests over the round's baseline.
+
+---
+
+### Unit (b) — close the wallet
+
+**1-05 · The operator's Tavily key is now gated — LANDED.** R-KEY-3, R-POOL-3, R-ENT-4, R-METER-2,
+key half of R-SEC-2. A's items 1 + 2. Files: `web/src/lib/search/system-key.ts` (new),
+`web/src/lib/search/system-key.test.ts` (new, 6 tests), the three readers
+(`jobs/sources/jobweb.ts`, `events/sources/eventweb.ts`, `sources/web-search.ts`), the three type
+files (`jobs/types.ts`, `events/types.ts`, `sources/types.ts`), the three pipelines
+(`jobs/pipeline.ts`, `events/pipeline.ts`, `feed/pipeline.ts`), and the two suites that pinned the
+old contract.
+
+**B'S SCAN-3 GREP, RUN AS ASKED:**
+`grep -rn "process.env.TAVILY_API_KEY" src/ scripts/ | grep -v "lib/search/system-key.ts" | grep -v "\.test\."`
+→ **0 hits.** One hit remains in a **test** — `src/test-support/env-isolation.test.ts:35`, which
+asserts the key is **absent** from the test process (1-00). That is the opposite of a read.
+**Note for A: scan 3 must exclude `*.test.ts`**, the same way A's other scans already drop test
+files, or it will report 1 forever. I also reworded the three "this used to be…" comments in the
+readers so they do not contain the literal string and cannot inflate the count.
+
+Papers passes a hard `false` at `feed/pipeline.ts` with B's correction 3 written out at the call
+site: a user's own Tavily key cannot reach that surface at all, so the only key it could ever have
+spent was the operator's, for every plan including paid. D3 implemented, not reversed.
+`dispatch-digests` and `test-digest` pass nothing and therefore get `false`.
+
+**The flag's VALUE is 1-06's, not this item's.** 1-05 lands the gate, the plumbing and the `false`
+default; the routes cannot supply `entitlement.systemSearchAllowed` until `requireEntitledAiRequest`
+exists. So **between 1-05 and 1-06 nobody gets the system Tavily key, trial and paid included** —
+the safe direction, and B's stated reason for putting 1-05 first (the key gate is what stops the
+spend; at `aiTier: 0` the route order closes nothing).
+
+**R-METER-2's search row landed here**, as B deferred it from 1-03: one `kind: "search"` row per
+fan-out in `jobweb`'s and `eventweb`'s `fetchImpl`, **only when `provenance === "system"` and the
+chosen provider is actually Tavily**, carrying `surface` and `query_count`. `user_id` rides on the
+same `webSearch` block as the flag.
+
+**Provenance describes the TAVILY key only** — a small refinement of B's shape, stated: B's
+`provenance` was `"byok" | "system" | "none"` over the whole result, but Brave is also
+operator-funded and R-METER-2 counts "every system-**Tavily** search". Folding Brave into `"system"`
+would have written search rows naming Tavily for Brave fan-outs. `"none"` therefore means "no Tavily
+key", whether or not Brave exists.
+
+**Tests at risk — B named the right two files and predicted the exact break.**
+`jobweb.test.ts` and `eventweb.test.ts` each had one case, *"keeps the shipped behaviour exactly
+when Vertex is absent"*, asserting `resolveSearchProvider` returns `"tavily"` from the env key with
+no request key. Both failed (`expected null to be 'tavily'`). **Rewritten to state the new contract,
+never deleted**, and each split into two so both halves are pinned: unentitled → `null` and
+`enabled === false`; entitled → `"tavily"` and `enabled === true`; and a separate case keeping the
+Brave behaviour byte for byte. Comments name 1-05. The other three files B listed
+(`query-budget.test.ts`, `welcome/completeness.test.ts`, `benchmark.test.ts`) were unaffected, as B
+predicted.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — one probe restoring the ungated read
+(`if (process.env.TAVILY_API_KEY)` without the flag): **4 tests FAIL** across three files —
+`system-key.test.ts` "gives an UNENTITLED request nothing" and "ignores a blank request key", plus
+the rewritten jobweb and eventweb cases (`expected 'tavily' to be null`). Probe reverted; tree
+clean.
+
+**Two type errors I caused and fixed inside the item** (recorded so the gate figures are honest):
+the rewritten cases first spread `baseQuery.webSearch`, which does not exist on either fixture —
+`tsc` caught both, and the entitled fixture now sets `webSearch` outright.
+
+**Standing regression locks re-verified**: `pool-cache.test.ts`, `daily-pool-cache.test.ts`,
+`ai-tier.test.ts` run together, **3 files, 21 passed**.
+
+**GATE after 1-05:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **105 files passed | 1 skipped (106)**, **2592 tests passed | 1 skipped (2593)**, **0
+failed**.

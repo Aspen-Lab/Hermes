@@ -115,7 +115,19 @@ async function buildPaperPool(
   // CREDIT MIGRATION — `webSearchOptions` prefers Vertex AI Search when a
   // Search App is configured and otherwise returns exactly what
   // `geminiWebSearchOptions` returned.
-  const paperWebSearch = webSearchOptions(req.searchConnectors);
+  //
+  // ABC-freemium 1-05 · R-KEY-3 · D3 — **a hard `false`, and it is permanent.**
+  // D3 says the papers surface costs zero paid search. It is not just policy:
+  // `webSearchOptions` returns `{ provider }` and never a `tavilyApiKey`, and
+  // `store/feed.ts` sends no `searchConnectors` for papers at all, so a user's
+  // own Tavily key cannot reach this surface. The only key it could ever spend
+  // is the operator's — for every plan, paid included. Combined with D2's Vercel
+  // bans on Brave and the Vertex/Gemini search names, the papers `web` source
+  // returns `[]` in production. That is D3 working as written.
+  const paperWebSearch = {
+    ...webSearchOptions(req.searchConnectors),
+    systemSearchAllowed: false,
+  };
 
   const fetchPromise = Promise.allSettled(
     sources.map((s) =>

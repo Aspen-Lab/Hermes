@@ -3074,11 +3074,34 @@ describe("RULING 75 — jobweb provider resolution", () => {
     ).toBe("tavily");
   });
 
-  it("keeps the shipped behaviour exactly when Vertex is absent", () => {
+  // ABC-freemium 1-05 · R-KEY-3 — REWRITTEN, NOT DELETED. This case asserted
+  // that the operator's environment Tavily key alone resolved `"tavily"`. That
+  // was the leak: nothing on that path read a session or an entitlement, so an
+  // unauthenticated request spent the operator's search credits. The env key now
+  // requires `systemSearchAllowed`, which only the route can set and only from
+  // the entitlement, so the case is split in two and both halves are asserted.
+  it("spends the operator's env Tavily key only when the request is entitled", () => {
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
     vi.stubEnv("TAVILY_API_KEY", "env-tavily");
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
-    expect(resolveSearchProvider(baseQuery)).toBe("tavily");
+
+    // Not entitled — and a query that says nothing is not entitled either.
+    expect(resolveSearchProvider(baseQuery)).toBeNull();
+    expect(jobweb.enabled(baseQuery)).toBe(false);
+
+    // Entitled: the shipped behaviour, unchanged.
+    const entitled = {
+      ...baseQuery,
+      webSearch: { systemSearchAllowed: true },
+    };
+    expect(resolveSearchProvider(entitled)).toBe("tavily");
+    expect(jobweb.enabled(entitled)).toBe(true);
+  });
+
+  it("keeps the shipped Brave behaviour exactly when Vertex is absent", () => {
+    // Brave is env-only and D2 bans it on Vercel, so R-KEY-3 leaves it ungated:
+    // it can only exist on a developer's machine.
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
     vi.stubEnv("TAVILY_API_KEY", "");
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "env-brave");
     expect(resolveSearchProvider(baseQuery)).toBe("brave");

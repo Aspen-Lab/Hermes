@@ -140,11 +140,20 @@ async function buildJobPool(
     limit: req.perSourceLimit ?? DEFAULT_PER_SOURCE_LIMIT,
     // RULING 75 — see the matching comment in `events/pipeline.ts`. The Tavily
     // branch is untouched; the gemini branch is what turns this surface back on.
-    webSearch: req.searchConnectors?.tavily?.enabled
-      ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
-      // CREDIT MIGRATION — prefers Vertex AI Search when a Search App is
-      // configured, otherwise byte-identical to `geminiWebSearchOptions`.
-      : webSearchOptions(req.searchConnectors),
+    //
+    // ABC-freemium 1-05 · R-KEY-3 — the two fields below ride on both branches.
+    // `systemSearchAllowed` comes from the caller's entitlement and is `false`
+    // when nothing passes it, which is what keeps the nightly cron
+    // (`dispatch-digests`) and `test-digest` off the operator's key (D9).
+    webSearch: {
+      ...(req.searchConnectors?.tavily?.enabled
+        ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
+        : // CREDIT MIGRATION — prefers Vertex AI Search when a Search App is
+          // configured, otherwise byte-identical to `geminiWebSearchOptions`.
+          webSearchOptions(req.searchConnectors)),
+      systemSearchAllowed: req.systemSearchAllowed === true,
+      userId: req.userId ?? null,
+    },
     apiKeys: req.apiKeys,
   };
 

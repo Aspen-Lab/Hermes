@@ -164,11 +164,18 @@ async function buildEventPool(
     // under `tavily.enabled`, so with Tavily disabled the query carried no
     // `webSearch`, `eventweb.enabled()` returned false, and the web surface was
     // entirely dark.
-    webSearch: req.searchConnectors?.tavily?.enabled
-      ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
-      // CREDIT MIGRATION — prefers Vertex AI Search when a Search App is
-      // configured, otherwise byte-identical to `geminiWebSearchOptions`.
-      : webSearchOptions(req.searchConnectors),
+    //
+    // ABC-freemium 1-05 · R-KEY-3 — the two fields below ride on both branches;
+    // `systemSearchAllowed` is `false` when nothing passes it (D9).
+    webSearch: {
+      ...(req.searchConnectors?.tavily?.enabled
+        ? { tavilyApiKey: req.searchConnectors.tavily.apiKey }
+        : // CREDIT MIGRATION — prefers Vertex AI Search when a Search App is
+          // configured, otherwise byte-identical to `geminiWebSearchOptions`.
+          webSearchOptions(req.searchConnectors)),
+      systemSearchAllowed: req.systemSearchAllowed === true,
+      userId: req.userId ?? null,
+    },
   };
 
   const active = eventSources.filter((source) => source.enabled(query));

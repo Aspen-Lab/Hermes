@@ -36,6 +36,11 @@ export interface SourceQuery {
     tavilyApiKey?: string;
     includeDomains?: string[];
     excludeDomains?: string[];
+    // ABC-freemium 1-05 · R-KEY-3 · D3 — the papers surface passes a hard
+    // `false` here. See the comment at `feed/pipeline.ts`'s call site: a user's
+    // own Tavily key cannot reach this surface at all, so the only key it could
+    // ever spend is the operator's, and D3 says papers cost zero paid search.
+    systemSearchAllowed?: boolean;
   };
 }
 
