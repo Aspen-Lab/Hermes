@@ -3745,3 +3745,83 @@ standing error.
 **GATE after 1-18 + 1-19:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **113 files passed | 1 skipped (114)**, **2685 tests passed | 1 skipped (2686)**, **0
 failed**. Unit (e) closed.
+
+---
+
+### Unit (f) — counting deep reports
+
+**1-20 + 1-21 + 1-22 + 1-23 · The deep-report quota, the three breakers, and what must never be
+counted — LANDED. UNIT (f) CLOSED.** R-QUOTA-1, R-QUOTA-2, R-QUOTA-3, D4. Files:
+`web/src/lib/usage/deep-report-quota.ts` (new), `web/src/lib/usage/search-breaker.ts` (new),
+`web/src/lib/usage/counters.ts`, the three report routes, `jobweb.ts`, `eventweb.ts`, the two
+pipelines, and four test files (`deep-report-quota.test.ts` 15 new,
+`quota-exemptions.test.ts` 6 new, plus edits to the report and jobs-feed route suites).
+
+**One counter across papers + jobs + events**, as D4 says. Nothing in `consumeDeepReport` names a
+surface — that is the point, and a test asserts five deep reports exhaust the budget however they
+are spread. Check and increment are one round trip, so two tabs cannot both see "4 of 5".
+
+**Placement, exactly as B specified.** Papers: inside the `deepReport` branch and nowhere else.
+Jobs and events: the whole route is the deep operation, so immediately after the entitlement guard
+and before `resolveProvider`. On exhaustion each route returns **the payload it already returned**
+when no provider resolved — the shallow report on papers, the no-LLM object on the other two — with
+one `quota` field added. No error status, no new response shape.
+
+**The three counters of R-QUOTA-2.** Trial cap 20 total on a key with **no period segment** (a
+comment says why, and a test asserts it does *not* reset at a month boundary). Paid deep-report
+breaker 200/day. System-search breaker 500/day, now consumed in **two** places — 1-18's forced
+rebuild and, new here, the ordinary fan-out in `jobweb`/`eventweb`, charged **per query, not per
+fan-out**, and only when the key is the operator's. A trip returns an empty result set, the same
+degraded value a keyless reader already gets. Both breaker sites share one helper so they cannot
+disagree about the limit. A trip writes an error-level line and **one awaited** breaker usage row;
+"for the rest of the UTC day" is a property of the key, and **no trippedUntil timestamp was added**.
+
+**A DECISION I MADE THAT D4 DOES NOT STATE, flagged for the manager: the deep-report quota FAILS
+CLOSED.** `counters.ts` sets two opposite rules — rate limits open, breakers closed — and B did not
+rule on the monthly allowance. I treated it as a spend cap and gave it the breaker's direction: an
+unreadable counter denies the deep read. The cost is bounded and visible (the reader still gets a
+complete deterministic report, which is the degraded path that already exists); failing open would
+hand out unmetered model calls for the length of an outage. Written into the module header and
+asserted by a test. **Manager: if the intent is that an outage should not cost readers their deep
+reports, this is a one-line change.**
+
+**The reset instant for a trial is the trial's end, not the next month.** A trial's twenty do not
+come back monthly; what changes is the plan. B's shape said "the first instant of the next UTC
+month", which is right for free and wrong for trial. Stated in the code and asserted.
+
+**R-QUOTA-3 is a placement rule, so it is asserted as a placement.** A suite walks non-test source
+and asserts `consumeDeepReport` appears **only** in the three report routes and its own module;
+names the three exempt files (`tier2-rerank.ts`, `api/digest/route.ts`, `query-gen.ts`) and asserts
+each is clean; and — for the fourth exempt path, which lives *inside* a counted file — asserts
+papers has exactly **one** `consumeDeepReport` call, that it sits **after** the deep-report branch
+opens, and that the shallow generator's body never reaches it. **A final case asserts every exempt
+path still acquires its provider through `resolveProvider`**, i.e. is still metered: B's warning
+that a later round could "fix" R-QUOTA-3 by skipping the metering, turned into an assertion.
+
+**A REAL FINDING THE QUOTA SURFACED IMMEDIATELY, and it is worth A's attention.** Six report-route
+tests failed the moment 1-20 landed — because the counter store is memoised per module and every
+test in a file was spending the **same** monthly budget, so the sixth was refused. That is the
+quota working. The suites now call `resetCounterStoreForTests()` in `beforeEach`, with a comment.
+**But it has a production shadow: `local-no-auth` is a single synthesised id shared by every caller
+in a runtime with no sign-in mechanism, so a self-hosted instance shares one 5/month budget across
+all its readers.** Defensible — such a runtime cannot tell readers apart — but it is a real
+consequence and it is not written anywhere else.
+
+**One test of mine had to be sharpened rather than banked.** The jobs-feed refresh cases observed
+the route's decision by "did the search counter move" — which stopped discriminating the moment
+1-21 made the ordinary fan-out charge the same counter. Rewritten to assert the **difference**
+between the same request with and without the flag is exactly one, which is a stronger statement
+than the one it replaced.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — three probes at once (the free quota never enforced;
+the paid breaker's verdict ignored; `consumeDeepReport` re-introduced into `tier2-rerank.ts`):
+**9 tests fail**, spanning the free quota, the shared-counter case, the expired-trial case, both
+paid-breaker cases, the breaker-row case and the fail-closed case. Probes reverted; tree clean.
+
+**Standing regression locks re-verified**, run together: `registry.test.ts`, `ai-tier.test.ts`,
+`feed/route.test.ts`, `jobs/report/route.test.ts`, `events/report/route.test.ts`,
+`pool-cache.test.ts`, `daily-pool-cache.test.ts` — **7 files, 64 passed**.
+
+**GATE after unit (f):** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **115 files passed | 1 skipped (116)**, **2705 tests passed | 1 skipped (2706)**, **0
+failed**.

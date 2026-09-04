@@ -17,6 +17,7 @@ vi.mock("@/lib/llm/providers/registry", async (importOriginal) => {
 });
 
 import { POST } from "./route";
+import { resetCounterStoreForTests } from "@/lib/usage/counters";
 import { loadConfiguredOpportunityEnrichment } from "@/lib/opportunities/enrichment";
 
 class MemoryStorage implements Storage {
@@ -51,6 +52,10 @@ function request(body: Record<string, unknown>): NextRequest {
 }
 
 beforeEach(() => {
+  // ABC-freemium 1-20 — the counter store is memoised per module, so without
+  // this every test in the file spends the same monthly deep-report budget and
+  // the sixth one is refused. Resetting it is what keeps each case independent.
+  resetCounterStoreForTests();
   vi.clearAllMocks();
 });
 

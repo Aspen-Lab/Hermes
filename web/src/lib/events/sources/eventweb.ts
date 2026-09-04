@@ -2,6 +2,7 @@ import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
 import { resolveSystemSearchKeys } from "@/lib/search/system-key";
 import { recordUsageEvent } from "@/lib/usage/events";
+import { consumeSystemSearches } from "@/lib/usage/search-breaker";
 import {
   DATE_TOKEN_PATTERN,
   DAY_PATTERN,
@@ -2770,6 +2771,23 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
 
   const searches = query.queries.slice(0, EVENT_QUERY_BUDGET);
   if (searches.length === 0) return [];
+
+  // ABC-freemium 1-21 · R-QUOTA-2, D4 — the daily cap on operator-funded
+  // search, charged before the fan-out and only when the key is the
+  // operator's. A BYOK fan-out costs the owner nothing and is not counted.
+  //
+  // A tripped breaker returns `[]`, which is the SAME degraded value a keyless
+  // reader already gets here: the pipeline serves its free structured sources.
+  // No error, no new shape.
+  if (keys.provenance === "system" && provider === "tavily") {
+    const allowed = await consumeSystemSearches(
+      query.webSearch?.userId ?? null,
+      searches.length,
+      undefined,
+      "events",
+    );
+    if (!allowed) return [];
+  }
   // Search providers bill per *search*, not per result, so asking each query
   // for a full page of results is free. The previous formula divided a fixed
   // cap across the query set, which meant every added query starved the

@@ -254,49 +254,51 @@ describe("POST /api/jobs/feed — the operator's search key", () => {
 });
 
 /**
- * ABC-freemium 1-19 · R-POOL-2 — the entitlement gate, observed at the route.
+ * ABC-freemium 1-19 / 1-21 · R-POOL-2 — the entitlement gate, observed at the
+ * route.
  *
- * A forced rebuild counts against the daily system-search breaker before it
- * runs, so "did the route forward the refresh?" is answered by whether that
- * counter moved. Nothing else in these requests touches it.
+ * A forced rebuild charges the daily system-search counter before it runs, so
+ * "did the route forward the refresh?" is answered by that counter moving.
+ * Since 1-21 the ordinary fan-out charges the same counter too, so the
+ * assertion is on the **difference** between the same request with and without
+ * the flag — which is a sharper statement anyway: a granted refresh costs
+ * exactly one charge on top of whatever the fan-out already costs.
  */
 describe("POST /api/jobs/feed — refresh now (R-POOL-2)", () => {
-  function searchIncrements(): unknown[] {
+  function searchIncrements(): number {
     return mocks.rpc.mock.calls.filter(
       (call) =>
         call[0] === "increment_usage_counter" &&
         String((call[1] as { p_key?: string })?.p_key ?? "").startsWith(
           "search:",
         ),
-    );
+    ).length;
   }
 
   it("refuses a free user's forced rebuild, and still answers 200", async () => {
+    // A free user has no system search at all, so nothing is charged either
+    // way — and the surface answers exactly as it would have. Refused, never
+    // errored.
     mocks.getUser.mockResolvedValue(signedIn("free-user"));
     mocks.adminFrom.mockReturnValue(planRow("free"));
 
     const response = await POST(request({ ...BASE, poolRefresh: true }));
 
-    // Refused, never errored: the surface answers exactly as it would have.
     expect(response.status).toBe(200);
-    expect(searchIncrements()).toEqual([]);
+    expect(searchIncrements()).toBe(0);
   });
 
-  it("grants a paid user's forced rebuild", async () => {
-    mocks.getUser.mockResolvedValue(signedIn("paid-user"));
-    mocks.adminFrom.mockReturnValue(planRow("paid"));
-
-    await POST(request({ ...BASE, poolRefresh: true }));
-
-    expect(searchIncrements().length).toBe(1);
-  });
-
-  it("does nothing when no refresh is asked for, whatever the plan", async () => {
+  it("charges a paid user exactly one extra for a granted refresh", async () => {
     mocks.getUser.mockResolvedValue(signedIn("paid-user"));
     mocks.adminFrom.mockReturnValue(planRow("paid"));
 
     await POST(request(BASE));
+    const withoutRefresh = searchIncrements();
+    mocks.rpc.mockClear();
 
-    expect(searchIncrements()).toEqual([]);
+    await POST(request({ ...BASE, poolRefresh: true }));
+    const withRefresh = searchIncrements();
+
+    expect(withRefresh).toBe(withoutRefresh + 1);
   });
 });

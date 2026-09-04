@@ -20,13 +20,7 @@ import {
   type PoolCache,
 } from "@/lib/opportunities/pool-cache";
 import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
-import {
-  SYSTEM_SEARCHES_PER_DAY,
-  breakerTripped,
-  endOfUtcDay,
-  getCounterStore,
-  systemSearchDayKey,
-} from "@/lib/usage/counters";
+import { consumeSystemSearches } from "@/lib/usage/search-breaker";
 import {
   countOpportunityFacets,
   DEFAULT_OPPORTUNITY_TOP_N,
@@ -278,11 +272,7 @@ export async function buildDailyEventPool(
   // costing the owner a fan-out.
   let forceRebuild = false;
   if ((options.poolRefresh ?? req.poolRefresh) && req.userId) {
-    const reading = await getCounterStore().increment(
-      systemSearchDayKey(req.userId, now),
-      endOfUtcDay(now),
-    );
-    forceRebuild = !breakerTripped(reading, SYSTEM_SEARCHES_PER_DAY);
+    forceRebuild = await consumeSystemSearches(req.userId, 1, now);
   }
 
   let fresh: BuiltEventPool | undefined;

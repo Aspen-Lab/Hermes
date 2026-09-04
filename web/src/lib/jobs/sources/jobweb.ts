@@ -1,6 +1,7 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
 import { resolveSystemSearchKeys } from "@/lib/search/system-key";
 import { recordUsageEvent } from "@/lib/usage/events";
+import { consumeSystemSearches } from "@/lib/usage/search-breaker";
 import { looksLikeHostBrand, urlHashId } from "@/lib/opportunities/shared";
 import {
   JOB_QUERY_BUDGET,
@@ -2159,6 +2160,23 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
 
   const searches = query.queries.slice(0, JOB_QUERY_BUDGET);
   if (searches.length === 0) return [];
+
+  // ABC-freemium 1-21 · R-QUOTA-2, D4 — the daily cap on operator-funded
+  // search, charged before the fan-out and only when the key is the
+  // operator's. A BYOK fan-out costs the owner nothing and is not counted.
+  //
+  // A tripped breaker returns `[]`, which is the SAME degraded value a keyless
+  // reader already gets here: the pipeline serves its free structured sources.
+  // No error, no new shape.
+  if (keys.provenance === "system" && provider === "tavily") {
+    const allowed = await consumeSystemSearches(
+      query.webSearch?.userId ?? null,
+      searches.length,
+      undefined,
+      "jobs",
+    );
+    if (!allowed) return [];
+  }
   // Providers bill per search, not per result — see RESULTS_PER_SEARCH.
   const perQuery = RESULTS_PER_SEARCH;
 

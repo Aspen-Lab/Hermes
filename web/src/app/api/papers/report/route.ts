@@ -18,6 +18,7 @@ import { getFullText } from "@/lib/papers/full-text";
 import { getFigurePool } from "@/lib/figures/extract";
 import type { ReportStreamEvent } from "@/lib/papers/report-stream";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
+import { consumeDeepReport } from "@/lib/usage/deep-report-quota";
 
 export const dynamic = "force-dynamic";
 // Deep reports (full-text fetch + two model passes + figure binding) have been
@@ -427,13 +428,29 @@ export async function POST(req: NextRequest) {
   // user BYOK in deployments, or the explicit developer provider in local dev.
   // Without a provider, fall through to the deterministic shallow path.
   if (body.deepReport) {
-    const provider = resolveProvider(
-      body.llmOverride ?? null,
-      providerCtx(ctx, body.llmOverride),
-    );
+    // ABC-freemium 1-20 · R-QUOTA-1, D4 — **only this branch counts.** The
+    // shallow path below and the streaming path above are R-QUOTA-3's exempt
+    // cases and must never reach the counter.
+    //
+    // Note "shallow" is not "no LLM": `generateShallowReport` calls the model
+    // when one is available, so it is **metered by 1-03 and uncounted by
+    // 1-20** — different things, and easy to conflate.
+    const quotaDecision = await consumeDeepReport(gate.entitlement);
+    const provider = quotaDecision.allowed
+      ? resolveProvider(
+          body.llmOverride ?? null,
+          providerCtx(ctx, body.llmOverride),
+        )
+      : null;
     if (!provider?.generateJsonText) {
-      // No user key (and no local developer provider): deterministic report.
-      return NextResponse.json(await generateShallowReport(body, body.llmOverride, ctx));
+      // No budget, no user key, no local provider: the deterministic report —
+      // the SAME call this route already made — plus the quota signal.
+      const shallow = await generateShallowReport(body, body.llmOverride, ctx);
+      return NextResponse.json(
+        quotaDecision.quota
+          ? { ...shallow, quota: quotaDecision.quota }
+          : shallow,
+      );
     }
 
     try {

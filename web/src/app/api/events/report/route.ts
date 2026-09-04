@@ -22,6 +22,7 @@ import {
 } from "@/lib/opportunities/page-text";
 import type { Event } from "@/types";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
+import { consumeDeepReport } from "@/lib/usage/deep-report-quota";
 
 export const dynamic = "force-dynamic";
 
@@ -120,17 +121,23 @@ export async function POST(req: NextRequest) {
   if (gate instanceof NextResponse) return gate;
   const { entitlement } = gate;
 
-  const provider = resolveProvider(body.llmOverride ?? null, {
-    userId: entitlement.userId,
-    byok: hasUsableProviderOverride(body.llmOverride ?? null),
-    path: "event-report",
-  });
+  // ABC-freemium 1-20 · R-QUOTA-1, D4 — see the matching comment in
+  // `api/jobs/report/route.ts`. Same counter, same degraded payload.
+  const quotaDecision = await consumeDeepReport(entitlement);
+  const provider = quotaDecision.allowed
+    ? resolveProvider(body.llmOverride ?? null, {
+        userId: entitlement.userId,
+        byok: hasUsableProviderOverride(body.llmOverride ?? null),
+        path: "event-report",
+      })
+    : null;
   if (!provider?.generateJsonText) {
     return NextResponse.json(
       {
         enrichment: null,
         noLlm: true,
         sourceReadStatus: "not-requested",
+        ...(quotaDecision.quota ? { quota: quotaDecision.quota } : {}),
       },
       { headers: { "Cache-Control": "private, no-store" } },
     );

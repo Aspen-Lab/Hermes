@@ -10,6 +10,7 @@ import {
 } from "@/lib/opportunities/enrichment";
 import type { Job } from "@/types";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
+import { consumeDeepReport } from "@/lib/usage/deep-report-quota";
 import { fetchPageHtml } from "@/lib/opportunities/page-fetch";
 import {
   ownedTextHasPostingSubstance,
@@ -69,17 +70,28 @@ export async function POST(req: NextRequest) {
   if (gate instanceof NextResponse) return gate;
   const { entitlement } = gate;
 
-  const provider = resolveProvider(body.llmOverride ?? null, {
-    userId: entitlement.userId,
-    byok: hasUsableProviderOverride(body.llmOverride ?? null),
-    path: "job-report",
-  });
+  // ABC-freemium 1-20 · R-QUOTA-1, D4 — the whole of this route IS the deep
+  // operation, so the counter is consumed here, before a provider is resolved.
+  // One counter across papers + jobs + events.
+  //
+  // A reader whose budget is gone gets **the existing degraded payload** plus a
+  // machine-readable `quota` — the same object this route already returns when
+  // no provider resolves, with one field added.
+  const quotaDecision = await consumeDeepReport(entitlement);
+  const provider = quotaDecision.allowed
+    ? resolveProvider(body.llmOverride ?? null, {
+        userId: entitlement.userId,
+        byok: hasUsableProviderOverride(body.llmOverride ?? null),
+        path: "job-report",
+      })
+    : null;
   if (!provider?.generateJsonText) {
     return NextResponse.json(
       {
         enrichment: null,
         noLlm: true,
         sourceReadStatus: "not-requested",
+        ...(quotaDecision.quota ? { quota: quotaDecision.quota } : {}),
       },
       { headers: { "Cache-Control": "private, no-store" } },
     );

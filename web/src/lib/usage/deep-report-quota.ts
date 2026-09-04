@@ -1,0 +1,186 @@
+/**
+ * How many deep reports this reader has left, and what to say when they run out.
+ *
+ * ABC-freemium 1-20 / 1-21 · R-QUOTA-1, R-QUOTA-2, D4.
+ *
+ * **One counter across papers + jobs + events** (D4 says so in as many words),
+ * so all three report routes increment the same key. Implementing it as three
+ * separate counters is the easy accident, which is why `1-23` asserts a papers
+ * deep report and a jobs report draw on the same budget.
+ *
+ * **Check and increment are one round trip.** `increment` returns the value
+ * *after* this call's increment, so two tabs cannot both see "4 of 5" and both
+ * proceed. Never read-then-write here.
+ *
+ * ── WHAT THE READER GETS WHEN THE BUDGET IS GONE ─────────────────────────────
+ *
+ * The **existing** degraded payload — `generateShallowReport` on papers, the
+ * `noLlm: true` object on jobs and events — plus a machine-readable `quota`.
+ * No error status, no new response shape, nothing new to render an emptiness
+ * into. A reader who is out of deep reports gets the deterministic report they
+ * would have had without a key, which is exactly what free means.
+ *
+ * ── THIS COUNTER FAILS CLOSED, AND HERE IS WHY ───────────────────────────────
+ *
+ * `counters.ts` sets out two opposite rules: rate limits fail open, breakers
+ * fail closed. **A deep-report allowance is a spend cap, so it takes the
+ * breaker's direction** — an unreadable counter denies the deep read. The cost
+ * is bounded and visible: the reader still gets a complete deterministic report,
+ * because that is what the degraded path already produces. Failing open would
+ * hand out unmetered model calls for the length of an outage.
+ *
+ * That is a reading of D4 rather than a sentence in it, so it is written here
+ * and flagged in the round log rather than left implicit.
+ */
+import type { Entitlement } from "@/lib/entitlement/types";
+import {
+  SYSTEM_SEARCHES_PER_DAY,
+  breakerTripped,
+  deepReportDayKey,
+  deepReportMonthKey,
+  deepReportTrialKey,
+  endOfUtcDay,
+  endOfUtcMonth,
+  getCounterStore,
+} from "./counters";
+import { recordUsageEventAwaited } from "./events";
+
+/** D4 — the paid breaker. Unlimited to the user, capped to protect the wallet. */
+export const PAID_DEEP_REPORTS_PER_DAY = 200;
+
+export { SYSTEM_SEARCHES_PER_DAY };
+
+/**
+ * The machine-readable signal R-QUOTA-1 requires. **Additive and optional** —
+ * every existing client ignores an unknown key, which is why the server half
+ * could land before the UI half.
+ */
+export interface QuotaSignal {
+  kind: "deep_report" | "breaker";
+  remaining: number;
+  /** ISO instant at which the allowance comes back. */
+  resetsAt: string;
+}
+
+export interface DeepReportDecision {
+  allowed: boolean;
+  quota?: QuotaSignal;
+}
+
+/**
+ * R-QUOTA-1's UI string, in English (Ruling 3 point 1 — the original Chinese was
+ * the manager's shorthand, and the product has no other CJK text in it).
+ *
+ * Kept next to the mechanism so the two cannot drift, and pure so it is
+ * testable without rendering anything.
+ */
+export function quotaMessage(quota: QuotaSignal, now = new Date()): string {
+  const days = Math.max(
+    1,
+    Math.ceil(
+      (new Date(quota.resetsAt).getTime() - now.getTime()) / 86_400_000,
+    ),
+  );
+  const unit = days === 1 ? "day" : "days";
+  return quota.kind === "breaker"
+    ? `Peer is at today's limit for deep reports. Resets in ${days} ${unit}.`
+    : `You've used this month's deep reports. Resets in ${days} ${unit}.`;
+}
+
+/**
+ * Check and consume one deep report.
+ *
+ * Call it **immediately before** `resolveProvider` on a deep path, and only on
+ * the deep path — R-QUOTA-3's exempt work (shallow paper reports, ranking, the
+ * digest, query generation) must never reach here.
+ */
+export async function consumeDeepReport(
+  entitlement: Entitlement,
+  now: Date = new Date(),
+): Promise<DeepReportDecision> {
+  const userId = entitlement.userId;
+  // No user, no budget. The report routes answer a signed-out caller 401 well
+  // before this, so in practice this is the local "no sign-in mechanism"
+  // runtime; it gets the degraded payload rather than an unmetered model call.
+  if (!userId) {
+    return {
+      allowed: false,
+      quota: {
+        kind: "deep_report",
+        remaining: 0,
+        resetsAt: endOfUtcMonth(now).toISOString(),
+      },
+    };
+  }
+
+  const store = getCounterStore();
+
+  if (entitlement.effectivePlan === "paid") {
+    // D4 — unlimited to the reader, behind a hard daily circuit breaker.
+    const reading = await store.increment(
+      deepReportDayKey(userId, now),
+      endOfUtcDay(now),
+    );
+    if (breakerTripped(reading, PAID_DEEP_REPORTS_PER_DAY)) {
+      const resetsAt = endOfUtcDay(now).toISOString();
+      // D4 names three things a trip does: an error-level line, a `breaker`
+      // usage row, and degradation for the rest of the UTC day. The third is a
+      // property of the key, not of extra state — the date segment changes at
+      // midnight and the breaker untrips itself.
+      console.error(
+        `[quota] deep-report breaker tripped for ${userId} (limit ${PAID_DEEP_REPORTS_PER_DAY}/day)`,
+      );
+      // **The one usage row that is awaited.** It is the audit trail for a spend
+      // cap, and losing it to a cold shutdown would leave a trip with no record.
+      // The decision is the counter's; this only records it.
+      await recordUsageEventAwaited({
+        user_id: userId,
+        kind: "breaker",
+        path: "deep-report",
+        ok: false,
+        byok: false,
+      });
+      return { allowed: false, quota: { kind: "breaker", remaining: 0, resetsAt } };
+    }
+    return { allowed: true };
+  }
+
+  if (entitlement.effectivePlan === "trial") {
+    // D4 — 20 over the WHOLE trial. The key carries no period segment, so it
+    // never rolls over; the trial expires by date instead (D5).
+    const reading = await store.increment(deepReportTrialKey(userId), null);
+    // `reading.ok` first: an unreadable counter fails CLOSED (see the header).
+    if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {
+      return { allowed: true };
+    }
+    return {
+      allowed: false,
+      quota: {
+        kind: "deep_report",
+        remaining: 0,
+        // Honest value, and NOT the next month: a trial's twenty do not come
+        // back monthly. What changes is the plan — at `trialEndsAt` the reader
+        // becomes free and a monthly allowance starts.
+        resetsAt: entitlement.trialEndsAt ?? endOfUtcMonth(now).toISOString(),
+      },
+    };
+  }
+
+  // Free — D4's five per calendar month, in UTC.
+  const reading = await store.increment(
+    deepReportMonthKey(userId, now),
+    endOfUtcMonth(now),
+  );
+  // `reading.ok` first: an unreadable counter fails CLOSED (see the header).
+  if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {
+    return { allowed: true };
+  }
+  return {
+    allowed: false,
+    quota: {
+      kind: "deep_report",
+      remaining: 0,
+      resetsAt: endOfUtcMonth(now).toISOString(),
+    },
+  };
+}

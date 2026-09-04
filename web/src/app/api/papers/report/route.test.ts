@@ -35,6 +35,7 @@ vi.mock("@/lib/figures/extract", () => ({
 }));
 
 import { POST } from "./route";
+import { resetCounterStoreForTests } from "@/lib/usage/counters";
 import type { ReportStreamEvent } from "@/lib/papers/report-stream";
 
 const paper = {
@@ -95,6 +96,10 @@ async function readEvents(response: Response): Promise<ReportStreamEvent[]> {
 }
 
 beforeEach(() => {
+  // ABC-freemium 1-20 — the counter store is memoised per module, so without
+  // this every test in the file spends the same monthly deep-report budget and
+  // the sixth one is refused. Resetting it is what keeps each case independent.
+  resetCounterStoreForTests();
   vi.clearAllMocks();
 });
 
