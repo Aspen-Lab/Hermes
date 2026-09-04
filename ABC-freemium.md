@@ -3574,3 +3574,48 @@ in the array. Recorded so the gate figure is honest — lint is back to the sing
 **GATE after 1-15:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **110 files passed | 1 skipped (111)**, **2659 tests passed | 1 skipped (2660)**, **0
 failed**.
+
+---
+
+**1-16 · The tests for unit (d) — LANDED. UNIT (d) CLOSED.** R-TEST-1 slice. Files:
+`web/src/app/api/profile/route.test.ts` (+2 tests),
+`web/src/lib/env/no-client-dev-flags.test.ts` (new, 2 tests).
+
+**Three of B's five bullets were already discharged inside the items they belong to**, and are
+recorded here so nothing looks missing: the one-predicate cases and the **extended anti-drift lock**
+(with `paperFeedRequestBody` added — the drift A missed) landed with **1-14** in `ai-tier.test.ts`;
+the `completeness.ts` cases landed with **1-15**. Each item proving itself is better than a test
+item that could pass against a stub. The two below had no home but this one.
+
+**The plan is server-owned, asserted from the request path.** `PUT /api/profile` is sent a body
+carrying `plan: "paid"`, `effectivePlan` and `trial_ends_at`, and the resulting upsert payload is
+asserted to contain **no key matching `/plan|trial/i`** — while `display_name` still goes through,
+so the test cannot pass by mapping nothing. A second case asserts the read mapping does not leak a
+stored `plan` into the profile the browser holds, even once the migration is applied and
+`select("*")` starts returning it. **This is the request-path half of 1-13's column grants, and it is
+here because the SQL itself cannot be exercised from this loop.**
+
+**A'S SCAN 2 IS NOW A GATE, NOT A GREP.** `src/lib/env/no-client-dev-flags.test.ts` walks every
+non-test `.ts`/`.tsx` under `src/`, applies A's own mechanical filter (drop lines whose first
+non-space characters are `//`, `*` or `/*`), and asserts the survivors are **only** the four
+allow-listed files — each carrying, in the file, the reason it is allowed and the fact that all four
+are server-only. B asked for this in as many words: "A's scan 2 is a grep, and a grep is not a gate."
+
+**The allow-list is kept honest in both directions.** A second case asserts every entry still exists
+*and* still matches; without it, an entry cleaned up long ago would sit there forever and quietly
+re-authorise the same file the day it came back. The file also states the rule for a future reader:
+a new occurrence that ships to the browser and gates AI belongs in `aiAvailability`, and Ruling 2
+point 2's escape clause applies — stop and record, do not widen the list.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — two probes:
+
+| Probe | Result |
+|---|---|
+| a `NODE_ENV === "development"` branch re-added to `aiAvailability` | FAIL — `expected [ 'src/lib/feed/ai-tier.ts' ] to deeply equal []` |
+| `plan` added to `profilePatchToRow`'s write mapping | FAIL — `expected [ 'user_id', 'plan', 'display_name' ] to not include 'plan'` |
+
+Both reverted; `grep -c FALSIFICATION` → 0.
+
+**GATE after 1-16:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **111 files passed | 1 skipped (112)**, **2663 tests passed | 1 skipped (2664)**, **0
+failed**. Unit (d) closed: 1-13 … 1-16 all landed.
