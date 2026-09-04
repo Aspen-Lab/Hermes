@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider } from "@/lib/llm/providers/registry";
+import {
+  hasUsableProviderOverride,
+  resolveProvider,
+} from "@/lib/llm/providers/registry";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import {
   buildFallbackPaperReport,
@@ -14,7 +17,7 @@ import { bindFiguresToReport } from "@/lib/papers/figure-binding";
 import { getFullText } from "@/lib/papers/full-text";
 import { getFigurePool } from "@/lib/figures/extract";
 import type { ReportStreamEvent } from "@/lib/papers/report-stream";
-import { protectAiRequest } from "@/lib/security/ai-request";
+import { requireEntitledAiRequest } from "@/lib/security/ai-request";
 
 export const dynamic = "force-dynamic";
 // Deep reports (full-text fetch + two model passes + figure binding) have been
@@ -125,11 +128,34 @@ const SHALLOW_SYSTEM = [
   "Return only valid JSON.",
 ].join(" ");
 
+/**
+ * ABC-freemium 1-03/1-06 — who this route's model calls are being made for.
+ * Threaded from the single entitlement check in `POST` so every
+ * `resolveProvider` on this route meters against the right user, without any of
+ * them re-reading a session.
+ */
+interface ReportUsageCtx {
+  userId: string | null;
+  path: string;
+}
+
+function providerCtx(
+  ctx: ReportUsageCtx | undefined,
+  override: ProviderOverrideConfig | null | undefined,
+) {
+  return {
+    userId: ctx?.userId ?? null,
+    byok: hasUsableProviderOverride(override ?? null),
+    path: ctx?.path ?? "paper-report",
+  };
+}
+
 async function generateShallowReport(
   body: PaperReportRequest,
   override?: ProviderOverrideConfig,
+  ctx?: ReportUsageCtx,
 ): Promise<PaperReport> {
-  const provider = resolveProvider(override ?? null);
+  const provider = resolveProvider(override ?? null, providerCtx(ctx, override));
   const fallback = buildFallbackPaperReport(body.paper, body.contextHint);
   if (!provider?.generateJsonText) {
     return { ...fallback, depth: "fallback" };
@@ -169,7 +195,7 @@ function bestPaperUrl(paper: PaperReportRequest["paper"]): string | null {
   return paper.linkPaper ?? paper.linkArxiv ?? null;
 }
 
-function streamReport(body: ExtendedRequest): Response {
+function streamReport(body: ExtendedRequest, ctx?: ReportUsageCtx): Response {
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
@@ -194,7 +220,10 @@ function streamReport(body: ExtendedRequest): Response {
       };
 
       try {
-        const provider = resolveProvider(body.llmOverride ?? null);
+        const provider = resolveProvider(
+          body.llmOverride ?? null,
+          providerCtx(ctx, body.llmOverride),
+        );
         if (!provider?.generateJsonText) {
           send({ type: "mode", aiMode: "tier0" });
           send({
@@ -222,7 +251,7 @@ function streamReport(body: ExtendedRequest): Response {
             label: "Writing the report",
             pct: 20,
           });
-          finish(await generateShallowReport(body, body.llmOverride));
+          finish(await generateShallowReport(body, body.llmOverride, ctx));
           return;
         }
 
@@ -247,7 +276,7 @@ function streamReport(body: ExtendedRequest): Response {
             label: "Writing the report",
             pct: 75,
           });
-          const shallow = await generateShallowReport(body, body.llmOverride);
+          const shallow = await generateShallowReport(body, body.llmOverride, ctx);
           const tagged: PaperReport = {
             ...shallow,
             paywallNotice: fullText.reason,
@@ -272,7 +301,7 @@ function streamReport(body: ExtendedRequest): Response {
             label: "Writing the report",
             pct: 75,
           });
-          const shallow = await generateShallowReport(body, body.llmOverride);
+          const shallow = await generateShallowReport(body, body.llmOverride, ctx);
           finish({
             ...shallow,
             paywallNotice:
@@ -312,7 +341,7 @@ function streamReport(body: ExtendedRequest): Response {
         });
 
         if (!deep) {
-          const shallow = await generateShallowReport(body, body.llmOverride);
+          const shallow = await generateShallowReport(body, body.llmOverride, ctx);
           finish({
             ...shallow,
             paywallNotice:
@@ -374,17 +403,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "paper is required" }, { status: 400 });
   }
 
-  const provider = resolveProvider(body.llmOverride ?? null);
-  if (provider?.generateJsonText) {
-    const denied = await protectAiRequest("paper-report", 20);
-    if (denied) return denied;
-  }
+  // ABC-freemium 1-06 · R-SEC-2 — **one entitlement check, before every
+  // `resolveProvider` on this route.** It used to run only when a provider had
+  // already resolved, which made it a check on configuration rather than on the
+  // caller. It is unconditional now, so a signed-out caller gets the shared 401
+  // rather than a deterministic report built by an unauthenticated request.
+  const gate = await requireEntitledAiRequest("paper-report", 20);
+  if (gate instanceof NextResponse) return gate;
+  const ctx: ReportUsageCtx = {
+    userId: gate.entitlement.userId,
+    path: "paper-report",
+  };
 
   const wantsStream =
     req.headers.get("accept")?.includes("application/x-ndjson") === true ||
     body.stream === true;
   if (wantsStream) {
-    return streamReport(body);
+    return streamReport(body, ctx);
   }
 
   // ── Deep path ────────────────────────────────────────────────────
@@ -392,10 +427,13 @@ export async function POST(req: NextRequest) {
   // user BYOK in deployments, or the explicit developer provider in local dev.
   // Without a provider, fall through to the deterministic shallow path.
   if (body.deepReport) {
-    const provider = resolveProvider(body.llmOverride ?? null);
+    const provider = resolveProvider(
+      body.llmOverride ?? null,
+      providerCtx(ctx, body.llmOverride),
+    );
     if (!provider?.generateJsonText) {
       // No user key (and no local developer provider): deterministic report.
-      return NextResponse.json(await generateShallowReport(body, body.llmOverride));
+      return NextResponse.json(await generateShallowReport(body, body.llmOverride, ctx));
     }
 
     try {
@@ -410,7 +448,7 @@ export async function POST(req: NextRequest) {
       if (fullText.status === "paywalled" && fullText.reason) {
         // Try the LLM-backed shallow path first; on LLM failure
         // buildPaywalledFallback gives a deterministic abstract-only report.
-        const shallow = await generateShallowReport(body, body.llmOverride);
+        const shallow = await generateShallowReport(body, body.llmOverride, ctx);
         const tagged: PaperReport = {
           ...shallow,
           paywallNotice: fullText.reason,
@@ -424,7 +462,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (fullText.status !== "ok" || !fullText.doc) {
-        const shallow = await generateShallowReport(body, body.llmOverride);
+        const shallow = await generateShallowReport(body, body.llmOverride, ctx);
         return NextResponse.json({
           ...shallow,
           paywallNotice:
@@ -457,7 +495,7 @@ export async function POST(req: NextRequest) {
       ]);
 
       if (!deep) {
-        const shallow = await generateShallowReport(body, body.llmOverride);
+        const shallow = await generateShallowReport(body, body.llmOverride, ctx);
         return NextResponse.json({
           ...shallow,
           paywallNotice:
@@ -476,10 +514,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(bound);
     } catch (err) {
       console.error("[papers/report] deep flow failed:", err);
-      return NextResponse.json(await generateShallowReport(body, body.llmOverride));
+      return NextResponse.json(await generateShallowReport(body, body.llmOverride, ctx));
     }
   }
 
   // ── Shallow path (default) ──────────────────────────────────────
-  return NextResponse.json(await generateShallowReport(body, body.llmOverride));
+  return NextResponse.json(await generateShallowReport(body, body.llmOverride, ctx));
 }

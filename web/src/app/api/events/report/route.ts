@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider } from "@/lib/llm/providers/registry";
+import {
+  hasUsableProviderOverride,
+  resolveProvider,
+} from "@/lib/llm/providers/registry";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import {
   buildEventEnrichmentPrompt,
@@ -18,7 +21,7 @@ import {
   MAX_PAGE_TEXT_CHARS,
 } from "@/lib/opportunities/page-text";
 import type { Event } from "@/types";
-import { protectAiRequest } from "@/lib/security/ai-request";
+import { requireEntitledAiRequest } from "@/lib/security/ai-request";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +113,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "event is required" }, { status: 400 });
   }
 
-  const provider = resolveProvider(body.llmOverride ?? null);
+  // ABC-freemium 1-06 · R-SEC-2 — **the guard moved ABOVE `resolveProvider`.**
+  // Two early `noLlm` returns used to fire before it, so this route answered a
+  // stranger 200 and never authenticated. See `api/digest/route.ts`.
+  const gate = await requireEntitledAiRequest("event-report", 20);
+  if (gate instanceof NextResponse) return gate;
+  const { entitlement } = gate;
+
+  const provider = resolveProvider(body.llmOverride ?? null, {
+    userId: entitlement.userId,
+    byok: hasUsableProviderOverride(body.llmOverride ?? null),
+    path: "event-report",
+  });
   if (!provider?.generateJsonText) {
     return NextResponse.json(
       {
@@ -132,9 +146,6 @@ export async function POST(req: NextRequest) {
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }
-
-  const denied = await protectAiRequest("event-report", 20);
-  if (denied) return denied;
 
   const pageRead = await fetchedEventPageText(body.event);
   const pageText = pageRead.text;

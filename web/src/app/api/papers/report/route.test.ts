@@ -11,9 +11,15 @@ const mocks = vi.hoisted(() => ({
   getFigurePool: vi.fn(),
 }));
 
-vi.mock("@/lib/llm/providers/registry", () => ({
-  resolveProvider: mocks.resolveProvider,
-}));
+// ABC-freemium 1-06 — the routes now ask the registry whether the request
+// carries a usable BYOK override, so the metering wrapper can attribute the
+// call. The mock must export it or the module has a hole where a real function
+// used to be.
+vi.mock("@/lib/llm/providers/registry", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/llm/providers/registry")>();
+  return { ...actual, resolveProvider: mocks.resolveProvider };
+});
 vi.mock("@/lib/papers/deep-report", () => ({
   generateDeepReport: mocks.generateDeepReport,
   buildPaywalledFallback: mocks.buildPaywalledFallback,

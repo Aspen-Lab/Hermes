@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveProvider } from "@/lib/llm/providers/registry";
+import {
+  hasUsableProviderOverride,
+  resolveProvider,
+} from "@/lib/llm/providers/registry";
 import type { ProviderOverrideConfig } from "@/lib/llm/providers/types";
 import {
   buildJobEnrichmentPrompt,
   parseJobEnrichment,
 } from "@/lib/opportunities/enrichment";
 import type { Job } from "@/types";
-import { protectAiRequest } from "@/lib/security/ai-request";
+import { requireEntitledAiRequest } from "@/lib/security/ai-request";
 import { fetchPageHtml } from "@/lib/opportunities/page-fetch";
 import {
   ownedTextHasPostingSubstance,
@@ -58,7 +61,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "job is required" }, { status: 400 });
   }
 
-  const provider = resolveProvider(body.llmOverride ?? null);
+  // ABC-freemium 1-06 · R-SEC-2 — **the guard moved ABOVE `resolveProvider`.**
+  // The early `noLlm` return below used to fire first, so this route answered a
+  // stranger 200 and never authenticated. See the matching comment in
+  // `api/digest/route.ts`.
+  const gate = await requireEntitledAiRequest("job-report", 20);
+  if (gate instanceof NextResponse) return gate;
+  const { entitlement } = gate;
+
+  const provider = resolveProvider(body.llmOverride ?? null, {
+    userId: entitlement.userId,
+    byok: hasUsableProviderOverride(body.llmOverride ?? null),
+    path: "job-report",
+  });
   if (!provider?.generateJsonText) {
     return NextResponse.json(
       {
@@ -69,9 +84,6 @@ export async function POST(req: NextRequest) {
       { headers: { "Cache-Control": "private, no-store" } },
     );
   }
-
-  const denied = await protectAiRequest("job-report", 20);
-  if (denied) return denied;
 
   const pageText = await fetchOwnedJobPostingText(body.job);
 

@@ -6,9 +6,15 @@ const mocks = vi.hoisted(() => ({
   resolveProvider: vi.fn(),
 }));
 
-vi.mock("@/lib/llm/providers/registry", () => ({
-  resolveProvider: mocks.resolveProvider,
-}));
+// ABC-freemium 1-06 — the routes now ask the registry whether the request
+// carries a usable BYOK override, so the metering wrapper can attribute the
+// call. The mock must export it or the module has a hole where a real function
+// used to be.
+vi.mock("@/lib/llm/providers/registry", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/llm/providers/registry")>();
+  return { ...actual, resolveProvider: mocks.resolveProvider };
+});
 
 import { POST } from "./route";
 import { loadConfiguredOpportunityEnrichment } from "@/lib/opportunities/enrichment";
@@ -84,7 +90,10 @@ describe("POST /api/jobs/report", () => {
       noLlm: true,
       sourceReadStatus: "not-requested",
     });
-    expect(mocks.resolveProvider).toHaveBeenCalledWith(null);
+    expect(mocks.resolveProvider).toHaveBeenCalledWith(
+      null,
+      expect.objectContaining({ byok: false, path: "job-report" }),
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -157,7 +166,10 @@ describe("POST /api/jobs/report", () => {
       noLlm: false,
       sourceReadStatus: "read",
     });
-    expect(mocks.resolveProvider).toHaveBeenCalledWith(llmOverride);
+    expect(mocks.resolveProvider).toHaveBeenCalledWith(
+      llmOverride,
+      expect.objectContaining({ byok: true, path: "job-report" }),
+    );
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
       "https://jobs.example.com/role",

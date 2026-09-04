@@ -2987,3 +2987,115 @@ the rewritten cases first spread `baseQuery.webSearch`, which does not exist on 
 **GATE after 1-05:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **105 files passed | 1 skipped (106)**, **2592 tests passed | 1 skipped (2593)**, **0
 failed**.
+
+---
+
+**1-06 · The entitlement check now runs before the provider, in eight routes — LANDED.**
+R-SEC-2, R-SEC-3, R-KEY-2. A's items 10 + 11. Files: `web/src/lib/security/ai-request.ts`,
+`web/src/test-support/route-harness.ts` (new), the eight routes (`api/feed`, `api/jobs/feed`,
+`api/events/feed`, `api/digest`, `api/jobs/report`, `api/events/report`, `api/papers/report`,
+`api/test-digest`), and six test files.
+
+`requireEntitledAiRequest(scope, limit, options)` reuses `protectAiRequest`'s 503 and 401 shapes
+byte for byte, calls `supabase.auth.getUser()` **exactly once** (asserted by a test), and returns
+`{ user, entitlement }`. `protectAiRequest` keeps its signature and is now a thin wrapper that
+discards the entitlement, so nothing that only needs "may this proceed" changed. `entitledAiTier`
+replaces the downgrade line in all three feeds: the requested tier is an upper bound, and the
+ceiling is **`entitlement.userId !== null`, not `effectivePlan`** — with the D1 warning in the code
+so a later round does not "tighten" it to `paid`.
+
+**DEVIATION FROM B, AND IT IS THE ONE THE MANAGER SHOULD LOOK AT FIRST — the three FEED routes do
+NOT 401 a signed-out visitor.** B's target sequence returns the guard's `NextResponse` from every
+route, which makes `POST /api/feed|jobs/feed|events/feed` answer a stranger 401. I did not do that,
+and here is the trace:
+
+- **R-ENT-4** says "Signed-out users get tier-0 behaviour **everywhere**, no system spend —
+  **unchanged**." A 401 is neither tier-0 behaviour nor unchanged; today a signed-out visitor gets a
+  working feed from free structured sources.
+- **R-SEC-3** says a non-entitled `aiTier: 2` is "**downgraded** server-side" — downgraded, not
+  rejected. `entitledAiTier` is that downgrade.
+- **Ruling 3 point 7**, the manager's own reading note, names exactly three routes that start
+  answering 401: `digest`, `jobs/report`, `events/report`. **Not the feeds.**
+- D8's substance holds: an anonymous feed request is capped at tier 0, so it reaches neither
+  `resolveProvider` nor the system Tavily key (`systemSearchAllowed` comes from the anonymous
+  entitlement and is `false`).
+
+So `allowAnonymous: true` is passed by the three feeds **and by nothing else**, and the option's doc
+comment carries this reasoning. **One visible consequence for A: an anonymous caller who supplies
+their own valid BYOK key on a feed in a DEPLOYED runtime is now capped at tier 0, where today they
+would get tier 2 on their own key.** That is D8 applied and it costs the operator nothing either
+way, but it is a real behaviour change and it is not one B named. **Manager: if the intent is that
+the feeds 401 strangers, it is one argument to remove and R-ENT-4 needs amending in the same
+ruling.**
+
+**A SECOND DEVIATION, and it fixes a regression I introduced: the "no sign-in mechanism at all"
+branch synthesises a `local-no-auth` user rather than resolving anonymous.** A runtime with no
+`NEXT_PUBLIC_SUPABASE_URL` that is not production and not Vercel — a self-hosted instance, and the
+whole test process — has no way for anyone to be signed in. Treating that caller as anonymous
+capped `entitledAiTier` at 0 and **silently stopped BYOK working**; `feed/route.test.ts`'s "keeps
+Tier 2 when a user override resolves" caught it. The branch is unreachable from a deployment
+(`deployedRuntimeNeedsAuth()` answers 503 first) and still yields `free`, so no system search key.
+
+**A THIRD DEVIATION: the three feed routes no longer call `resolveProvider` at all.** They only
+ever resolved one to decide the downgrade — the value was never passed on, because the pipeline
+resolves its own provider where it needs one. R-SEC-3 says that predicate is *replaced*, so keeping
+the call would have left the old reason in the file and cost a redundant provider construction per
+feed request. I verified both internal degrade paths are unchanged and handle a null provider:
+`query-gen.ts:317-323` returns template queries, `tier2-rerank.ts:65-68` returns the input order.
+eslint caught the three now-unused variables (3 warnings) and they are gone; lint is back to the
+single standing error.
+
+**`test-digest` is now guarded** — R-SEC-2 names it and A's tally omitted it. It keeps its own
+`getUser()` for the email and profile query, so it reads the session twice; that is one extra round
+trip on a manual diagnostic route, stated in a comment, and the "one `getUser()` per request" rule
+is about the hot paths.
+
+**`papers/report`'s guard is now unconditional and above all four `resolveProvider` calls.** It used
+to run only when a provider had already resolved, which made it a check on configuration rather than
+on the caller. A `ReportUsageCtx` is threaded into `generateShallowReport` and `streamReport` so
+every call on that route meters against the right user without re-reading a session.
+
+**Tests at risk — B's list was right about the files and missed one break class.** B named the three
+`noLlm` route tests, `feed/route.test.ts`, `events/report/route.test.ts:328` and
+`papers/report/route.test.ts`. What actually broke was **22 tests across five files**, and the
+largest cause was not auth at all: the five suites `vi.mock` the registry with an object literal, so
+the moment the routes imported `hasUsableProviderOverride` the mock had a hole where a real export
+used to be. All five now use `importOriginal` and spread the real module, which is strictly safer —
+the next export a route imports will not silently vanish. The rest were `toHaveBeenCalledWith`
+assertions on `resolveProvider` that now receive the metering context; **rewritten to assert both
+arguments**, which is stronger than what they replaced (a call that loses the context writes a usage
+row with no user on it).
+
+**`feed/route.test.ts`'s downgrade case rewritten, not deleted.** It asserted the downgrade happened
+because *no provider resolved*. It now asserts a signed-out visitor is capped at 0 **with a provider
+deliberately available**, so a regression to the old predicate cannot pass, plus a new case that a
+signed-in free user keeps tier 2 (D1).
+
+**`ai-request.test.ts` rewritten and extended, 2 tests to 10.** Both original cases survive
+unchanged, as B predicted. Added: the guard returns an entitlement rather than `null` in local dev
+(B asked for exactly this); 401 for a signed-out caller in a deployed runtime, with the
+`Cache-Control` header asserted; `allowAnonymous` returning the frozen anonymous constant; the
+signed-in path; `getUser()` called exactly once; and four `entitledAiTier` cases including the D1
+"free user still reaches tier 2" lock.
+
+**`src/test-support/route-harness.ts` created HERE, not in 1-09.** B places it in 1-09 but five
+suites need it the moment 1-06 lands, which is B's own observation ("the argument for extracting it
+once"). 1-09 will use it rather than write it.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — three probes:
+
+| Probe | Result |
+|---|---|
+| `entitledAiTier` ceiling forced to 2 (the entitlement stops capping) | FAIL x2 — `expected 2 to be +0`, and the feed route hands the pipeline `aiTier: 2` for a signed-out visitor |
+| the digest guard removed from above the early return | FAIL — same run |
+| the `allowAnonymous` branch deleted | FAIL x2 — the guard 401s where R-ENT-4 requires a feed |
+
+All probes reverted; `grep -c FALSIFICATION` returned 0 in every file afterwards.
+
+**Standing regression locks re-verified**, run together: `registry.test.ts`, `ai-tier.test.ts`, the
+three feed/report `route.test.ts` files, `pool-cache.test.ts`, `daily-pool-cache.test.ts` —
+**7 files, 48 passed**.
+
+**GATE after 1-06:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **105 files passed | 1 skipped (106)**, **2601 tests passed | 1 skipped (2602)**, **0
+failed**.
