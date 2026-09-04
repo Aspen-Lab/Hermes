@@ -122,25 +122,36 @@ HELD BY:          C-round1 @ 2026-09-04T21:22Z
 ROUND:            1
 WHOSE TURN:       C
 STOPPED BECAUSE:  IN PROGRESS — C is working the guide right now (lock held).
-STATUS:           C: unit (a) CLOSED. Landed 1-00, 1-01, 1-02, 1-03, 1-04 — one commit each,
-                  pushed. Next unlanded item: 1-05 (unit b, the operator Tavily key).
-                  Three deviations from B's guide, all traced and logged in §4: (i) 1-00 puts the
-                  vitest env allow-list in its own module (a config with a named export makes
-                  Vitest print MIXED_EXPORTS on every run); (ii) 1-02 uses B's option (ii), an
-                  RPC, because PostgREST upsert CANNOT express value = table.value +
-                  excluded.value — B's recommended shape would have overwritten the counter
-                  instead of adding to it; (iii) 1-03 writes the usage row from logLlmUsage with
-                  an AsyncLocalStorage context rather than from the wrapper, because B's literal
-                  design would write TWO rows per failure (every provider already logs its own
-                  error path) and neither place alone holds all of R-METER-1's fields.
+STATUS:           C: units (a) and (b) CLOSED. Landed 1-00 .. 1-09, one commit each, pushed.
+                  Next unlanded item: 1-10 (unit c, the prebuild guard).
+                  MANAGER, ONE DECISION TO REVIEW (logged in full at 1-06 in §4): the three FEED
+                  routes DEGRADE a signed-out visitor to tier 0 instead of answering 401. B's
+                  sketch returned the guard's 401 from every route; R-ENT-4 ("signed-out users get
+                  tier-0 behaviour everywhere ... unchanged"), R-SEC-3 ("downgraded", not
+                  rejected) and Ruling 3 point 7 (which names ONLY digest, jobs/report and
+                  events/report as becoming 401) all point the other way. Anonymous feed requests
+                  reach neither a provider nor the system key, so nothing operator-funded is
+                  touched. Side effect A must expect: an anonymous caller with their OWN valid
+                  BYOK key on a feed is now capped at tier 0 in a deployed runtime.
+                  Other traced deviations, all in §4: 1-02 uses an RPC because PostgREST upsert
+                  cannot add to a column; 1-03 writes the usage row from logLlmUsage through an
+                  AsyncLocalStorage context (B's literal design wrote two rows per failure);
+                  1-07 splits the figure input type after the compiler found two extractFigure-
+                  family callers B said did not exist; 1-09 builds trial/paid by stubbing the
+                  stored row because PEER_DEV_ENTITLEMENT and a deployed runtime are mutually
+                  exclusive by design.
+                  A'S SCANS 3 AND 4 ARE NOW ZERO in non-test source (scan 3 must exclude
+                  *.test.ts; scan 4's three remaining hits are comment lines A's own filter drops).
+                  The 1-09 route suites reproduce A's round-1 counts exactly when the fix is
+                  reverted: 2 on jobs/feed, 7 on events/feed.
                   TWO MIGRATIONS WRITTEN, NOT APPLIED — see PENDING USER ACTION.
 LAST DIFFERENCE:  93.5% (29/31; exclusions: none)
 GATE (0% unexplained, both measurements):  NOT MET
 
-DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: 1-00, 1-01, 1-02,
-           1-03, 1-04 (unit (a) closed).
-GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 104 passed / 1 skipped (105) files,
-           2584 passed / 1 skipped (2585) tests, 0 failed — C's measurement after 1-04.
+DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: 1-00 .. 1-09
+           (units (a) and (b) closed).
+GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 108 passed / 1 skipped (109) files,
+           2618 passed / 1 skipped (2619) tests, 0 failed — C's measurement after 1-09.
 TODO:      C works the round-1 guide from unit (a) item 1-01, top down, one commit per item,
            pushed. RULING 3 (§1d) ADDS: item 1-00 (structural vitest fix: allow-list + global
            setup deleting GOOGLE_API_KEY/TAVILY_API_KEY + protective test) lands BEFORE 1-11;
