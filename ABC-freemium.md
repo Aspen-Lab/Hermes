@@ -3099,3 +3099,61 @@ three feed/report `route.test.ts` files, `pool-cache.test.ts`, `daily-pool-cache
 **GATE after 1-06:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **105 files passed | 1 skipped (106)**, **2601 tests passed | 1 skipped (2602)**, **0
 failed**.
+
+---
+
+**1-07 · `GET /api/figure` had no authentication of any kind — LANDED.** R-SEC-1. A's item 3.
+Files: `web/src/app/api/figure/route.ts`, `web/src/lib/figures/match-context.ts` (new),
+`web/src/lib/figures/semantic-match.ts`, `web/src/lib/figures/vision-match.ts`,
+`web/src/lib/figures/extract.ts`.
+
+The route calls `requireEntitledAiRequest("figure", 60)` immediately after the `id` validation and
+before `extractFigure`. 60/h matches the feed scopes, per B: the route is hit once per card.
+
+**R-SEC-1's second sentence implemented as B specified — `ctx` is REQUIRED on both matchers.**
+`FigureMatchContext` is a new type in its own module (`figures/match-context.ts`) so the matchers do
+not import a route's types. `matchFigureSemantically` and `matchFigureVisually` now call
+`resolveProvider(ctx.override ?? null, { userId, byok, path })`; the two no-argument
+`resolveProvider()` calls that were A's scan-4 pair are gone. Required rather than optional is the
+point: a new caller cannot compile without saying whose request this is, which is what makes the
+scan permanently zero instead of zero-until-someone-adds-a-caller.
+
+**A'S SCAN 4, RE-RUN:** `grep -rn "resolveProvider()" src/ --include="*.ts" --include="*.tsx" | grep -v "\.test\."`
+returns **3 hits, all of them comment lines** describing what was fixed
+(`api/figure/route.ts:30`, `figures/match-context.ts:7`, `figures/semantic-match.ts:54`). A's own
+mechanical filter drops lines whose first non-space characters are `//`, `*` or `/*`, so the scan
+reports **0**. Left as comments deliberately — they are the record of what the fix removed.
+
+**A CORRECTION TO B, found by the compiler rather than by grep.** B says "`extractFigure` has one
+non-test caller (this route)" and lists the greps behind it. True of `extractFigure` — but
+**`getFigurePool` takes the same input type and has two more callers**, both in
+`api/papers/report/route.ts` (`:320` inside the streaming path and `:486` inside the deep path).
+Making `ctx` required broke both immediately. B's grep covered `extractFigure`,
+`matchFigureSemantically` and `matchFigureVisually` and did not include `getFigurePool`, which is
+how they were missed.
+
+**The fix for that is a type split, not a widened context.** `getFigurePool` only *collects*
+candidates and never *chooses* between them, so it can never reach a matcher and needs no
+authenticated context. `ExtractInput` now extends a new `FigureSourceInput` (the deterministic
+half: which paper, where to look) and adds the required `ctx`; `getFigurePool`, `getCandidatePool`,
+`buildCandidatePool`, `poolCacheKey` and `collectSourceLinks` take `FigureSourceInput`. So the
+context is required exactly where a provider is reachable and nowhere else, and papers/report's two
+call sites are untouched. **This is the "stop and record rather than widen the guard" rule applied
+in the other direction:** the honest answer was to narrow what needs the guard, not to make the
+guard optional so the extra callers would compile.
+
+**The degraded figure path is untouched and must stay that way.** `semantic-match.ts` and
+`vision-match.ts` still `return null` when the provider or the needed method is missing, and
+`extract.ts:1332-1335`'s hard guarantee ("if we have ANY candidates, never return a placeholder")
+is unchanged — so a signed-in reader with no provider still gets a real figure chosen without a
+model, not an empty card.
+
+**Tests.** None exist for this route and none are added here: B places the first
+`api/figure/route.test.ts` in **1-09**, built to the post-1-05/1-06 contract, and the
+proof-that-the-test-tests-the-fix obligation is discharged there. What this item does carry is a
+**compile-time** guarantee rather than a runtime one — a caller that forgets the context does not
+build, which is how the two `getFigurePool` callers surfaced within seconds.
+
+**GATE after 1-07:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **105 files passed | 1 skipped (106)**, **2601 tests passed | 1 skipped (2602)**, **0
+failed**.

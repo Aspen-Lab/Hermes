@@ -1,4 +1,5 @@
 import { resolveProvider } from "@/lib/llm/providers/registry";
+import type { FigureMatchContext } from "./match-context";
 import { cleanDisplayText } from "@/lib/text/clean";
 
 interface MatchCandidate {
@@ -45,12 +46,28 @@ function parseMatch(text: string): SemanticFigureMatch | null {
   return null;
 }
 
+/**
+ * ABC-freemium 1-07 · R-SEC-1 — **`ctx` is REQUIRED, not optional.**
+ *
+ * R-SEC-1's second sentence is the load-bearing half: these matchers must
+ * "never resolve a server provider without an authenticated request context
+ * passed in explicitly". This used to call `resolveProvider()` with no
+ * arguments at all, from a route with no authentication of any kind. Making the
+ * argument required is what keeps A's scan-4 count at zero permanently rather
+ * than zero-until-someone-adds-a-caller: a new caller cannot compile without
+ * deciding whose request this is.
+ */
 export async function matchFigureSemantically(args: {
   paperTitle?: string;
   query: string;
   candidates: MatchCandidate[];
+  ctx: FigureMatchContext;
 }): Promise<SemanticFigureMatch | null> {
-  const provider = resolveProvider();
+  const provider = resolveProvider(args.ctx.override ?? null, {
+    userId: args.ctx.userId,
+    byok: args.ctx.byok,
+    path: "figure:semantic",
+  });
   if (!provider?.generateJsonText) return null;
   if (!args.query.trim() || args.candidates.length === 0) return null;
 
