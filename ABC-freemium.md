@@ -1977,3 +1977,163 @@ matched the `Tier 0` scan and may assert on the label string; C must grep the li
   `connectors`).
 - **No test may assert a `NODE_ENV === "development"` branch in client code.** Worth one explicit
   scan-shaped test: A's scan 2 is a grep, and a grep is not a gate.
+
+---
+
+### Unit (e) — weekly cadence
+
+*R-POOL-3 is **not** in this unit: it is the same mechanism as R-KEY-3 and shipped in **1-05**. What
+is left is the key (1-17) and the forced rebuild (1-18). Order unchanged.*
+
+---
+
+**1-17 · Jobs and events pools rebuild daily, not weekly**
+**R-POOL-1. A's item 13. Classification: `WRONG DATA`.**
+
+**Verified, with A's citation corrected.** `src/lib/opportunities/pool-cache.ts`:
+`derivePoolCacheKey` is declared at **`:149`**; `const date = localCalendarDate(input.now);` at
+**`:150`**; `date` is a field of the hashed signature at **`:159`**; and it appears **again** as a
+plaintext segment of the returned key at **`:162`** —
+`` return `peer-pool-v${CACHE_KEY_VERSION}-${input.surface}-${date}-${digest}`; ``.
+`CACHE_KEY_VERSION = 5` at `:137`. `grep -rni "isoWeek|ISO week" src/` -> **0 hits**.
+**A said the date appears once; it appears twice, and a fix that changes only the signature leaves
+a daily string in the key and rebuilds daily anyway.**
+
+The three callers are `feed/pipeline.ts:301` (papers), `jobs/pipeline.ts:220`,
+`events/pipeline.ts:239`. Only papers passes `aiTier`; jobs and events pass surface, topics,
+careerStage, locationPreferences and `now`. **The function already knows the surface** — so the
+weekly/daily fork is a one-line branch inside `derivePoolCacheKey` and **no caller changes**.
+
+**Fix direction.** A new exported `localIsoWeek(now = new Date()): string` returning `YYYY-Www`,
+placed **next to `localCalendarDate` in `src/lib/local-calendar-date.ts`** — that file is six lines
+long, has one job, and is already re-exported through `pool-cache.ts:14`, so the pair stays
+together and cannot drift on timezone handling. Then in `derivePoolCacheKey`:
+`const period = input.surface === "papers" ? localCalendarDate(input.now) : localIsoWeek(input.now);`
+and use `period` in **both** places (`:159` and `:162`). Bump `CACHE_KEY_VERSION` 5 -> **6**, and
+extend the comment block at `:132-136` with a v6 line in the same style the v3/v4/v5 lines use.
+The bump is not optional: without it a v5 daily key and a v6 weekly key could collide in the shared
+`opportunity_pools` table.
+
+**Why it must be computed from the same local components as `localCalendarDate`, and the trap I
+found by running it.** `localCalendarDate` (`local-calendar-date.ts:2-4`) uses `getFullYear`,
+`getMonth`, `getDate` — the server's **local** calendar. An ISO week derived from `getUTCDay()`
+would disagree with it near midnight. **I tested three candidate implementations across a 13-year
+day-by-day sweep (2019-2031) in ten timezones, in a throwaway Node harness outside the repo.** The
+result decided the recommendation:
+
+| Candidate | UTC | Asia/Shanghai | America/New_York | Europe/Berlin | Pacific/Chatham | America/Santiago | Australia/Lord_Howe |
+|---|---|---|---|---|---|---|---|
+| **A** — `Math.ceil(((thu - jan1)/86400000 + 1) / 7)`, the form most commonly published | 0 | 0 | 0 | 0 | **350 wrong days** | **308** | **364** |
+| **B** — `Math.round((thu - jan1)/86400000)` then `Math.floor(days/7) + 1` | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **C** — day-of-year from the local month/day table, no `Date` subtraction at all | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+Candidate A is exact in every northern-hemisphere zone I tried and **wrong for roughly a seventh of
+the year in southern-hemisphere DST zones**, where 1 January falls inside DST and the raw
+millisecond difference rounds the other way; the first divergence is 2021-04-05, returning W15 for a
+day in W14. **A developer or a CI machine on UTC cannot catch this.** **Recommend candidate B** —
+it is two tokens different from A, exact everywhere tested, and readable. Candidate C is also exact
+but is twenty lines of calendar arithmetic for no additional correctness.
+
+**The test must stub the timezone, or it proves nothing.** I verified on this Windows Node that
+assigning `process.env.TZ` mid-process takes effect on subsequently-constructed `Date`s (probed:
+`Pacific/Chatham` -> +765 min, `UTC` -> 0, `America/Santiago` -> -240 min, all within one process).
+So `vi.stubEnv("TZ", "Pacific/Chatham")` works — **restore it in `afterEach` or every later suite in
+the file inherits the zone.**
+
+**What the field shows.** Nothing changes visibly except cadence: the same pool, rebuilt on Monday
+instead of nightly. **A mid-week topic change becomes a cache miss on the user's own key** —
+`requiredTopics`/`exploreTopics` are still in the signature (`:154-155`), so a changed topic set
+still produces a new key and a fresh build. D3 says that in as many words ("that is their quota to
+spend"), so it is intended, not a regression, and A should not report it as one.
+
+**Blast radius.** Every jobs and events pool key changes at once, so the first request per user
+after deploy is a rebuild — one slow load, then a week of hits. The `CACHE_KEY_VERSION` bump orphans
+every existing row in `opportunity_pools`; that table has no TTL sweep in the migration
+(`20260727000000_opportunity_pools.sql` has only a `created_at` index), so the old rows simply sit
+there. Worth a note, not an item.
+
+**Tests at risk — grepped; A named none.** `grep -rln "derivePoolCacheKey" src/ --include="*.test.ts"`
+-> **four** files: `src/lib/opportunities/pool-cache.test.ts`,
+`src/lib/opportunities/daily-pool-cache.test.ts` (384 lines),
+`src/lib/opportunities/facets.test.ts`, `src/lib/jobs/facet-remote-claim.test.ts`. **Any assertion
+that two `now` values one day apart produce different jobs/events keys now becomes false**, and any
+that pins the literal key prefix `peer-pool-v5-` breaks on the bump. Per §2 these are **rewritten to
+state the weekly contract, never deleted** — and the rewrite is valuable, because "two days in the
+same ISO week give the same key, two days across a Monday boundary do not" is a stronger assertion
+than the one it replaces. `daily-pool-cache.test.ts` is the big one; C should read it first and
+budget for it.
+
+---
+
+**1-18 · There is no "refresh now" that forces a pool rebuild**
+**R-POOL-2. A's item 14. Classification: `MISSING`.**
+
+**Verified.** `grep -rn "forceRebuild|forceRefresh|bypassCache" src/` -> **0 hits**. The only
+"Refresh now" string in the tree is `src/components/cards/feed-more-tile.tsx:64`, and reading its
+surroundings (`:55-69`) it is the **papers** feed's empty-state refetch button in the `sparse`
+branch — a plain refetch with no pool-cache interaction and no entitlement gate. **Wrong surface and
+wrong mechanism; it is not a partial implementation of R-POOL-2 and should not be extended into
+one.**
+
+**Fix direction, and the shape that looks obvious but is wrong.** R-POOL-2 offers "key nonce or
+bypass". **Both of the obvious readings are defective:**
+- A **nonce in the key** stores the rebuilt pool under a key nobody else will ever read, so the user
+  pays for a rebuild and the next ordinary page load still serves the stale pool.
+- A **bypass around `getOrBuildCachedPool`** skips its per-process single-flight protection
+  (`inFlightByCache`, `pool-cache.ts:165-167`), so two clicks fire two full builds — two Tavily
+  fan-outs, on the operator's key.
+
+**The correct shape is a third one:** add an optional `forceRebuild?: boolean` to
+`getOrBuildCachedPool` (`pool-cache.ts:174`) that **skips the `cache.get` read while keeping the
+`cache.set` write and the single-flight map**, under the **same** key. The user gets a genuinely
+fresh pool, everyone else gets it on their next load, and a double click still builds once. Thread
+`poolRefresh?: boolean` from the jobs/events routes into the pipelines beside 1-05's
+`systemSearchAllowed`.
+
+**The two gates on it, both required by R-POOL-2.**
+1. `entitlement.poolRefreshAllowed` — a free user's forced rebuild is refused. **Refused, not
+   errored:** the route serves the cached pool exactly as it would have, and the response carries
+   the same `quota`-shaped signal 1-20 introduces so the UI can offer the upgrade. No new endpoint,
+   no 403.
+2. **It counts against the daily search breaker** — increment `search:${userId}:${YYYY-MM-DD}`
+   (1-02's key layout) *before* rebuilding, and if the increment trips the 500/day breaker of
+   R-QUOTA-2, serve the cached pool instead. R-POOL-2 says this in its second clause and it is the
+   only thing stopping a paid user's refresh button from being an unbounded spend button.
+
+**The UI half.** A jobs/events action, not a papers one. Placing it is a design choice the spec does
+not make; the smallest honest version is a control on the jobs and events surfaces that calls the
+existing feed route with `poolRefresh: true`. **Do not reuse `feed-more-tile.tsx`** — it is papers,
+and papers pools stay daily and never refresh on demand.
+
+**What the field shows when refused.** The pool that was already there, unchanged, plus the upgrade
+signal. Never an error, never an empty surface. That is the same "degrade, don't fail" rule every
+other gate in this guide follows.
+
+**Blast radius.** `getOrBuildCachedPool` is called by all three pipelines
+(`feed/pipeline.ts`, `jobs/pipeline.ts:230`, `events/pipeline.ts:249`); an **optional** parameter
+defaulting to `false` leaves papers and every existing caller untouched.
+
+**Tests at risk.** The same four `derivePoolCacheKey` suites plus whatever asserts
+`getOrBuildCachedPool`'s cache-hit behaviour — `daily-pool-cache.test.ts` is the likely one.
+An optional-parameter addition should break none of them; C must confirm rather than assume, since
+`daily-pool-cache.test.ts` is 384 lines and exercises the single-flight path directly.
+
+---
+
+**1-19 · The tests for unit (e)** — **R-TEST-1 slice ("the weekly pool key"). Classification: `MISSING`.**
+
+- **`localIsoWeek`, in a non-UTC timezone.** Pin the exact cases my harness found: `2021-04-05`
+  under `TZ=Pacific/Chatham` and `TZ=America/Santiago` returns **`2021-W14`** (candidate A returns
+  `2021-W15` — this single case is the whole reason to prefer B); `2025-12-29` is `2026-W01`;
+  `2026-12-31` is `2026-W53` (a 53-week ISO year); `2021-01-01` is `2020-W53`. Restore `TZ` in
+  `afterEach`.
+- **The key.** Two `now` values in the same ISO week give the **same** jobs key and the **same**
+  events key; two values across a Monday boundary give different ones; the **papers** key still
+  changes daily. The last is the one that catches an over-broad edit.
+- **The version bump.** A v5-shaped key is not produced any more (assert the returned key starts
+  `peer-pool-v6-`).
+- **Forced rebuild.** With `forceRebuild: true` the builder runs even on a cache hit, the result is
+  written back under the **same** key, and two concurrent forced calls build **once** (the
+  single-flight assertion — this is the one that fails if C reaches for a bypass).
+- **The gates.** A free entitlement does not rebuild and returns the cached pool; a tripped search
+  breaker does not rebuild and returns the cached pool.
