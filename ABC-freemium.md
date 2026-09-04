@@ -136,12 +136,14 @@ DONE:      Round 1 A, all three parts: fixture checklist (31 items), five person
            the real route handlers, five static scans, 20-item ranked difference list.
 GATE NOW:  tsc 0 · eslint 1 (standing quiz.tsx:46) · vitest 100 passed / 1 skipped (101) files,
            2552 passed / 1 skipped (2553) tests, 0 failed — exactly baseline.
-TODO:      B writes the round-1 fix guide from A's list.
-PENDING USER ACTION: none yet (R-ENT-1 will need a migration applied once C writes it)
-OPEN FOR MANAGER:  (1) R-QUOTA-3 scoring convention — a negative requirement that is vacuously
-                   un-violated because no counter exists; A scored NOT MET, which makes the number
-                   93.5% rather than 90.3%. (2) R-ENT-3 names two client-side dev flags to delete;
-                   A's scan 2 found six. Does R-ENT-3 cover all six?
+TODO:      B writes the round-1 fix guide from A's 20-item list (§4, "The numbered difference
+           list"), grouped into the units of Ruling 2 point 4, shared helpers first.
+PENDING USER ACTION: (1) DO NOT set TAVILY_API_KEY on Vercel until Ruling 2 point 3 is satisfied
+           (R-SEC-2/3 + R-KEY-3 landed and re-measured at zero operator searches for anonymous
+           and free-no-key). (2) Register GOOGLE_API_KEY + TAVILY_API_KEY into local .env.local
+           when ready — live-model passes stay BLOCKED until then. (3) R-ENT-1 migration will
+           need applying in Supabase once C writes it.
+OPEN FOR MANAGER:  none — both round-1 questions ruled in §1c (Ruling 2 points 1–2).
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -174,6 +176,54 @@ part-way; a released lock looks identical in both cases.
 7. **R-UI-4 ships in the same commit as R-KEY-1** (cache poisoning otherwise ships silently).
 8. **Manager runs on Fable; agents on Opus, passed explicitly.** Recorded so a cold manager does
    not downgrade them.
+
+---
+
+## §1c. RULING 2 — after round-1 A (2026-09-04, BINDING)
+
+1. **Scoring convention: `NOT MET` stands for R-QUOTA-3.** A requirement scores `MET` only when
+   the mechanism it names exists and behaves as specified under observation. "Nothing to violate
+   because the feature does not exist yet" is `NOT MET`. The denominator stays 31; the round-1
+   number is **93.5%**. Same convention for every future vacuous case — no per-item argument.
+2. **R-ENT-3 covers all six browser-shipped `NODE_ENV === "development"` tests**, not the two
+   the spec named (spec amended in place, dated). B classifies each of the six by what it gates;
+   C replaces every one that gates AI availability, entitlement, or an AI-dependent UI state with
+   the single predicate; any that is an unrelated dev convenience is recorded by name, left, and
+   reported by A's scan 2 as accepted thereafter. **Escape clause:** if C finds a seventh, stop
+   and record — do not widen inline.
+3. **Reading note on "live", for every later reader.** A's harness ran the real route handlers
+   with a sentinel `TAVILY_API_KEY` in a stubbed deployed runtime and recorded outgoing fetches.
+   The manager re-read the code: the sign-in guard is inside `if (aiTier >= 2 && aiProvider)` in
+   all three feed routes (`feed/route.ts:154`, `jobs/feed/route.ts:149`,
+   `events/feed/route.ts:134`), and `protectAiRequest` returns `null` in local dev before reading
+   a user (`ai-request.ts:44`). **Confirmed.** "Live" means: the route reaches the Tavily fetch
+   with the env key for a stranger. It does **not** mean money is leaving today — the current
+   Vercel deployment has no `TAVILY_API_KEY`. It becomes a real bill the moment D2's system key is
+   set. **Therefore `TAVILY_API_KEY` must not be set on Vercel until R-SEC-2, R-SEC-3 and R-KEY-3
+   have landed and A has re-measured the `anonymous` and `free-no-key` personas at zero operator
+   searches.** Recorded in §1 `PENDING USER ACTION` as a do-not-yet.
+4. **Order for B's fix guide — refines Ruling 1 point 6.** Foundations before consumers:
+   (a) the entitlement resolver + dev override (R-ENT-2, R-ENT-5) and the metering wrapper +
+   shared counter (R-METER-1..4) land first, because a correct R-SEC-2 needs an entitlement to
+   check and a correct breaker needs a counter; (b) the "close the wallet" unit — R-SEC-1/2/3,
+   R-KEY-2/3, and the one-line R-SEC-4 comment (A's item 19); (c) the R-GUARD-1 + R-KEY-1 +
+   R-UI-4 unit (Ruling 1 points 6–7, one commit for R-KEY-1 + R-UI-4); (d) R-ENT-1 migration +
+   R-ENT-3 client predicate + R-KEY-4; (e) R-POOL; (f) R-QUOTA; (g) R-UI; (h) R-TEST alongside
+   each unit, not at the end. B may reorder **within** a unit with a stated reason. C works
+   top-down and stops at an item boundary when budget ends — the next C resumes, never restarts.
+5. **New ground rule (added to §3): agents never start `next dev` in this loop.** `predev` runs
+   `kill-dev-orphans.mjs`, which would kill another session's dev server in this folder (A saw
+   its `node.exe` processes and correctly left them alone). The vitest route harness A used —
+   real handlers, stubbed `createClient` and `fetch`, sentinel keys, `VERCEL=1` — is the
+   sanctioned way to drive routes. A turn that truly needs a running server marks `blocked:`.
+6. **Standing tallies A owes every round** (each reported even when zero): the five static
+   scans; **routes calling `resolveProvider` before `protectAiRequest`** (7 this round);
+   **persona/route pairs behaving per spec** (2 of 13 this round); **operator-key searches on
+   `anonymous` + `free-no-key`** (2 + 7 per surface this round — the number that must reach 0).
+7. **A's probe becomes permanent tests.** A deleted `zz-persona-probe.test.ts` before committing
+   (correct). C turns that harness into the route tests R-TEST-1 requires for `api/figure`,
+   `api/jobs/feed` and `api/events/feed` — A found none exist — so the persona pass is
+   re-runnable by anyone, not reconstructed from prose each round.
 
 ---
 
@@ -284,8 +334,11 @@ C does **not** judge whether something should be fixed.
 - **Do not open a PR.**
 - **This Next.js is not the one you know.** Read the relevant guide under
   `web/node_modules/next/dist/docs/` before writing framework code; heed deprecation notices.
-- **Run npm from `web/`.** Windows leaves Next.js workers running after a dev server stops —
-  if you start one, verify it is gone (`tasklist | findstr node`) before you finish.
+- **Run npm from `web/`.** **Never start `next dev` in this loop** (Ruling 2 point 5): its
+  `predev` step kills every Next.js worker in this folder, including another session's server.
+  Drive routes through the vitest harness (real handlers, stubbed `createClient` + `fetch`,
+  sentinel keys, `VERCEL=1`). Never kill a process you did not start. If a turn truly needs a
+  running server, mark `blocked:` and stop.
 - **Supabase is not configured locally** (`.env.local` has the vars commented out). Tests and
   `next dev` run on the in-memory fallbacks (R-METER-4, R-ENT-5). Do not "fix" this by adding
   credentials.

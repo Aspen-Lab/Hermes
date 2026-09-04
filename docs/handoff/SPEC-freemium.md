@@ -105,6 +105,13 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   `canAttemptOpportunityEnrichment` collapse into **one** predicate reading
   `(entitlement allows AI) || (BYOK override present)`. The two client-side
   `process.env.NODE_ENV === "development"` tests (`ai-tier.ts`, `enrichment.ts`) are deleted.
+  **Amendment 2026-09-04 (Ruling 2, binding):** the intent is that **no code shipped to the
+  browser decides whether AI is available by testing `NODE_ENV`**. Round-1 A found six such
+  tests, not two (`app/page.tsx:961`, `app/page.tsx:988`, `app/papers/[id]/page.tsx:685`,
+  `store/feed.ts:266`, plus the two named). All six are in scope: B classifies each by what it
+  gates; every one that gates AI availability, entitlement, or an AI-dependent UI state is replaced
+  by the single predicate; any that turns out to be an unrelated dev convenience is recorded by
+  name and left, and A's scan 2 reports it as an accepted item thereafter.
 - **R-ENT-4.** Signed-out users get tier-0 behaviour everywhere, no system spend — unchanged.
 - **R-ENT-5.** A dev-only override `PEER_DEV_ENTITLEMENT=free|trial|paid` is honoured only when
   `NODE_ENV === "development"` and not on Vercel, so local runs and tests can exercise every
