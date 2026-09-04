@@ -27,9 +27,58 @@ describe("daily opportunity pool cache key", () => {
     });
 
     expect(reordered).toBe(first);
-    expect(first).toMatch(
-      /^peer-pool-v5-events-2026-07-27-[a-f0-9]{32}$/,
+    // ABC-freemium 1-17 · R-POOL-1 — REWRITTEN, NOT DELETED. The prefix moves
+    // from `v5` and a local DATE to `v6` and a local ISO WEEK on this surface.
+    // 2026-07-27 is a Monday, so it opens 2026-W31.
+    expect(first).toMatch(/^peer-pool-v6-events-2026-W31-[a-f0-9]{32}$/);
+  });
+
+  it("keeps papers on a DAILY key while jobs and events go weekly", () => {
+    // ABC-freemium 1-17 — the case that catches an over-broad edit. D3 keeps
+    // papers daily because they run on free academic sources.
+    const monday = new Date(2026, 6, 27, 12, 0, 0);
+    expect(
+      derivePoolCacheKey({ ...base, surface: "papers", now: monday }),
+    ).toMatch(/^peer-pool-v6-papers-2026-07-27-[a-f0-9]{32}$/);
+    expect(derivePoolCacheKey({ ...base, surface: "jobs", now: monday })).toMatch(
+      /^peer-pool-v6-jobs-2026-W31-[a-f0-9]{32}$/,
     );
+  });
+
+  it("gives two days in the same ISO week the SAME jobs and events key", () => {
+    // The whole point of the item: a rebuild once a week, not once a night.
+    const monday = new Date(2026, 6, 27, 12, 0, 0);
+    const thursday = new Date(2026, 6, 30, 12, 0, 0);
+
+    for (const surface of ["events", "jobs"] as const) {
+      expect(derivePoolCacheKey({ ...base, surface, now: thursday })).toBe(
+        derivePoolCacheKey({ ...base, surface, now: monday }),
+      );
+    }
+    // ...and papers still change nightly, which is what makes the assertion
+    // above a statement about the fork rather than about the whole function.
+    expect(
+      derivePoolCacheKey({ ...base, surface: "papers", now: thursday }),
+    ).not.toBe(
+      derivePoolCacheKey({ ...base, surface: "papers", now: monday }),
+    );
+  });
+
+  it("changes across a Monday boundary", () => {
+    const sunday = new Date(2026, 7, 2, 23, 59, 0);
+    const monday = new Date(2026, 7, 3, 0, 1, 0);
+
+    expect(derivePoolCacheKey({ ...base, now: monday })).not.toBe(
+      derivePoolCacheKey({ ...base, now: sunday }),
+    );
+  });
+
+  it("no longer produces a v5-shaped key", () => {
+    // The bump is not cosmetic: a v5 daily key and a v6 weekly key would
+    // otherwise collide in the shared `opportunity_pools` table.
+    for (const surface of ["papers", "events", "jobs"] as const) {
+      expect(derivePoolCacheKey({ ...base, surface })).toMatch(/^peer-pool-v6-/);
+    }
   });
 
   it("ignores aiTier on surfaces that never send it", () => {
@@ -52,7 +101,7 @@ describe("daily opportunity pool cache key", () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
-  it("changes for every profile dimension, surface, and local date", () => {
+  it("changes for every profile dimension, surface, and period", () => {
     const keys = [
       derivePoolCacheKey(base),
       derivePoolCacheKey({
@@ -77,7 +126,9 @@ describe("daily opportunity pool cache key", () => {
       }),
       derivePoolCacheKey({
         ...base,
-        now: new Date(2026, 6, 28, 0, 1, 0),
+        // ABC-freemium 1-17 — was "the next day", which no longer moves an
+        // events key. The period is a week now, so the case steps a week.
+        now: new Date(2026, 7, 3, 0, 1, 0),
       }),
     ];
 

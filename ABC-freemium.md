@@ -3619,3 +3619,56 @@ Both reverted; `grep -c FALSIFICATION` → 0.
 **GATE after 1-16:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **111 files passed | 1 skipped (112)**, **2663 tests passed | 1 skipped (2664)**, **0
 failed**. Unit (d) closed: 1-13 … 1-16 all landed.
+
+---
+
+### Unit (e) — weekly cadence
+
+**1-17 · Jobs and events pools rebuild weekly — LANDED.** R-POOL-1, D3. A's item 13. Files:
+`web/src/lib/local-calendar-date.ts` (adds `localIsoWeek`),
+`web/src/lib/local-calendar-date.test.ts` (new, 7 tests),
+`web/src/lib/opportunities/pool-cache.ts`, `web/src/lib/opportunities/pool-cache.test.ts`.
+
+**B's correction to A's citation is what the fix is built on: the date appeared TWICE.** Both the
+hashed signature and the plaintext key segment now read one `period` variable, so there is no way to
+change one and leave the other daily. The fork is a one-line branch inside `derivePoolCacheKey`,
+which already knows the surface — **no caller changed**, exactly as B predicted.
+`CACHE_KEY_VERSION` 5 → **6**, with a v6 line added to the existing comment block; the bump is not
+cosmetic and the comment says so — a v5 daily key and a v6 weekly key would otherwise collide in the
+shared `opportunity_pools` table.
+
+**B's candidate B adopted, and its harness result independently reproduced.** `localIsoWeek` lives
+next to `localCalendarDate` in the same six-line module, so the pair cannot drift on timezone
+handling, and uses local components throughout. The `Math.round` on the day difference is
+load-bearing and the reason is written at the function.
+
+**I did not take B's timezone sweep on trust — I falsified against it.** Replacing the `Math.round`
+form with candidate A (`Math.ceil(((thursday - jan1)/86400000 + 1)/7)`, the commonly published one)
+and re-running gives exactly B's reported failure: **`Pacific/Chatham: expected '2021-W15' to be
+'2021-W14'`**. B's single decisive case, reproduced from the other side. Probe reverted.
+
+**Tests at risk — B named four files; only one actually broke, and B's reasoning explains why.**
+`pool-cache.test.ts` had both predicted breaks: a literal `^peer-pool-v5-events-2026-07-27-` prefix,
+and a "changes for every dimension" case whose last entry stepped **one day** — which no longer
+moves an events key. Both **rewritten, not deleted**: the prefix case now pins
+`peer-pool-v6-events-2026-W31-`, and the dimension case steps **a week** with a comment saying why.
+`daily-pool-cache.test.ts`, `facets.test.ts` and `facet-remote-claim.test.ts` all pass unchanged —
+I checked rather than assumed: each uses a single fixed `now`, so none of them ever asserted a
+day-boundary. `pool-cache-disk.test.ts` and `pool-cache-supabase.test.ts` use `peer-pool-v1-…`
+strings as opaque keys and are unaffected.
+
+**Four new assertions beyond the rewrite**, each pinning a way the fix could be wrong rather than
+absent: two days in the same ISO week give the **same** jobs and events key **while papers still
+change nightly** (the case that catches an over-broad edit); a Monday boundary moves it; papers keep
+a daily key on the same date; and no surface produces a v5-shaped key any more.
+
+**Recorded for A, so it is not reported as a regression:** the first jobs/events load per user after
+deploy is a rebuild — every key changes at once — then a week of hits. And a mid-week topic change
+is still a cache miss on the user's own key, because the topic sets remain in the signature; D3 says
+that in as many words ("that is their quota to spend"). The `CACHE_KEY_VERSION` bump orphans every
+existing `opportunity_pools` row; that table has no TTL sweep, so the old rows simply sit there —
+worth a note, not an item.
+
+**GATE after 1-17:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **112 files passed | 1 skipped (113)**, **2674 tests passed | 1 skipped (2675)**, **0
+failed**.
