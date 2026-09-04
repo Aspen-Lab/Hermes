@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isLocalDevRuntime } from "@/lib/env/local-dev";
-
-interface RateBucket {
-  count: number;
-  resetAt: number;
-}
-
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-const rateBuckets = new Map<string, RateBucket>();
+import {
+  endOfUtcHour,
+  getCounterStore,
+  rateKey,
+  underLimit,
+} from "@/lib/usage/counters";
 
 function hasSupabaseAuthConfig(): boolean {
   return Boolean(
@@ -65,16 +63,31 @@ export async function protectAiRequest(
     );
   }
 
-  const now = Date.now();
-  const key = `${scope}:${user.id}`;
-  const current = rateBuckets.get(key);
-  const bucket =
-    current && current.resetAt > now
-      ? current
-      : { count: 0, resetAt: now + RATE_WINDOW_MS };
+  // ABC-freemium 1-02 · R-METER-3 — this was a module-scope `Map`, so a
+  // serverless instance that had just started always saw zero and the limit was
+  // per-instance rather than per-user. The shared store counts once per user
+  // across every instance and survives a cold start.
+  //
+  // Increment first, then compare: the post-increment value is this caller's
+  // own, so two instances cannot both see 59 and both proceed. The limits
+  // themselves are unchanged — 60/h feeds, 20/h reports, passed by each route.
+  //
+  // The window is now a fixed UTC clock hour carried in the key rather than an
+  // hour rolling from the user's first request. A user who sends 60 requests at
+  // 10:59 can send 60 more at 11:00; that is the trade for a counter that
+  // survives a cold start. **Fails open** — an unreachable store must not answer
+  // 429 to every signed-in user (see `counters.ts`).
+  const now = new Date();
+  const reading = await getCounterStore().increment(
+    rateKey(scope, user.id, now),
+    endOfUtcHour(now),
+  );
 
-  if (bucket.count >= limitPerHour) {
-    const retryAfter = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000));
+  if (!underLimit(reading, limitPerHour)) {
+    const retryAfter = Math.max(
+      1,
+      Math.ceil((endOfUtcHour(now).getTime() - now.getTime()) / 1000),
+    );
     return NextResponse.json(
       { error: "AI request limit reached. Try again later." },
       {
@@ -87,7 +100,5 @@ export async function protectAiRequest(
     );
   }
 
-  bucket.count += 1;
-  rateBuckets.set(key, bucket);
   return null;
 }

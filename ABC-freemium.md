@@ -2736,3 +2736,55 @@ its own: `registry.test.ts` **5 passed**, `ai-request.test.ts` **2 passed**.
 **GATE after 1-01:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
 failed**.
+
+---
+
+**1-02 · The shared counter — LANDED.** R-METER-3, R-METER-4. Files:
+`web/src/lib/usage/counters.ts` (new),
+`web/supabase/migrations/20260904000000_usage_counters.sql` (new, **NOT applied — see §1
+PENDING USER ACTION**), `web/src/lib/security/ai-request.ts` (modified — the `Map` is gone).
+
+Key layout is B's, in UTC, with `localCalendarDate` deliberately not reused. Selection is on the
+Supabase env pair exactly as `configuredAdminClient` does it, **not** on `NODE_ENV` — B's correction
+to the `pool-cache-runtime.ts` precedent, adopted. `label` is `"in-memory"` / `"supabase"`.
+`counters.ts` imports no framework. The fixed-clock-hour window change is written into the code
+comment as B required, with the 10:59/11:00 example.
+
+**DEVIATION FROM B, TRACED FIRST — B's recommended atomic shape (i) is not reachable and I used
+(ii).** B recommended "a single-row upsert with a returning clause, reachable through supabase-js's
+`.upsert(...).select()`" and preferred it because it "needs no second migration object". That is
+wrong on the mechanism: PostgREST's upsert (`Prefer: resolution=merge-duplicates`) can only emit
+`on conflict do update set col = excluded.col`. There is **no way to express
+`value = usage_counters.value + excluded.value`** through it, so an upsert would *overwrite* the
+counter with `by` instead of adding to it — a silently broken quota rather than a compile error.
+So the migration ships B's option (ii), `increment_usage_counter(...)` called with `.rpc()`, which
+R-METER-3 explicitly allows. B's stated cost for (ii) was a `security definer` review; that cost
+does not arise either — the only caller holds the service-role key, which already bypasses RLS, so
+the function is written **without** `security definer` and there is nothing to elevate. Reason
+recorded in the migration file itself, not only here.
+
+**DEVIATION FROM B, second: `increment` returns `{ value, ok }`, not a bare `number`.** B's
+interface is `increment(...): Promise<number>` plus the rule "fail open". A bare number cannot
+express "the store was unreachable" — 0 would be indistinguishable from a genuine 0, and the two
+failure rules are *opposite* (rate limits open, breakers closed), so both directions have to be
+derivable from one reading. `CounterReading` carries `ok`, and the module exports the two rules as
+`underLimit()` (fail open) and `breakerTripped()` (fail closed) so no call site hand-rolls either.
+A caller who forgets to check `ok` fails **open**, which is the safe direction for the rate limits
+that are almost every call. Both rules are in the module header comment as B asked, including the
+sentence that a Supabase outage degrades every paid user to no-LLM.
+
+**Migration written, NOT applied** (§3): `20260904000000_usage_counters.sql`. Everything works
+without it — locally `configuredAdminClient()` returns null and the in-memory store is selected; in
+a deployed runtime with Supabase but no table the RPC errors, `ok` is false, and rate limits fail
+open. **The breakers of 1-21 will fail CLOSED against a missing table**, so this migration must be
+applied before or with the deploy that lands unit (f). Listed in §1 PENDING USER ACTION.
+
+**Tests.** In **1-04**, per B (Ruling 2 point 4(h)) — including the N-concurrent-increments case
+and the fail-open/fail-closed asymmetry.
+
+**Standing regression lock re-verified** (I edited `ai-request.ts`): `ai-request.test.ts` run on its
+own, **2 passed**. B predicted both survive 1-02 unchanged; confirmed — neither touches a bucket.
+
+**GATE after 1-02:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
+failed**.
