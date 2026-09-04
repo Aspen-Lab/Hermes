@@ -102,16 +102,20 @@ async function buildPaperPool(
   // SUB-ITEM 8 / RULING 79c. Resolved ONCE so the timeout override below reads
   // the same value the fetch is given, rather than re-deriving the provider
   // from the same ternary in two places and inviting them to disagree.
-  const paperWebSearch = req.searchConnectors?.tavily?.enabled
-    ? {
-        provider: "tavily" as const,
-        tavilyApiKey: req.searchConnectors.tavily.apiKey,
-      }
-    // CREDIT MIGRATION — `webSearchOptions` prefers Vertex AI Search when a
-    // Search App is configured and otherwise returns exactly what
-    // `geminiWebSearchOptions` returned. With no Search App configured this
-    // line is behaviourally identical to the one it replaces.
-    : webSearchOptions(req.searchConnectors);
+  //
+  // **NO TAVILY BRANCH. THE PAPER SURFACE DOES NOT SPEND THE USER'S TAVILY
+  // QUOTA, AT ALL.** Events and jobs genuinely need web search — their
+  // listings exist only on the open web. Papers do not: they come from the
+  // five free academic sources, and the one Tavily channel this surface had
+  // was deleted for buying a number nothing displayed. The optional `web`
+  // source below is dark by product choice and, if it is ever turned back on,
+  // runs on the server's own Vertex project rather than on a key the user
+  // pays for.
+  //
+  // CREDIT MIGRATION — `webSearchOptions` prefers Vertex AI Search when a
+  // Search App is configured and otherwise returns exactly what
+  // `geminiWebSearchOptions` returned.
+  const paperWebSearch = webSearchOptions(req.searchConnectors);
 
   const fetchPromise = Promise.allSettled(
     sources.map((s) =>

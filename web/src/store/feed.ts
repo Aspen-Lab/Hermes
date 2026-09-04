@@ -256,7 +256,6 @@ export function paperFeedRequestBody(
     (s) => s.trim().length > 0,
   );
   const preferenceLedger = profile.preferenceLedger ?? {};
-  const tavilyApiKey = profile.tavilyApiKey?.trim();
   const feedAiApiKey = profile.feedAiApiKey?.trim();
   const hasUserLlmOverride =
     aiPaperSearchEnabled &&
@@ -292,14 +291,10 @@ export function paperFeedRequestBody(
         : undefined,
     topN: profile.paperCount,
     aiTier: hasUserLlmOverride || hasLocalDeveloperProvider ? 2 : 0,
-    searchConnectors: profile.tavilyEnabled
-      ? {
-          tavily: {
-            enabled: true,
-            apiKey: tavilyApiKey || undefined,
-          },
-        }
-      : undefined,
+    // NO `searchConnectors`. The Tavily toggle stays in the profile because
+    // events and jobs still need it — their listings only exist on the open
+    // web — but the paper surface has nothing left to spend it on, so it does
+    // not ask for the key. `opportunityRequestBody` is where it is still sent.
     llmOverride: hasUserLlmOverride
       ? {
           provider: profile.feedAiProvider,
