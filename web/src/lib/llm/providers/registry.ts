@@ -9,6 +9,7 @@ import { openaiProvider, createOpenAIProvider } from "./openai";
 import { qwenProvider, createQwenProvider } from "./qwen";
 import { deepseekProvider, createDeepseekProvider } from "./deepseek";
 import { isLocalDevRuntime } from "@/lib/env/local-dev";
+import { meterProvider } from "./metered";
 
 const providers: Record<ProviderId, DigestProvider> = {
   anthropic: anthropicProvider,
@@ -97,12 +98,32 @@ function resolveLocalServerProvider(): DigestProvider | null {
  *   1. Valid per-request BYOK override supplied by the current user.
  *   2. Local `next dev` server credentials (developer convenience only).
  *   3. null (Tier 0 fallback everywhere else).
+ *
+ * ABC-freemium 1-03 · R-METER-1 — the result is wrapped by `meterProvider` at
+ * this single return point, so all thirteen acquisition sites are metered
+ * without a user id threaded through any of them. **The second argument is
+ * optional and stays optional**: making it required would be a thirteen-site
+ * edit and a call site that omits it still meters, with a null `user_id`, which
+ * is the honest value for a library-level call inside a request the route has
+ * already authenticated (feed reranking, opportunity query generation).
+ *
+ * This function stays **synchronous** — eleven call sites use its result without
+ * `await`, and wrapping is pure object construction.
  */
 export function resolveProvider(
   override?: ProviderOverrideConfig | null,
+  ctx?: { userId?: string | null; byok?: boolean; path?: string },
 ): DigestProvider | null {
-  if (hasUsableProviderOverride(override)) {
-    return resolveUserProvider(override);
-  }
-  return canUseLocalServerProvider() ? resolveLocalServerProvider() : null;
+  const byok = hasUsableProviderOverride(override);
+  const provider = byok
+    ? resolveUserProvider(override)
+    : canUseLocalServerProvider()
+      ? resolveLocalServerProvider()
+      : null;
+  if (!provider) return null;
+  return meterProvider(provider, {
+    userId: ctx?.userId ?? null,
+    byok: ctx?.byok ?? byok,
+    path: ctx?.path,
+  });
 }

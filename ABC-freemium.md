@@ -2788,3 +2788,74 @@ own, **2 passed**. B predicted both survive 1-02 unchanged; confirmed — neithe
 **GATE after 1-02:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
 failed**.
+
+---
+
+**1-03 · The metering wrapper and `usage_events` — LANDED.** R-METER-1, R-METER-2 (LLM half). Files:
+`web/src/lib/usage/context.ts` (new), `web/src/lib/usage/events.ts` (new),
+`web/src/lib/llm/providers/metered.ts` (new),
+`web/supabase/migrations/20260904000100_usage_events.sql` (new, **NOT applied**),
+`web/src/lib/llm/usage-log.ts` (modified — one added block, console line untouched),
+`web/src/lib/llm/providers/registry.ts` (modified — wrapper at the single return point, optional
+second argument).
+
+B's three "must not break" constraints are implemented and commented at the wrapper: method
+presence is copied by `typeof … === "function"` (the DeepSeek case), `id` is carried over, a throw
+re-throws. `resolveProvider` stays synchronous. The second argument is optional and defaults to
+`{ userId: null, byok: hasUsableProviderOverride(override) }`, exactly as B specified.
+
+**DEVIATION FROM B, TRACED FIRST — B's design would have written TWO rows per call, and the user id
+could not have reached the row that mattered.** B says both (i) "`logLlmUsage` gains one line that
+calls `recordUsageEvent`" and (ii) "the wrapper records `ok: false` and re-throws". Read together
+those double-record every failure, because **every provider already calls `logLlmUsage` on its error
+path as well as its success path** — verified by reading all five: `gemini.ts` calls `logGemini(...)`
+with `ok: false` at `:177`, `:208`, `:331`, `:359`; `deepseek.ts:82`, `openai.ts:91`, `qwen.ts:94`
+do the same inline; `anthropic.ts:43` is the success line. Worse, R-METER-1's required
+`input_tokens`/`output_tokens`/`thinking_tokens` exist **only** inside the provider, and the
+`user_id`/`byok` exist **only** at `resolveProvider` — so neither place alone can write the row the
+requirement describes.
+
+Resolution, and it is the smallest thing that satisfies R-METER-1's "**one** row" literally:
+- `lib/usage/context.ts` carries `{ userId, byok, path }` in an **`AsyncLocalStorage`** scope opened
+  by the wrapper around each call. **Not a module variable** — that would be read by whichever
+  request happened to be running when a callback resumed, so two concurrent feed loads would
+  attribute each other's spend, which is precisely the wrong-value class this round exists to
+  remove. Checked that this is safe: no client component imports the provider registry (all 13
+  importers are route handlers or server libraries), so `node:async_hooks` is available and nothing
+  reaches a browser bundle.
+- `logLlmUsage` writes the row (it has the numbers) and flips `scope.recorded`.
+- The wrapper writes an `ok: false` row **only when a call throws before anything logged** — e.g.
+  gemini's "GOOGLE_VERTEX_PROJECT not set" throw, which happens before any `logGemini`. So: exactly
+  one row per call, always, with every field R-METER-1 names.
+
+**A second, smaller deviation: `byok` is nullable.** R-METER-1 says "plus `byok boolean`". A row
+written outside a resolved-provider scope does not know whose key paid, and a wrong `false` would
+read as "the operator paid for this" — the exact failure mode this round is about. The column is
+nullable and null is documented as "not known". Flagged for the manager as a widening of the
+requirement's literal shape.
+
+**`logLlmUsage`'s console output is unchanged byte for byte** — the added block is after the
+`console.log`, and its header comment says why the line stays (it is the API-efficiency measurement
+layer, an unrelated capability). The five providers needed no edit, as B predicted.
+
+**R-METER-2's search rows are NOT here** — deferred to 1-05, where the surface, provenance and query
+count are known. Recorded so it is not written twice.
+
+**Migration written, NOT applied**: `20260904000100_usage_events.sql`. No column on it could hold a
+credential and the file says so.
+
+**Tests.** In **1-04**, per B.
+
+**Standing regression locks re-verified** — `registry.test.ts`, `ai-tier.test.ts` and the three feed
+`route.test.ts` files (`feed`, `jobs/report`, `events/report`) run together: **5 files, 36 passed**.
+`registry.test.ts` was the one suite B flagged as seeing the real return value; its `.id`
+assertions survive the wrapper, as B predicted.
+
+**Confirmed for round-2 A (Ruling 3 point 7):** the `=== geminiProvider` identity probe is now dead
+— `resolveProvider` returns a fresh wrapper object every call. Assert on `.id` plus the env
+preconditions. I grepped for a production identity comparison (`=== geminiProvider` and friends)
+and found **none**, so nothing in the app relies on it.
+
+**GATE after 1-03:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
+failed**.
