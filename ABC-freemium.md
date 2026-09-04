@@ -2289,3 +2289,245 @@ Classification: `MISSING`.**
 - **R-QUOTA-3, as four assertions:** a shallow paper report, a rerank, a digest and a query
   generation each leave the deep counter **unchanged** — and each still writes a `usage_events` row.
   The second half is what stops a later round "fixing" R-QUOTA-3 by skipping the metering.
+
+---
+
+### Unit (g) — what the user sees
+
+*Last, on purpose: every string here depends on 1-14's predicate and 1-20's `quota` field already
+existing. Order within the unit is by blast radius — the badges (1-24) touch seven files, the
+profile copy (1-25) touches one, the upsell (1-26) touches four.*
+
+---
+
+**1-24 · Twenty-two rendered strings still say "Tier 0/1/2", and no plan chip exists**
+**R-UI-1, D6. A's item 15. Classification: `WRONG DATA` (the vocabulary) + `MISSING` (the plan chip).**
+
+**A's scan 1 re-run and confirmed: 26 survivors of the mechanical filter, 22 rendered.** I got the
+identical 26 file:line pairs, and A's four hand-exclusions check out — `app/page.tsx:829`,
+`app/jobs/[id]/page.tsx:1334` and `:1515` are inside `{/* … */}` JSX comment blocks, and
+`lib/feed/tier2-rerank.ts:135` is a `console.warn`. **`BYOK` itself: 0 rendered occurrences**;
+every `BYOK` in the tree is a comment, and the lowercase `byok=` in `papers/[id]/page.tsx:695` is a
+localStorage key, which A correctly did not count and 1-11 changes for a different reason.
+
+The 22, grouped by what they are — because the three groups need three different treatments:
+
+*(i) Seven provenance badges — D6's "computed without a model" case.* All are literally
+`<ReportBadge tone="accent">Tier 0</ReportBadge>`: `components/reports/why-peer-sent-this.tsx:75`,
+`app/events/[id]/page.tsx:1551` (guarded by `organisationsAllTier0`), `:1588`, `:1638`, `:1683`,
+`:2289`, and `app/jobs/[id]/page.tsx:1255`. **These are the easiest and the most literal**: one
+plain-language label, used seven times. D6 asks for exactly this. Something like `Computed` or
+`No model used` — one word or two, chosen once and applied identically, because seven
+near-synonyms would be worse than what is there now. **Note the variable `organisationsAllTier0`
+(`events/[id]/page.tsx:1550`) is internal and stays** — D6 keeps `aiTier` and the tier-0 code paths.
+
+*(ii) Two chip strings.* `lib/feed/ai-tier.ts:83` (`tier: options.feedsUseAi ? "Tier 2" : "Tier 0"`)
+and `:88` (the tooltip, "Paper search is on Tier 0 fixed scoring…"). **This is where the plan chip
+R-UI-1 asks for goes** — `aiModeChip` (`:75-90`) is already the one testable home for the chip's
+strings, and its header comment (`:59-73`) explains why they were moved there. Extend its input from
+`{ feedsUseAi, aiSearchActive }` to `{ aiMode, entitlement, aiSearchActive }` and its output from
+`{ label, tier, title }` to `{ label, plan, ai, title }`: `plan` renders **"Free" / "Trial · N days
+left" / "Pro"** (R-UI-1's three strings verbatim; N from `entitlement.trialEndsAt`, computed on the
+client for display only — D5 makes the server the authority and this is the "client only displays"
+half), `ai` says whether AI is on. **Keep the `label`/`aiSearchActive` split exactly as it is**:
+`ai-tier.ts:69-73` records that `label` is the button's own pressed state and that changing it
+"would be a different lie". Renaming `tier` -> `plan` is what makes the type system find the call
+site at `app/page.tsx:489`.
+
+*(iii) Thirteen body-copy sentences.* `app/page.tsx:949` ("Tier 0 uses no AI API. To turn on Tier 2
+reranking…"), `:963`, `:964`, `:965`, `:990`; `app/welcome/page.tsx:481`/`:483` ("smarter Tier 1/2
+ranking", "complete free Tier 0 briefing"); `components/profile/ai-setup.tsx:81`, `:283`, `:284`,
+`:327`, `:388`. **Every one of these says the same false thing under D1** — that without your own
+key Peer makes no AI call. `welcome/page.tsx:479-483` is the sharpest: "Peer runs significantly
+better with an API key… Without one, you still get a complete free Tier 0 briefing." Under D1 the
+truthful version is that Peer's AI is included and a key is an alternative, not an unlock.
+**1-25 owns the five in `ai-setup.tsx`**; the other eight are this item's.
+
+**What the field shows.** Nothing empties. Every string here is replaced by another string, and the
+plan chip always has a value because 1-01's anonymous entitlement is a real object — a signed-out
+visitor sees "Free", not a blank chip.
+
+**Blast radius.** Seven files. `aiModeChip`'s signature change is caught by the compiler at its one
+call site (`app/page.tsx:489`); the badge and copy changes are not caught by anything, which is why
+1-27 pins the scan.
+
+**Tests at risk — grepped.** `grep -rln "FEED_AI_PROVIDER_OPTIONS|TierUpgradeBlock|Tier 0" src/ --include="*.test.ts" --include="*.test.tsx"`
+-> **twelve** files. The ones that matter: `src/lib/feed/ai-tier.test.ts` asserts the literal strings
+`"Tier 2"` and `"Tier 0"` at `:82`, `:88` and `:97`, and asserts the exact tooltip at `:99` — **four
+assertions that must be rewritten to the plan vocabulary, not deleted**, and `:104-131`'s
+"never lets the papers toggle move the tier text" must survive as "never lets the papers toggle move
+the plan chip". `src/components/reports/tier-upgrade-block.test.tsx` belongs to 1-26.
+`src/app/events/[id]/page.test.ts` and `src/app/jobs/[id]/page.test.ts` render the badge surfaces.
+`src/components/reports/plate-type-system.test.ts`, `src/lib/jobs/sources/arbeitnow.test.ts`,
+`src/lib/opportunities/enrichment.test.ts`, `src/store/feed-request-body.test.ts` and the four route
+tests matched the grep and must each be checked rather than assumed — several matched on `BYOK` in a
+comment and will not need touching.
+
+---
+
+**1-25 · The provider dropdown's default option still tells a new user there is no AI**
+**R-UI-2. A's item 15 (profile half), overlapping A's item 17. Classification: `WRONG DATA`.**
+
+**Verified.** `components/profile/ai-setup.tsx:16` — `{ value: "default", label: "Tier 0 — no AI API" }`,
+the first of six `FEED_AI_PROVIDER_OPTIONS` (`:15-22`). `grep -rn "Peer.s AI" src/` -> **0**. Four
+more sentences in the same file say the same thing: `:81` and `:327` describe "Tier 1/2 text
+ranking"; `:283-284` is the "No key is okay. Peer's free Tier 0 briefing still works" panel; `:388`
+is a billing estimate mentioning "normal daily Tier 1/2 use".
+
+**Fix direction.** The label becomes **"Peer's AI (included)"** — R-UI-2's exact string, and the
+same edit 1-15 makes; **land it once, in whichever item C reaches first, and say so in the other's
+commit** so the guide's two references do not become two edits. `"Use my own key"` stays: the other
+five options *are* that choice, and R-UI-2 says it remains. Rewrite `:283-284` from "No key is okay
+… Tier 0 briefing still works" to the truth under D1 — Peer's AI is included, and your own key means
+your own model and your own bill. `:81`, `:327` and `:388` are provider-guide copy where "Tier 1/2"
+just means "ranking and reports"; drop the tier numbers and name the capability.
+
+**What the field shows.** A user who never opens this panel now has AI. That is D1, and it is also
+why 1-15 changes the onboarding step: the panel stops being a prerequisite and becomes an upgrade.
+
+**Blast radius.** `ai-setup.tsx` is the shared component for **both** the feed command bar and
+`/welcome` (`:3-5`), so one label change appears in two places.
+
+**Tests at risk.** Any test asserting the literal `"Tier 0 — no AI API"`. C must
+`grep -rn "Tier 0 — no AI API" src/` before editing and fix every hit in the same commit;
+`plate-type-system.test.ts` and the two `[id]/page.test.ts` files are the candidates from the scan.
+
+---
+
+**1-26 · The upsell block is keyed on BYOK, so it would render for a paid user**
+**R-UI-3. A's item 16. Classification: `WRONG DATA`.**
+
+**Verified.** `components/reports/tier-upgrade-block.tsx:18` —
+`if (providerConfigured || items.length === 0) return null;`. The prop is fed from
+`reportProviderConfigured(profile)` at `papers/[id]/page.tsx:1548` and from
+`canAttemptOpportunityEnrichment(profile)` at `jobs/[id]/page.tsx:1675` and
+`events/[id]/page.tsx:2499` — **a BYOK test in all three cases, with no notion of a plan.** Its
+heading reads "Also in this report with an AI key" (`:27-29`) and its CTA is **"Connect a key"** ->
+`/welcome?step=ai` (`:59-64`).
+
+**Fix direction.** Replace the `providerConfigured` prop with the entitlement: render **only** when
+the reader would get more by upgrading — i.e. when `effectivePlan === "free"` and there is no BYOK
+override. Never for `paid` (R-UI-3 says so), and never for `trial`, who already has the paid
+behaviour and would be confused by an upsell for something they have. The heading and CTA follow the
+plan: the honest CTA for a free user is now an upgrade prompt, not "Connect a key" — under D1 they
+already have Peer's AI, so "with an AI key" is no longer what the locked rows are about. **D7 gives
+the price copy: $12/month, student $6, display only. Do not add a checkout link** — spec §3 puts
+payment out of scope, and a dead link is worse than no link. Where the CTA points when there is no
+checkout is a small product choice; the defensible minimum is the existing `/welcome?step=ai` route
+with upgraded copy, or a plain non-link statement of the price.
+
+**What the field shows for each plan.** Free without BYOK: the block, with the price. Free with
+BYOK: nothing (they can already run those rows on their own key — today's behaviour, preserved).
+Trial: nothing. Paid: nothing, which is the requirement. **`items.length === 0` -> nothing**, which
+is the existing guard and must stay.
+
+**Blast radius.** Four files — the component and its three call sites. The prop rename is compiler-
+caught at all three.
+
+**Tests at risk.** `src/components/reports/tier-upgrade-block.test.tsx` **exists** and asserts the
+`providerConfigured` behaviour directly. Its "renders nothing when a provider is configured" case
+becomes "renders nothing for a paid user, a trial user, or a BYOK user" — **rewritten, not
+deleted**, and it is the natural place for R-UI-3's "never renders for paid users" to become a
+permanent assertion. `src/app/events/[id]/page.test.ts` and `src/app/jobs/[id]/page.test.ts` render
+the surfaces that mount it.
+
+---
+
+**1-27 · The tests for unit (g)** — **R-TEST-1 slice. Classification: `MISSING`.**
+
+- **The chip:** the three plan strings render for the three effective plans; a trial with 3 days
+  left reads "Trial · 3 days left"; a signed-out reader reads "Free" and not a blank; and the
+  anti-drift lock at `ai-tier.test.ts:104-159` survives the rename — the chip's AI boolean and
+  **all three** request builders still compute from one predicate (with `paperFeedRequestBody`
+  added per 1-16).
+- **The badge label:** one shared plain-language string, asserted once, so seven call sites cannot
+  drift into seven synonyms.
+- **The upsell:** renders for free-without-BYOK; renders **nothing** for paid, for trial, for
+  free-with-BYOK, and for `items.length === 0`.
+- **The vocabulary, as a gate rather than a grep.** A's scan 1 is a grep run by a human once a
+  round; make it a test. A suite that walks `src/**/*.{ts,tsx}` excluding `*.test.*`, applies A's
+  two mechanical filters (drop test files; drop lines whose first non-space characters are `//`,
+  `*` or `/*`), and asserts the survivors are **only** the four A hand-excluded
+  (`app/page.tsx:829`, `app/jobs/[id]/page.tsx:1334`, `:1515`, `lib/feed/tier2-rerank.ts:135`) —
+  or zero, if C also cleans those. **This is the single highest-value test in unit (g)**: R-UI-1 is
+  the one requirement in the spec that a future edit can silently reopen, and A's scan is otherwise
+  the only thing standing between the product and "Tier 2" reappearing in a new component. Give the
+  allow-list a comment naming each entry and why it is exempt.
+
+---
+
+## Round 1 — Agent B: close-out
+
+**27 items, `1-01` … `1-27`, grouped in the units of Ruling 2 point 4.** Two reorders **within**
+units, both stated where they occur: 1-05 before 1-06 in unit (b) (the key gate is what actually
+stops the spend; at `aiTier: 0` the route order closes nothing), and 1-10 before 1-11 in unit (c)
+(the guard bans `GOOGLE_API_KEY` today, so the resolver alone would fail the next Vercel build).
+The units themselves are in the ruling's order. Within every unit the shared helper precedes its
+callers: 1-01 before 1-02/1-03, 1-05's resolver before the routes that set its flag, 1-14's
+predicate before the strings that render it.
+
+**Classification breakdown.** 27 items total: **20 substantive** plus **7 test items** (1-04, 1-09,
+1-12, 1-16, 1-19, 1-23, 1-27 — all `MISSING` by construction, counted separately so they cannot
+inflate the picture). The 20, by **primary** class:
+
+| Class | Count | Items |
+|---|---|---|
+| `MISSING` | 10 | 1-01, 1-03, 1-05, 1-07, 1-08, 1-13, 1-18, 1-20, 1-21, 1-22 |
+| `WRONG DATA` | 7 | 1-10, 1-14, 1-15, 1-17, 1-24, 1-25, 1-26 |
+| `WRONG ORDER` | 2 | 1-06 (eight routes), 1-11 (the resolution order) |
+| `WRONG SHAPE` | 1 | 1-02 (the module-scope `Map`) |
+| `EXTRA` | 0 | — nothing in this round is code that should simply be removed |
+
+**Six items carry a second class**, because two different things are wrong at one site, and each is
+named in its own entry rather than split, per §2's "one gap or several" rule: 1-05 also
+`WRONG DATA` (the key that is sent, on top of the missing gate); 1-06 also `WRONG DATA` (the
+downgrade predicate reads "no provider" where it must read "not entitled"); 1-10 also `MISSING`
+(there is no require list at all); 1-11 also `MISSING` (the two cache discriminators); 1-14 also
+`MISSING` (the client never receives an entitlement); 1-24 also `MISSING` (no plan chip exists).
+
+**The dependency C must not reorder across units.** 1-06 (unit b) **must** land before 1-11
+(unit c). `digest`, `jobs/report` and `events/report` currently return their degraded payload
+*before* reaching `protectAiRequest`; the moment a provider always resolves, all three start
+authenticating for the first time. If 1-11 landed first, three suites would break inside unit (c)
+for a reason that belongs to unit (b). The brief's unit order already gives this — it is recorded so
+a budget-truncated C does not "just do the key unit next".
+
+**The one way this round could spend real money.** `vitest.config.ts:22` loads every `GOOGLE_`-prefixed
+variable from `.env.local` into all 101 suites. Today `resolveProvider()` returns `null` under
+`NODE_ENV=test`; after 1-11 it returns a live provider on the owner's real key. Before landing 1-11,
+C should confirm the only suite that reaches `resolveProvider` unmocked is `registry.test.ts`
+(which deletes the key in `afterEach`), and every new test must mock the registry or delete the key.
+Repeated in 1-09, 1-11 and 1-12 because it bites in all three.
+
+**Open for the manager — three, none of them blocking C.**
+
+1. **`POLICY — manager decides` (1-20): R-QUOTA-1 specifies a Chinese UI string in an all-English
+   product.** `grep -rlP "[\x{4e00}-\x{9fff}]" src/ --include="*.ts" --include="*.tsx"` returns
+   **zero files**. Shipping `"本月 deep report 已用完，N 天后重置"` as written puts one Chinese
+   sentence in the UI. I have not assumed an answer and am not recommending a reversal — R-QUOTA-1
+   is the contract. C can build the whole mechanism and change the literal last. **Where I looked:**
+   every `.ts`/`.tsx` under `src/`, spec §2 R-QUOTA-1, spec §1 D6.
+2. **`POLICY — manager decides` (1-01), with a recommendation so C is not blocked: the local-dev
+   entitlement when `PEER_DEV_ENTITLEMENT` is unset.** I recommend `free` — under D1 a free user
+   still gets the system LLM, so the developer loop is unchanged, and it closes A's finding 9
+   instead of renaming it. `paid` would preserve today's convenience and keep the finding alive.
+   One constant either way; C implements `free` unless told otherwise.
+3. **Not a policy question, but the manager should see it (1-05).** After the search key is gated,
+   D3 makes the papers surface's `systemSearchAllowed` permanently `false` for **every** plan,
+   because a user's own Tavily key cannot reach the papers surface at all
+   (`feed/pipeline.ts:118` never threads one; `store/feed.ts` sends no `searchConnectors` for
+   papers). Combined with D2's Vercel bans on Brave and Vertex/Gemini search, the papers `web`
+   source returns `[]` in production, permanently. That is D3 working as written. Whether `"web"`
+   should then leave `parseSources` (`feed/route.ts:29`) is outside spec §2; recorded, not fixed.
+
+**What A should expect to measure next round, framed as things a fixture cannot settle:** three
+routes that answered a stranger 200 now answer 401 (`digest`, `jobs/report`, `events/report`); the
+`welcome` completeness count moves by one; the first jobs/events load per user after deploy is a
+rebuild; and A's Part-2 identity probe (`=== geminiProvider`) stops working once the metering wrapper
+is in — assert on `.id` and the env preconditions instead.
+
+**Housekeeping.** Two throwaway harnesses were written **outside the repo**, in the session
+scratchpad, and are described in full where their results are used (1-17's ten-timezone ISO-week
+sweep and its TZ-switching probe). Nothing was written into the working tree;
+`git status --porcelain --untracked-files=all` is clean of scaffolds. **B changed no code and ran no
+gate** — the §3 figures stand at A's measurement.
