@@ -34,6 +34,7 @@ import {
 const mocks = vi.hoisted(() => ({
   getUser: vi.fn(),
   adminFrom: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -47,10 +48,10 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from: mocks.adminFrom,
-    // The counter store and the usage sink share this client. Neither decides
-    // anything here; they are stubbed so a missing method cannot be mistaken
-    // for a behaviour change.
-    rpc: () => Promise.resolve({ data: 1, error: null }),
+    // The counter store and the usage sink share this client. The counter's
+    // RPC is a spy as well as a stub, because "did the route forward the
+    // refresh?" is answered by whether the daily search counter moved.
+    rpc: mocks.rpc,
   }),
 }));
 
@@ -123,6 +124,7 @@ beforeEach(() => {
   vi.stubEnv("BRAVE_SEARCH_API_KEY", "");
   vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
   mocks.adminFrom.mockReturnValue(planRow(null));
+  mocks.rpc.mockResolvedValue({ data: 1, error: null });
   mocks.getUser.mockResolvedValue(signedOut());
 });
 
@@ -248,5 +250,53 @@ describe("POST /api/jobs/feed — the operator's search key", () => {
     );
 
     expect(requestsCarrying(OPERATOR_SENTINEL)).toEqual([]);
+  });
+});
+
+/**
+ * ABC-freemium 1-19 · R-POOL-2 — the entitlement gate, observed at the route.
+ *
+ * A forced rebuild counts against the daily system-search breaker before it
+ * runs, so "did the route forward the refresh?" is answered by whether that
+ * counter moved. Nothing else in these requests touches it.
+ */
+describe("POST /api/jobs/feed — refresh now (R-POOL-2)", () => {
+  function searchIncrements(): unknown[] {
+    return mocks.rpc.mock.calls.filter(
+      (call) =>
+        call[0] === "increment_usage_counter" &&
+        String((call[1] as { p_key?: string })?.p_key ?? "").startsWith(
+          "search:",
+        ),
+    );
+  }
+
+  it("refuses a free user's forced rebuild, and still answers 200", async () => {
+    mocks.getUser.mockResolvedValue(signedIn("free-user"));
+    mocks.adminFrom.mockReturnValue(planRow("free"));
+
+    const response = await POST(request({ ...BASE, poolRefresh: true }));
+
+    // Refused, never errored: the surface answers exactly as it would have.
+    expect(response.status).toBe(200);
+    expect(searchIncrements()).toEqual([]);
+  });
+
+  it("grants a paid user's forced rebuild", async () => {
+    mocks.getUser.mockResolvedValue(signedIn("paid-user"));
+    mocks.adminFrom.mockReturnValue(planRow("paid"));
+
+    await POST(request({ ...BASE, poolRefresh: true }));
+
+    expect(searchIncrements().length).toBe(1);
+  });
+
+  it("does nothing when no refresh is asked for, whatever the plan", async () => {
+    mocks.getUser.mockResolvedValue(signedIn("paid-user"));
+    mocks.adminFrom.mockReturnValue(planRow("paid"));
+
+    await POST(request(BASE));
+
+    expect(searchIncrements()).toEqual([]);
   });
 });

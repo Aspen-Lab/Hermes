@@ -3672,3 +3672,76 @@ worth a note, not an item.
 **GATE after 1-17:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **112 files passed | 1 skipped (113)**, **2674 tests passed | 1 skipped (2675)**, **0
 failed**.
+
+---
+
+**1-18 + 1-19 · "Refresh now" forces a rebuild, gated twice — LANDED. UNIT (e) CLOSED.**
+R-POOL-2, R-QUOTA-2 (the search breaker's first consumer), R-TEST-1. Files:
+`web/src/lib/opportunities/pool-cache.ts`, `web/src/lib/jobs/pipeline.ts`,
+`web/src/lib/events/pipeline.ts`, `web/src/lib/jobs/types.ts`, `web/src/lib/events/types.ts`,
+`web/src/lib/usage/counters.ts`, the two feed routes, `web/src/store/feed.ts`,
+`web/src/app/page.tsx`, plus `pool-cache.test.ts` (+3),
+`web/src/lib/opportunities/pool-refresh-gates.test.ts` (new, 5) and
+`web/src/app/api/jobs/feed/route.test.ts` (+3).
+
+**B's third shape implemented exactly: skip the READ, keep the WRITE and the single-flight, under
+the SAME key.** Both of B's defective readings are now caught by their own assertion, and I proved
+it by building each one:
+- the **nonce** shape (rebuild stored where nobody looks) → *"skips the READ but keeps the WRITE"*
+  fails;
+- the **bypass** shape (around `getOrBuildCachedPool`, losing single-flight) → *"builds ONCE for two
+  concurrent forced calls"* fails with **`expected 2 to be 1`** — literally B's "two clicks fire two
+  full builds, two Tavily fan-outs on the operator's key".
+
+**Both gates, both required.** `entitlement.poolRefreshAllowed` is applied **at the route**
+(`body.poolRefresh === true && entitlement.poolRefreshAllowed`), so a body that asks without the
+entitlement is simply not forwarded. The daily **system-search breaker** is applied in the pipeline:
+the counter is incremented *before* rebuilding and a trip serves the cache. Both **refuse rather
+than error** — the pool that was already there comes back, no new response shape.
+`SYSTEM_SEARCHES_PER_DAY = 500` lands in `counters.ts` next to its key helper; 1-21 adds the other
+two. The breaker **fails closed**, so an unreadable counter costs the user a refresh rather than
+costing the owner a fan-out.
+
+**A CORRECTION TO B, and it would have shipped a silently dead button.** B says *"Do not reuse
+`feed-more-tile.tsx` — it is papers"*, and that its "Refresh now" is the papers empty-state control.
+It is not papers-only: `app/page.tsx:1254` renders `FeedMoreTile` in the **opportunity** branch, as
+the `else` of `opportunityPage.remaining > 0 ? <OpportunityShowMore …>`. So jobs and events already
+have a "Refresh now" button — and **1-17 had just turned it into a no-op**, because a plain refetch
+now reads the same weekly pool all week. B read the component in isolation and missed its second
+call site.
+
+So R-POOL-2's action is **the button that already exists**, now asking for a rebuild on the
+opportunity surfaces and staying a plain refetch on papers (D3 keeps that pool daily and never
+on-demand; `paperFeedRequestBody` deliberately carries no `poolRefresh`, with a comment saying so).
+No new UI was designed — which is the outcome B wanted from "the smallest honest version" without
+the guesswork.
+
+**The client only ever ASKS.** `FeedLoadOptions.poolRefresh` → `opportunityRequestBody` →
+`body.poolRefresh`; the route decides. Written at all three layers.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** — four probes:
+
+| Probe | Result |
+|---|---|
+| nonce shape: forced rebuild returns early, no write back | FAIL — the write assertion |
+| bypass shape: forced rebuild returns before the single-flight map | FAIL — `expected 2 to be 1` |
+| the breaker's verdict ignored (`forceRebuild = true`) | FAIL — the tripped-breaker case rebuilds |
+| the route forwards `body.poolRefresh` without the entitlement | FAIL — a free user's refresh moves the search counter |
+
+All reverted; `grep -c FALSIFICATION` → 0 everywhere.
+
+**The route-level gate is observed through the counter, not a spy.** A forced rebuild increments
+`search:<user>:<date>` before it runs and nothing else in those requests touches that key, so
+"did the route forward the refresh?" has a direct, behavioural answer. The pipeline-level gates are
+driven with an injected cache holding a marked pool, so "did it rebuild?" is answered by which pool
+comes back. **A fifth case asserts a refresh one increment *below* the breaker still succeeds** —
+without it, the tripped-breaker case would pass against a gate that always refuses.
+
+**Two small things I introduced and fixed inside the item**, recorded so the gate figures are
+honest: a `CachedPool["facetCounts"]` type reference that does not exist on that union, and an
+eslint `no-unused-vars` warning on a type-predicate parameter. Both gone; lint is back to the single
+standing error.
+
+**GATE after 1-18 + 1-19:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **113 files passed | 1 skipped (114)**, **2685 tests passed | 1 skipped (2686)**, **0
+failed**. Unit (e) closed.

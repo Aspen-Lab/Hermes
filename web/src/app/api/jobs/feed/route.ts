@@ -195,6 +195,10 @@ export async function POST(req: NextRequest) {
     // entitlement the guard above resolved. Never parsed from the body.
     systemSearchAllowed: entitlement.systemSearchAllowed,
     userId: entitlement.userId,
+    // ABC-freemium 1-18 · R-POOL-2 — the body may ASK for a rebuild; only the
+    // entitlement grants one. A free user's request is refused by serving the
+    // pool that is already there, with no error and no empty surface.
+    poolRefresh: body.poolRefresh === true && entitlement.poolRefreshAllowed,
   });
 
   return NextResponse.json(result, { headers: CACHE_HEADERS });

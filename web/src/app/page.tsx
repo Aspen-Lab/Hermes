@@ -163,6 +163,23 @@ function DiscoveryPage() {
     void loadFeed({ advanceHistory: true });
   }, [loadFeed]);
 
+  /**
+   * ABC-freemium 1-18 · R-POOL-2 — the "refresh now" action, on the jobs and
+   * events surfaces only.
+   *
+   * **This is what keeps the existing button honest after 1-17.** Those pools
+   * rebuild weekly now, so a plain refetch reads the same cached pool all week
+   * and "Refresh now" would do nothing visible. It asks for a rebuild instead.
+   *
+   * Asking is all it does: the route forwards the request only when the reader's
+   * entitlement allows a forced rebuild and the daily search breaker has not
+   * tripped, and refuses by serving the pool that is already there — no error,
+   * no empty surface. Papers keep the plain refresh: D3 keeps that pool daily.
+   */
+  const refreshOpportunityPool = useCallback(() => {
+    void loadFeed({ advanceHistory: true, poolRefresh: true });
+  }, [loadFeed]);
+
   const searchParamsObj = useSearchParams();
   const incomingQuery = searchParamsObj?.get("q") ?? "";
   const incomingType = feedTypeFromSearchParams(searchParamsObj);
@@ -1254,7 +1271,11 @@ function DiscoveryPage() {
                   <FeedMoreTile
                     itemCount={briefingItems.length}
                     topics={profile.researchTopics}
-                    onRefresh={refreshFeed}
+                    onRefresh={
+                      activeType === "papers"
+                        ? refreshFeed
+                        : refreshOpportunityPool
+                    }
                     isLoading={isLoading}
                   />
                 ) : null}

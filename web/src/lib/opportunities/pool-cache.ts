@@ -194,6 +194,21 @@ export async function getOrBuildCachedPool<TPool extends CachedPool>(
   key: string,
   accepts: (pool: CachedPool) => pool is TPool,
   build: () => Promise<TPool>,
+  /**
+   * ABC-freemium 1-18 · R-POOL-2 — **"refresh now": skip the READ, keep the
+   * WRITE and the single-flight, under the SAME key.**
+   *
+   * R-POOL-2 offers "key nonce or bypass" and both obvious readings are
+   * defective. A **nonce in the key** stores the rebuilt pool where nobody else
+   * will ever look, so the user pays for a rebuild and the next ordinary page
+   * load still serves the stale pool. A **bypass around this function** skips
+   * the single-flight map below, so two clicks fire two full builds — two
+   * Tavily fan-outs, on the operator's key.
+   *
+   * This third shape gives the user a genuinely fresh pool, gives everyone else
+   * that pool on their next load, and still builds **once** for a double click.
+   */
+  forceRebuild = false,
 ): Promise<DailyPoolLoad<TPool>> {
   let inFlight = inFlightByCache.get(cache);
   if (!inFlight) {
@@ -209,11 +224,15 @@ export async function getOrBuildCachedPool<TPool extends CachedPool>(
 
   let builtFresh = false;
   const pending = (async (): Promise<TPool> => {
-    try {
-      const cached = await cache.get(key);
-      if (cached && accepts(cached)) return cached;
-    } catch {
-      // A cache outage is a miss, not a feed outage.
+    // The read is the only thing a forced rebuild skips. The write below, and
+    // the single-flight map above, both still apply.
+    if (!forceRebuild) {
+      try {
+        const cached = await cache.get(key);
+        if (cached && accepts(cached)) return cached;
+      } catch {
+        // A cache outage is a miss, not a feed outage.
+      }
     }
 
     builtFresh = true;

@@ -328,6 +328,9 @@ export function paperFeedRequestBody(
       avoidBroadSurveys: profile.feedAvoidBroadSurveys,
     },
     excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
+    // ABC-freemium 1-18 — **no `poolRefresh` here, deliberately.** D3 keeps the
+    // papers pool daily and never refreshed on demand; it is built from free
+    // academic sources, so there is no paid fan-out to force.
   };
 }
 
@@ -369,6 +372,7 @@ export function opportunityRequestBody(
   surface: "events" | "jobs",
   excludeIds: string[],
   entitlement: Pick<Entitlement, "userId"> = ANONYMOUS_ENTITLEMENT,
+  poolRefresh = false,
 ): Record<string, unknown> {
   const { topics, softTopics } = activeSurfaceTopics(profile, surface);
   const activeInputs = profile.activeSearchInputs;
@@ -416,12 +420,15 @@ export function opportunityRequestBody(
       ? { provider: profile.feedAiProvider, apiKey: feedAiApiKey }
       : undefined,
     excludeIds: excludeIds.length > 0 ? excludeIds : undefined,
+    // ABC-freemium 1-18 · R-POOL-2 — an ask, not a grant. See `FeedLoadOptions`.
+    poolRefresh: poolRefresh || undefined,
   };
 }
 
 async function fetchRealEvents(
   profile: UserProfile,
   excludeIds: string[] = [],
+  poolRefresh = false,
 ): Promise<OpportunityClientPool<Event>> {
   if (activeSurfaceTopics(profile, "events").topics.length === 0) {
     return emptyOpportunityClientPool<Event>();
@@ -436,6 +443,7 @@ async function fetchRealEvents(
           "events",
           excludeIds,
           useProfileStore.getState().entitlement,
+          poolRefresh,
         ),
       ),
     });
@@ -458,6 +466,7 @@ async function fetchRealEvents(
 async function fetchRealJobs(
   profile: UserProfile,
   excludeIds: string[] = [],
+  poolRefresh = false,
 ): Promise<OpportunityClientPool<Job>> {
   if (activeSurfaceTopics(profile, "jobs").topics.length === 0) {
     return emptyOpportunityClientPool<Job>();
@@ -472,6 +481,7 @@ async function fetchRealJobs(
           "jobs",
           excludeIds,
           useProfileStore.getState().entitlement,
+          poolRefresh,
         ),
       ),
     });
@@ -560,6 +570,20 @@ export interface FeedLoadOptions {
    * page open reads a feed without mutating the recently-shown clock.
    */
   advanceHistory?: boolean;
+  /**
+   * ABC-freemium 1-18 · R-POOL-2 — ask for a forced pool rebuild on the jobs and
+   * events surfaces.
+   *
+   * **This is what keeps the existing "Refresh now" button honest after 1-17.**
+   * Those pools now rebuild weekly, so a plain refetch reads the same cached
+   * pool all week and the button would do nothing visible. Asking for a rebuild
+   * makes it mean what it says.
+   *
+   * Only an ASK: the route forwards it only when `entitlement.poolRefreshAllowed`
+   * is true, and a free user is refused by being served the pool that is already
+   * there — no error, no empty surface.
+   */
+  poolRefresh?: boolean;
 }
 
 interface FeedState {
@@ -688,6 +712,8 @@ export const useFeedStore = create<FeedState>()(
       loadFeed: async (options) => {
         const requestId = ++feedLoadSeq;
         const advanceHistory = options?.advanceHistory === true;
+        // ABC-freemium 1-18 · R-POOL-2 — only ever an ask; the route decides.
+        const poolRefresh = options?.poolRefresh === true;
         set({
           isLoading: true,
           papersLoading: true,
@@ -811,7 +837,11 @@ export const useFeedStore = create<FeedState>()(
 
         const eventsLane = (async () => {
           try {
-            const realEvents = await fetchRealEvents(profile, dismissedEventIds);
+            const realEvents = await fetchRealEvents(
+              profile,
+              dismissedEventIds,
+              poolRefresh,
+            );
             if (requestId !== feedLoadSeq) return;
             set((state) => {
               const currentSavedIds = new Set(
@@ -850,7 +880,11 @@ export const useFeedStore = create<FeedState>()(
 
         const jobsLane = (async () => {
           try {
-            const realJobs = await fetchRealJobs(profile, dismissedJobIds);
+            const realJobs = await fetchRealJobs(
+              profile,
+              dismissedJobIds,
+              poolRefresh,
+            );
             if (requestId !== feedLoadSeq) return;
             set((state) => {
               const currentSavedIds = new Set(

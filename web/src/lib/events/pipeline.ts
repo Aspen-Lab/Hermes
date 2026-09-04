@@ -21,6 +21,13 @@ import {
 } from "@/lib/opportunities/pool-cache";
 import { getDefaultOpportunityPoolCache } from "@/lib/opportunities/pool-cache-runtime";
 import {
+  SYSTEM_SEARCHES_PER_DAY,
+  breakerTripped,
+  endOfUtcDay,
+  getCounterStore,
+  systemSearchDayKey,
+} from "@/lib/usage/counters";
+import {
   countOpportunityFacets,
   DEFAULT_OPPORTUNITY_TOP_N,
   filterOpportunitiesByFacets,
@@ -58,6 +65,12 @@ export interface EventsPipelineOptions {
 export interface DailyEventPoolOptions {
   cache?: PoolCache;
   now?: Date;
+  /**
+   * ABC-freemium 1-18 · R-POOL-2 — "refresh now". Set by the route from the
+   * entitlement, never from the request body, and refused for a free user by
+   * serving the pool that is already there.
+   */
+  poolRefresh?: boolean;
 }
 
 export interface BuiltEventPool {
@@ -251,6 +264,27 @@ export async function buildDailyEventPool(
     locationPreferences: req.locationPreferences,
     now,
   });
+  // ABC-freemium 1-18 · R-POOL-2 — the two gates, both required.
+  //
+  // 1. `poolRefreshAllowed` is the entitlement's, resolved by the route. A free
+  //    user's forced rebuild is REFUSED, not errored: `forceRebuild` stays
+  //    false and they get the cached pool exactly as they would have.
+  // 2. It counts against the daily system-search breaker, and a tripped breaker
+  //    also serves the cache. Without this second gate the refresh button is an
+  //    unbounded spend button for a paid user.
+  //
+  // **Fails closed**, like every breaker (see `counters.ts`): an unreadable
+  // counter means no forced rebuild, which costs the user a refresh rather than
+  // costing the owner a fan-out.
+  let forceRebuild = false;
+  if ((options.poolRefresh ?? req.poolRefresh) && req.userId) {
+    const reading = await getCounterStore().increment(
+      systemSearchDayKey(req.userId, now),
+      endOfUtcDay(now),
+    );
+    forceRebuild = !breakerTripped(reading, SYSTEM_SEARCHES_PER_DAY);
+  }
+
   let fresh: BuiltEventPool | undefined;
 
   const loaded = await getOrBuildCachedPool(
@@ -272,6 +306,9 @@ export async function buildDailyEventPool(
         localDate: fresh.localDate,
       };
     },
+    // ABC-freemium 1-18 · R-POOL-2 — the route decides this from the
+    // entitlement and the search breaker, never from the request body alone.
+    forceRebuild,
   );
 
   // The daily cache owns source collection/enrichment, not the user's mutable

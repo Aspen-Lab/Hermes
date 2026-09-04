@@ -153,6 +153,12 @@ export interface JobsFeedRequest {
   systemSearchAllowed?: boolean;
   /** ABC-freemium 1-05 · R-METER-2 — attribution for a system search. */
   userId?: string | null;
+  /**
+   * ABC-freemium 1-18 · R-POOL-2 — "refresh now". Set by the route from
+   * `entitlement.poolRefreshAllowed`; a body that asks for it without the
+   * entitlement gets nothing, because the route never forwards it.
+   */
+  poolRefresh?: boolean;
 }
 
 export interface JobsFeedMeta {

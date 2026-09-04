@@ -121,6 +121,12 @@ export function deepReportTrialKey(userId: string): string {
   return `deep:${userId}:trial`;
 }
 
+/**
+ * R-QUOTA-2 / D4 — the paid circuit breakers. Unlimited *to the user*, behind a
+ * hard cap that protects the owner's wallet.
+ */
+export const SYSTEM_SEARCHES_PER_DAY = 500;
+
 /** R-QUOTA-2 — the 500/day system-search breaker. */
 export function systemSearchDayKey(userId: string, now: Date): string {
   return `search:${userId}:${utcDaySegment(now)}`;
