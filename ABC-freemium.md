@@ -170,8 +170,11 @@ TODO:      C works the round-1 guide from unit (a) item 1-01, top down, one comm
            resolveProvider() in a test returns a live provider on the owner's real key.
 PENDING USER ACTION: (0) THREE MIGRATION FILES ARE WRITTEN AND NOT APPLIED. Nobody in this loop
            can run them. web/supabase/migrations/20260904000000_usage_counters.sql (1-02, the
-           shared counter table + increment_usage_counter RPC) and
-           web/supabase/migrations/20260904000100_usage_events.sql (1-03, the usage table).
+           shared counter table + increment_usage_counter RPC),
+           web/supabase/migrations/20260904000100_usage_events.sql (1-03, the usage table), and
+           web/supabase/migrations/20260904000200_profile_plan.sql (1-13, the plan columns, the
+           14-day trial in handle_new_user, and the column-level revoke that stops a browser
+           writing its own plan).
            Everything works without them today — locally the in-memory counter is selected and
            usage rows are a no-op. ORDER MATTERS: the R-QUOTA-2 breakers of 1-21 fail CLOSED, so
            a deployed runtime that has Supabase but not the usage_counters table would degrade
@@ -3400,3 +3403,50 @@ GOOGLE_VERTEX_PROJECT outrank the system key"*, *"gives the three AI modes three
 **GATE after 1-11 + 1-12:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **110 files passed | 1 skipped (111)**, **2654 tests passed | 1 skipped (2655)**, **0
 failed**. Unit (c) closed.
+
+---
+
+### Unit (d) — the migration, the one predicate, and what `"default"` means
+
+**1-13 · `profiles` gains a plan, and `handle_new_user` starts the trial — LANDED (file written,
+NOT applied).** R-ENT-1, D5, D7. A's item 6, server half. File:
+`web/supabase/migrations/20260904000200_profile_plan.sql`. **Zero runtime change until an admin
+applies it.**
+
+Four columns, `add column if not exists`, in the style of the two existing migrations.
+**The column default is `'free'`, not `'trial'`** — B's point, adopted with its reason written into
+the file: a column default governs the rows that already exist, so `'trial'` would silently convert
+every current user into a 14-day trial that started at migration time, which is a decision D5 does
+not make. New users get their trial from the trigger, which is what D5 actually says.
+
+`handle_new_user` is **re-declared whole**, not patched — it is `security definer set search_path =
+public` and re-declaring is the only safe edit. It now inserts `plan = 'trial'`,
+`trial_started_at = now()`, `trial_ends_at = now() + interval '14 days'` and `plan_updated_at =
+now()`. The `on_auth_user_created` trigger needs no change.
+
+**The RLS half, which B correctly calls the one place a wrong migration silently hands every user a
+free upgrade.** The three existing row policies let a user update their own row, and that includes
+`plan`. Postgres RLS has no column-level grant inside a policy, so the instrument is a column
+privilege: `revoke update (plan, trial_started_at, trial_ends_at, plan_updated_at) on
+public.profiles from anon, authenticated;`. Row policies for every other column are untouched. The
+service role bypasses RLS and column grants alike — that is D7's "a column an admin sets by hand".
+
+**D7's documented hook is a SQL comment on the column and nothing else.** No code, no route, no
+stub: spec §3 puts payment out of scope, and a stub route would be a payment surface that does not
+work.
+
+**The request-path half, confirmed by reading rather than assumed.** `PUT /api/profile` upserts from
+`profilePatchToRow`, and `ProfileRow` has no plan fields — so the route **cannot** write them today.
+That is inherited safety, not designed safety, and 1-14 must not turn it into a hole by adding
+`plan` to the write mapping when it adds it to the read mapping. 1-16 asserts it, because the SQL
+cannot be exercised from this loop. Noted here so the two halves stay together.
+
+**Blast radius, verified:** `GET /api/profile` uses `select("*")`, so the new columns arrive in
+`data` automatically once applied; only `profileRowToProfile` decides what reaches the browser, and
+it drops unknown columns. Nothing breaks before or after the migration runs.
+
+**PENDING USER ACTION updated** — this is the third migration file waiting on the owner.
+
+**GATE after 1-13:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **110 files passed | 1 skipped (111)**, **2654 tests passed | 1 skipped (2655)**, **0
+failed**. Unchanged, as a migration-only item must be.
