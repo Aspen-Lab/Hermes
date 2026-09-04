@@ -2587,3 +2587,92 @@ scratchpad, and are described in full where their results are used (1-17's ten-t
 sweep and its TZ-switching probe). Nothing was written into the working tree;
 `git status --porcelain --untracked-files=all` is clean of scaffolds. **B changed no code and ran no
 gate** — the §3 figures stand at A's measurement.
+
+---
+
+### Round 1 — Agent C
+
+**One commit per item, pushed immediately.** Gate figures are reported verbatim after every item.
+Baseline confirmed **cold, before the first edit**: `tsc` exit 0 · `eslint` 1 error (the standing
+`quiz.tsx:46` `react-hooks/set-state-in-effect`) · `vitest` **100 files passed | 1 skipped (101)**,
+**2552 tests passed | 1 skipped (2553)**, 0 failed, 11.87 s. Matches §3 exactly.
+
+---
+
+**1-00 · The billable-test trap — LANDED** (Ruling 3 point 3). Files:
+`web/vitest.config.ts` (modified), `web/vitest.env-allowlist.ts` (new),
+`web/vitest.setup.ts` (new), `web/src/test-support/env-isolation.test.ts` (new).
+
+**(a) The allow-list.** `loadEnv("test", cwd, "GOOGLE_")` is gone. The config now loads with the
+three allow-listed names *as the prefixes* **and** filters the result to those exact names, so a
+forbidden variable is never read out of `.env.local` and a near-miss like
+`GOOGLE_VERTEX_PROJECT_ID` — which prefix-matching alone would accept — is still dropped.
+
+**Deviation from B/Ruling 3, stated: the list lives in its own module, not in `vitest.config.ts`.**
+Ruling 3 point 3(a) says the config injects the three names by explicit allow-list; it does not say
+where the array is declared. I first put it in `vitest.config.ts` as a named export so the test
+could import it, and Vitest's bundler then printed a `MIXED_EXPORTS` warning **on every run** (a
+config entry module with both a default and a named export). New file
+`web/vitest.env-allowlist.ts` holds the array; the config and the test both import it. Same
+mechanism, no warning. Traced before changing, per §2.
+
+**(b) The global setup file.** `test.setupFiles: ["./vitest.setup.ts"]`. It deletes
+`GOOGLE_API_KEY` and `TAVILY_API_KEY` from `process.env` at import time (once per suite file) **and
+in a global `beforeEach`**. The `beforeEach` is deliberate belt-and-braces: a suite that leaks one
+into `process.env` cannot arm the next test in the same file. Verified safe against every existing
+user of those two names — all ten `TAVILY_API_KEY` and both `GOOGLE_API_KEY` occurrences in the
+test tree are `vi.stubEnv` calls made from inside test bodies or from helpers those bodies call
+(`jobweb.test.ts:3029` `withoutKeys()`, `eventweb.test.ts:2561`, `registry.test.ts:31`), never a
+`beforeAll`/module-scope assignment; setup-file hooks register before a suite's own, so the delete
+always precedes the stub. `grep -rn "process\.env\.\(GOOGLE_API_KEY\|TAVILY_API_KEY\)\s*="` over
+`src/` returns 0 — nothing assigns them directly.
+
+**(c) The protective test.** `src/test-support/env-isolation.test.ts`, two cases: both keys are
+`undefined` inside the test process, and the config injects only allow-listed names
+(`Object.keys(vitestConfig.test.env)` ⊆ the trio, plus the trio's exact contents pinned so a fourth
+name cannot be added silently).
+
+**(d) `benchmark.test.ts` still SKIPs cleanly** without the Vertex trio — run on its own, `1 skipped`,
+no error. That it still **runs** with the trio present is verified **by construction, not by
+execution**: its gate is `Boolean(process.env.GOOGLE_VERTEX_PROJECT)` (`:55`) and that name is on
+the allow-list, and I confirmed with vite's own `loadEnv` that the allow-list passes an
+allow-listed name through (probe `.env.test.local` carrying `GOOGLE_VERTEX_LOCATION` → injected)
+while the old prefix load would additionally have carried a non-allow-listed sentinel. I did **not**
+execute the benchmark with a Vertex project set: it is the standing live-search flake (§3) and a
+probe project value would drive a live call, not a meaningful pass. Closure of the "runs with it"
+half belongs to a run on a machine with real Vertex credentials.
+
+**Escape clause (Ruling 3 point 3): no test legitimately needs `GOOGLE_API_KEY`.** Checked, not
+assumed — the only two occurrences in the whole test tree are `registry.test.ts:11` (a name in a
+cleanup list) and `:31` (a `vi.stubEnv` sentinel asserting the key is *ignored*). Both are
+unaffected. Nothing to record.
+
+**PROOF THAT THE NEW TESTS TEST THE FIX** (§2's obligation) — both layers falsified separately,
+with sentinel strings only, never a real credential:
+1. *Layer 2 (`setupFiles`).* With `GOOGLE_API_KEY=PROBE-NOT-A-KEY TAVILY_API_KEY=PROBE-NOT-A-KEY`
+   exported in the shell: **post-fix 2 passed**; with `setupFiles` commented out,
+   **`AssertionError: expected 'PROBE-NOT-A-KEY' to be undefined`, 1 failed | 1 passed**. Config
+   restored from a backup outside the repo.
+2. *Layer 1 (the allow-list).* With a temporary `web/.env.test.local` carrying
+   `GOOGLE_VERTEX_LOCATION=probe-location` and `GOOGLE_SENTINEL_NOT_A_KEY=PROBE-NOT-A-KEY`:
+   **post-fix 2 passed**; with the config reverted to `loadEnv(..., "GOOGLE_")`,
+   **`AssertionError: expected [...] to include 'GOOGLE_SENTINEL_NOT_A_KEY'`, 1 failed | 1 passed**.
+   Config restored, probe file deleted; `git status --porcelain --untracked-files=all` shows only
+   the four shipped files.
+
+**A side effect worth recording for A.** `jobweb.test.ts:3031-3035` and `eventweb.test.ts:2565-2568`
+carry a "CREDIT MIGRATION" comment saying they must stub `GOOGLE_VERTEX_SEARCH_ENGINE_ID` /
+`GOOGLE_VERTEX_SEARCH_DATA_STORE_ID` empty because "Vitest loads every `GOOGLE_` variable out of
+`.env.local`". After 1-00 that is no longer true — those two names are off the allow-list and can
+never be injected. **The stubs stay** (never delete a test's defence; they still guard a
+shell-exported value), but the comment's stated reason is now one layer out of date. Left as a note
+for A rather than edited, per "land what is confirmed".
+
+**Standing regression locks re-verified** (same code family — the test harness itself), each run on
+its own: `registry.test.ts` **5 passed**; `benchmark.test.ts` **1 skipped**, clean.
+`ai-tier.test.ts`, the three feed `route.test.ts` files and the `pool-cache` tests are not in this
+item's family and are covered by the full-suite figure below.
+
+**GATE after 1-00:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
+failed**. +1 file and +2 tests over baseline — the new suite, and nothing else moved.
