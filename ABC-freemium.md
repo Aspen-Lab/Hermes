@@ -1531,3 +1531,219 @@ file, not just in the commit.
 **Tests at risk.** None — three new files. But they must be written to the **post-1-05/1-06**
 contract, so they go in at the end of unit (b), and A should be told they are the re-runnable form
 of its Part-2 table.
+
+---
+
+### Unit (c) — the key unit
+
+*Ruling 1 points 6-7: R-GUARD-1 and R-KEY-1 land in the same round, and R-KEY-1 + R-UI-4 in the same
+commit. One reorder inside the unit, with a reason: **the guard (1-10) ships before the resolver
+(1-11)**. The guard is wired as `prebuild` (`package.json:9`) and today it **bans `GOOGLE_API_KEY`**
+(`assert-byok-production-env.mjs:11`) — so if the resolver landed first, the first Vercel build after
+it would exit 1 on the very key the product now requires. Guard first, resolver second, and the two
+are still one round.*
+
+---
+
+**1-10 · The prebuild guard bans the key the product now needs, and requires nothing**
+**R-GUARD-1. A's item 8. Classification: `WRONG DATA` (the ban list) + `MISSING` (the require list).**
+
+**Verified, whole file read** — `web/scripts/assert-byok-production-env.mjs`, 45 lines.
+`OPERATOR_AI_ENV_NAMES` (`:1-17`) is **ban-only**; there is no require list anywhere in the file.
+`GOOGLE_API_KEY` is on it at `:11`. Already banned and correct to keep: `PEER_DIGEST_PROVIDER` (`:2`),
+`GOOGLE_VERTEX_PROJECT` (`:3`), the three Vertex-Search names (`:7-9`),
+`GOOGLE_APPLICATION_CREDENTIALS` (`:10`), `ANTHROPIC_API_KEY` (`:12`), `OPENAI_API_KEY` (`:13`),
+`QWEN_API_KEY` (`:14`), `DASHSCOPE_API_KEY` (`:15`), `DEEPSEEK_API_KEY` (`:16`), plus
+`PEER_FEED_AI_TIER > 0` handled separately at `:29-34`. Absent from the ban list:
+`BRAVE_SEARCH_API_KEY`, `PEER_DEV_ENTITLEMENT`. Absent entirely: `TAVILY_API_KEY`,
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Fires only under
+`isVercelBuild` (`:19-21`, `VERCEL || VERCEL_ENV`).
+
+**Fix direction.** Two arrays instead of one, and both checked on a Vercel build:
+
+- `REQUIRED_ON_VERCEL = ["GOOGLE_API_KEY", "TAVILY_API_KEY", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]`
+  — **verbatim from R-GUARD-1**, four names, no more.
+- `FORBIDDEN_ON_VERCEL = ["GOOGLE_VERTEX_PROJECT", "GOOGLE_VERTEX_SEARCH_PROJECT", "GOOGLE_VERTEX_SEARCH_ENGINE_ID", "GOOGLE_VERTEX_SEARCH_DATA_STORE_ID", "GOOGLE_APPLICATION_CREDENTIALS", "PEER_DIGEST_PROVIDER", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "QWEN_API_KEY", "DASHSCOPE_API_KEY", "DEEPSEEK_API_KEY", "BRAVE_SEARCH_API_KEY", "PEER_DEV_ENTITLEMENT"]`
+  — the current list **minus `GOOGLE_API_KEY`, plus `BRAVE_SEARCH_API_KEY` and
+  `PEER_DEV_ENTITLEMENT`**. The three `GOOGLE_VERTEX_SEARCH_*` names stay: R-GUARD-1's
+  `GOOGLE_VERTEX_*` glob covers them and the file's own `:4-6` comment explains why they belong.
+  `PEER_FEED_AI_TIER > 0` keeps its separate numeric test at `:29-34`, unchanged.
+
+Exit 1 with a message naming **every** missing and **every** forbidden variable — R-GUARD-1 says
+"names every", so build both lists fully before printing rather than failing on the first.
+
+**R-GUARD-2 must survive, and it is easy to break here.** The current message interpolates only
+`problems.join(", ")` (`:39`), and `problems` holds env **names** filtered from a literal array
+(`:24`) — never `env[name]`. A's score of MET is correct. **The obvious way to write the "missing"
+half is `Missing: ${name}=${env[name]}`, which prints an empty string today and a live key the day
+someone sets a wrong-cased variant.** Keep the same discipline: the message may name variables and
+must never index `env` for output. 1-12 asserts this.
+
+**What the field shows when the guard trips.** A failed Vercel build with a printed list — no
+partial deploy, no degraded runtime. That is the intended shape: R-GUARD-1 exists so a
+misconfiguration is a build failure rather than a silent BYOK-only production.
+
+**Blast radius.** `prebuild` runs on **every** `npm run build`, including a local one. A developer
+building locally without `VERCEL` set is unaffected (`isVercelBuild` is false). Nobody in this loop
+can set the Vercel variables — **note in the commit that the first Vercel build after 1-10 will fail
+until the user sets all four**, and that this is the intended interlock, not a regression. It also
+means §1's `PENDING USER ACTION` do-not-yet on `TAVILY_API_KEY` (Ruling 2 point 3) now has a second
+reason to be honoured in order: setting it before R-SEC-2/3 and R-KEY-3 land opens the wallet;
+setting it after 1-10 lands is *required* for the build to pass.
+
+**Tests at risk.** `grep -rln "assert-byok" src/ --include="*.test.ts"` -> **0**. The script has
+**no test at all** — it is referenced only by `package.json:9`. 1-12 writes the first, which R-TEST-1
+asks for by name ("the guard script's require/ban lists").
+
+---
+
+**1-11 · The system provider does not exist in any deployed runtime; Vertex outranks the key it
+should not; and the report/digest caches cannot tell AI output from no-AI output**
+**R-KEY-1, R-KEY-2, R-UI-4. A's items 7 + 12. Classification: `WRONG ORDER` (the resolution order)
++ `MISSING` (the cache discriminators). ONE COMMIT — Ruling 1 point 7.**
+
+**Verified.** `registry.ts:106` — `return canUseLocalServerProvider() ? resolveLocalServerProvider() : null;`.
+`canUseLocalServerProvider` (`:34-40`) is `NODE_ENV === "development" && !VERCEL && !VERCEL_ENV`.
+Inside `resolveLocalServerProvider` (`:74-89`) the order is `PEER_DIGEST_PROVIDER` (`:75-78`) ->
+`GOOGLE_VERTEX_PROJECT` (`:80`, returns the `geminiProvider` **singleton**, which is the Vertex/ADC
+path) -> `GOOGLE_API_KEY` (`:81-83`, `createGeminiApiProvider`) -> `ANTHROPIC_API_KEY` (`:84`) ->
+`OPENAI_API_KEY` (`:85`) -> `QWEN_API_KEY`/`DASHSCOPE_API_KEY` (`:86`) -> `DEEPSEEK_API_KEY` (`:87`).
+A's construction probe is consistent with the source: with both set the singleton wins.
+
+**The exact target order, and the one ambiguity I resolved by construction.** R-KEY-1 states three
+steps ("BYOK -> `GOOGLE_API_KEY` via `createGeminiApiProvider` -> null") *and* says Vertex stays
+"reachable only by an explicit local opt-in". Those two sentences can only both be true if the
+opt-in sits **between** them — after D1 the system key is always present, so an opt-in placed after
+it would be permanently unreachable. So:
+
+```
+resolveProvider(override, ctx?):
+  1. hasUsableProviderOverride(override)              -> resolveUserProvider(override)     [BYOK, any env]
+  2. LOCAL OPT-IN: NODE_ENV==="development" && !VERCEL && !VERCEL_ENV
+       && PEER_DIGEST_PROVIDER in providers          -> providers[PEER_DIGEST_PROVIDER]    [banned on Vercel]
+  3. process.env.GOOGLE_API_KEY                      -> createGeminiApiProvider(key)       [system, EVERY env]
+  4. null                                                                                  [the existing tier-0 path]
+  (the result of 1-3 is wrapped by meterProvider(…, ctx) from 1-03)
+```
+
+**What becomes of the two helpers.** `resolveLocalServerProvider` collapses into step 2 and loses
+steps 3-7 of its current body: `GOOGLE_VERTEX_PROJECT` **stops being a bare trigger** and becomes
+reachable only as `PEER_DIGEST_PROVIDER=gemini` (which returns `geminiProvider`, the Vertex
+singleton, via the `providers` record at `registry.ts:14`); the four other operator keys likewise.
+That is exactly "an explicit local opt-in that the guard bans on Vercel" — `PEER_DIGEST_PROVIDER` is
+already on the ban list (`assert-byok-production-env.mjs:2`) and stays there in 1-10.
+`canUseLocalServerProvider` **must not simply be deleted**: it is exported, `registry.test.ts:3`
+imports it, and its three-condition body is the same expression 1-01 and `ai-request.ts:28-34` need.
+Either keep it exported and narrow its **documented meaning** to "may this runtime honour a local
+operator opt-in?", or move it to a shared `lib/env/local-dev.ts` and re-export. **Say which in the
+commit** — a silently deleted export is what turns a test rewrite into a test deletion.
+
+**R-UI-4, in the same commit, and the mechanism is sharper than A described.** Two caches:
+
+- **Papers** — `app/papers/[id]/page.tsx:695`:
+  `` `${paper.id}|${contextHint}|deep=${deepReportRequested}|p=${profile.feedAiProvider}|byok=${userProviderConfigured}` ``.
+  I traced the write path A did not: `finishWithReport` (`:774-788`) calls
+  `writeCachedPaperReport(reportKey, nextReport)` at `:779` **unconditionally** — the `reveal`
+  argument at `:797` (`nextReport.noLlm !== true`) controls the animation, **not** the write. So a
+  `noLlm: true` report **is** written, with the fallback TTL of **6 hours** (`:78`,
+  `isReportCacheFresh` at `:475-485`). For a non-BYOK user every component of the key is constant
+  across the R-KEY-1 deploy. **A no-AI report therefore survives as "the AI report" for six hours
+  after the system key goes live.** A's item 12 is confirmed and this is the concrete harm.
+- **Digest** — `components/digest/daily-digest.tsx:107`:
+  `` `${ids}::${ctx.length}:${simpleHash(ctx)}::${llmOverride?.provider ?? "tier0"}` ``, 12-hour TTL
+  (`:37`). **Here A over-stated the risk in one direction and missed it in another:** `:162` writes
+  only `if (json.bullets?.length && !json.noLlm)`, so a no-AI digest is **never cached** and the
+  stale-tier0 poisoning A described cannot happen. What *can* happen is the reverse — a cached
+  system-AI digest served for 12 hours after a user's entitlement changes, and one browser profile's
+  entry colliding across plans. The discriminator is still required; the reason is different.
+
+**Fix direction for both keys.** Add one AI-mode segment computed from the **same single predicate**
+1-14 introduces, with three values, not two: `byok` / `system` / `none`. Papers:
+append `|ai=${aiMode}`. Digest: replace `${llmOverride?.provider ?? "tier0"}` with
+`${llmOverride?.provider ?? aiMode}` — which also removes a rendered-adjacent `"tier0"` literal that
+R-UI-1's spirit is about, though it is a cache string and A correctly did not count it. **Also bump
+both storage versions in the same commit**, because a key change alone leaves the *old* entries
+readable under their old keys: `PAPER_REPORT_CACHE_STORAGE_KEY = "peer-paper-report-cache-v3"`
+(`app/papers/[id]/page.tsx:71`) -> `-v4`, and `CACHE_KEY = "peer-digest-cache"`
+(`daily-digest.tsx:36`) -> `"peer-digest-cache-v2"`. The `-v3` suffix is the codebase's own
+precedent for exactly this.
+
+**The ordering dependency C must not get wrong.** `aiMode` needs the entitlement on the client,
+which is 1-14 in unit (d). Unit (c) ships **before** unit (d). So in this commit `aiMode` is derived
+from what the client already has — `hasUserLlmOverride(profile)` -> `"byok"`, otherwise `"system"`
+if the single predicate says AI is on, else `"none"` — and 1-14 swaps the predicate's *body* without
+touching either key. **That is why R-UI-4 can ship with R-KEY-1 even though the entitlement has not
+reached the browser yet:** the key gains the right *shape* now and the right *value* in unit (d).
+
+**What the field shows when no provider resolves.** Step 4 returns `null`, and every one of the
+thirteen call sites already handles it — `provider?.generateJsonText` guards at `digest:68`,
+`jobs/report:62`, `events/report:114`, `papers/report:134/198/378/396`, and `return null` in the two
+figure matchers. **The tier-0 path D1 says "stays" is these branches, and 1-11 must not touch one of
+them.**
+
+**Blast radius — this is the widest item in the guide.**
+1. **Every deployed runtime gains an LLM.** Three routes that were public-and-degraded start
+   authenticating (see 1-06) — which is why 1-06 must already be in.
+2. **`vitest.config.ts:22` injects `GOOGLE_API_KEY` into all 101 suites.** Before 1-11,
+   `resolveProvider()` in a test returns `null` because `NODE_ENV=test` fails
+   `canUseLocalServerProvider`. **After 1-11 it returns a live provider on the owner's real key.**
+   The seven suites that `vi.mock` the registry are safe. `registry.test.ts` is safe only by its
+   `afterEach` delete loop (`:21-24`). **Every other suite that transitively reaches
+   `resolveProvider` becomes a live-call risk.** Before landing 1-11, C should run
+   `grep -rLn "vi.mock(\"@/lib/llm/providers/registry\"" $(grep -rln "resolveProvider" src --include="*.test.ts")`
+   and confirm the only unmocked file is `registry.test.ts`. **This is the single most likely way
+   this round spends real money.**
+3. **A's Part-2 identity probe (`=== geminiProvider`) stops working** once 1-03's wrapper is in;
+   A should assert on `.id` plus env preconditions instead.
+4. `PEER_DIGEST_PROVIDER=gemini` becomes the only local route to Vertex. The manager's `.env.local`
+   has the Vertex lines commented out already, so nothing on this machine changes.
+
+**Tests at risk — verified line by line, and A named the file but not the damage.**
+`src/lib/llm/providers/registry.test.ts`, 79 lines, 5 tests:
+- `:27-39` "ignores every server-owned provider credential in production" — stubs
+  `GOOGLE_API_KEY` and asserts `resolveProvider()` is **null**. **This assertion becomes false by
+  design.** Rewrite it to the new contract (system provider resolves; `PEER_DIGEST_PROVIDER`,
+  `GOOGLE_VERTEX_PROJECT` and the other four are ignored in production) and comment that 1-11
+  changed it. **Do not delete it** — it is the anti-drift lock for "Vertex never outranks the key".
+- `:41-48` "does not treat a Vercel preview as local development" — stubs `VERCEL_ENV=preview` and
+  `GOOGLE_VERTEX_PROJECT`, expects null. **Still true** under the new order (no `GOOGLE_API_KEY` in
+  that test, Vertex not opted into). Survives on behaviour; it imports `canUseLocalServerProvider`
+  at `:3`, so it survives on compilation only if that export is kept or re-pointed.
+- `:50-56` "keeps the existing local Vertex development path" — development + `GOOGLE_VERTEX_PROJECT`
+  alone, expects `?.id === "gemini"`. **Breaks**: Vertex is no longer a bare trigger. Rewrite to set
+  `PEER_DIGEST_PROVIDER=gemini` and keep asserting the same result — that is the opt-in, stated.
+- `:58-66` BYOK wins in production. **Survives** (and is now the most important test in the file).
+- `:68-78` `hasUsableProviderOverride` validation. **Survives.**
+
+`src/lib/feed/ai-tier.test.ts` (159 lines) is **not** at risk from 1-11 — it never imports the
+registry — but is heavily at risk from 1-14 and 1-24, where it is dealt with.
+
+---
+
+**1-12 · The tests for unit (c)** — **R-TEST-1 slice. Classification: `MISSING`.**
+
+- **Rewrite `registry.test.ts`** per the four verdicts above: assertions rewritten to the new
+  contract, none deleted, each carrying a comment naming 1-11. Add two the file has never had: BYOK
+  **beats** the system key when both are present, and `GOOGLE_VERTEX_PROJECT` **plus**
+  `GOOGLE_API_KEY` in production resolves the API-key provider (the inversion A proved by
+  construction, turned into a permanent assertion). Assert on `.id` and on which factory ran, never
+  on object identity (1-03's wrapper).
+- **New `web/scripts/assert-byok-production-env.test.ts`** — R-TEST-1 names the guard explicitly and
+  it has never had one. It is a top-level script with side effects (`:27` runs on import,
+  `process.exit(1)` at `:43`), so test it by spawning it: `node scripts/assert-byok-production-env.mjs`
+  as a child process with a controlled env, asserting exit code and stderr. Cases: all four required
+  present and nothing forbidden -> exit 0; each required name missing in turn -> exit 1 and the
+  message contains that name; each forbidden name set in turn -> exit 1 and the message contains it;
+  `PEER_FEED_AI_TIER=2` -> exit 1; **not on Vercel -> exit 0 whatever the env holds**; and the
+  R-GUARD-2 lock — set a forbidden variable to a recognisable sentinel and assert the sentinel
+  **does not appear** in stdout or stderr. Note the vitest `include` glob is `src/**/*.test.{ts,tsx}`
+  (`vitest.config.ts:31`), so a test under `scripts/` **will not run** — put the file under
+  `src/` (e.g. `src/scripts/assert-byok-production-env.test.ts`) and have it spawn the script by
+  path, or widen the glob. **C must check this or the test is green by absence.**
+- **Cache-key tests for R-UI-4.** Both keys are built inline inside client components and are not
+  independently importable, which is why they were never tested. Extract each into a small pure
+  function next to its component (`paperReportCacheKey(...)`, `digestCacheKey(...)`) and assert:
+  the three `aiMode` values produce three different keys; a BYOK user's key differs from a system-AI
+  user's; the storage-version bump makes every pre-existing key unreadable. Extraction is the
+  minimum change that makes the requirement testable at all, and it is the same move
+  `lib/feed/ai-tier.ts` documents at `:59-67` for the chip strings.
