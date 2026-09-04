@@ -2137,3 +2137,155 @@ An optional-parameter addition should break none of them; C must confirm rather 
   single-flight assertion — this is the one that fails if C reaches for a bypass).
 - **The gates.** A free entitlement does not rebuild and returns the cached pool; a tripped search
   breaker does not rebuild and returns the cached pool.
+
+---
+
+### Unit (f) — counting deep reports
+
+*Order unchanged. 1-20 before 1-21 because the breaker is the same counter with a different key and
+a different failure direction.*
+
+---
+
+**1-20 · No deep-report quota exists, and no route says how many are left**
+**R-QUOTA-1, D4. A's item 6 (quota half). Classification: `MISSING`.**
+
+**Verified.** `grep -rn "deep_reports_month|resetsAt" src/` -> **0 each**. A's Part-2 measured
+`POST /api/papers/report` with `deepReport: true` returning `noLlm: true` and **no `quota` field**
+for both the `anonymous` and `free-no-key` personas.
+
+**Where the check goes — three routes, and the placement differs by route.**
+- **`api/papers/report/route.ts`** — inside `if (body.deepReport)` at **`:394`**, immediately before
+  `resolveProvider` at `:395`. **Only this branch counts.** The shallow path
+  (`generateShallowReport`, `:123-132`) and the streaming path (`:197`) are R-QUOTA-3's exempt cases.
+- **`api/jobs/report/route.ts`** — the whole route is the deep operation; the check goes after the
+  entitlement guard (1-06) and before `resolveProvider` at `:61`.
+- **`api/events/report/route.ts`** — the same, before `:113`.
+
+D4 says "one counter across papers + jobs + events", so all three increment the **same** key:
+`deep:${userId}:${YYYY-MM}` in UTC (1-02's layout). One atomic check-and-increment per request —
+`increment` returns the post-increment value, and the route compares it against
+`entitlement.deepReportsRemaining`'s budget. **Never read-then-write**: two tabs would both see 4
+and both proceed.
+
+**What the field shows on exhaustion — and it is a payload that already exists.** R-QUOTA-1 is
+explicit: "the existing degraded (no-LLM) payload plus a machine-readable `quota`". So:
+- papers: `return NextResponse.json({ ...(await generateShallowReport(body, body.llmOverride)), quota })`
+  — the **same** call the route already makes at `:398` when no provider resolves.
+- jobs: the existing `{ enrichment: null, noLlm: true, sourceReadStatus: "not-requested" }` at
+  `:63-70`, plus `quota`.
+- events: the existing object at `:115-122`, plus `quota`.
+`quota` is `{ kind: "deep_report", remaining: 0, resetsAt }`, `resetsAt` the ISO timestamp of the
+first instant of the next UTC month. **No new response shape, no error status, no new component
+needed to render nothing** — the user gets the deterministic report they would have got without a
+key, which is exactly what free means.
+
+**`POLICY — manager decides`: the UI string R-QUOTA-1 specifies is the only Chinese string in the
+product.** R-QUOTA-1 asks the UI to show `"本月 deep report 已用完，N 天后重置"`. I checked whether
+the app has any Chinese: `grep -rlP "[\x{4e00}-\x{9fff}]" src/ --include="*.ts" --include="*.tsx"`
+returns **zero files** — the entire rendered UI is English, and A's `grep -rn "本月" src/` -> 0
+agrees. Shipping this string as written would put one Chinese sentence in an otherwise English
+product. **I am not recommending a reversal and I have not assumed an answer** — R-QUOTA-1 is the
+contract and D6 is a recorded decision about vocabulary. **Manager: rule on whether C ships the
+literal string or an English equivalent** (e.g. "You've used this month's deep reports — resets in N
+days"). The mechanism is identical either way, so C can implement everything else and leave the
+literal as the last line to change. **Where I looked:** every `.ts`/`.tsx` under `src/`, plus the
+spec's §2 R-QUOTA-1 and §1 D6; nothing else in the repo prescribes a UI language.
+
+**Blast radius.** Three routes on the deep-report path. The `quota` field is **additive and
+optional** — every existing client ignores an unknown key, so the UI half (`1-24`) can lag the
+server half by a commit without breaking anything. `deepReportsRemaining` on the client comes from
+1-14's profile response, so the "N left" display needs no extra endpoint.
+
+**Tests at risk.** `src/app/api/papers/report/route.test.ts`, `src/app/api/jobs/report/route.test.ts`
+and `src/app/api/events/report/route.test.ts` all exist and all mock the registry. **Any assertion
+using `toEqual` on a degraded body breaks the moment `quota` is added** — `events/report/route.test.ts:82`
+and `:107` are `toEqual` on exactly that shape, and `jobs/report/route.test.ts:70`'s no-provider case
+is the same pattern. Rewrite to the new contract with a comment naming 1-20; do not delete. These
+three suites are also the ones 1-06 already touches, so C should expect to edit them twice and
+should say in each commit which item changed which assertion.
+
+---
+
+**1-21 · No trial cap, no daily breaker, on either the model or the search**
+**R-QUOTA-2, D4. Classification: `MISSING`.**
+
+**Verified.** `grep -rn "breaker" src/` -> **0 hits**, non-test and test alike.
+
+**Three counters, three keys, one helper.** All on 1-02's store; all fail **closed** (the opposite
+of 1-02's rate-limit rule, and the reason both rules are in that module's header comment):
+- **Trial cap, 20 total over the 14 days** — *not* a period counter. Key
+  `deep:${userId}:trial`, no date segment, never reset; the trial itself expires by date, so a
+  reset would double the allowance. This is the one place where the "same counter, different key"
+  pattern needs a comment, because a future reader will try to make it monthly for symmetry.
+- **Paid deep-report breaker, 200/day** — `deep:${userId}:${YYYY-MM-DD}`, UTC.
+- **System-search breaker, 500/day** — `search:${userId}:${YYYY-MM-DD}`, UTC. Incremented in
+  **1-05's** resolver, at the same point the search row is written, and by **1-18's** forced
+  rebuild.
+
+**What a trip does — three things, and D4 names all three.** An **error-level** log line (this
+codebase logs with `console.error`; the guard script at `assert-byok-production-env.mjs:36` is the
+precedent), a `usage_events` row with `kind: "breaker"` (1-03's sink, and **this is the one
+`recordUsageEvent` call that must be awaited**, because it is the audit trail for a spend cap), and
+**degradation to the existing no-LLM path for the rest of the UTC day** — the same
+`generateShallowReport` / `noLlm: true` / `resolveSearchProvider -> null -> []` responses as
+everywhere else in this guide.
+
+**"For the rest of the UTC day" is a property of the key, not of extra state.** Because the key
+carries the UTC date, a tripped breaker stays tripped until the date segment changes. **Do not add a
+`trippedUntil` timestamp** — it would be a second source of truth for the same fact.
+
+**Spec §3 puts alerting out of scope**: an error-level log line suffices. No email, no webhook.
+
+**What the field shows.** Identical to 1-20's exhaustion payload, with `quota.kind: "breaker"`. A
+paid user who trips 200/day sees the deterministic report, not an error — the breaker protects the
+owner's wallet without telling the user their account is broken.
+
+**Blast radius.** The same three report routes plus 1-05's search resolver. Because it fails closed,
+**a Supabase outage degrades every paid user to no-LLM** — that is the deliberate trade (a wallet
+that cannot be read must not be spent), and C should put that sentence in the code, because it is
+the kind of behaviour a later round will otherwise report as a defect.
+
+**Tests at risk.** None existing (`breaker` -> 0 hits anywhere). All new, in 1-23.
+
+---
+
+**1-22 · Shallow reports, ranking, digest and query generation must not be counted**
+**R-QUOTA-3. Classification: `MISSING` (per Ruling 2 point 1 — vacuous today because no counter
+exists, and it becomes violable the moment 1-20 lands).**
+
+**No code of its own.** It is a placement rule on 1-20 plus a permanent assertion. The four exempt
+paths, each verified as a distinct code path so C can see what must stay uncounted:
+- **Shallow paper reports** — `generateShallowReport` (`papers/report/route.ts:123`), reached at
+  `:398` and `:413` and `:427`; the abstract-only report. Note it **also** calls the model when one
+  is available (`:132`), so "shallow" is not "no LLM" — **it is metered by 1-03 and uncounted by
+  1-20**, and those are different things. Easy to conflate; say so in the comment.
+- **Ranking** — `lib/feed/tier2-rerank.ts:65`.
+- **Digest** — `api/digest/route.ts:67`.
+- **Query generation** — `lib/opportunities/query-gen.ts:319`.
+D4's last sentence is the reason: these are "unlimited for everyone (metered, never capped)". **So
+every one of them still writes a `usage_events` row via 1-03's wrapper and none touches a counter.**
+
+**Blast radius / tests at risk.** None directly; 1-23 pins it.
+
+---
+
+**1-23 · The tests for unit (f)** — **R-TEST-1 slice ("quota increment and exhaustion, breaker trip").
+Classification: `MISSING`.**
+
+- **Increment and exhaustion:** a free user's 5th deep report succeeds and the 6th returns the
+  degraded payload with `quota: { kind: "deep_report", remaining: 0, resetsAt }`; `resetsAt` is the
+  first instant of the next **UTC** month (assert with a stubbed clock, not with `Date.now()`);
+  the counter is shared — a papers deep report and a jobs report both decrement the same budget,
+  which is D4's "one counter across papers + jobs + events" and is otherwise easy to implement as
+  three separate counters by accident.
+- **Trial:** 20 total, and the 21st degrades; an expired trial resolves to `free` **and** to the
+  free budget, not the trial one.
+- **Breakers:** the 201st paid deep report in a UTC day degrades; the 501st system search degrades
+  and the pool serves from cache; each trip writes exactly one `kind: "breaker"` row and one
+  error-level line; **the breaker fails closed when the store errors** while the ordinary rate limit
+  fails open — assert both in the same file so the asymmetry is documented by test rather than by
+  comment alone.
+- **R-QUOTA-3, as four assertions:** a shallow paper report, a rerank, a digest and a query
+  generation each leave the deep counter **unchanged** — and each still writes a `usage_events` row.
+  The second half is what stops a later round "fixing" R-QUOTA-3 by skipping the metering.
