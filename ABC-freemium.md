@@ -473,3 +473,259 @@ the spec requires** (`free-byok-tavily` on jobs and events); 1 more is correct f
 disappears the moment R-KEY-1 lands (`anonymous` papers report returns `noLlm`); the rest differ.
 **The operator's Tavily key is spendable today by anyone on the internet with a `curl` and no
 account, at 2 searches per jobs request and 7 per events request.**
+
+#### Part 3 — the five static scans (standing tallies, reported every round)
+
+**Scan 1 — rendered strings matching `Tier 0|Tier 1|Tier 2|BYOK` under `web/src`: 22.**
+
+```
+grep -rn -E "Tier 0|Tier 1|Tier 2|BYOK" src/ --include="*.ts" --include="*.tsx" \
+  | grep -v "\.test\." \
+  | grep -vE ":[0-9]+:[[:space:]]*(//|\*|/\*)"
+```
+*How I excluded:* (a) `grep -v "\.test\."` drops the 68 hits in `*.test.ts(x)` files (139 raw -> 71);
+(b) the second `grep -vE` drops lines whose first non-space characters are `//`, `*` or `/*`
+(line comments and block-comment continuations); (c) I then read the surrounding lines of every
+survivor and dropped four by hand — `src/app/page.tsx:829`, `src/app/jobs/[id]/page.tsx:1334` and
+`:1515` are inside `{/* … */}` JSX comment blocks, and `src/lib/feed/tier2-rerank.ts:135` is a
+`console.warn` (a server log, never rendered). 26 survivors − 4 = **22 rendered strings**.
+
+| File:line | What the user sees |
+|---|---|
+| `lib/feed/ai-tier.ts:83` | the dashboard chip's tier text — `"Tier 2"` / `"Tier 0"` |
+| `lib/feed/ai-tier.ts:88` | chip tooltip — "Paper search is on Tier 0 fixed scoring…" |
+| `app/page.tsx:949` | "Tier 0 uses no AI API. To turn on Tier 2 reranking…" |
+| `app/page.tsx:963, :964, :965, :990` | four provider-status sentences |
+| `app/welcome/page.tsx:481, :483` | "smarter Tier 1/2 ranking", "complete free Tier 0 briefing" |
+| `components/profile/ai-setup.tsx:16` | the provider dropdown's default option — `"Tier 0 — no AI API"` |
+| `components/profile/ai-setup.tsx:81, :283, :284, :327, :388` | five body-copy sentences |
+| `components/reports/why-peer-sent-this.tsx:75` | a `ReportBadge` reading `Tier 0` |
+| `app/events/[id]/page.tsx:1551, :1588, :1638, :1683, :2289` | five report badges |
+| `app/jobs/[id]/page.tsx:1255` | a report badge |
+
+**`BYOK` itself: 0 rendered occurrences.** `grep -rn "BYOK" src/ --include="*.ts" --include="*.tsx"
+| grep -v "\.test\." | grep -vE ":[0-9]+:[[:space:]]*(//|\*|/\*)"` returns nothing — every `BYOK` in
+the tree is a comment. One near-miss worth naming so a later round does not call it a regression:
+`app/papers/[id]/page.tsx:695` builds a **localStorage cache key** containing the literal `byok=`.
+It is lowercase, it is not rendered, and I did not count it.
+
+**Scan 2 — `NODE_ENV === "development"` in code that ships to the browser: 6.**
+
+```
+grep -rn 'NODE_ENV === "development"' src/ --include="*.ts" --include="*.tsx" | grep -v "\.test\."
+```
+12 raw hits. I classified each by reading the file's first line for `"use client"` and, for
+library modules, by grepping their importers.
+
+| File:line | Why it reaches the browser |
+|---|---|
+| `app/page.tsx:961` | file opens `"use client"` |
+| `app/page.tsx:988` | same |
+| `app/papers/[id]/page.tsx:685` | file opens `"use client"` |
+| `store/feed.ts:266` | file opens `"use client"` (zustand store) |
+| `lib/feed/ai-tier.ts:45` | imported by `app/page.tsx:14` and `store/feed.ts:20`, both client |
+| `lib/opportunities/enrichment.ts:1001` | imported by `app/events/[id]/page.tsx:39` and `app/jobs/[id]/page.tsx:25`, both client |
+
+Excluded as server-only (6): `app/auth/callback/route.ts:17`, `lib/llm/providers/registry.ts:36`,
+`lib/security/ai-request.ts:30`, `lib/opportunities/pool-cache-disk.ts:42`,
+`lib/opportunities/pool-cache-runtime.ts:14`, and `lib/feed/ai-tier.ts:27` (prose inside a block
+comment). The spec (R-ENT-3) names two of the six for deletion; **the scan finds six.**
+
+**Scan 3 — `process.env.TAVILY_API_KEY` reads outside a single gated resolver: 3.**
+
+```
+grep -rn "process.env.TAVILY_API_KEY" src/ --include="*.ts" --include="*.tsx" | grep -v "\.test\."
+```
+`lib/jobs/sources/jobweb.ts:2118`, `lib/events/sources/eventweb.ts:2727`,
+`lib/sources/web-search.ts:44`. **All three are outside a gate because no gated resolver exists** —
+`grep -rn "systemSearchAllowed" src/` -> 0. All three are the same shape: `request key ||
+process.env.TAVILY_API_KEY`.
+
+**Scan 4 — `resolveProvider()` calls with no override argument: 2.**
+
+```
+grep -rn "resolveProvider()" src/ --include="*.ts" --include="*.tsx" | grep -v "\.test\."
+```
+`lib/figures/semantic-match.ts:53`, `lib/figures/vision-match.ts:134` — both on the `/api/figure`
+path, the one route with no auth at all. (`lib/sources/web-search.ts:249` declares a *different*,
+local `resolveProvider` for search providers; its two call sites pass arguments, so it is not a
+match and I did not count it.)
+
+**Scan 5 — routes that can spend an operator key without `protectAiRequest`: 4.**
+
+| Route | Evidence |
+|---|---|
+| `POST /api/feed` | **Confirmed live, anonymous, 200 OK: 1 Tavily search carrying the operator sentinel key**, reached with `sources: ["web"]` (the route's `parseSources` accepts `"web"`, `feed/route.ts:~60`) via `lib/sources/web-search.ts:44`. `protectAiRequest` is only called when `aiTier >= 2 && aiProvider` (`:154-157`). |
+| `POST /api/jobs/feed` | **Confirmed live, anonymous, 200 OK: 2 Tavily searches on the operator key.** Guard at `:149-152` is behind the same condition. |
+| `POST /api/events/feed` | **Confirmed live, anonymous, 200 OK: 7 Tavily searches on the operator key.** Guard at `:134-137`, same condition. |
+| `GET /api/figure` | **Confirmed live, anonymous, 200 OK, no auth challenge.** `grep -n "protectAiRequest\|getUser" src/app/api/figure/route.ts` -> 0. Reaches `resolveProvider()` through `semantic-match.ts:53` / `vision-match.ts:134`. The LLM spend itself is `BLOCKED: no key`; the missing guard is not. |
+
+Not counted, and why: `POST /api/test-digest` returns **401** to an anonymous request (confirmed
+live) via its own `supabase.auth.getUser()`; `POST /api/jobs/dispatch-digests` is guarded by
+`CRON_SECRET` (`:123-127`) and pinned to `aiTier: 0`.
+
+**Companion tally (new this round, worth standing):** **7 routes call `resolveProvider` before
+`protectAiRequest`** — `feed:151/155`, `jobs/feed:146/150`, `events/feed:131/135`,
+`digest:67/73`, `jobs/report:61/73`, `events/report:113/136`, `papers/report:377/379`. R-SEC-2
+requires the check first.
+
+---
+
+#### The numbered difference list — ranked by what a user, or the owner's wallet, notices first
+
+**Tier A — unauthenticated spend and wrong data**
+
+**1. Anyone on the internet can spend the operator's Tavily budget, with no account.**
+Spec: D8 / R-SEC-2 / R-ENT-4 — never spend an operator key on an unauthenticated request.
+Build: confirmed live. `POST /api/events/feed` -> 200 with **7** operator-key searches;
+`POST /api/jobs/feed` -> 200 with **2**; `POST /api/feed` with `sources:["web"]` -> 200 with **1**.
+No sign-in, no rate bucket. Mechanism: `resolveKeys` at `lib/jobs/sources/jobweb.ts:2116-2121` and
+`lib/events/sources/eventweb.ts:2725-2730`, plus `lib/sources/web-search.ts:44`, each
+`request key || process.env.TAVILY_API_KEY`. The guard exists but sits behind
+`if (aiTier >= 2 && aiProvider)` in all three feed routes, so a request that simply omits `aiTier`
+never meets it — proven by the contrast pair: the same route with `aiTier: 2` + a BYOK LLM key
+returns **401**.
+
+**2. A free user spends the operator's Tavily key on every feed load.**
+Spec: D2 / R-KEY-3 / R-POOL-3 — free users get their own key or structured sources only.
+Build: `free-no-key` is byte-for-byte identical to `anonymous` — 2 searches on jobs, 7 on events,
+operator key both times. Same three lines as difference 1. (`free-byok-tavily` is correct: user key
+sent, operator key not.)
+
+**3. `GET /api/figure` has no authentication of any kind.**
+Spec: R-SEC-1. Build: confirmed live — 200 to an anonymous request.
+`grep -n "protectAiRequest\|getUser" src/app/api/figure/route.ts` -> **0 hits**, and it reaches
+`resolveProvider()` with no override and no request context via `lib/figures/semantic-match.ts:53`
+and `lib/figures/vision-match.ts:134`.
+
+**4. Nothing that is spent is recorded.**
+Spec: R-METER-1/2. Build: `grep -rn "usage_events" src/ supabase/` -> **0**.
+`lib/llm/usage-log.ts` `console.log`s a line with no `user_id`, no `byok` flag, no `kind`, and
+searches are not logged at all. There is no way to answer "who spent this" after the fact.
+
+**5. Rate limits do not survive a cold start.**
+Spec: R-METER-3. Build: `lib/security/ai-request.ts:10` — a module-scope `Map`. On Vercel every new
+instance starts the 60/h and 20/h buckets at zero.
+
+**Tier B — the missing entitlement**
+
+**6. There is no entitlement, anywhere.** Spec: R-ENT-1/2/3/5, R-QUOTA-1/2.
+Build: `plan` column — absent (`grep -n "plan" web/supabase/schema.sql` -> 1 hit, a prose comment
+on line 100). `resolveEntitlement` — **0 hits**. `PEER_DEV_ENTITLEMENT` — **0 hits**.
+`deep_reports_month` / `searches_today` / `breaker` / `resetsAt` — **0 hits each**.
+`GET /api/profile` mentions none of it (0 hits in 202 lines). Consequence for this round: the
+`trial` and `paid` personas **cannot be constructed at all**. Migration file needed under
+`web/supabase/migrations/` (only two files there today, neither related).
+
+**7. The server has no system LLM in any deployed runtime.** Spec: D1 / R-KEY-1.
+Build: `lib/llm/providers/registry.ts:106` — `return canUseLocalServerProvider() ?
+resolveLocalServerProvider() : null`, and `canUseLocalServerProvider()` (`:34-40`) is
+`NODE_ENV === "development" && !VERCEL && !VERCEL_ENV`. Two further faults inside
+`resolveLocalServerProvider` (`:74`): **`GOOGLE_VERTEX_PROJECT` is checked at `:80`, before
+`GOOGLE_API_KEY` at `:81`** — confirmed by construction (with both set the registry returns the
+Vertex singleton `geminiProvider`; with only `GOOGLE_API_KEY` it returns the
+`createGeminiApiProvider` object) — and `PEER_DIGEST_PROVIDER` (`:75`) outranks both.
+
+**8. The prebuild guard bans the very key the product now needs.** Spec: R-GUARD-1.
+Build: `web/scripts/assert-byok-production-env.mjs:11` lists `GOOGLE_API_KEY` in
+`OPERATOR_AI_ENV_NAMES`, i.e. on the **ban** list. The script has **no require list at all**;
+`TAVILY_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` appear nowhere in the
+file, and `BRAVE_SEARCH_API_KEY` / `PEER_DEV_ENTITLEMENT` are missing from the ban list. It is
+wired as `prebuild` (`web/package.json:9`), so this fires on the first Vercel build after R-KEY-1.
+**Ruling 1 point 6 already ties R-GUARD-1 and R-KEY-1 to the same round; this is why.**
+
+**9. In local dev the system provider is handed to unauthenticated requests.** Spec: R-KEY-2.
+Build: confirmed live — with `NODE_ENV=development` and a sentinel `GOOGLE_API_KEY`, an anonymous
+`POST /api/jobs/feed` at `aiTier: 2` returns 200 and the registry yields a system provider.
+`protectAiRequest` returns `null` at `lib/security/ai-request.ts:44` before it ever reads a user.
+
+**10. A lying client is stopped by the wrong test.** Spec: R-SEC-3.
+Build: `const aiTier = requestedAiTier >= 2 && !aiProvider ? 0 : requestedAiTier;` —
+`feed/route.ts:152`, `jobs/feed/route.ts:147`, `events/feed/route.ts:132`. It downgrades on "no
+provider resolved". The moment a provider always resolves (R-KEY-1), this stops defending anything.
+
+**11. The entitlement check runs after the provider is resolved, in seven routes.** Spec: R-SEC-2.
+Build: the seven line-pairs listed under scan 5's companion tally.
+
+**Tier C — cache, cadence and vocabulary**
+
+**12. Report and digest caches cannot tell system-AI output from no-AI output.** Spec: R-UI-4.
+Build: `app/papers/[id]/page.tsx:695` keys on `p=${profile.feedAiProvider}|byok=${…}`;
+`components/digest/daily-digest.tsx:107` keys on `${llmOverride?.provider ?? "tier0"}`. For a
+non-BYOK user both are constant, so the first cached no-AI report is served forever as the AI one.
+**R-UI-4 must ship in the same commit as R-KEY-1 (Ruling 1 point 7) or this poisons silently.**
+
+**13. Jobs and events pools rebuild daily, not weekly.** Spec: R-POOL-1.
+Build: `lib/opportunities/pool-cache.ts:149` — `const date = localCalendarDate(input.now)` for
+every surface. `grep -rni "isoWeek|ISO week" src/` -> **0**. `CACHE_KEY_VERSION = 5` (`:137`)
+needs the bump.
+
+**14. There is no "refresh now" that forces a pool rebuild.** Spec: R-POOL-2.
+Build: `forceRebuild|forceRefresh|bypassCache` -> **0 hits**. The only "Refresh now" string
+(`components/cards/feed-more-tile.tsx:64`) is a papers refetch button — no cache bypass, no gate.
+
+**15. 22 rendered strings still say "Tier 0/1/2".** Spec: D6 / R-UI-1/2. Build: the scan-1 table.
+The dropdown option a new user meets first still reads `"Tier 0 — no AI API"`
+(`components/profile/ai-setup.tsx:16`). No plan chip exists — no "Free" / "Trial · N days left" /
+"Pro" string anywhere.
+
+**16. The upsell block is keyed on BYOK, not on plan.** Spec: R-UI-3.
+Build: `components/reports/tier-upgrade-block.tsx:18` — `if (providerConfigured || items.length
+=== 0) return null`, fed from `reportProviderConfigured` / `canAttemptOpportunityEnrichment` at
+`papers/[id]/page.tsx:1548`, `jobs/[id]/page.tsx:1675`, `events/[id]/page.tsx:2499`. It would
+render for a paid user, and its CTA is "Connect a key".
+
+**17. `"default"` still means "no AI" throughout the client.** Spec: R-KEY-4.
+Build: `app/welcome/completeness.ts:99` requires `feedAiProvider !== "default"` for the `ai` step
+to count as done; `components/profile/ai-setup.tsx:16` labels it `"Tier 0 — no AI API"`.
+
+**18. Three predicates that must become one, and six client dev-flags where the spec names two.**
+Spec: R-ENT-3. Build: `reportProviderConfigured` (`components/reports/provider-configured.ts:13`),
+`feedsUseAi` (`lib/feed/ai-tier.ts:59`), `canAttemptOpportunityEnrichment`
+(`lib/opportunities/enrichment.ts:997`). Scan 2 found **six** browser-shipped
+`NODE_ENV === "development"` tests, not the two the spec lists — the extra four are
+`app/page.tsx:961`, `app/page.tsx:988`, `app/papers/[id]/page.tsx:685`, `store/feed.ts:266`.
+**Flagged for the manager: R-ENT-3 names two; a build that deletes only those two still ships four
+client-side dev flags that decide whether AI appears on.**
+
+**19. `dispatch-digests` does the right thing for an unrecorded reason.** Spec: R-SEC-4.
+Build: `aiTier: 0` at `api/jobs/dispatch-digests/route.ts:213` — correct — but the comment above it
+(`:211-212`) explains it as a BYOK-key-safety issue and never names D9. Scored PARTIAL.
+
+**20. None of the new tests exist.** Spec: R-TEST-1.
+Build: across every `*.test.ts(x)` under `src/`: `entitlement` 0, `resolveEntitlement` 0,
+`breaker` 0, `isoWeek` 0. No test references `assert-byok`. **There is no `route.test.ts` at all
+for `api/figure`, `api/jobs/feed` or `api/events/feed`** — the three routes differences 1-3 are
+about are the three with no route test.
+
+---
+
+#### The number
+
+**93.5% unexplained difference.**
+
+Method, in one sentence: (NOT MET + PARTIAL) ÷ (total R-* items − exclusions) =
+(28 + 1) ÷ (31 − 0) = 29/31 = 93.5%. **Exclusions: none.**
+
+`GATE: NOT MET.` Two items are `MET`: R-GUARD-2 (the guard never prints a value) and R-TEST-2 (the
+gate is at baseline). Nothing here is reclassified as cosmetic and nothing is rounded down.
+
+**One item awaits a manager ruling, and only on a scoring convention, not on a fact:** R-QUOTA-3
+(negative requirement, vacuously un-violated because no counter exists to count against). I scored
+it NOT MET. If the manager rules that a vacuously-satisfied negative requirement is MET, the number
+becomes 28/31 = **90.3%**. No other item's score moves.
+
+#### Gate, run cold from `web/` this turn
+
+```
+npx tsc --noEmit -p tsconfig.json && npm run lint --silent && npx vitest run --reporter=dot
+```
+
+- **tsc:** exit **0**
+- **eslint:** **1 error** — `src/components/persona/quiz.tsx:46:7 react-hooks/set-state-in-effect`,
+  the standing one. Nothing else.
+- **vitest:** **Test Files 100 passed | 1 skipped (101) · Tests 2552 passed | 1 skipped (2553) ·
+  0 failed**, 7.20 s.
+
+Exactly the §3 baseline. `benchmark.test.ts` did not flake this run. Both throwaway probe files
+were deleted before this commit; `git status --porcelain --untracked-files=all` is clean.
