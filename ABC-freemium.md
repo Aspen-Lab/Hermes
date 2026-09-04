@@ -299,3 +299,91 @@ C does **not** judge whether something should be fixed.
   files, 2552/1 tests, 0 failed. Recorded in §3.
 - Resume clock: hourly, in-session cron (session-only; auto-expires after 7 days — the manager
   re-arms it). Cloud clock: not armed at setup; add per §0c if the machine will be off.
+
+### Round 1 — Agent A
+
+**Round 1 measures the BYOK-only build as it stands. Most items are `NOT MET` by construction —
+that is the correct result, not a defect in the measurement.** Exclusions: **none**.
+
+Every score below is backed by a grep I ran or a file I read on `freemium-system-key @ 3ce968a`.
+Spec §4 (the manager's lead list) is **not** cited as evidence anywhere in this entry.
+
+#### Part 1 — fixture checklist (all 31 R-* items)
+
+**R-SEC — no unauthenticated or unentitled spend**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-SEC-1 | **NOT MET** | `grep -n "protectAiRequest\|getUser" src/app/api/figure/route.ts` -> **0 hits**. The `GET` handler reads query params and calls `extractFigure` directly; no auth, no rate bucket. `src/lib/figures/semantic-match.ts:53` and `src/lib/figures/vision-match.ts:134` are both `const provider = resolveProvider();` — no override, no request context argument. |
+| R-SEC-2 | **NOT MET** | `grep -rn "resolveEntitlement" src/` -> **0 hits**; no shared entitlement check exists. Worse, the check that does exist runs in the wrong order in every AI route: `resolveProvider` at `api/feed/route.ts:151` vs `protectAiRequest` at `:155`; `api/jobs/feed/route.ts:146` vs `:150`; `api/events/feed/route.ts:131` vs `:135`; `api/digest/route.ts:67` vs `:73`; `api/jobs/report/route.ts:61` vs `:73`; `api/events/report/route.ts:113` vs `:136`; `api/papers/report/route.ts:132/197/377/395` vs `:379`. `api/figure/route.ts` calls neither. `api/test-digest/route.ts` calls `supabase.auth.getUser()` (`:76`, 401 at `:78`) but never `protectAiRequest` and never an entitlement check. |
+| R-SEC-3 | **NOT MET** | The literal line the spec names is still the only defence, unchanged, in all three feeds: `const aiTier = requestedAiTier >= 2 && !aiProvider ? 0 : requestedAiTier;` — `api/feed/route.ts:152`, `api/jobs/feed/route.ts:147`, `api/events/feed/route.ts:132`. It downgrades on "no provider resolved", never on entitlement. |
+| R-SEC-4 | **PARTIAL** | The behaviour holds: `api/jobs/dispatch-digests/route.ts:213` passes `aiTier: 0` hard-coded, and it is the only `aiTier` in that file (`grep -n aiTier` -> 1 hit). The comment above it (`:211-212`) explains it as "Scheduled jobs cannot safely access a browser user's private BYOK key ... always deterministic Tier 0" — it does **not** name D9, which the spec requires. |
+
+**R-METER — every operator-funded call is recorded**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-METER-1 | **NOT MET** | `grep -rn "usage_events" src/ supabase/` -> **0 hits**. `src/lib/llm/usage-log.ts` `logLlmUsage` builds a string and calls `console.log`; its `LlmUsage` interface has no `user_id`, no `byok`, no `kind`. It is called from inside each provider (`providers/{anthropic,deepseek,gemini,openai,qwen}.ts`), not as a wrapper around the `DigestProvider` that `resolveProvider` returns. |
+| R-METER-2 | **NOT MET** | Same `usage_events` grep -> 0. No search-side usage record exists anywhere. |
+| R-METER-3 | **NOT MET** | `src/lib/security/ai-request.ts:10` — `const rateBuckets = new Map<string, RateBucket>();` at module scope, keyed `${scope}:${user.id}` (`:67`). `grep -rn "deep_reports_month\|deep_reports_today\|searches_today" src/` -> **0 hits each**. |
+| R-METER-4 | **NOT MET** | There is no counter store at all, so there is no labelled in-memory fallback and no Supabase-present check to gate it. The module-scope `Map` is unconditional — it never consults `NEXT_PUBLIC_SUPABASE_URL`. |
+
+**R-ENT — entitlement is a server concept**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-ENT-1 | **NOT MET** | `grep -n "plan" web/supabase/schema.sql` -> **1 hit, line 100, a prose comment** ("knobs for the paper-finding plan"). No `plan`, `trial_started_at`, `trial_ends_at` or `plan_updated_at` column. `handle_new_user` exists (`schema.sql:60`) and sets none of them. `ls supabase/migrations/` -> only `20260727000000_opportunity_pools.sql` and `20260731000000_authorised_countries.sql`. |
+| R-ENT-2 | **NOT MET** | `grep -rn "resolveEntitlement" src/` -> **0**. `grep -rn "effectivePlan\|deepReportsRemaining\|systemSearchAllowed\|poolRefreshAllowed" src/` -> **0 each**. |
+| R-ENT-3 | **NOT MET** | `grep -n "plan\|entitlement\|trial" src/app/api/profile/route.ts` -> **0 hits** in a 202-line file. The three predicates are still three: `reportProviderConfigured` (`src/components/reports/provider-configured.ts:13`), `feedsUseAi` (`src/lib/feed/ai-tier.ts:59`), `canAttemptOpportunityEnrichment` (`src/lib/opportunities/enrichment.ts:997`). Both client-side dev tests the spec asks to delete are present: `ai-tier.ts:45` and `enrichment.ts:1001`. |
+| R-ENT-4 | **NOT MET** | The LLM half holds in deployed runtimes (`registry.ts:106` returns `null` when `canUseLocalServerProvider()` is false). The **search** half does not: `src/lib/jobs/sources/jobweb.ts:2118` and `src/lib/events/sources/eventweb.ts:2727` both read `process.env.TAVILY_API_KEY` with no auth and no entitlement test, and `jobweb.ts:2143 fetchImpl` calls `resolveKeys` before any tier gate. The feed routes only call `protectAiRequest` when `aiTier >= 2 && aiProvider` — so an anonymous `aiTier: 0` request reaches it. **Confirmed live in Part 2, persona `anonymous`.** |
+| R-ENT-5 | **NOT MET** | `grep -rn "PEER_DEV_ENTITLEMENT" src/ scripts/` -> **0 hits**. This is why the `trial` and `paid` personas cannot be constructed at all this round. |
+
+**R-POOL — weekly cadence**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-POOL-1 | **NOT MET** | `src/lib/opportunities/pool-cache.ts:149 derivePoolCacheKey` opens `const date = localCalendarDate(input.now);` and uses `date` in both the signature and the returned key (`:162`) for **every** surface, jobs and events included. `grep -rni "isoWeek\|ISO week" src/` -> **0 hits**. `CACHE_KEY_VERSION = 5` (`:137`), unbumped. |
+| R-POOL-2 | **NOT MET** | `grep -rn "forceRebuild\|forceRefresh\|bypassCache" src/` -> **0 hits**. The only "Refresh now" string is `src/components/cards/feed-more-tile.tsx:64`, a papers-feed refetch button with no pool-cache bypass and no entitlement gate. |
+| R-POOL-3 | **NOT MET** | `resolveKeys` in both `jobweb.ts:2116-2121` and `eventweb.ts:2725-2730` is `tavily: query.webSearch?.tavilyApiKey?.trim() \|\| process.env.TAVILY_API_KEY` — an unconditional operator-key fallback. `resolveSearchProvider` then returns `"tavily"` on the strength of that key. **Confirmed live in Part 2, persona `free-no-key`.** |
+
+**R-KEY — the system keys**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-KEY-1 | **NOT MET** | `src/lib/llm/providers/registry.ts:106` — `return canUseLocalServerProvider() ? resolveLocalServerProvider() : null;`. The `NODE_ENV`/`VERCEL` gate (`:34-40`) still decides whether a system provider exists at all. Inside `resolveLocalServerProvider` (`:74`) the order is `PEER_DIGEST_PROVIDER` (`:75`) -> `GOOGLE_VERTEX_PROJECT` (`:80`) -> `GOOGLE_API_KEY` (`:81`): **Vertex takes precedence over `GOOGLE_API_KEY`**, the reverse of the spec. |
+| R-KEY-2 | **NOT MET** | No entitlement exists to check. In local dev `protectAiRequest` returns `null` at `ai-request.ts:44` before it ever reads a user, so the local system provider is handed to unauthenticated requests. |
+| R-KEY-3 | **NOT MET** | The required order (BYOK -> entitlement-gated system key -> Brave -> none) is not implemented; the actual order is BYOK -> system key unconditionally, with Brave read in the same object (`jobweb.ts:2119`, `eventweb.ts:2728`). No `systemSearchAllowed` anywhere. |
+| R-KEY-4 | **NOT MET** | `src/components/profile/ai-setup.tsx:16` — `{ value: "default", label: "Tier 0 — no AI API" }`. `src/app/welcome/completeness.ts:99` still requires `profile.feedAiProvider !== "default"` for the `ai` step to count as complete. |
+
+**R-QUOTA — counting deep reports**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-QUOTA-1 | **NOT MET** | No monthly counter (`deep_reports_month` -> 0 hits). No `quota: {` payload shape (`grep -rn "resetsAt" src/` -> 0). The UI string the spec names does not exist: `grep -rn "本月" src/` -> **0 hits**. |
+| R-QUOTA-2 | **NOT MET** | `grep -rn "breaker" src/` -> **0 hits**. No trial cap, no daily deep-report breaker, no daily search breaker. |
+| R-QUOTA-3 | **NOT MET** (vacuous — `POLICY — manager decides` on the scoring convention only) | There is no deep-report counter, so nothing is counted against it and the requirement is trivially un-violated. I score it NOT MET rather than MET because the property cannot be observed until R-QUOTA-1 exists, and scoring it MET would make the percentage look better than the build is. **Manager: rule on whether a vacuously-satisfied negative requirement scores MET or NOT MET. I have not assumed the answer; if you rule MET, the round-1 percentage drops from 93.5% to 90.3%.** |
+
+**R-UI — what the user sees**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-UI-1 | **NOT MET** | **22 rendered strings** still match `Tier 0\|Tier 1\|Tier 2` (full list and exclusion method in Part 3). The dashboard chip is `aiModeChip` in `src/lib/feed/ai-tier.ts:83`, which returns `tier: options.feedsUseAi ? "Tier 2" : "Tier 0"`. No plan chip exists — no "Free"/"Trial"/"Pro" plan string anywhere. |
+| R-UI-2 | **NOT MET** | `src/components/profile/ai-setup.tsx:16` is still `label: "Tier 0 — no AI API"`. No "Peer's AI (included)" string exists (`grep -rn "Peer.s AI" src/` -> 0). |
+| R-UI-3 | **NOT MET** | `src/components/reports/tier-upgrade-block.tsx:18` — `if (providerConfigured \|\| items.length === 0) return null;`. `providerConfigured` is fed from `reportProviderConfigured(profile)` / `canAttemptOpportunityEnrichment(profile)` at the three call sites (`papers/[id]/page.tsx:1548`, `jobs/[id]/page.tsx:1675`, `events/[id]/page.tsx:2499`) — a BYOK test, not a plan test. It has no notion of a paid user, and its CTA is "Connect a key" -> `/welcome?step=ai`. |
+| R-UI-4 | **NOT MET** | Papers report key, `src/app/papers/[id]/page.tsx:695`: `${paper.id}\|${contextHint}\|deep=${deepReportRequested}\|p=${profile.feedAiProvider}\|byok=${userProviderConfigured}` — for a non-BYOK user this is identical whether the server had a system provider or not. Digest key, `src/components/digest/daily-digest.tsx:107`: `...::${llmOverride?.provider ?? "tier0"}` — same collision, the literal `"tier0"` covers both the system-AI and the no-AI case. |
+
+**R-GUARD — the build refuses to ship the wrong shape**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-GUARD-1 | **NOT MET** | `web/scripts/assert-byok-production-env.mjs` has **no require list at all** — it only bans. `GOOGLE_API_KEY` is on the **ban** list (`:11`), the exact inversion of the spec, which requires it. `TAVILY_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` appear nowhere in the file. `BRAVE_SEARCH_API_KEY` and `PEER_DEV_ENTITLEMENT` are absent from the ban list. Already correctly banned: `PEER_DIGEST_PROVIDER`, `GOOGLE_VERTEX_*` (incl. the three Vertex-Search names), `GOOGLE_APPLICATION_CREDENTIALS`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `QWEN_API_KEY`, `DASHSCOPE_API_KEY`, `DEEPSEEK_API_KEY`, and `PEER_FEED_AI_TIER > 0` (`:29-34`). Wired as `prebuild` (`web/package.json:9`). |
+| R-GUARD-2 | **MET** | The only interpolation into the message is `problems.join(", ")` (`:39`), and `problems` is built from `OPERATOR_AI_ENV_NAMES.filter(...)` (`:24`) — env **names**, never `env[name]`. No value can reach the output. |
+
+**R-TEST — the gate**
+
+| Item | Score | Evidence |
+|---|---|---|
+| R-TEST-1 | **NOT MET** | The three existing files are present (`src/lib/llm/providers/registry.test.ts`, `src/lib/feed/ai-tier.test.ts`, `src/lib/security/ai-request.test.ts`) but still assert the BYOK-only contract. None of the new tests exist: across every `*.test.ts(x)` under `src/`, `entitlement` -> 0, `resolveEntitlement` -> 0, `breaker` -> 0, `isoWeek` -> 0. No test file references `assert-byok`. There is **no `route.test.ts` at all** for `api/figure`, `api/jobs/feed` or `api/events/feed` — only `feed`, `digest`, `events/report`, `jobs/report`, `papers/report`, `profile`, `dispatch-digests` have one. |
+| R-TEST-2 | **MET** | Gate run cold from `web/` this turn: tsc exit 0 · eslint **1 error** (the standing `quiz.tsx:46 react-hooks/set-state-in-effect`) · vitest **100 passed \| 1 skipped (101) files, 2552 passed \| 1 skipped (2553) tests, 0 failed**, 7.20s. Exactly the §3 baseline. `benchmark.test.ts` did not flake this run. |
+
+**Part 1 tally:** 31 items · **2 MET** (R-GUARD-2, R-TEST-2) · **1 PARTIAL** (R-SEC-4) · **28 NOT MET**.
