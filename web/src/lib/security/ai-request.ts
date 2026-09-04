@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isLocalDevRuntime } from "@/lib/env/local-dev";
 
 interface RateBucket {
   count: number;
@@ -25,12 +26,13 @@ function deployedRuntimeNeedsAuth(): boolean {
   );
 }
 
+/**
+ * ABC-freemium 1-01 — the three-condition body moved to `lib/env/local-dev.ts`
+ * so this, `canUseLocalServerProvider` and `resolveEntitlement` cannot drift
+ * apart. Local name and meaning unchanged.
+ */
 function isLocalDevelopment(): boolean {
-  return (
-    process.env.NODE_ENV === "development" &&
-    !process.env.VERCEL &&
-    !process.env.VERCEL_ENV
-  );
+  return isLocalDevRuntime();
 }
 
 /**

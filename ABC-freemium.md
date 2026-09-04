@@ -2676,3 +2676,63 @@ item's family and are covered by the full-suite figure below.
 **GATE after 1-00:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
 `vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
 failed**. +1 file and +2 tests over baseline — the new suite, and nothing else moved.
+
+---
+
+**1-01 · `resolveEntitlement` — LANDED.** R-ENT-2, R-ENT-5. Files:
+`web/src/lib/entitlement/types.ts` (new), `web/src/lib/entitlement/resolve.ts` (new),
+`web/src/lib/env/local-dev.ts` (new), `web/src/lib/llm/providers/registry.ts` (modified),
+`web/src/lib/security/ai-request.ts` (modified).
+
+Shape is B's, verbatim, including the two non-contractual fields (`userId`, `source`) with the
+comment saying which are R-ENT-2's minimum. `resolveEntitlement(null)` returns the frozen
+`ANONYMOUS_ENTITLEMENT` constant; the signed-in path reads `profiles` through the **admin** client
+behind `pool-cache-supabase.ts`'s own `configuredAdminClient` predicate (both env variables present,
+constructor throw swallowed), so `resolve.ts` never imports `next/headers` or `next/server`.
+Supabase error and missing row are handled by the same line — that is what makes it safe to land
+before the 1-13 migration exists.
+
+**B's open question answered as Ruling 3 point 2 directs:** `PEER_DEV_ENTITLEMENT` unset in local
+dev resolves to `free` with a synthesised `userId: "dev-local"`. An unrecognised value is ignored,
+never defaulted.
+
+**Decision recorded as B asked ("say which in the commit"): the local-dev predicate is EXTRACTED,
+not copied a fourth time.** New `lib/env/local-dev.ts` exports `isLocalDevRuntime()`;
+`canUseLocalServerProvider` (registry) and `isLocalDevelopment` (ai-request) now delegate to it and
+keep their exported names, signatures and meanings. Reason for extracting rather than adding a
+fourth copy: three hand-written copies of a security predicate is how one of them loses a condition,
+and 1-11 already has to decide what happens to `canUseLocalServerProvider` — it can now re-point one
+line instead of re-deriving the expression. `registry.test.ts:3` still imports
+`canUseLocalServerProvider` and still compiles.
+
+**Two deviations from B's guide, both additive, both stated:**
+1. **A third parameter.** B's signature is `(userId, now = new Date())`. I added an optional
+   `options: { client? }` third argument, following `SupabasePoolCache`'s constructor precedent
+   (`undefined` = build the configured client, explicit `null` = behave as if Supabase is
+   unreachable). Reason: it makes 1-04 testable by injection instead of by module mocking, and it
+   cannot change any caller's behaviour because it defaults to `{}`.
+2. **`source: "dev-override"` covers the whole local-development branch**, including the case where
+   `PEER_DEV_ENTITLEMENT` is unset. B fixed three source values and Ruling 3 point 2 created a
+   fourth situation (local dev, no variable) with no label of its own. Adding a fourth enum value
+   would widen a type six later items consume, so I documented the existing one's meaning instead.
+   **Flagged for the manager, not decided by me:** if `source` is later used to distinguish "the
+   developer set a variable" from "the local default applied", it needs a fourth value.
+
+**A doubt recorded rather than resolved — `deepReportsRemaining` is a BUDGET, not a remaining
+count.** R-ENT-2 names the field and B's shape says "free 5/month, trial 20 total, paid Infinity",
+which are allowances; nothing is subtracted because the counter that knows what has been used is
+1-02 and the comparison is 1-20. I kept the contract's name and wrote the caveat into the type's
+doc comment. **Manager: if `deepReportsRemaining` should become usage-aware, the place is 1-20 and
+the resolver is already `Promise`-returning, so it can consult the counter without a signature
+change.** Landed what is confirmed; not widened on my own judgement.
+
+**Tests.** None in this item — B places unit (a)'s tests in **1-04** (Ruling 2 point 4(h)), and the
+proof-that-the-test-tests-the-fix obligation is discharged there, against the source landed here.
+Recorded so a reader does not mistake 1-01's gate figure for coverage.
+
+**Standing regression locks re-verified** (I edited `registry.ts` and `ai-request.ts`), each run on
+its own: `registry.test.ts` **5 passed**, `ai-request.test.ts` **2 passed**.
+
+**GATE after 1-01:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **101 files passed | 1 skipped (102)**, **2554 tests passed | 1 skipped (2555)**, **0
+failed**.
