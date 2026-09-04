@@ -49,7 +49,7 @@ afterEach(() => {
 });
 
 describe("combined daily search budget", () => {
-  it("stays within 16 Events + 12 Jobs + 4 Papers for repeated daily builds", async () => {
+  it("stays within 16 Events + 12 Jobs + 0 Papers for repeated daily builds", async () => {
     const searchFetch = vi.fn(async () =>
       new Response(JSON.stringify({ results: [] }), {
         headers: { "content-type": "application/json" },
@@ -99,8 +99,12 @@ describe("combined daily search budget", () => {
 
     expect(eventSearches).toBe(EVENT_QUERY_BUDGET);
     expect(jobSearches).toBe(JOB_QUERY_BUDGET);
-    expect(paperSearches).toBe(4);
-    expect(firstDaySearches).toBe(32);
+    // ZERO, with a Tavily key in the request. This used to be 4: a discovery
+    // side-channel bought them daily to compute query boosts that nothing fed
+    // back into the search and a stats field that nothing displayed. Papers
+    // come from the free academic sources and cost no search quota at all.
+    expect(paperSearches).toBe(0);
+    expect(firstDaySearches).toBe(28);
 
     await buildDailyEventPool(eventRequest, { cache, now });
     await buildDailyJobPool(jobRequest, { cache, now });

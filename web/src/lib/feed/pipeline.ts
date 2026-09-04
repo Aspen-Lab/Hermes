@@ -13,11 +13,6 @@ import { applyTier1Rerank } from "./rerank";
 import { applyRerankOrder, applyTier2Rerank } from "./tier2-rerank";
 import { briefToSeedTexts, compileSearchBrief } from "./profile-compiler";
 import type { FeedRequest, FeedResponse } from "./types";
-import {
-  canRunTavilyDiscovery,
-  runTavilyDiscovery,
-  type TavilyDiscoveryResult,
-} from "./tavily-discovery";
 import { fetchCitationNeighborhood } from "@/lib/affiliation/openalex";
 import {
   derivePoolCacheKey,
@@ -68,8 +63,6 @@ interface BuiltPaperPool {
   items: ScoredItem[];
   aiOrder: string[];
   aiReasons: Record<string, string>;
-  queryBoosts: string[];
-  resultCount: number;
   fetched: Partial<Record<SourceId, number>>;
   errors: Partial<Record<SourceId, string>>;
   beforeDedup: number;
@@ -79,9 +72,22 @@ interface BuiltPaperPool {
 }
 
 /**
- * Everything a paper build PAYS for: the discovery side-channel's web searches,
- * every academic source fetch, and — at Tier 2 — the LLM rerank. Called only on
- * a cache miss, so it runs at most once per (topic set, AI tier) per local day.
+ * Everything a paper build PAYS for: every academic source fetch and, at Tier
+ * 2, the LLM rerank. Called only on a cache miss, so it runs at most once per
+ * (topic set, AI tier) per local day.
+ *
+ * **THE WEB-SEARCH DISCOVERY SIDE-CHANNEL USED TO RUN HERE AND IS GONE.** It
+ * spent 4 searches a day turning web hits into "query boost" strings, and the
+ * pipeline had ALREADY stopped feeding those strings back into the source
+ * fetch — the boosts and their result count reached exactly one place, a
+ * `connectorStats` field on the response that no component, store or route
+ * ever read. Papers themselves have never come from it: they come from the
+ * free academic sources below, which have no monthly ceiling.
+ *
+ * That made it 4 searches a day, per user, per topic set, bought against the
+ * user's OWN Tavily plan (the key is theirs, not the server's), for a number
+ * nothing displayed. Deleting it is the only change here that gives search
+ * quota back, and it costs the surface nothing it was actually using.
  */
 async function buildPaperPool(
   req: FeedRequest,
@@ -92,22 +98,6 @@ async function buildPaperPool(
   const sources = req.sources ?? defaultSources();
   const perSourceLimit = req.perSourceLimit ?? 60;
   const includeNonPaperResults = shouldIncludeNonPaperResults(req);
-
-  // Tavily discovery used to gate source fetch on its boost queries, but
-  // that added a serial 1-2s before sources even started. Run both in
-  // parallel — sources use the base generated queries, Tavily only feeds
-  // connectorStats. Boost re-injection can come back as a 2nd wave if we
-  // need it for relevance.
-  // The daily-cache wrapper moved OUT to `runFeedPipeline`, which now caches
-  // this whole function rather than just this one side-channel. Discovery is a
-  // plain call again because reaching it already means a cache miss.
-  const tavilyPromise: Promise<TavilyDiscoveryResult> =
-    requestedTier >= 1 && canRunTavilyDiscovery(req)
-      ? runTavilyDiscovery(req, brief).catch(() => ({
-          queryBoosts: [],
-          resultCount: 0,
-        }))
-      : Promise.resolve({ queryBoosts: [], resultCount: 0 });
 
   // SUB-ITEM 8 / RULING 79c. Resolved ONCE so the timeout override below reads
   // the same value the fetch is given, rather than re-deriving the provider
@@ -197,8 +187,7 @@ async function buildPaperPool(
       ? fetchCitationNeighborhood(req.affiliation.seedWorkIds!).catch(() => [])
       : Promise.resolve([]);
 
-  const [tavilyDiscovery, fetchResults, affiliationItems] = await Promise.all([
-    tavilyPromise,
+  const [fetchResults, affiliationItems] = await Promise.all([
     fetchPromise,
     affiliationPromise,
   ]);
@@ -249,8 +238,6 @@ async function buildPaperPool(
     items: tier2.items.slice(0, MAX_PAPER_POOL_ITEMS),
     aiOrder: tier2.orderedIds,
     aiReasons: tier2.reasons,
-    queryBoosts: tavilyDiscovery.queryBoosts,
-    resultCount: tavilyDiscovery.resultCount,
     fetched,
     errors,
     beforeDedup,
@@ -327,8 +314,6 @@ export async function runFeedPipeline(
         items: built.items,
         aiOrder: built.aiOrder,
         aiReasons: built.aiReasons,
-        queryBoosts: built.queryBoosts,
-        resultCount: built.resultCount,
         generatedAt: built.generatedAt,
         localDate: built.localDate,
       };
@@ -380,15 +365,6 @@ export async function runFeedPipeline(
         requestedTier >= 2
           ? (req.llmOverride?.provider ?? "default")
           : null,
-      connectorStats:
-        req.searchConnectors?.tavily?.enabled
-          ? {
-              tavily: {
-                results: pool.resultCount,
-                queryBoosts: pool.queryBoosts.length,
-              },
-            }
-          : undefined,
     },
   };
 }

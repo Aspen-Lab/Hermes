@@ -25,10 +25,11 @@ interface CachedOpportunityPoolBase extends CachedPoolBase {
 /**
  * The paper surface's daily pool — the twin of `CachedEventPool` /
  * `CachedJobPool`, and it replaced a far thinner record that held ONLY the
- * discovery side-channel's `queryBoosts`. That record cached the cheap half of
- * a paper build (4 web searches) and left the expensive half — every academic
+ * web-search discovery side-channel's query boosts. That record cached the
+ * cheap half of a paper build and left the expensive half — every academic
  * source fetch and, at Tier 2, an LLM rerank — to re-run on every request, so
- * a page reload rebuilt the feed and re-spent the tokens.
+ * a page reload rebuilt the feed and re-spent the tokens. The side-channel
+ * itself is gone; see `buildPaperPool` for why nothing was lost with it.
  *
  * Two fields have no counterpart on the other two surfaces:
  *
@@ -45,8 +46,6 @@ export interface CachedPaperPool extends CachedPoolBase {
   aiOrder: string[];
   /** Tier-2 written reasons, by paper id. Empty when Tier 2 did not run. */
   aiReasons: Record<string, string>;
-  queryBoosts: string[];
-  resultCount: number;
 }
 
 export interface CachedEventPool extends CachedOpportunityPoolBase {
@@ -93,10 +92,7 @@ export function isCachedPool(value: unknown): value is CachedPool {
       Array.isArray(value.items) &&
       Array.isArray(value.aiOrder) &&
       value.aiOrder.every((id) => typeof id === "string") &&
-      isRecord(value.aiReasons) &&
-      Array.isArray(value.queryBoosts) &&
-      value.queryBoosts.every((query) => typeof query === "string") &&
-      typeof value.resultCount === "number"
+      isRecord(value.aiReasons)
     );
   }
 
@@ -136,8 +132,9 @@ export interface PoolCacheKeyInput {
 // Bump whenever the durable pool payload semantics change. v3 makes cached
 // scores preference-neutral so one daily pool can be safely re-ranked locally.
 // v4 turns the papers entry from a discovery-only record into a full daily
-// pool, so a v3 papers entry can no longer satisfy a v4 read.
-const CACHE_KEY_VERSION = 4;
+// pool, so a v3 papers entry can no longer satisfy a v4 read. v5 drops the
+// deleted discovery side-channel's `queryBoosts`/`resultCount` from it.
+const CACHE_KEY_VERSION = 5;
 
 function normalizeSet(values: string[] | undefined): string[] {
   return Array.from(

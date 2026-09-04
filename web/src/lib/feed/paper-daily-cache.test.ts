@@ -96,11 +96,12 @@ describe("daily paper pool", () => {
       morning.items.map((item) => item.id),
     );
     expect(academicFetch).toHaveBeenCalledOnce();
-    expect(searchFetch).toHaveBeenCalledOnce();
     expect(cache.values.size).toBe(1);
-    expect(afternoon.meta.connectorStats?.tavily).toEqual(
-      morning.meta.connectorStats?.tavily,
-    );
+    // NOT ONE WEB SEARCH, on either call, with a Tavily key sitting right
+    // there in the request. The paper surface's only web spend was a
+    // discovery side-channel whose output nothing read; papers come from the
+    // free academic sources, so the surface now costs zero search quota.
+    expect(searchFetch).not.toHaveBeenCalled();
     // The pool's build stamp travels with it, so a cached read reports when
     // the papers were actually found rather than when they were served.
     expect(afternoon.meta.generatedAt).toBe(morning.meta.generatedAt);
