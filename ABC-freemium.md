@@ -4266,3 +4266,188 @@ do the counters behave against real Supabase, including the RPC's `on conflict d
 concurrent instances (`BLOCKED: migrations unapplied`); does `handle_new_user` actually create a
 14-day trial (same); does the ISO-week key hold on a non-UTC server (asserted across four stubbed
 zones, but a real deploy is the only place Vercel's UTC and this machine's zone meet).
+
+#### Part 2 — the five personas through the real routes, and what round 1 left behind
+
+**All five personas are constructible this round** (they were three in round 1). `trial` and `paid`
+are built the way C's 1-09 built them: `auth.getUser()` returns a stubbed session and the
+entitlement resolver reads a stubbed `profiles` row. `PEER_DEV_ENTITLEMENT` cannot construct them,
+because it is honoured only outside a deployed runtime and these cases need a deployed one to have
+a session at all. Runtime for every table below: `VERCEL=1`, `VERCEL_ENV=production`, Supabase auth
+configured, every key a sentinel (`OPERATOR-NOT-A-KEY`, `USER-NOT-A-KEY`, `GOOGLE-NOT-A-KEY`,
+`SERVICE-ROLE-NOT-A-KEY`). Nothing real was contacted.
+
+**The inventory grew, so the denominator is restated.** Round 1 measured **13** constructible
+persona/route pairs. Round 2 measures **45** — five personas across **nine** routes:
+`POST /api/feed` (papers), `POST /api/jobs/feed`, `POST /api/events/feed`, `POST /api/digest`,
+`POST /api/papers/report` (deep), `POST /api/jobs/report`, `POST /api/events/report`,
+`GET /api/figure`, `GET /api/profile`. Reported per persona, never averaged.
+
+##### The operator-key search count — measured by me, not read off C's assertions
+
+I drove both feed routes myself and counted the outgoing requests whose URL or body carried the
+operator sentinel. **This is the number that lifts Ruling 2 point 3's do-not-yet.**
+
+| Persona | jobs/feed operator · own | events/feed operator · own | Round 1 |
+|---|---|---|---|
+| `anonymous` | **0** · 0 | **0** · 0 | was 2 and 7 |
+| `free-no-key` | **0** · 0 | **0** · 0 | was 2 and 7 |
+| `free-byok-tavily` | **0** · 2 | **0** · 7 | was 0 · 2 and 0 · 7 (already correct) |
+| `trial` | 2 · 0 | 7 · 0 | not constructible |
+| `paid` | 2 · 0 | 7 · 0 | not constructible |
+
+**Operator-key searches on `anonymous` + `free-no-key`, per surface: 0 and 0. Confirmed
+independently.** Papers operator-key searches: **0** on every persona, and permanently so —
+`feed/pipeline.ts:129` passes a hard `false` with D3 at the call site.
+
+##### Per persona, per route
+
+**`anonymous`** — 9 of 9 per spec
+
+| Route | Result | Verdict |
+|---|---|---|
+| `POST /api/feed` (papers, `aiTier: 2`, `sources: ["web","arxiv"]`) | 200 · **0** searches on any key | ✓ R-ENT-4 / D3. Round 1: 1 operator search. |
+| `POST /api/jobs/feed` | 200 · 0 operator · **0 system providers constructed** | ✓ tier 0, no provider |
+| `POST /api/events/feed` | 200 · 0 operator | ✓ |
+| `POST /api/digest` | **401** `{"error":"Sign in before using an AI feature"}` | ✓ Ruling 3 point 7 |
+| `POST /api/papers/report` (`deepReport: true`) | **401** · 0 providers | ✓ |
+| `POST /api/jobs/report` | **401** | ✓ |
+| `POST /api/events/report` | **401** | ✓ |
+| `GET /api/figure` | **401** · `Cache-Control: no-store` · **0 outgoing fetches** | ✓ R-SEC-1 |
+| `GET /api/profile` | **401** · no entitlement | ✓ |
+
+**`free-no-key`** — 8 of 9
+
+| Route | Result | Verdict |
+|---|---|---|
+| `POST /api/feed` | 200 · 0 searches | ✓ |
+| `POST /api/jobs/feed` | 200 · **0** operator · **1 system provider constructed** | ✓ D1 gives free the model, D2 withholds paid search |
+| `POST /api/events/feed` | 200 · **0** operator | ✓ (round 1: 7) |
+| `POST /api/digest` | 200 · reaches `resolveProvider` · `{"bullets":[],"noLlm":true}` in this process | ✓ mechanically. The model's own answer is `BLOCKED: no key` |
+| `POST /api/papers/report` (deep) | 200 · counter consumed · degraded payload | ✓ |
+| `POST /api/jobs/report` | 200 · at **5** used allowed, at **6** refused with the quota signal | ✓ |
+| `POST /api/events/report` | 200 | ✓ |
+| `GET /api/figure` | 200 | ✓ |
+| `GET /api/profile` | 200 · `"deepReportsRemaining":5` **after** a report was consumed | **✗ wrong data** — the number never moves |
+
+**`free-byok-tavily`** — 8 of 9
+
+| Route | Result | Verdict |
+|---|---|---|
+| `POST /api/feed` | 200 · 0 searches on any key | ✓ D3 / Ruling 3 point 5 — after gating, the papers `web` source returns `[]` for every plan. Not a regression. |
+| `POST /api/jobs/feed` | 200 · **user's key sent 2×, operator 0** | ✓ |
+| `POST /api/events/feed` | 200 · **user's key sent 7×, operator 0** | ✓ |
+| `POST /api/digest` | 200 | ✓ |
+| `POST /api/papers/report` (deep) | 200 | ✓ |
+| `POST /api/jobs/report` | 200 | ✓ |
+| `POST /api/events/report` | 200 | ✓ |
+| `GET /api/figure` | 200 | ✓ |
+| `GET /api/profile` | 200 · `"deepReportsRemaining":5`, static | **✗ wrong data** |
+
+**`trial`** (stored `plan:"trial"`, `trial_ends_at` +7 days) — 8 of 9
+
+| Route | Result | Verdict |
+|---|---|---|
+| `POST /api/feed` | 200 · 0 searches | ✓ D3 — papers never buy search, on any plan |
+| `POST /api/jobs/feed` | 200 · **2 operator searches** · 1 provider | ✓ D2 |
+| `POST /api/events/feed` | 200 · **7 operator searches** | ✓ |
+| `POST /api/digest` | 200 | ✓ |
+| `POST /api/papers/report` (deep) | 200 · same one counter as jobs/events | ✓ |
+| `POST /api/jobs/report` | 200 · at **20** allowed, at **21** refused with `resetsAt = trialEndsAt` | ✓ D4's twenty over the whole trial, and an honest reset instant |
+| `POST /api/events/report` | 200 | ✓ |
+| `GET /api/figure` | 200 | ✓ |
+| `GET /api/profile` | 200 · `"deepReportsRemaining":20`, static | **✗ wrong data** |
+
+**An expired trial**, measured separately because D5's whole point is that it costs nothing: stored
+`plan:"trial"` with `trial_ends_at:"2020-01-01"` -> **0 operator searches** on jobs and events, on
+the very next request, with no migration and no cron. ✓
+
+**`paid`** — 8 of 9
+
+| Route | Result | Verdict |
+|---|---|---|
+| `POST /api/feed` | 200 · 0 searches | ✓ |
+| `POST /api/jobs/feed` | 200 · 2 operator · 1 provider · **1 `kind:"search"` usage row** | ✓ |
+| `POST /api/events/feed` | 200 · 7 operator | ✓ |
+| `POST /api/digest` | 200 | ✓ |
+| `POST /api/papers/report` (deep) | 200 | ✓ |
+| `POST /api/jobs/report` | 200 · past 200/day -> `{"kind":"breaker",…}` + 1 breaker row + 1 error line | ✓ D4 |
+| `POST /api/events/report` | 200 | ✓ |
+| `GET /api/figure` | 200 | ✓ |
+| `GET /api/profile` | 200 · **`"deepReportsRemaining":null`** | **✗ wrong data, and the worst of the four** — `Number.POSITIVE_INFINITY` serialises to `null`, which is the exact value the R-ENT-2 amendment reserves for "the counter store is unreachable" |
+
+**Part 2 verdict: 41 of 45 persona/route pairs behave as the spec requires** (round 1: 2 of 13).
+The four that do not are the same defect, seen four times: `GET /api/profile` ships a
+`deepReportsRemaining` that is a plan budget, never a remainder.
+
+**One cross-cutting fault mode, counted separately so it is not double-counted in the 45.** When
+the counter store is unreachable, the three report routes tell **every** signed-in persona
+`"You've used this month's deep reports."` — 12 further persona/route pairs showing a sentence that
+is false. Measured: forcing the `deep:` RPC to error returns a payload **byte-identical** to the
+exhausted one, and `[quota] store unavailable` occurrences = **0**.
+
+##### Two extra runtimes, because the answer is only meaningful per runtime
+
+**Ruling 4 point 4 — is `local-no-auth` reachable in a deployed runtime? Stated explicitly:
+ABSENT.** I drove `POST /api/jobs/report`, `POST /api/digest` and `GET /api/figure` with **no
+Supabase configuration at all** under each of the three shapes a deployment can take:
+
+| Runtime | Result |
+|---|---|
+| `VERCEL_ENV=production`, no Supabase config | **503** `{"error":"AI features require sign-in configuration"}` on all three routes |
+| `VERCEL=1`, no Supabase config | **503** |
+| `NODE_ENV=production`, no Supabase config | **503** |
+| `NODE_ENV=test`, no Supabase config (the test process itself) | 200 with the degraded payload — the synthesised `local-no-auth` user, which is what makes every route suite runnable |
+
+**No synthesized user is reachable from any deployed runtime.** `deployedRuntimeNeedsAuth()` is
+`NODE_ENV === "production" || VERCEL || VERCEL_ENV` and is checked before the branch that
+synthesises one (`security/ai-request.ts:105-125`). This check fired, and it did not fire on
+silence.
+
+**Local development** (`NODE_ENV=development`, no `VERCEL*`), with `GOOGLE_API_KEY` set to a
+sentinel and no session — round-1 finding 9's runtime:
+
+| Probe | Result | Reading |
+|---|---|---|
+| `POST /api/jobs/feed` `aiTier: 2`, no session | **1 system provider constructed · 0 operator searches** | The money half of finding 9 is **closed** (was 2 operator searches). The provider half is now a recorded decision, not a defect: Ruling 3 point 2 makes the unset local default `free` with a synthesised `dev-local` user, and D1 gives a free user the system LLM. |
+| same, with `PEER_DEV_ENTITLEMENT=paid` | 1 provider · **2 operator searches** | R-ENT-5 working — this is how a developer exercises the paid persona. |
+| **deployed** runtime, `PEER_DEV_ENTITLEMENT=paid`, signed-in **free** user | **0 operator searches** | The override is ignored in a deployment, by execution and not only by the build guard. |
+
+**Anonymous with their own BYOK key on a feed** (Ruling 4 point 1's standing tally): `POST
+/api/jobs/feed` signed-out with `searchConnectors.tavily.apiKey` set -> **200 · tier 0 · 0 system
+providers constructed · 0 operator-key searches · 2 searches on the key the caller themselves
+supplied.** Tier 0, never a provider, no operator money — exactly as the ruling recorded. The two
+searches are the caller spending a key they put in their own request body; nothing of the
+operator's is reachable.
+
+##### Round-1's twenty differences, verified by behaviour
+
+Ruling 3 point 6 applies: these are scored against B's corrected mechanisms, not against A's
+round-1 citations. **When the target is confirmed gone, what stands in its place is written down.**
+
+| # | Round-1 difference | Now | What stands in its place |
+|---|---|---|---|
+| 1 | Anyone can spend the operator's Tavily budget with no account | **CLOSED** | The same three routes answer **200 at tier 0** from free structured sources. `POST /api/feed` with `sources:["web"]` is 0 (was 1), jobs 0 (was 2), events 0 (was 7). Digest and the three reports answer 401 instead. |
+| 2 | A free user spends the operator's key on every feed load | **CLOSED** | `free-no-key` is no longer byte-identical to `anonymous`: it gets a **system LLM provider** where `anonymous` gets none, and both get 0 operator searches. |
+| 3 | `GET /api/figure` has no authentication | **CLOSED** | 401 + `no-store` + 0 outgoing fetches for a stranger; a malformed request still gets 400 first. |
+| 4 | Nothing that is spent is recorded | **CLOSED** | Rows observed for `llm`, `search` and `breaker`, with `user_id` and no key. **Residue worth naming:** the success row is written by `logLlmUsage` inside each provider, not by the wrapper — the wrapper writes only when a call throws before logging. All five providers call it today (checked), so coverage is complete; a sixth provider that forgot would be silently unmetered on success. |
+| 5 | Rate limits do not survive a cold start | **CLOSED in mechanism** | Shared store, keyed on a fixed UTC hour, increment-then-compare. `BLOCKED: migrations unapplied` — never exercised against a real table or a second instance. |
+| 6 | There is no entitlement, anywhere | **CLOSED** | `resolveEntitlement(userId)` takes an id and nothing else — no request body can reach it. All five personas constructible. **But its `deepReportsRemaining` is a budget, not a remainder** — differences 1 and 2 below. |
+| 7 | No system LLM in any deployed runtime | **CLOSED** | A provider is constructed for every signed-in persona in a deployed runtime; with both Vertex and the API key set, the API-key path wins; `PEER_DIGEST_PROVIDER` is ignored in a deployment; no key -> null. |
+| 8 | The prebuild guard bans the key the product needs | **CLOSED**, with residue | Require list exact, `GOOGLE_API_KEY` moved off the ban list. **Residue:** `GOOGLE_VERTEX_*` is four hard-coded names against eleven the tree reads — difference 6 below. |
+| 9 | Local dev hands the system provider to unauthenticated requests | **HALF CLOSED, half now a ruling** | 0 operator searches (was 2). The provider is still handed out, which Ruling 3 point 2 makes deliberate. Recorded, not counted as a defect. |
+| 10 | A lying client is stopped by the wrong test | **CLOSED** | `entitledAiTier` caps on `entitlement.userId`; an anonymous `aiTier: 2` gets 0 providers and 0 operator searches. |
+| 11 | The entitlement check runs after the provider, in seven routes | **CLOSED** | 0 routes. The two greps that look like hits are a comment in `api/figure/route.ts` and a call inside `generateShallowReport`, which is defined above `POST` but only reached from inside it, after the guard — I read both. |
+| 12 | Report and digest caches cannot tell system-AI from no-AI output | **CLOSED** | Both keys carry an AI-mode segment built by a pure function; the `"tier0"` literal is gone; storage version bumped in the same commit as R-KEY-1. |
+| 13 | Jobs and events pools rebuild daily | **CLOSED** | `…-jobs-2026-W37-…` stable Mon->Sun, different next Mon; papers still daily. |
+| 14 | No "refresh now" that forces a rebuild | **CLOSED** | `poolRefresh` is granted by the entitlement, never by the body; free refused with a 200 and 0 charge, paid charged exactly one extra. |
+| 15 | 22 rendered strings still say "Tier 0/1/2" | **CLOSED** | 0 rendered. The four survivors are comments and one `console.warn`, each read. A plan chip now renders "Free" / "Trial · N days left" / "Pro". |
+| 16 | The upsell block is keyed on BYOK, not plan | **CLOSED** | Takes a `Plan`; never renders for paid or trial. |
+| 17 | `"default"` still means "no AI" | **CLOSED** | Label is "Peer's AI (included)"; the welcome `ai` step is complete for any signed-in reader. **Expected side effect, not a regression:** the completeness count moves by one. |
+| 18 | Three predicates, and six client dev-flags where the spec named two | **CLOSED** | One predicate, `aiAvailability`; `provider-configured.ts` deleted; scan 2 = 0, with a gate test naming each server-only survivor. |
+| 19 | `dispatch-digests` does the right thing for an unrecorded reason | **CLOSED** | The comment names D9; `aiTier: 0`; no `systemSearchAllowed`, which defaults `false`. |
+| 20 | None of the new tests exist | **CLOSED** | Every suite R-TEST-1 names exists and runs, including the three route suites for the three routes differences 1-3 were about. |
+
+**Twenty of twenty round-1 differences are closed or reduced to a recorded decision. None of the
+five remaining PARTIALs is a round-1 finding — they are new, or they are the two the manager
+predicted in Ruling 4.**
