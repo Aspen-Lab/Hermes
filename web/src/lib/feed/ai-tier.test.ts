@@ -48,7 +48,7 @@ const NO_KEY: UserProfile = {
 const SIGNED_IN: Entitlement = {
   ...ANONYMOUS_ENTITLEMENT,
   userId: "user-1",
-  deepReportsRemaining: 5,
+  deepReportsBudget: 5,
 };
 const SIGNED_OUT: Entitlement = ANONYMOUS_ENTITLEMENT;
 

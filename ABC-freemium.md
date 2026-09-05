@@ -122,7 +122,7 @@ HELD BY:          C-round2 @ 2026-09-05T00:40Z
 ROUND:            2
 WHOSE TURN:       C
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:35Z
-STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02.
+STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03.
 
                   DEVIATIONS FROM B'S GUIDE, each traced before it was taken:
                   - 2-02: B put the `[quota] store unavailable` writer in a PRIVATE helper in
@@ -6307,3 +6307,125 @@ an outage**, and a log line does not survive a serverless cold shutdown the way 
 Ruling 6 point 1 chose this knowingly and names the future migration that brings the row back with
 an honest `'outage'` kind. A should count `[quota] store unavailable` occurrences from a captured
 log, not from `usage_events`, and should expect **0** in a healthy local run.
+
+---
+
+#### 2-03 — LANDED. The field that said "remaining" now holds a real remainder, and `Infinity` cannot reach the wire
+
+**Gate after this item:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, **0
+warnings**) · `vitest` **117 files passed | 1 skipped (118)** · **2752 tests passed | 1 skipped
+(2753)**, **0 failed**. Up 26 from 2-02's 2726.
+
+**What changed, eight files (one new):**
+
+| File | Change |
+|---|---|
+| `web/src/lib/entitlement/types.ts` | `deepReportsRemaining` → **`deepReportsBudget`**, on the interface and on `ANONYMOUS_ENTITLEMENT`. The stale comment (which ended "until 1-20 has landed and this comment says otherwise" — 1-20 has landed) is rewritten to say what the field is, why nothing is subtracted here, and why `Infinity` must not escape. |
+| `web/src/lib/entitlement/resolve.ts` | the producer key renamed. The private function that fills it was **already** called `deepReportBudget`, so the rename makes the field agree with its own producer. |
+| **NEW** `web/src/lib/entitlement/allowance.ts` | `DeepReportAllowance`, the pure `deepReportAllowance()`, `ClientEntitlement`, `toClientEntitlement()` and `ANONYMOUS_CLIENT_ENTITLEMENT`. **No Supabase import**, so it stays importable by the browser. |
+| `web/src/lib/usage/deep-report-quota.ts` | the two comparison sites read `deepReportsBudget` — they were **always** budget comparisons, which is the clearest evidence the rename is right rather than cosmetic |
+| `web/src/app/api/profile/route.ts` | `GET` ships `ClientEntitlement`, built by a new private `clientEntitlement()` that resolves the plan and does **one non-incrementing** counter read |
+| `web/src/store/profile.ts` | holds `ClientEntitlement`; the default is `ANONYMOUS_CLIENT_ENTITLEMENT` |
+| `web/src/components/profile-sync.tsx` | the fetch types only |
+| **NEW** `web/src/lib/entitlement/allowance.test.ts` + `web/src/app/api/profile/route.test.ts` | 13 + 7 new cases |
+
+**The architectural constraint B named is respected exactly: `resolveEntitlement` still reads no
+counter.** It runs on every AI request (four call sites in `ai-request.ts`), and a counter read
+inside it would put a database round trip on every feed load, every report and every digest to
+compute a number only the profile screen wants. **The subtraction happens in the delivery layer and
+nowhere else.** `resolveEntitlement`'s signature is unchanged, so R-SEC-2 cannot have moved.
+
+**`Infinity` is now impossible on the wire BY CONSTRUCTION, not by remembering.**
+`ClientEntitlement` is `Omit<Entitlement, "deepReportsBudget"> & DeepReportAllowance`, and
+`toClientEntitlement()` is the single place the field is dropped — it names the seven fields it
+keeps, so the only way to leak the budget in future is to deliberately add it back. That is stronger
+than a destructure at the call site, which is what I wrote first: it produced two
+`@typescript-eslint/no-unused-vars` warnings (a lint regression against the "1 error, 0 warnings"
+baseline), and fixing them by consolidating into one helper was strictly better than silencing them
+with `void`.
+
+**The paid fetch does not get slower.** `deepReportAllowance` short-circuits on `effectivePlan ===
+"paid"` before it looks at the reading, and the route skips the store round trip entirely for paid
+for the same reason. The extra read lands **only** on `GET /api/profile` for free and trial readers.
+
+**The key is chosen by plan, not guessed.** Free reads `deepReportMonthKey`, trial reads
+`deepReportTrialKey` (**no period segment** — reading the monthly key for a trial user would always
+answer twenty), paid reads nothing. There is a case pinning the trial key specifically.
+
+**Every branch, exhaustive, as landed:**
+
+| Case | Result |
+|---|---|
+| `effectivePlan === "paid"` | `{ unlimited: true, deepReportsRemaining: null }`, no `reason`, no store read |
+| no `userId` | `{ unlimited: false, deepReportsRemaining: 0 }` — `0` and not `null`: no allowance is a fact we know, `null` is reserved for "we cannot tell" |
+| `!used.ok` | `{ unlimited: false, deepReportsRemaining: null, reason: "unavailable" }` |
+| free / trial, readable | `{ unlimited: false, deepReportsRemaining: Math.max(0, budget − used) }` |
+
+`Math.max(0, …)` is load-bearing and commented as such: the counter is incremented **before** the
+limit is compared, so a reader who has just been refused sits at `budget + 1` used and a bare
+subtraction would ship `-1` to the browser.
+
+**THE TRAP B FOUND IS AVOIDED, and I turned it into a live test rather than a comment.** The obvious
+protective test — `JSON.stringify(JSON.parse(JSON.stringify(x))) === JSON.stringify(x)` — is
+**green on the broken code**, because the first `stringify` has already turned `Infinity` into
+`null` on both sides. Every round-trip case here compares the **parsed object** with the **original
+object**. And there is a case named `would have FAILED the naive round-trip check on the old shape`
+that runs both forms side by side on `{ deepReportsRemaining: Infinity }` and asserts the naive one
+passes and the correct one fails — so the reason the suite is written this way is executable, not
+folklore.
+
+**Twenty new cases.** In `allowance.test.ts` (13): paid is unlimited with no number; paid ignores
+the counter entirely (asserted with a reading that would give a very different answer on any other
+plan); free gets a real remainder; the floor at zero; a trial counts against its own budget; store
+down says `unavailable`; signed out gets `0` not `null`; **`unlimited` and `unavailable` are
+distinguishable though both carry `null`** (Ruling 5 point 4's whole purpose — before this both
+arrived as a bare `null`); five round-trip cases; five structural "no `Infinity`, no budget field"
+cases; and the naive-form demonstration. In `route.test.ts` (7): the signed-out 401; a free reader's
+real remainder; **THE NUMBER MOVES** (5 → 4 across a spend — the assertion whose absence let the
+defect ship, because every existing test asserted the *constant*); **the profile fetch never
+increments** (five GETs, counter still 0); paid ships `unlimited` with no `Infinity` **in the
+serialised text**; the trial key; the budget field is absent; and R-ENT-1's "the plan does not leak"
+re-asserted at the route now that a route test exists.
+
+**B's correction accepted and acted on.** `src/app/api/profile/route.test.ts` **does** exist — B
+issued the correction itself. I **added to it** rather than creating a new file, which is B's
+restated instruction and the right home: a file that already asserts "the plan is server-owned" is
+where "the allowance is delivered and is a real remainder" belongs. The file had **no `GET`
+coverage at all** before this item — only the two pure mapping functions — which is exactly why a
+field named "remaining" could ship a plan's budget for a whole round with nothing going red.
+
+**Proved the new tests test the fix (§2 Agent C, standard 1).** I reverted the route's one line
+(`clientEntitlement(user.id)` back to `resolveEntitlement(user.id)`) and re-ran: **5 failed**, by
+name — the real remainder, the number moving, the paid `unlimited`, the trial key, and the absent
+budget field. Restored, re-ran, green. The `allowance.test.ts` cases are proved by the
+naive-vs-correct case inside the suite itself, which fails on the old shape by construction.
+
+**Tests at risk — B's table was right, and the rename is a pure key rename in all of them.** Four
+assertions in `resolve.test.ts` (including `:90`'s `Number.POSITIVE_INFINITY`, which is what pins
+that `Infinity` stays **inside** the process and is deliberately kept), one fixture in
+`ai-tier.test.ts`, five in `deep-report-quota.test.ts`. **No assertion was deleted or weakened** —
+every one is the same assertion under the new key.
+
+**Every `Pick<Entitlement, …>` consumer re-checked and none moved**, because they all pick fields
+that survive: `store/feed.ts:259`/`:374`, `welcome/completeness.ts:74`/`:144`,
+`opportunities/enrichment.ts:983`, `feed/ai-tier.ts:71`/`:84`/`:115`/`:140`. `tsc` at 0 is the
+proof; I re-grepped `deepReportsRemaining` across `src/` afterwards and the only hits are the new
+client-facing ones.
+
+**Standing locks re-verified** (§2 Agent C, standard 2): `ai-tier.test.ts` green (it holds an
+entitlement fixture), `deep-report-quota.test.ts` 24 green, `counters` 14 green, `registry.test.ts`
+green, the four harness-driven route suites green, `ui-vocabulary.test.ts` and
+`no-client-dev-flags.test.ts` green, the guard script test green — all in the cold full run above.
+
+**Nothing renders this number yet**, which B established and which this item does not change: the
+grep for `deepReportsRemaining` outside the entitlement modules finds only tests. The value is now
+**correct on the wire**, which is what Ruling 4 point 3 and Ruling 5 point 4 ask for; whether a
+screen shows it is not in R-ENT-2 or R-ENT-3.
+
+**Doubt flagged, not judged.** One, for the manager rather than for me to settle: `GET /api/profile`
+now performs one extra counter read for free and trial readers. On the in-memory store that is free;
+on Supabase it is one `select` on a primary key. I judged it in scope because Ruling 4 point 3 says
+the summary "carries a real `deepReportsRemaining` = budget − used from the counter store" in as
+many words, and there is no other place to get `used`. If the manager would rather the profile
+screen fetch the allowance separately, that is a shape change, not a correction, and it belongs to a
+later round.

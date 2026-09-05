@@ -23,9 +23,9 @@ import type {
 } from "@/types";
 import { defaultProfile } from "@/types";
 import {
-  ANONYMOUS_ENTITLEMENT,
-  type Entitlement,
-} from "@/lib/entitlement/types";
+  ANONYMOUS_CLIENT_ENTITLEMENT,
+  type ClientEntitlement,
+} from "@/lib/entitlement/allowance";
 import {
   applyOpportunityFacetPreferenceSignal,
   applyPreferenceSignal,
@@ -56,8 +56,8 @@ interface ProfileState {
    * **Deliberately NOT persisted** (see `partialize`): a `paid` entitlement
    * cached in localStorage would survive a downgrade.
    */
-  entitlement: Entitlement;
-  setEntitlement: (entitlement: Entitlement) => void;
+  entitlement: ClientEntitlement;
+  setEntitlement: (entitlement: ClientEntitlement) => void;
   /** Replace the whole profile from an exported document. */
   importProfile: (document: unknown) => boolean;
   updateDisplayName: (name: string) => void;
@@ -351,7 +351,7 @@ export const useProfileStore = create<ProfileState>()(
   persist(
     (set) => ({
       profile: defaultProfile,
-      entitlement: ANONYMOUS_ENTITLEMENT,
+      entitlement: ANONYMOUS_CLIENT_ENTITLEMENT,
 
       setEntitlement: (entitlement) => set({ entitlement }),
 

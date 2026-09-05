@@ -121,7 +121,7 @@ function fromStoredPlan(
   return {
     plan,
     effectivePlan,
-    deepReportsRemaining: deepReportBudget(effectivePlan),
+    deepReportsBudget: deepReportBudget(effectivePlan),
     // D2/D3: paid search and the forced pool rebuild are what a free user does
     // not get. Both read `effectivePlan`, so an expired trial loses them the
     // moment it expires.

@@ -58,7 +58,7 @@ describe("resolveEntitlement", () => {
     expect(entitlement.effectivePlan).toBe("trial");
     expect(entitlement.systemSearchAllowed).toBe(true);
     expect(entitlement.poolRefreshAllowed).toBe(true);
-    expect(entitlement.deepReportsRemaining).toBe(20);
+    expect(entitlement.deepReportsBudget).toBe(20);
     expect(entitlement.trialEndsAt).toBe("2026-09-10T00:00:00.000Z");
   });
 
@@ -76,7 +76,7 @@ describe("resolveEntitlement", () => {
     expect(entitlement.effectivePlan).toBe("free");
     expect(entitlement.systemSearchAllowed).toBe(false);
     expect(entitlement.poolRefreshAllowed).toBe(false);
-    expect(entitlement.deepReportsRemaining).toBe(5);
+    expect(entitlement.deepReportsBudget).toBe(5);
     expect(entitlement.trialEndsAt).toBeNull();
   });
 
@@ -87,7 +87,7 @@ describe("resolveEntitlement", () => {
 
     expect(entitlement.effectivePlan).toBe("paid");
     expect(entitlement.systemSearchAllowed).toBe(true);
-    expect(entitlement.deepReportsRemaining).toBe(Number.POSITIVE_INFINITY);
+    expect(entitlement.deepReportsBudget).toBe(Number.POSITIVE_INFINITY);
   });
 
   it("treats a missing plan column exactly like a missing row", async () => {
@@ -111,7 +111,7 @@ describe("resolveEntitlement", () => {
     const entitlement = await resolveEntitlement("user-1", NOW, { client: null });
 
     expect(entitlement.effectivePlan).toBe("free");
-    expect(entitlement.deepReportsRemaining).toBe(5);
+    expect(entitlement.deepReportsBudget).toBe(5);
   });
 
   describe("PEER_DEV_ENTITLEMENT (R-ENT-5)", () => {

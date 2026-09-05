@@ -34,14 +34,27 @@ export interface Entitlement {
    * The plan's deep-report allowance: free 5 per calendar month, trial 20 over
    * the whole trial, paid unbounded (D4).
    *
-   * **This is the budget, not budget-minus-used.** Nothing has been subtracted
-   * here because the counter that knows what has been used is item 1-02 and the
-   * check that compares them is item 1-20; the resolver is an input to both, not
-   * a consumer of either. R-ENT-2 names the field `deepReportsRemaining`, so the
-   * name is the contract's and is kept — but a reader must not treat it as a
-   * live remaining count until 1-20 has landed and this comment says otherwise.
+   * **This is the budget, not budget-minus-used, and the name now says so**
+   * (ABC-freemium 2-03 · Ruling 4 point 3). It used to be named for a
+   * remainder, which was the lie: a field named "remaining" that
+   * never decreases will eventually be displayed as a wrong number, and it was
+   * already on the wire as one. The live remainder is computed in the delivery
+   * layer by `deepReportAllowance` in `./allowance`, never here.
+   *
+   * **Nothing is subtracted here on purpose.** `resolveEntitlement` runs on
+   * *every* AI request, and putting a counter read inside it would add a
+   * database round trip to every feed load, every report and every digest to
+   * compute a number only the profile screen wants. The resolver is an input to
+   * the counter and to the quota check, not a consumer of either. That is a
+   * decision, not an accident — do not "fix" it by reading the store here.
+   *
+   * `Number.POSITIVE_INFINITY` for paid is fine **inside the process** and is
+   * what the two comparison sites in `deep-report-quota.ts` want. It must never
+   * reach a payload — `JSON.stringify` turns it into `null` — which is why
+   * `GET /api/profile` ships `ClientEntitlement` and drops this field by
+   * construction rather than by remembering.
    */
-  deepReportsRemaining: number;
+  deepReportsBudget: number;
   /** D2: the system Tavily key is spent only for trial and paid users. */
   systemSearchAllowed: boolean;
   /** D3: only entitled users may force a pool rebuild. */
@@ -75,7 +88,7 @@ export const TRIAL_DEEP_REPORTS_TOTAL = 20;
 export const ANONYMOUS_ENTITLEMENT: Readonly<Entitlement> = Object.freeze({
   plan: "free",
   effectivePlan: "free",
-  deepReportsRemaining: 0,
+  deepReportsBudget: 0,
   systemSearchAllowed: false,
   poolRefreshAllowed: false,
   trialEndsAt: null,

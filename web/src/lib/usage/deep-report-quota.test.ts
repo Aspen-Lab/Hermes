@@ -31,18 +31,18 @@ function entitlement(overrides: Partial<Entitlement>): Entitlement {
 const FREE = entitlement({
   plan: "free",
   effectivePlan: "free",
-  deepReportsRemaining: 5,
+  deepReportsBudget: 5,
 });
 const TRIAL = entitlement({
   plan: "trial",
   effectivePlan: "trial",
-  deepReportsRemaining: 20,
+  deepReportsBudget: 20,
   trialEndsAt: "2026-09-18T00:00:00.000Z",
 });
 const PAID = entitlement({
   plan: "paid",
   effectivePlan: "paid",
-  deepReportsRemaining: Number.POSITIVE_INFINITY,
+  deepReportsBudget: Number.POSITIVE_INFINITY,
 });
 
 beforeEach(() => {
@@ -144,11 +144,11 @@ describe("trial cap (R-QUOTA-2, D4)", () => {
 
   it("an expired trial falls to the FREE budget, not the trial one", async () => {
     // D5 — expiry is computed at read time, so `effectivePlan` is already
-    // `free` here and `deepReportsRemaining` is five.
+    // `free` here and `deepReportsBudget` is five.
     const expired = entitlement({
       plan: "trial",
       effectivePlan: "free",
-      deepReportsRemaining: 5,
+      deepReportsBudget: 5,
       trialEndsAt: null,
     });
 

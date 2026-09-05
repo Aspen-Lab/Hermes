@@ -206,7 +206,7 @@ export async function consumeDeepReport(
     // never rolls over; the trial expires by date instead (D5).
     const reading = await store.increment(deepReportTrialKey(userId), null, 1, now);
     // `reading.ok` first: an unreadable counter fails CLOSED (see the header).
-    if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {
+    if (reading.ok && reading.value <= entitlement.deepReportsBudget) {
       return { allowed: true };
     }
     if (!reading.ok) logStoreUnavailable("deep-report", userId);
@@ -237,7 +237,7 @@ export async function consumeDeepReport(
     now,
   );
   // `reading.ok` first: an unreadable counter fails CLOSED (see the header).
-  if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {
+  if (reading.ok && reading.value <= entitlement.deepReportsBudget) {
     return { allowed: true };
   }
   if (!reading.ok) logStoreUnavailable("deep-report", userId);

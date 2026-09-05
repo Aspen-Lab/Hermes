@@ -20,7 +20,7 @@
 import { useEffect, useRef } from "react";
 import { create } from "zustand";
 import { apiFetch } from "@/lib/api";
-import type { Entitlement } from "@/lib/entitlement/types";
+import type { ClientEntitlement } from "@/lib/entitlement/allowance";
 import { supabase } from "@/lib/supabase/client";
 import { useProfileStore } from "@/store/profile";
 import type { UserProfile } from "@/types";
@@ -53,12 +53,12 @@ function hasAnySignal(p: UserProfile): boolean {
  */
 async function fetchRemote(): Promise<{
   profile: Partial<UserProfile> | null;
-  entitlement: Entitlement | null;
+  entitlement: ClientEntitlement | null;
 }> {
   try {
     const data = await apiFetch<{
       profile: Partial<UserProfile> | null;
-      entitlement?: Entitlement;
+      entitlement?: ClientEntitlement;
     }>("/api/profile", { cache: "no-store" });
     return { profile: data.profile, entitlement: data.entitlement ?? null };
   } catch (err) {
