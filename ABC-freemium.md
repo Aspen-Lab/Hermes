@@ -8209,3 +8209,88 @@ server running in this folder; it was left alone and no process was killed. No w
 `.claude/worktrees/` was touched. No PR was opened.
 
 **Three items, three commits, each pushed as it finished** — 3-01, 3-02, 3-03.
+
+---
+
+### Round 3 — Agent C
+
+**Turn opened 2026-09-05T02:29Z.** Lock claimed on a clean tree, `git branch --show-current`
+printed `freemium-system-key`. **Cold gate before the first edit, run in full:** `tsc` exit **0** ·
+`eslint` **1 error** (the standing `quiz.tsx:46`, 0 warnings) · `vitest` **123 files passed | 1
+skipped (124)** · **2825 tests passed | 1 skipped (2826)**, **0 failed**, 9.70 s. Identical to
+round-3 A's and B's figures, so the baseline is the one B measured against.
+
+Working the order Ruling 9 binds: **3-01 → 3-02 → 3-03 fix → 3-03 tests.** No deviation.
+
+---
+
+#### 3-01 — the paid upsell. **LANDED.**
+
+Built exactly as Ruling 9 point 4 ratified: option (a), the plan from the client entitlement
+summary the page already holds. **Three defects closed, not the one A reported** — B's reading was
+right on all three.
+
+**Defect 1 — a paid reader was upsold.** `quota-notice.tsx` gains a **required** `effectivePlan:
+Plan` prop and a second boolean:
+
+```ts
+const exhausted = quota.reason === "exhausted";
+const showUpgradePrompt = exhausted && effectivePlan !== "paid";
+```
+
+**Defect 2 — one boolean drove two things.** The heading and the sentence still read `exhausted`;
+only the prompt reads `showUpgradePrompt`. B's warning was live: narrowing `exhausted` itself would
+have retitled a paid reader's breaker notice "Deep reports unavailable", and there is now a test
+asserting that exact string is absent.
+
+**The prop is required, not optional-defaulting-to-`"free"`.** B's argument holds and I followed it:
+that default fails **open** on the property being fixed. The test helper took the one-line change
+instead (`render(quota?, effectivePlan: Plan = "free")`) — the fail-open default lives in the test
+file, where a forgotten call site cannot ship it to a reader.
+
+**The predicate is `!== "paid"`, not `=== "free"`.** Trial readers keep the prompt, per Ruling 8
+point 1, and there is a dedicated trial case so a later round cannot quietly copy
+`TierUpgradeBlock`'s `=== "free"` across.
+
+**Defect 3 — the reset unit.** `quotaMessage` now delegates to a new `resetsIn(quota, now)`: **hours
+under a day, days otherwise**, `Math.ceil` on both, with the `Math.max(1, …)` floor kept **on the
+hours branch only**. B's execution result is confirmed and its consequence is worse than it looks —
+because `Math.ceil` stays, the days branch can no longer emit "1 day" at all (25 h renders "2
+days"), so **"Resets in 1 day" is now unreachable**. That is correct and it is why the existing
+singular-day case was **re-pointed at a 1-hour fixture rather than deleted**.
+
+**Call sites, one prop each, no server work:** `papers/[id]/page.tsx` (`entitlement.effectivePlan`,
+already in scope at `:582`), `jobs/[id]/page.tsx` and `events/[id]/page.tsx` (`effectivePlan`,
+already destructured). `QuotaSignal` is untouched, so R-QUOTA-2's payload — which A measured as
+correct — stays byte-identical, and the four `toEqual` payload tests never moved.
+
+**Tests — the sharp one repaired in place, not replaced.** `quota-notice.test.tsx:73`, named *"says
+the daily-breaker sentence for a paid reader at the cap"*, asserted none of what its name claims. It
+now runs on a **fixed clock** (`vi.setSystemTime`, Ruling 5 point 3 — the component calls
+`quotaMessage(quota)` with its default `new Date()`, so the fixture has to reach that read) against a
+**real `endOfUtcDay` reset 30 minutes out**, and asserts the sentence, `"Resets in 1 hour."`, and the
+absence of "Peer Pro", `/settings` and "Add your own key". Five cases in total: the paid breaker, the
+paid heading, the **free** twin, the **trial** twin, and a paid reader on the monthly path. Plus a
+six-case unit-boundary suite in `deep-report-quota.test.ts` (23 h 59 m → hours; 24 h 1 m → days; 30
+minutes → "1 hour"; a reset already past → "1 hour", never a `"0 "` and never a `-`; 26 days still
+days; the monthly path's last day). The placement suite gains *"passes the reader's plan"*, matched
+against `effectivePlan={entitlement.effectivePlan}` — `tsc` already forces *something* to be passed;
+the source assertion is what stops a fourth page satisfying the type with a literal `"free"`.
+
+**Proved the tests test the fix (§2 Agent C), both halves separately:**
+
+| Reverted | Result |
+|---|---|
+| `showUpgradePrompt` → `exhausted` in the component | **2 failed** / 20 passed — the paid breaker and the paid monthly case |
+| `resetsIn` → the old days-only `Math.max(1, …)` | **7 failed** / 42 passed across both suites |
+
+Restored, and the second revert was re-run after the first attempt silently no-op'd on a CRLF
+mismatch — the "2 passed" it printed was the unmodified file and proved nothing. **Recording it
+because a revert proof that quietly does not apply is the exact failure mode this rule exists to
+catch:** always assert the substitution happened, never trust the test result alone.
+
+**Gate after 3-01:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0
+warnings) · `vitest` **123 files passed | 1 skipped (124)** · **2837 tests passed | 1 skipped
+(2838)**, **0 failed**. +12 tests, 0 regressions. `tier-upgrade-block.test.tsx` untouched and green.
+
+**Standing tally, answerable now:** paid readers shown any upsell — **0**, pinned by render test.

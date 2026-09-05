@@ -106,16 +106,38 @@ export function quotaMessage(quota: QuotaSignal, now = new Date()): string {
   if (quota.reason === "unavailable") {
     return "Deep reports are temporarily unavailable — your allowance is unchanged. Try again shortly.";
   }
-  const days = Math.max(
-    1,
-    Math.ceil(
-      (new Date(quota.resetsAt).getTime() - now.getTime()) / 86_400_000,
-    ),
-  );
-  const unit = days === 1 ? "day" : "days";
   return quota.kind === "breaker"
-    ? `Peer is at today's limit for deep reports. Resets in ${days} ${unit}.`
-    : `You've used this month's deep reports. Resets in ${days} ${unit}.`;
+    ? `Peer is at today's limit for deep reports. Resets in ${resetsIn(quota, now)}.`
+    : `You've used this month's deep reports. Resets in ${resetsIn(quota, now)}.`;
+}
+
+/**
+ * "N hours" under a day, "N days" otherwise (ABC-freemium 3-01 · Ruling 8
+ * point 1 · Ruling 9 point 4).
+ *
+ * **The bug this replaces was the opposite of the one first reported.** The old
+ * code was days-only with a `Math.max(1, …)` floor, so "Resets in 0 days" was
+ * already impossible — and the floor is what produced the real defect: the
+ * daily breaker's `resetsAt` is `endOfUtcDay(now)`, which is under 24 hours *by
+ * construction*, so the breaker sentence said **"Resets in 1 day" on every
+ * single trip**, overstating a 30-minute wait by 48x. Round-3 B proved it by
+ * execution. The monthly path had the same fault on its last day.
+ *
+ * `Math.ceil` on both units, so a reset instant already in the past still reads
+ * "1 hour" rather than a zero or a negative — a reader who is one tick early is
+ * told to wait a little, which is true, rather than told a number that reads
+ * like a bug. And because `Math.ceil` stays, 25 hours renders "2 days": the
+ * days branch can no longer produce "1 day" at all, which is correct and is why
+ * the singular-day test moved to a 1-hour fixture rather than being deleted.
+ */
+function resetsIn(quota: QuotaSignal, now: Date): string {
+  const ms = new Date(quota.resetsAt).getTime() - now.getTime();
+  if (ms < 86_400_000) {
+    const hours = Math.max(1, Math.ceil(ms / 3_600_000));
+    return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  }
+  const days = Math.ceil(ms / 86_400_000);
+  return `${days} ${days === 1 ? "day" : "days"}`;
 }
 
 /**

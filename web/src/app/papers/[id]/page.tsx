@@ -1580,7 +1580,10 @@ export default function PaperDetailPage({
         {/* ABC-freemium 2-07 · R-QUOTA-1 — beside the deterministic report the
             reader already has, never instead of it. Renders null when the
             server sent no signal, which is the common case. */}
-        <QuotaNotice quota={quota} />
+        {/* ABC-freemium 3-01 · R-UI-3 — the plan comes from the same server
+            entitlement the block below already reads, so a paid reader at the
+            daily breaker is never upsold. */}
+        <QuotaNotice quota={quota} effectivePlan={entitlement.effectivePlan} />
 
         <TierUpgradeBlock
           items={PAPER_TIER_UPGRADE_ITEMS}

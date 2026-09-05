@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { REPORT_LABEL_STEP } from "./report-section";
 import { quotaMessage, type QuotaSignal } from "@/lib/usage/deep-report-quota";
+import type { Plan } from "@/lib/entitlement/types";
 
 /**
  * ABC-freemium 2-07 · R-QUOTA-1 · Ruling 3 point 1 · Ruling 4 point 2 ·
@@ -34,18 +35,67 @@ import { quotaMessage, type QuotaSignal } from "@/lib/usage/deep-report-quota";
  * reason `TierUpgradeBlock` has none: spec §3 puts payment out of scope and a
  * dead link is worse than no link. The prompt points at the key panel, which is
  * a real thing a reader can act on today.
+ *
+ * ── ABC-freemium 3-01 · R-UI-3 · Ruling 8 point 1 · Ruling 9 point 4 ─────────
+ *
+ * **A paid reader is never upsold.** A paid reader who trips D4's 200/day
+ * wallet breaker gets `{kind:"breaker", reason:"exhausted"}` — which is exactly
+ * the payload R-QUOTA-2 specifies, so the *server* was right and this component
+ * was the defect: it decided the prompt on `reason === "exhausted"` alone and
+ * told a paying customer to pay. D7 makes the price display-only, so there is
+ * nothing for them to buy; and telling the one group who already paid to pay is
+ * wrong data aimed at precisely the wrong reader.
+ *
+ * **Two booleans, not one.** The old single `exhausted` flag drove the heading
+ * *and* the prompt, so the obvious fix — make `exhausted` plan-aware — would
+ * have silently retitled a paid reader's breaker notice **"Deep reports
+ * unavailable"**, which reads like an outage they should wait out. The heading
+ * and the sentence keep using `exhausted`; only `showUpgradePrompt` is
+ * plan-aware.
+ *
+ * **The plan is a required prop and comes from the server's entitlement**
+ * (`ClientEntitlement.effectivePlan`, the same value `TierUpgradeBlock` on the
+ * next line already takes) — never inferred from the shape of the refusal,
+ * which Ruling 8 forbids, and never read from the store here, because all three
+ * report trees render in tests with no store setup and the paid path could then
+ * never be asserted. It is **required, not optional-defaulting-to-`"free"`**:
+ * that default would fail *open* on the exact property being fixed, so a fourth
+ * call site that forgot the prop would upsell a paid reader silently. Same
+ * reasoning as `FigureMatchContext`, which is required on purpose.
+ *
+ * **Trial readers still get the prompt.** `TierUpgradeBlock` uses
+ * `effectivePlan === "free"` and so shows a trial reader nothing — a deliberate
+ * difference, not an inconsistency to tidy up. Ruling 8 point 1 scopes the
+ * prompt to free **and trial**, and trial readers are exactly the group with 20
+ * reports to exhaust, so the predicate here is `!== "paid"`, not `=== "free"`.
+ *
+ * **What a paid reader at the breaker sees:** the heading, the sentence with a
+ * real hours count, and nothing else. The `<aside>` still renders — the
+ * sentence is true information they need — but not an empty bordered panel and
+ * not a third paragraph. Only the prompt is dropped.
  */
 export function QuotaNotice({
   quota,
+  effectivePlan,
   className = "",
 }: {
   /** From the report response. Absent whenever the reader was served. */
   quota?: QuotaSignal;
+  /**
+   * The reader's server-resolved plan. **Required on purpose** — see the note
+   * above; a `"free"` default would fail open on the property this prop exists
+   * to enforce.
+   */
+  effectivePlan: Plan;
   className?: string;
 }) {
   if (!quota) return null;
 
   const exhausted = quota.reason === "exhausted";
+  // R-UI-3 — the upsell, and ONLY the upsell, is plan-aware. Keeping this a
+  // second name rather than narrowing `exhausted` is what stops the heading
+  // changing with it.
+  const showUpgradePrompt = exhausted && effectivePlan !== "paid";
 
   return (
     <aside
@@ -60,7 +110,7 @@ export function QuotaNotice({
         <p className="mt-2 text-body-sm leading-6 text-text-muted">
           {quotaMessage(quota)}
         </p>
-        {exhausted ? (
+        {showUpgradePrompt ? (
           <p className="mt-3 text-caption leading-5 text-text-faint">
             Peer Pro lifts the monthly limit.{" "}
             <Link

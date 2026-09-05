@@ -341,23 +341,31 @@ describe("quotaMessage (R-QUOTA-1, Ruling 3 point 1)", () => {
     ).toBe("You've used this month's deep reports. Resets in 27 days.");
   });
 
-  it("says the day count in singular when it is one", () => {
+  it("says the count in singular when it is one", () => {
+    // ABC-freemium 3-01 — **re-pointed at a 1-hour fixture, not deleted.** This
+    // case used a 12-hour reset and asserted "Resets in 1 day", which is the
+    // bug written down as an assertion. Because `Math.ceil` stays, the days
+    // branch can no longer produce "1 day" at all (25 h renders "2 days"), so
+    // the singular case that still exists is the hour.
     expect(
       quotaMessage(
         {
           kind: "deep_report",
           reason: "exhausted",
           remaining: 0,
-          resetsAt: "2026-09-05T00:00:00.000Z",
+          resetsAt: new Date(NOW.getTime() + 3_600_000).toISOString(),
         },
         NOW,
       ),
-    ).toContain("Resets in 1 day.");
+    ).toContain("Resets in 1 hour.");
   });
 
   it("says the breaker string, unchanged, for a real trip", () => {
     // 2-02 pinned byte-for-byte: the existing two strings must not drift while
-    // the outage branch is added beside them.
+    // the outage branch is added beside them. 3-01 changed the RESET CLAUSE
+    // only — the breaker's `resetsAt` is `endOfUtcDay(now)`, always under a day
+    // by construction, so this sentence used to read "Resets in 1 day" on every
+    // trip including one 30 minutes away. The lead sentence is unchanged.
     expect(
       quotaMessage(
         {
@@ -368,7 +376,71 @@ describe("quotaMessage (R-QUOTA-1, Ruling 3 point 1)", () => {
         },
         NOW,
       ),
-    ).toBe("Peer is at today's limit for deep reports. Resets in 1 day.");
+    ).toBe("Peer is at today's limit for deep reports. Resets in 12 hours.");
+  });
+
+  /**
+   * ABC-freemium 3-01 · Ruling 8 point 1 · Ruling 9 point 4 — **the unit
+   * boundary.** Round-3 B proved by execution that every daily-breaker trip
+   * rendered "Resets in 1 day", overstating a 30-minute wait by 48x, because
+   * the old formatter was days-only with a `Math.max(1, …)` floor.
+   */
+  describe("the reset unit (3-01)", () => {
+    function resetIn(ms: number): string {
+      return quotaMessage(
+        {
+          kind: "breaker",
+          reason: "exhausted",
+          remaining: 0,
+          resetsAt: new Date(NOW.getTime() + ms).toISOString(),
+        },
+        NOW,
+      );
+    }
+
+    it("uses hours at 23 h 59 m and days at 24 h 1 m", () => {
+      expect(resetIn(23 * 3_600_000 + 59 * 60_000)).toContain(
+        "Resets in 24 hours.",
+      );
+      expect(resetIn(24 * 3_600_000 + 60_000)).toContain("Resets in 2 days.");
+    });
+
+    it("says half an hour in hours, not in days", () => {
+      // The exact case B measured: a breaker that resets in 30 minutes.
+      expect(resetIn(30 * 60_000)).toContain("Resets in 1 hour.");
+    });
+
+    it("never renders a zero, a negative, or a bare '0 '", () => {
+      // A reset instant already in the past clamps to one hour: a reader one
+      // tick early is told to wait a little, which is true, rather than shown a
+      // number that reads like a bug.
+      for (const ms of [-86_400_000, -1, 0, 1, 60_000]) {
+        const message = resetIn(ms);
+        expect(message).toContain("Resets in 1 hour.");
+        expect(message).not.toContain("0 ");
+        expect(message).not.toContain("-");
+      }
+    });
+
+    it("still counts long waits in days", () => {
+      expect(resetIn(26 * 86_400_000)).toContain("Resets in 26 days.");
+    });
+
+    it("uses hours on the monthly path too, on its last day", () => {
+      // The same fault hit the monthly sentence in the last 24 hours of a
+      // month, which is exactly when a reader is most likely to be looking.
+      expect(
+        quotaMessage(
+          {
+            kind: "deep_report",
+            reason: "exhausted",
+            remaining: 0,
+            resetsAt: new Date(NOW.getTime() + 2 * 3_600_000).toISOString(),
+          },
+          NOW,
+        ),
+      ).toBe("You've used this month's deep reports. Resets in 2 hours.");
+    });
   });
 
   it("says the outage copy verbatim, on BOTH kinds (2-02)", () => {

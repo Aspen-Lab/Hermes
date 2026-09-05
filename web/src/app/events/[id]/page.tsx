@@ -2318,7 +2318,9 @@ export function EventReport({
 
         {/* ABC-freemium 2-07 · R-QUOTA-1 — beside the degraded report, never
             instead of it. Renders null when there is no signal. */}
-        <QuotaNotice quota={quota} />
+        {/* ABC-freemium 3-01 · R-UI-3 — same plan the block below takes; a paid
+            reader at the daily breaker is never upsold. */}
+        <QuotaNotice quota={quota} effectivePlan={effectivePlan} />
 
         {/* ABC-freemium 1-26 — `hasEnrichment` still suppresses the block, and
             it is not about plans: if the enriched rows are already on the page

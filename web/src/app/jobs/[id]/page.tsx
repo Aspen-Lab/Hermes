@@ -1538,7 +1538,9 @@ export function JobReport({
           computed and nothing ever rendered. It sits beside the existing
           degraded report rather than replacing it: the reader still has their
           complete deterministic report. Renders null when there is no signal. */}
-      <QuotaNotice quota={quota} />
+      {/* ABC-freemium 3-01 · R-UI-3 — same plan the block below takes; a paid
+          reader at the daily breaker is never upsold. */}
+      <QuotaNotice quota={quota} effectivePlan={effectivePlan} />
 
       {/* ABC-freemium 1-26 — see the matching note in the events report:
           nothing locked means nothing to advertise. */}
