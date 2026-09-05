@@ -4918,3 +4918,196 @@ observable effect is three tests going green and R-TEST-2 becoming scoreable.
 **Gate expectation after 2-01:** `tsc` 0 · `eslint` 1 (the standing `quiz.tsx:46`) · `vitest`
 **0 failed, 2716 passed, 1 skipped (2717)** across 116 passed / 1 skipped files — plus whatever
 the two new protective cases add. Anything else is a regression.
+
+---
+
+#### 2-02 — an unreachable counter store is reported as exhaustion (and, for paid, as a breaker trip that never happened)
+
+**Class: `WRONG DATA`** — the reader is told something false, and for one persona a false row is
+written to the audit trail. Ruling 4 point 2 · Ruling 5 point 5 · A's difference 1.
+
+**Where the store-unavailable branch is — there are FOUR, not one, and A measured only two of the
+shapes.** All in `web/src/lib/usage/deep-report-quota.ts`:
+
+| Branch | Line | What `!reading.ok` does today | Payload |
+|---|---|---|---|
+| paid | `:124` `if (breakerTripped(reading, PAID_DEEP_REPORTS_PER_DAY))` | `breakerTripped` returns `true` on `!ok` (`counters.ts:352`) | `{kind:"breaker",…}` **+ an error line + a `usage_events` row** |
+| trial | `:153` `if (reading.ok && reading.value <= …)` | falls through | `{kind:"deep_report",…}`, `resetsAt = trialEndsAt` |
+| free | `:175` `if (reading.ok && reading.value <= …)` | falls through | `{kind:"deep_report",…}`, `resetsAt = end of UTC month` |
+| no `userId` | `:105-114` | never reaches the store at all | `{kind:"deep_report",…}` — identical to exhaustion |
+
+**Proved by execution, not by reading.** I drove all four branches against a store stubbed to
+return `{ value: 0, ok: false }` on every call, in a scratchpad copy of the exact code:
+
+```
+free    {"kind":"deep_report","remaining":0,"resetsAt":"2026-10-01T00:00:00.000Z"} | error lines: 0 | usage rows: 0
+trial   {"kind":"deep_report","remaining":0,"resetsAt":"2026-09-18T00:00:00.000Z"} | error lines: 0 | usage rows: 0
+paid    {"kind":"breaker","remaining":0,"resetsAt":"2026-09-05T00:00:00.000Z"}     | error lines: 1 | usage rows: 1
+                    line: "[quota] deep-report breaker tripped for u (limit 200/day)"
+nouser  {"kind":"deep_report","remaining":0,"resetsAt":"2026-10-01T00:00:00.000Z"} | error lines: 0 | usage rows: 0
+```
+
+**NEW — not in A's list, and it is worse than the difference A recorded.** A measured the outage on
+the free path and reported "0 error-level lines of any kind". That is true for free and trial. **On
+the paid path an outage writes a `usage_events` row saying `kind: "breaker", path: "deep-report",
+ok: false` and an error line saying the 200/day cap tripped — when nothing tripped and the user
+spent nothing.** So a Supabase outage does not merely mislead a reader: it **injects false trip
+records into the owner's own audit trail**, which is the one artefact the loop is building to tell
+the owner where money went. Mechanism: `breakerTripped` (`counters.ts:351-357`) collapses "over the
+limit" and "cannot read the limit" into one boolean, and `consumeDeepReport:130-142` logs and
+records unconditionally inside that branch. There is no test for a paid outage — the only outage
+case in the suite is `deep-report-quota.test.ts:224-237`, and it uses `FREE`.
+
+**Fix direction — a `reason` FIELD, not a third `kind`. Decided by reading, and the manager's
+premise does not hold.** The brief says "choose by reading how the UI switches on `kind` today".
+**The UI does not switch on `kind`, because nothing in the browser ever reads `quota`** — see the
+MISSING half below. So the choice has to be made on the contract, and the contract is clear:
+
+- `kind` answers *which cap said no* — the monthly/trial allowance (`deep_report`) or the daily
+  wallet breaker (`breaker`). `reason` answers *how we know* — a real count, or a store we could
+  not read. **They are orthogonal, and the paid row above proves it**: an outage happens on the
+  `breaker` path too. A third `kind: "unavailable"` would collapse two independent axes and make a
+  paid outage and a free outage indistinguishable in the payload — losing the very information this
+  item exists to add.
+- `quotaMessage` already switches on `kind` (`:85-87`). Adding a value to that union forces every
+  future `switch` to handle a case that is not a cap.
+- A separate optional field is additive: the three routes spread the object unchanged and keep
+  compiling.
+
+```ts
+export interface QuotaSignal {
+  kind: "deep_report" | "breaker";
+  reason: "exhausted" | "unavailable";   // required, so a new branch cannot forget it
+  remaining: number;
+  resetsAt: string;
+}
+```
+
+Make `reason` **required, not optional.** The whole defect is a branch that forgot to say which
+state it was in; an optional field lets the next branch forget again, and `tsc` is the cheapest
+possible reviewer. Five construction sites must then name it: `:108`, `:143`, `:158`, `:180`, and
+whatever 2-03's outage path adds.
+
+**What each of the four branches must say.** Stated exhaustively so C does not have to infer:
+
+| Branch | `kind` | `reason` | Note |
+|---|---|---|---|
+| paid, real trip (`reading.ok && value > 200`) | `breaker` | `exhausted` | keeps today's error line **and** the `usage_events` row |
+| paid, outage (`!reading.ok`) | `breaker` | `unavailable` | **must not** claim the cap tripped |
+| trial / free, real exhaustion | `deep_report` | `exhausted` | unchanged |
+| trial / free, outage | `deep_report` | `unavailable` | new |
+| no `userId` (`:105-114`) | `deep_report` | `exhausted` | **C must not invent a third value here.** There is no store call and no allowance; the routes 401 a stranger long before this (A: 401 on all three report routes), so this is only the local no-sign-in runtime. Two values is the ruled vocabulary; keep it at two and say so in a comment. |
+
+`breakerTripped` cannot express this, because it returns one boolean for two states. C needs the
+raw `reading.ok` alongside it at `:124` — e.g. `const tripped = breakerTripped(reading, LIMIT);`
+then branch on `reading.ok`. **Do not change `breakerTripped`'s fail-closed direction** — it is
+Ruling-level behaviour (`counters.ts:20-24`, `:346-357`) and 2-01 already warns C off it. The
+decision stays "refuse"; only the explanation changes.
+
+**The log line.** One error-level line per outage, prefix exactly `[quota] store unavailable`, so
+A's standing tally can count occurrences. Two traps, both found by reading:
+
+1. **Do not reuse `warnOnce` (`counters.ts:246-255`).** It is `console.warn`, not error-level; its
+   text is `[usage] counter store unreachable…`, not the required prefix; and it is **once per
+   process** (`warnedOnce` at `:246`, reset only by `resetCounterStoreForTests`). A needs to count
+   occurrences, and a once-per-process flag makes the tally meaningless. Leave `warnOnce` where it
+   is — it is the store's own diagnostic — and add the new line in `deep-report-quota.ts`.
+2. **One writer.** Put the line in a single private helper in `deep-report-quota.ts` called from
+   each `!reading.ok` branch, not three copies. Three copies is how the prefix drifts.
+
+**The MISSING half of R-QUOTA-1, which A did not report and which keeps the item PARTIAL even
+after the above lands.** The spec's own sentence is "the UI shows an English message … and an
+upgrade prompt", and the amendment is "for `unavailable` the UI shows *…*". **Nothing renders
+either string.** Established by grep, three ways:
+
+- `quotaMessage` (`deep-report-quota.ts:77-88`) has **zero production callers**. `grep -rn
+  "quotaMessage" src/` returns the definition and five hits, all inside
+  `deep-report-quota.test.ts`.
+- `grep -rn "quota" src/ -i`, excluding `src/lib/usage/`, `src/app/api/` and `*.test.*`, returns
+  **no reader of the field** — every hit is an unrelated word (`quotable`, `quotation`, prose about
+  API quotas). I read all 24.
+- The three clients that fetch these routes — `app/jobs/[id]/page.tsx:1610`,
+  `app/events/[id]/page.tsx:2415`, `app/papers/[id]/page.tsx:808` — destructure the degraded
+  payload and drop `quota` on the floor. On papers it is dropped at the type boundary too:
+  `apiFetch<PaperReport>` and `PaperReport` (`lib/papers/report.ts:77`) has `noLlm?` but no
+  `quota`, so the field is not even reachable in TypeScript.
+
+So today the server computes a correct message, tests it three ways, and shows it to nobody.
+**This is in R-QUOTA-1's own text, so it is not a widening of scope** — but it is a bigger job than
+the `reason` field, so it is called out separately here and flagged in `OPEN FOR MANAGER` in case
+the manager wants it split into its own item. Direction: add `quota?: QuotaSignal` to the three
+client payload types, render `quotaMessage(quota)` where each surface already renders its degraded
+state, and pair it with the existing `TierUpgradeBlock`
+(`components/reports/tier-upgrade-block.tsx`, already plan-aware from 1-26) for the "upgrade
+prompt" half — **except** when `reason === "unavailable"`, where an upgrade prompt would be a
+second lie: nothing the reader buys fixes a store outage. `quotaMessage` gains the outage branch
+and returns the copy verbatim: *"Deep reports are temporarily unavailable — your allowance is
+unchanged. Try again shortly."*
+
+**POLICY — manager decides: the false `breaker` row on a paid outage.** Ruling 4 point 2 requires
+the log line and says nothing about the `usage_events` row. Removing the row on an outage keeps the
+audit trail truthful but loses the only durable record that an outage happened; keeping it as
+`kind: "breaker"` records a trip that did not occur. A third option is to keep a row and change its
+`kind` — but `kind: "breaker"` is asserted by R-QUOTA-2's tests
+(`deep-report-quota.test.ts:180-185`, `:210-211`) and by A's scoring, so C must not choose that
+alone. **I am not recommending a reversal of anything; I am naming a gap the ruling did not
+cover.** Until it is ruled, C leaves the row exactly as it is and fixes only the log line and the
+payload — that is strictly an improvement and cannot regress R-QUOTA-2.
+
+**Same-mechanism sibling, named so it is not rediscovered.** `consumeSystemSearches`
+(`web/src/lib/usage/search-breaker.ts:39-72`) has the identical shape: `breakerTripped` at `:52`
+returns `true` on `!reading.ok`, and `:56-70` then writes
+`[quota] system-search breaker tripped…` plus a `kind:"breaker", path:"system-search"` row. So a
+store outage also fabricates a search-breaker trip. It has no payload, so no `reason` field is
+needed — but the log line and the row have the same problem, and whatever the manager rules above
+applies here verbatim. C fixes the log line here in the same commit; the row waits on the same
+ruling.
+
+**Every consumer of `QuotaSignal`, and what each must do.** Grepped, not assumed — the type is
+referenced in exactly three places and the value in six:
+
+| Consumer | File:line | Must change to |
+|---|---|---|
+| `DeepReportDecision.quota?` | `deep-report-quota.ts:67` | nothing — the type widens under it |
+| `quotaMessage` | `deep-report-quota.ts:77-88` | switch on `reason` **before** `kind`; return the outage copy verbatim for `unavailable`; keep both existing strings byte-for-byte for `exhausted` |
+| `POST /api/jobs/report` | `route.ts:80` (consume), `:94` (spread) | nothing — spreads the object |
+| `POST /api/events/report` | `route.ts:126`, `:140` | nothing — spreads the object |
+| `POST /api/papers/report` | `route.ts:438`, `:450-452` | nothing — spreads the object |
+| the three browser fetchers | `jobs/[id]/page.tsx:1610`, `events/[id]/page.tsx:2415`, `papers/[id]/page.tsx:808` | render it — the MISSING half above |
+
+**Tests at risk — found by grepping the assertions, and two of them WILL break.** `toEqual` is
+exact, so adding a required field fails them:
+
+| File:line | Assertion | What happens |
+|---|---|---|
+| `deep-report-quota.test.ts:82-87` | `expect(sixth.quota).toEqual({kind, remaining, resetsAt})` | **FAILS** — rewrite to include `reason: "exhausted"`. Never delete (§3). |
+| `deep-report-quota.test.ts:162-166` | `expect(overCap.quota).toEqual({kind:"breaker", …})` | **FAILS** — add `reason: "exhausted"` |
+| `deep-report-quota.test.ts:236` | `expect(decision.quota?.kind).toBe("deep_report")` | passes; **strengthen it** to assert `reason === "unavailable"` — this is the case the whole item is about and today it only checks `kind` |
+| `deep-report-quota.test.ts:243-275` | three `quotaMessage` cases | pass; they construct literals, so they need `reason` once the field is required |
+| `usage/quota-exemptions.test.ts:98-107` | source-text assertions on `consumeDeepReport(` call sites | unaffected — it counts call sites, and none move |
+
+**New tests this item owes** (2-06 lives inside each item, per the brief):
+
+1. A **paid** outage returns `{kind:"breaker", reason:"unavailable"}` — the case that does not
+   exist today and the one that caught the false audit row.
+2. A free outage and a real free exhaustion produce payloads that **differ** — assert
+   `.reason` on both, in one test, so "byte-identical" can never come back.
+3. Exactly one error-level line matching `/^\[quota\] store unavailable/` per outage call, and
+   **zero** on a real exhaustion. Spy on `console.error`; the suite already does this at `:61`.
+4. `quotaMessage` returns the outage copy verbatim for `reason:"unavailable"` and is unchanged for
+   `exhausted` — one assertion per string, byte-for-byte, and the existing CJK guard (`:267-275`)
+   extended to the new string.
+
+**What the field shows when every candidate is rejected.** When the store cannot be read and the
+plan cannot be established, the reader still gets **the complete deterministic report** — the exact
+degraded payload a keyless reader already receives (`generateShallowReport` on papers, the
+`noLlm: true` object on jobs/events) — plus `{kind, reason:"unavailable", remaining: 0, resetsAt}`.
+`remaining: 0` stays `0` and not `null` here: this is the *route's* signal about one refused call,
+not the profile summary, and `null` is 2-03's outage sentinel in a different payload. Honest
+emptiness, not an error status and not a guessed number.
+
+**Blast radius.** Server: one interface, one pure function, three branches, one new log line — no
+route response shape changes (a field is added inside an object every route already spreads
+conditionally). Client, if the MISSING half lands in the same item: three page components and one
+type. No cache key changes; no entitlement change; nothing touches the counter store, so 2-01
+cannot be disturbed. Existing clients ignore an unknown key, so the server half can land alone.
