@@ -118,163 +118,171 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          C-round3 @ 2026-09-05T02:29Z
+HELD BY:          free
 ROUND:            3
-WHOSE TURN:       C
-STOPPED BECAUSE:  finished the turn @ 2026-09-05T02:24Z
-STATUS:           ROUND 3 — B HAS WRITTEN THE FIX GUIDE. **Three items, 3-01 / 3-02 / 3-03,
-                  one commit each, each pushed; no production code changed; five throwaway
-                  files written outside the repo and the tree clean throughout.**
-                  Classifications: **3-01 WRONG DATA · 3-02 MISSING (structural) · 3-03
-                  MISSING (a third difference, POLICY-flagged).**
-                  1. **3-01 — the paid upsell. Recommendation (a), the client entitlement
-                     summary, and it is not close.** `ClientEntitlement` already ships `plan`
-                     AND `effectivePlan` (`entitlement/allowance.ts:128-143`), the store holds
-                     it, and **all three pages already have the plan in scope at the render
-                     site** — `QuotaNotice` sits on the line immediately above
-                     `TierUpgradeBlock`, which already takes `effectivePlan`. So it is a
-                     one-prop, three-line change with ZERO server work. (b), a field on
-                     `QuotaSignal`, is a valid fallback but needs all five producers to
-                     remember and breaks four payload-equality tests. **TWO defects A did not
-                     name:** one boolean at `quota-notice.tsx:48` drives the heading AND the
-                     upsell, so the obvious fix also breaks the heading; and the reset-unit bug
-                     is the OPPOSITE of Ruling 8's description — `Math.max(1, ...)` already
-                     makes "0 days" impossible and instead renders **"Resets in 1 day" on every
-                     breaker trip**, including one that resets in 30 minutes. Proved by
-                     execution. Ruling 8's remedy is right; only its stated symptom names a
-                     state that cannot occur.
-                  2. **3-02 — the branded context. The item SPLITS, and the split is the
-                     answer.** **Half A (`resolveProvider`): the brand SURVIVES — recommend
-                     building it.** Proved in a scratchpad harness on the repo's own tsc:
-                     five accidental-caller attacks are all compile errors, including a
-                     correct-looking plain object and an invented symbol. The two contextless
-                     pool-closure callers A did not list (`tier2-rerank.ts:65`,
-                     `query-gen.ts:319` — scan 4 never covered them) are handled by a REQUIRED
-                     UNION of named justifications, which widens no request type and leaves
-                     the cron untouched. **Half B (the operator-search availability gate): the
-                     ESCAPE CLAUSE FIRES — stop, as Ruling 7 point 3 allows.** A brand cannot
-                     survive the `=== true` idiom every adapter uses; the change reaches eight
-                     sites across six files plus the digest cron. The heuristic scan stays the
-                     guard and its cost is written down.
-                  3. **3-03 — A THIRD DIFFERENCE, found by following the doubt A left open.**
-                     2-07 flagged TWO doubts; A answered one. The other is live: on the papers
-                     surface the streaming branch **returns at `papers/report/route.ts:422`,
-                     above the route's only `consumeDeepReport` call at `:438`**, and the
-                     client ALWAYS streams (`report-stream.ts:21`). The stream honours
-                     `deepReport` (`:240` -> `tier2`, full text). So **a deep papers report
-                     never decrements the monthly allowance and never charges D4's 200/day
-                     paid breaker.** It stays authenticated and metered — uncounted is not
-                     unmetered. Every test missed it because `quota-exemptions.test.ts:94-115`
-                     asserts the counter's POSITION IN THE FILE, not its reachability, and A
-                     drove the route without the NDJSON header — a real path, but not the one
-                     the app takes. **POLICY-flagged, see OPEN FOR MANAGER.**
-GATE THIS TURN:   Re-run cold to prove the turn moved nothing (B changes no code): `tsc` exit
-                  **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0 warnings) ·
-                  `vitest` **123 files passed | 1 skipped (124)** · **2825 tests passed | 1
-                  skipped (2826)**, **0 failed**, 9.48 s. Identical to round-3 A's figures.
-PRIOR STATUS (round-3 A, kept because the measurement still stands):
-                  **Code-side fell 19.4% -> 6.5% (2 of 31, exclusions: none) and every one of round-2
-                  A's seven differences is CLOSED, each re-verified by behaviour rather
-                  fell 19.4% -> 6.5% (2 of 31, exclusions: none) and every one of round-2
-                  A's seven differences is CLOSED, each re-verified by behaviour rather
-                  than read off a commit message.** The gate is green. Persona coverage is
-                  45 of 45 pairs, up from 41 of 45 — the four that failed were the same
-                  `GET /api/profile` defect and all four are fixed. All five static scans
-                  are 0, grepped independently and agreeing with C's three new gate tests.
-                  Two differences remain, both NEW, both the same shape — a guard that
-                  covers the case it was written for and not the case next door:
-                  1. **R-UI-3, PARTIAL — a paid reader is shown an upgrade prompt.** The
-                     `QuotaNotice` component 2-07 added decides the prompt on
-                     `reason === "exhausted"` alone, and `QuotaSignal` carries no plan. A
-                     paid reader who trips D4's 200/day wallet breaker gets
-                     `{kind:"breaker", reason:"exhausted"}` — which is exactly what
-                     R-QUOTA-2 specifies, so the PAYLOAD is correct — and the component
-                     renders "Peer Pro lifts the monthly limit. Add your own key to keep
-                     going now." to a Pro subscriber. Both halves measured this turn.
-                     `TierUpgradeBlock` itself is unaffected and still correct; this is a
-                     SECOND upsell that R-UI-3's rule never reached.
-                  2. **R-SEC-2, PARTIAL — Ruling 7 point 3's branded context has not
-                     landed.** A grep of `src/lib` for `__brand`, `declare const brand`,
-                     `Branded<` and `Opaque<` returns ZERO hits: no branded or opaque type
-                     exists anywhere in the tree. `resolveProvider(override?, ctx?)` has
-                     both parameters optional and every field of `ctx` optional, and
-                     `operatorSearchAvailability` takes a bare boolean — so an unguarded
-                     caller is still a grep miss, not a compile error. Reachability today
-                     is NIL (all nine spending routes carry the guard, all nine driven this
-                     turn, scans 4 and 5 both 0); this is the difference between "correct"
-                     and "cannot be made incorrect by accident".
-                  **BLOCKED is now 7 items, and that rise is ACCOUNTING, NOT DECAY**
-                  (Ruling 5 point 8 predicted it). Nothing became less observable: round 2
-                  listed four unnamed QUESTIONS, Ruling 5 point 1 then asked for the
-                  enumeration to be per item and by name, so the same two root causes now
-                  attach to seven named requirements. The two causes are unchanged — no key
-                  in `.env.local`, and three unapplied migrations. Both are owner actions.
-                  **THINGS THAT WILL LOOK LIKE FINDINGS AND ARE NOT, for whoever reads next:**
-                  - Scan 1's two `jobs/[id]/page.tsx` hits moved from `:1342`/`:1523` to
-                    `:1347`/`:1528`. 2-07 inserted five lines above them; same two comment
-                    blocks, read in context, still 0 rendered.
-                  - A counter store that answers 200 with no row for a key is a reader who
-                    has used NOTHING, not an outage — `GET /api/profile` correctly ships a
-                    real remainder there, and `null` + `reason:"unavailable"` only when the
-                    store is genuinely unreachable. A's first probe got this wrong for a
-                    minute; the fixture was the defect.
-                  - Papers spends 0 on any operator key on every persona in BOTH runtimes.
-                    Ruling 6 point 3 working, superseding report-parity Rulings 75 and 79c.
-                  - The structured-source tally is 3 SOURCES (Adzuna, JSearch, USAJobs); the
-                    raw line count is 4 because Adzuna reads two names. The threshold is
-                    about sources and none of the three bills per request.
-                  - `local-no-auth` is ABSENT from all three deployed shapes (503 x3), and a
-                    developer machine with Vertex, Brave and Tavily all configured spends
-                    NOTHING until `PEER_DEV_ENTITLEMENT=paid` is set — A confirmed the
-                    override flips it on, so the zero is the gate, not an inert runtime.
+WHOSE TURN:       A
+STOPPED BECAUSE:  finished the turn @ 2026-09-05T02:53Z
+STATUS:           ROUND 3 — **C HAS WORKED THE WHOLE GUIDE. All three items landed, 3-01 /
+                  3-02 / 3-03, one commit each, each pushed as it finished; no deviation
+                  from the ordering; tree clean throughout and every throwaway written
+                  outside the repo.**
+                  1. **3-01 — the paid upsell. CLOSED.** Built as Ruling 9 point 4 ratified:
+                     option (a), the plan from the client entitlement summary, one required
+                     prop at three call sites, zero server work. **All three of B's defects
+                     fixed, not just the one A reported** — the upsell is now
+                     `exhausted && effectivePlan !== "paid"`, the heading keeps its own
+                     boolean so a paid reader is not retitled into an outage, and the reset
+                     formatter says **hours under a day**. B's execution result confirmed:
+                     the old formatter said "Resets in 1 day" on **every** breaker trip,
+                     including one 30 minutes away. `QuotaSignal` untouched, so R-QUOTA-2's
+                     payload is byte-identical. Predicate is `!== "paid"`, so **trial readers
+                     keep the prompt** — the trap B named, with a dedicated test.
+                  2. **3-02 — the branded entitlement context. HALF A CLOSED, half B not
+                     built (correct outcome, Ruling 9 point 5).** New
+                     `lib/security/entitled-context.ts`; `resolveProvider`'s second argument
+                     is **required and branded**. All ten call sites threaded; the two
+                     contextless pool closures carry a compile-checked
+                     `SpendJustification` naming the tier ceiling that guards them. **No
+                     request type widened, no pipeline signature changed, the cron
+                     untouched.** Two changes beyond B's design, both traced: the mint takes
+                     the **`Entitlement` itself** (a factory anyone can call with a made-up
+                     string proves less than it looks), and `FigureMatchContext` carries the
+                     entitlement too — which **closes a hole 1-07 left open**, since
+                     `{ userId: null, byok: false }` satisfied the old required shape and
+                     compiled. **Behaviour moved zero bytes**, as B predicted.
+                  3. **3-03 — the streaming quota bypass. CLOSED, fix then tests.** The
+                     counter moved above the transport branch; **one** `consumeDeepReport`
+                     call site; the refusal travels as a new `ReportStreamEvent` carrying
+                     `quota`, emitted **before** the `mode` event — the only ordering that
+                     works, because the client returns early on `tier0`. Three wrong comments
+                     corrected. **Seven reachability tests** drive the route with the NDJSON
+                     header the app actually sends and watch the counter itself.
+GATE THIS TURN:   Final cold run after the last item: `tsc` exit **0** · `eslint` **1 error**
+                  (the standing `quiz.tsx:46`, 0 warnings) · `vitest` **124 files passed | 1
+                  skipped (125)** · **2859 tests passed | 1 skipped (2860)**, **0 failed**,
+                  9.43 s. Cold baseline before the first edit was **123/124 files, 2825/2826
+                  tests** — identical to round-3 A's and B's, so the turn started on the
+                  measured baseline. **+34 tests, +1 file, 0 regressions, 0 tests deleted.**
+                  `benchmark.test.ts` is still the one skip and did not flake.
+REVERT PROOFS (§2 Agent C — every new test proved against its own fix):
+                  - 3-01 component upsell gate reverted → **2 failed**; formatter reverted →
+                    **7 failed**.
+                  - 3-02 signature weakened to the pre-item optional form → `tsc` **5
+                    errors, three of them TS2578 "unused @ts-expect-error"** — the directives
+                    fail *because the errors stopped happening*.
+                  - 3-02 scan 6 proved by **planting** each offender: optional context → 2
+                    failed; escape hatch in production → 1 failed; cast to the brand → 2
+                    failed.
+                  - 3-03 ordering reverted to pre-fix → **7 failed** (six of the seven new
+                    cases plus the rewritten source assertion). The shallow-exemption case
+                    correctly still passed.
+TWO PROCESS DEFECTS C HIT IN ITS OWN WORK, both recorded because they falsify evidence rather
+                  than break a build:
+                  1. **A revert proof that silently did not apply.** A scripted multi-line
+                     replacement no-op'd on a **CRLF** mismatch and the suite printed "2
+                     passed" against the *unmodified* file. **Always assert the substitution
+                     happened; never read a green run as proof the revert landed.** The same
+                     family bit a source assertion in 3-03 (`toContain` across a `\n` on a
+                     CRLF file, which can never match — now a whitespace-tolerant regex).
+                  2. **A scan that passed while testing nothing.** Scan 6's word-boundary
+                     anchors were written into the file as literal **backspace characters
+                     (0x08)** by a generation script; the suite went green and the first
+                     alternation branch could never match. Found by dumping the bytes.
+                     **A guard that passes is not a guard that works** — the plant-and-rerun
+                     table in §4 exists because of this, and every future scan should be
+                     proved by planting an offender.
+                  **A third, for whoever writes route tests next:** `PEER_DEV_ENTITLEMENT=paid`
+                  **does nothing on its own in a route test.** `isLocalDevRuntime()` is
+                  deliberately false under `NODE_ENV=test`, so the default is the
+                  no-sign-in branch — user `local-no-auth`, plan **free**, budget 5 — and the
+                  dev override is only read on the local-development branch. A paid case must
+                  stub `NODE_ENV=development` with `VERCEL`/`VERCEL_ENV` cleared, which also
+                  changes the user id to `dev-local`. A test that believes it is exercising a
+                  paid reader and is not **passes for the wrong reason**; only asserting the
+                  exact counter key caught it.
+PRIOR STATUS (round-3 A's measurement, kept because it is A's number and C does not measure):
+                  code-side **6.5% (2/31)** · **blocked 7**. That number predates all three
+                  items above. Round-4 A should expect the two named code-side differences
+                  (R-UI-3, R-SEC-2) to be closed on the code side, and 3-03 — which A never
+                  scored, since B found it after A's turn — to be closed too. **Read the
+                  number below as "A's last measurement", not as "what is left".**
 LAST DIFFERENCE:  **6.5% code-side (2/31, exclusions: none)** — R-SEC-2, R-UI-3 · **blocked: 7
-                  — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2**
-                  **NOT re-measured by B — measuring is A's job and this number is A's.** But
-                  round-3 B found a THIRD code-side difference (3-03, the papers streaming
-                  quota bypass) that is POLICY-blocked, so **round-4 A should expect 3 or 2
-                  depending on the manager's ruling, not 2 minus what C fixes.** Read this
-                  number as "A's last measurement", not as "what is left".
-GATE (0% unexplained, both measurements):  NOT MET — code-side is 6.5%, not 0%, and seven
-           items carry a blocked half. The blocked half CANNOT close without the owner even
-           if B and C close the code side next round.
+                  — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2.**
+                  NOT re-measured this turn — measuring is A's job.
+GATE (0% unexplained, both measurements):  NOT MET — awaiting round-4 A's re-measurement, and
+           seven items carry a blocked half that cannot close without the owner even if the
+           code side is now 0.
 
 DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 28 ITEMS.
            Round 2 A: all three parts. Round 2 B: all six items plus one issued correction
            and a close-out; no code changed.
            Round 2 C: ALL SEVEN ITEMS, 2-01 … 2-07, one commit each, each pushed.
-           **Round 3 A: all three parts**, one commit each, each pushed; no code changed;
-           five throwaway measurement files created and deleted before the final commit.
+           **Round 3 A: all three parts**, one commit each, each pushed; no code changed.
+           **Round 3 B: all three items**, the fix guide plus Ruling 9's question; no code
+           changed.
+           **Round 3 C: ALL THREE ITEMS, 3-01 / 3-02 / 3-03**, one commit each, each pushed;
+           every new test proved by reverting; no test deleted; no migration.
 GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0 warnings**) ·
-           vitest **123 files passed | 1 skipped (124)** · **2825 tests passed | 1 skipped
-           (2826)**, **0 failed**, 9.32 s. Run cold TWICE by round-3 A — once on the tree as
-           found, once after deleting every throwaway — identical figures both times.
-           `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      C WORKS THE ROUND-3 GUIDE under Ruling 9 (§1j): 3-01 the paid upsell via the client
-           entitlement summary (one prop; hours-under-a-day copy; render test); 3-02 half A only
-           — the branded `EntitledContext` required by `resolveProvider`, thread the two
-           no-context call sites or the named harness escape hatch; half B stays the 2-06 scan;
-           3-03 the papers STREAMING quota fix — move the check ABOVE the stream branch at
-           `papers/report/route.ts:418-422`, one `consumeDeepReport` call site, refusal as a
-           `ReportStreamEvent` carrying `quota`, correct the route comment — then 3-03's tests
-           incl. a reachability test that drives the STREAMED request shape the app sends.
+           vitest **124 files passed | 1 skipped (125)** · **2859 tests passed | 1 skipped
+           (2860)**, **0 failed**, 9.43 s.
+TODO:      **ROUND-4 A RE-MEASURES.** Questions a fixture cannot settle, and the standing
+           tallies, carried by name:
+           1. **Drive every route the way the CLIENT drives it** (Ruling 9 point 3, now a §3
+              rule). 3-03 existed because A drove papers without the NDJSON header. **The
+              same question is open for `jobs/report` and `events/report`** — C did not touch
+              them: both consume the counter before resolving a provider and neither has a
+              streaming transport today, but that is a reading of the code, not a
+              measurement. Ditto `digest` and `figure`.
+           2. **Does the paid reader see a clean breaker notice end-to-end?** C's proof is a
+              render test plus a unit test. Nobody has driven a real paid reader to the
+              200/day cap and read the screen. **Blocked on the migrations** (no real paid
+              plan exists), so it may have to stay blocked — say so rather than scoring it.
+           3. **Does the `quota` stream event reach the notice on a real page?** The route
+              emits it and the page handler sets state; the two have never met outside
+              vitest. Same blocker.
+           4. **Is `resetsIn` right at a DST boundary and across a month end?** Both units are
+              pure UTC arithmetic, so C believes yes, and the unit tests cover 23 h 59 m /
+              24 h 1 m / a past instant. A should confirm from the rendered string.
+           **STANDING TALLIES — every one, by name (Ruling 7 point 5, Ruling 8 point 5,
+           Ruling 9 point 6):** the five scans; routes resolving a provider before the guard;
+           persona/route pairs (denominator 45); operator-key searches on anonymous and on
+           free-no-key, per surface; papers operator-key searches; anonymous-BYOK feed
+           requests; `[quota] store unavailable` occurrences; `local-no-auth` reachability;
+           structured-source key reads outside the gate (3); usage rows per provider request;
+           **paid readers shown any upsell** (C: now **0**, pinned by render test);
+           **compile-time enforcement of the entitlement context** (C: **PRESENT** for
+           `resolveProvider`, **ABSENT** for the operator-search availability gate — report as
+           **two figures, not one**); **quota/breaker checks reachable on the app's real
+           request shape, per route** (C: papers **now reachable on both transports**, proved
+           by driving it; the other four routes unmeasured); **`resolveProvider` call sites
+           without a context** (C: **0**, now enforced by the compiler — note scan 4 read 0
+           before this item too, because it only ever banned the zero-argument form, so the
+           two numbers measure different things and both should be reported).
+           **A SIXTH SCAN EXISTS NOW** — scan 6, banning the three shapes that would re-open
+           3-02 (an optional entitled/provider context, the test-only mint in production, a
+           cast to the brand outside its module). The five-scan tally becomes six.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
            works — the column-level revoke has never met a real profile sync. (4) The Vercel
            do-not-yet on TAVILY_API_KEY is LIFTED (Ruling 5 point 7): the four variables may
-           be set. **The gate is green and round-3 A has now re-measured**, so the remaining
-           bar to deploying this branch is the two code-side items above and the merge.
-           (5) Local .env.local keys whenever ready — `GOOGLE_API_KEY` and `TAVILY_API_KEY`
-           are both absent. **The two causes split the seven items unevenly:** the keys alone
-           unblock R-KEY-1 and half of R-METER-1; the three migrations are what the other
-           six need (R-ENT-1, R-ENT-2, R-METER-1's persistence half, R-METER-2, R-METER-3,
-           R-QUOTA-2). **Applying the migrations is the larger of the two owner actions.**
-           (6) Confirm ADZUNA_APP_ID/APP_KEY, JSEARCH_API_KEY and USAJOBS_API_KEY are set on
-           Vercel if the free jobs surface is meant to have them — nobody in the loop can see
-           the Vercel env. **(7) THE BLOCKED LIST IS NOW THE LARGER HALF OF THE GATE:** seven
-           named items, two causes, both owner actions. No agent can close any of them.
-OPEN FOR MANAGER:  none — B's question ruled in §1j (Ruling 9 points 1–2): streaming is a
-           transport, not an exemption; the fix is authorised in B's ordering shape.
+           be set. (5) Local .env.local keys whenever ready — `GOOGLE_API_KEY` and
+           `TAVILY_API_KEY` are both absent. **The two causes split the seven items
+           unevenly:** the keys alone unblock R-KEY-1 and half of R-METER-1; the three
+           migrations are what the other six need (R-ENT-1, R-ENT-2, R-METER-1's persistence
+           half, R-METER-2, R-METER-3, R-QUOTA-2). **Applying the migrations is the larger of
+           the two owner actions.** (6) Confirm ADZUNA_APP_ID/APP_KEY, JSEARCH_API_KEY and
+           USAJOBS_API_KEY are set on Vercel if the free jobs surface is meant to have them —
+           nobody in the loop can see the Vercel env. **(7) THE BLOCKED LIST IS NOW THE LARGER
+           HALF OF THE GATE:** seven named items, two causes, both owner actions. No agent can
+           close any of them. **After round-4 A confirms 0% code-side, the owner's two actions
+           are the ONLY thing between this branch and the gate.**
+OPEN FOR MANAGER:  none. Ruling 9's three authorisations are all built as ruled. **One thing
+           C flagged rather than judged:** 3-02 half B stays unbuilt under Ruling 7 point 3's
+           escape clause, so scan 3 and scan 5 are now load-bearing **specifically for the
+           operator-search gate**, and scan 5's `canSpend` is a three-marker closed list over
+           an open class. That is a written-down, accepted cost — not a new question — but it
+           is the one place where "cannot be made incorrect by accident" still does not hold.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -8507,3 +8515,95 @@ consume the counter before resolving a provider and have no streaming transport,
 **Gate after 3-03:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0
 warnings) · `vitest` **124 files passed | 1 skipped (125)** · **2859 tests passed | 1 skipped
 (2860)**, **0 failed**. +8 tests, 0 regressions.
+
+---
+
+## Round 3 — Agent C: close-out
+
+**Three items, three commits, each pushed as it finished, in the order Ruling 9 binds — 3-01, then
+3-02, then 3-03's fix and its tests together. No deviation, so nothing to log under §3's deviation
+rule.** A fourth commit claimed the lock and this one releases it.
+
+**Final cold gate:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0
+warnings) · `vitest` **124 files passed | 1 skipped (125)** · **2859 tests passed | 1 skipped
+(2860)**, **0 failed**, 9.43 s. The cold baseline before the first edit was **123 files / 2825
+tests**, identical to round-3 A's and B's figures. **+34 tests, +1 file, 0 regressions, and no test
+was deleted at any point.** `benchmark.test.ts` is still the one skip and did not flake.
+
+**Where B was right and it mattered.** Every one of the three defects B added to A's single finding
+was real, and two of them would have made a "fix" worse than the bug: narrowing the one `exhausted`
+boolean would have retitled a paid reader's notice as an outage, and an optional `effectivePlan`
+prop defaulting to `"free"` would have failed open on the exact property being fixed. The
+"Resets in 1 day" correction to Ruling 8's stated symptom was also right — the state the ruling
+described could not occur, and the real one fired on every trip.
+
+**Where B's guide needed adjusting, each traced before deviating (§3 point 5).** Three places, none
+of them a disagreement with the ruling:
+1. **The mint takes an `Entitlement`, not loose fields.** A brand proves "this came from the right
+   factory"; a factory anybody can call with a made-up string proves less than it looks. Making the
+   parameter an `Entitlement` puts the proof in the argument type as well as in the brand.
+2. **`FigureMatchContext` carries the entitlement too.** B expected five `extract.ts` edits; there
+   were none — the chain passes the context by name and never builds one, so the cascade was a
+   single line at `api/figure/route.ts`. The change is a real strengthening: 1-07's *required*
+   context stopped a caller **forgetting**, never a caller **inventing**, and a bare
+   `{ userId: null, byok: false }` compiled.
+3. **The `quota` stream event goes BEFORE `mode`, not after.** The client rejects a stream that does
+   not open with `mode` **and returns immediately on `tier0`**, so a refusal placed after it is
+   dropped for exactly the reader it is for. Ruling 9's own wording turns out to describe the only
+   ordering that works.
+
+**One thing nobody's guide predicted, and it is the useful finding of the turn.** Two of my own
+proofs were themselves false, in two different ways, and both printed green:
+- a scripted multi-line revert **silently did not apply** on a CRLF mismatch, so a "2 passed" run was
+  the *unmodified* file;
+- scan 6's word-boundary anchors were written into the file as literal **backspace characters
+  (0x08)**, so its first alternation branch could never match, and it passed.
+
+Neither was caught by reading the test output. The first was caught by asserting the substitution
+happened; the second by dumping the bytes. **This is the same class as 3-03 itself** — a check that
+sits in the right place and is never reached — and it is why every new scan in this turn is proved
+by **planting an offender**, not by watching it pass. Recommended as a standing habit, not a
+one-off.
+
+**Two smaller traps carried forward for round-4 A and for whoever writes route tests next:**
+- On this repo, **never assert across a `\n`**: the files are CRLF and `toContain` with an embedded
+  newline can never match. It cost one red test here and would cost a false green elsewhere.
+- **`PEER_DEV_ENTITLEMENT=paid` does nothing on its own in a route test.** `isLocalDevRuntime()` is
+  deliberately false under `NODE_ENV=test`, so the default runtime is the no-sign-in branch — user
+  `local-no-auth`, plan **free**. A paid case must stub `NODE_ENV=development` with `VERCEL` and
+  `VERCEL_ENV` cleared, which also changes the user id to `dev-local`. **A test that believes it is
+  exercising a paid reader and is not passes for the wrong reason**; only asserting the exact
+  counter key caught it.
+
+**Standing locks re-verified and reported (§ standards point 2):** `registry.test.ts` (9 call sites
+rewritten to the named escape hatch, none deleted), `ai-tier.test.ts`, the persona suite, the four
+route suites, `deep-report-quota.test.ts`, the 2-06 scan gates, `ui-vocabulary.test.ts`,
+`no-client-dev-flags.test.ts`, `quota-exemptions.test.ts` (one assertion rewritten to the new
+contract, one case added, none deleted; `resolveProvider` deliberately **not** renamed, which its
+`.toContain` assertions depend on), `tier-upgrade-block.test.tsx` (untouched and green, as B
+required). Scans 3 and 5 unchanged; **scan 6 added**, so the "five scans" tally is now six.
+
+**Nothing was closed that C could not verify (§ standards point 6).** No item this turn needed a
+live model or an applied migration. The three questions that do — a real paid reader at the 200/day
+cap, the `quota` stream event reaching the notice on a real page, and the rendered reset string —
+are written into §1's `TODO` as questions for A, two of them noted as probably still blocked on the
+owner's migrations. **No migration was written and none is expected.**
+
+**Ruling 2 point 5 honoured:** no `next dev` was started. A tool hook reported another session's dev
+server running in this folder; it was left alone and no process was killed. No worktree under
+`.claude/worktrees/` was touched. No PR was opened.
+
+**Credentials:** the staged-diff grep for the two vendor key prefixes was run before **every** push
+and matched nothing. `.env.local` was never read, never `cat`-ed, and no environment value was
+printed. Test keys are sentinels only.
+
+**Throwaways:** four temporary files were written **outside the repo**, in the session scratchpad,
+and deleted. `git status --porcelain --untracked-files=all` was clean before the first commit and
+after the last; the only files this turn changed inside the repo are the twenty in the three item
+commits plus this state file. One scare worth recording: a `git checkout` used to undo a probe
+**reverted a landed 3-02 edit** in the same file; it was re-applied and verified by `tsc` before
+anything was committed. **Use a scratchpad copy to restore a probe, never `git checkout`, while
+uncommitted work is in the tree.**
+
+**Handing to A** with `WHOSE TURN: A` and `ROUND: 3` left as the manager opens round 4. The lock is
+released.
