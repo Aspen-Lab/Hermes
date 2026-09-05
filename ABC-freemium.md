@@ -7700,3 +7700,273 @@ and `QuotaSignal` is untouched, so R-QUOTA-2's payload, which A measured as corr
 Nothing outside the three report surfaces imports `QuotaNotice` or `quotaMessage` (grepped
 repo-wide: 9 files, 2 of them markdown). `TierUpgradeBlock` is not touched and
 `tier-upgrade-block.test.tsx` must stay green **and unmodified**.
+
+---
+
+#### 3-02 — the branded entitlement context at the chokepoint. **MISSING (structural).** The brand **survives for `resolveProvider`** and the **escape clause fires for the availability gate**.
+
+**Classification: `MISSING`** — nothing is wrong today; a guard that exists only as a grep is absent.
+**Reachability today: still nil**, and I re-established that myself rather than inheriting it (below).
+
+##### What is actually there — A's difference 2 confirmed, and TWO call sites it does not mention
+
+`resolveProvider` is `web/src/lib/llm/providers/registry.ts:160-163`:
+
+```ts
+export function resolveProvider(
+  override?: ProviderOverrideConfig | null,
+  ctx?: { userId?: string | null; byok?: boolean; path?: string },
+): DigestProvider | null
+```
+
+Both parameters optional, every ctx field optional, and the ctx type is an **inline anonymous
+object with no name** anywhere in the tree. `operatorSearchAvailability` is
+`web/src/lib/search/system-key.ts:138-140` and takes `{ systemSearchAllowed: boolean }` — one
+required field, bare boolean, also unnamed. A's zero-branded-types finding is right: I re-grepped
+`web/src` for `__brand`, `declare const brand`, `Branded<`, `Opaque<`, `unique symbol`,
+`readonly _brand` and `_tag` — **no branded-type infrastructure of any kind exists.** Every "brand"
+hit is a colour palette or prose; every `_tag` hit is a `"job_tag"` string literal or Algolia's
+`_tags`. **A branded token would be net-new.**
+
+**What A's entry does not say, and C needs before it starts.** There are **ten** production
+`resolveProvider` call sites, not the eight that carry a context. Two pass **no context at all**:
+
+| Path | Line | Call |
+|---|---|---|
+| `web/src/lib/feed/tier2-rerank.ts` | **65** | `resolveProvider(llmOverride)` |
+| `web/src/lib/opportunities/query-gen.ts` | **319** | `resolveProvider(llmOverride)`, inside a `try/catch` |
+
+**Scan 4 does not catch these and was never meant to** — its regex is
+`/(?<!function\s)\bresolveProvider\(\s*\)/` (`spend-scans.test.ts:179`), which bans only the
+**zero-argument** form, and its own comment at `:171-173` explicitly permits these two. So "an
+unguarded caller is a grep miss, not a compile error" is not hypothetical: **two such callers exist
+today.** They are the whole reason this item is harder than it looks, and they are the reason the
+escape clause has to be applied rather than waved at.
+
+**Also worth C's minute: there is a second, unrelated `resolveProvider`.**
+`web/src/lib/sources/web-search.ts:322` declares a module-local, non-exported function of the same
+name (it picks a *search* provider, not an LLM). It is not the registry function and must be left
+out of any signature change. `spend-scans.test.ts:176-179` already documents the ambiguity.
+
+##### Why the two contextless callers are safe today — measured, not assumed
+
+Both sit behind a **numeric tier ceiling**, not behind `requireEntitledAiRequest`:
+
+- `applyTier2Rerank` runs only when `requestedTier >= 2` (`web/src/lib/feed/pipeline.ts:249`), and
+  `requestedTier = req.aiTier ?? feedTierFromEnv()` (`:303`), where `feedTierFromEnv()` reads
+  `PEER_FEED_AI_TIER ?? "0"` and returns `0` for anything `<= 0` (`:443-448`).
+- `generateSearchQueries` runs only when `(req.aiTier ?? 0) >= 2` (`jobs/pipeline.ts:137`,
+  `events/pipeline.ts:161`) — the default there is a literal `0`.
+
+Every default is 0, R-GUARD-1 handles `PEER_FEED_AI_TIER > 0` on Vercel, and R-SEC-3 stops a request
+body raising the tier. **So the guard on these two paths is real, it is just a different guard**, and
+that is the finding: the tree has two enforcement mechanisms for one property and only one of them
+is visible at the chokepoint.
+
+##### The design, tested adversarially before recommending it
+
+Per §2 Agent B I built the thing rather than describing it — four TypeScript files in the session
+scratchpad, compiled with the repo's own `tsc` 5.9.3 under `strict: true`, `isolatedModules: true`,
+ES2018, matching `web/tsconfig.json`.
+
+**Shape:** a new module `web/src/lib/security/entitled-context.ts`, deliberately mirroring
+`web/src/lib/figures/match-context.ts` — which is the precedent Ruling 7 point 3 names, and which
+already carries the written rationale (`match-context.ts:13-16`: *"Required, not optional, on
+purpose"*). A standalone module, **not** an addition to `ai-request.ts`: that file imports
+`@/lib/supabase/server`, and `registry.ts` currently imports nothing from `lib/security`. A separate
+brand module keeps Supabase out of the provider registry's import graph.
+
+```ts
+declare const entitledBrand: unique symbol;              // NOT exported
+export type EntitledContext = {
+  readonly userId: string | null;
+  readonly byok: boolean;
+  readonly path: string;
+} & { readonly [entitledBrand]: true };
+```
+
+**Result of the adversarial run — every accidental caller is now a compile error:**
+
+| Attack, written the way a forgetful author actually types it | Outcome |
+|---|---|
+| `resolveProvider(null)` — forget the argument | **TS2554** Expected 2 arguments, but got 0/1 |
+| pass a plain object with **every field correct** | **TS2345** `Property '[entitledBrand]' is missing` |
+| `operatorSearchAvailability({ systemSearchAllowed: true })` | **TS2345** |
+| invent your own `unique symbol` and supply it | **TS2353** `'[myBrand]' does not exist in type` |
+| `resolveProvider(null, undefined)` | **TS2345** `undefined is not assignable` |
+
+**And the honest limits, which I also ran rather than guessed:**
+
+| Attack | Outcome | Why it is acceptable |
+|---|---|---|
+| spread a legitimately-obtained context and tamper: `{ ...real, userId: "someone-else" }` | **compiles** | A brand proves provenance, not that fields were not edited afterwards. Meters would attribute to the wrong user; it cannot create spend that was not already authorised. |
+| an explicit `as EntitledContext` cast | **compiles** | TypeScript always allows this. The win is that it is now **greppable and lintable** (`@typescript-eslint/consistent-type-assertions`, or a sixth scan) instead of invisible. |
+| a helper that declares `ctx?: EntitledContext` | **compiles** | **The one real regression risk.** An optional parameter re-opens the hole exactly as it stands today. C must add a scan banning `?: EntitledContext`, or this item buys nothing a year from now. |
+
+**All legitimate paths compile**, including a three-level helper cascade where each level only names
+the type, and a test harness going through one explicitly-named escape hatch
+(`unsafeEntitledContextForTests`).
+
+##### The escape clause, applied honestly — it fires for ONE half and not the other
+
+Ruling 7 point 3: *"if it forces a signature cascade beyond the AI routes and their direct helpers,
+stop and record."* The two halves land on opposite sides of that line, so I am splitting the item.
+
+**HALF A — `resolveProvider`: the brand SURVIVES. Recommend building it.**
+
+Per-caller, what it passes and where it gets it:
+
+| Caller | Line | Class | What it must pass, and from where |
+|---|---|---|---|
+| `app/api/digest/route.ts` | 80 | AI route | mint from `gate.entitlement` (already held at `:76`) |
+| `app/api/events/report/route.ts` | 128 | AI route | mint from `gate.entitlement` (`:120`) |
+| `app/api/jobs/report/route.ts` | 82 | AI route | mint from `gate.entitlement` (`:69`) |
+| `app/api/papers/report/route.ts` | 440 | AI route | mint from `gate.entitlement` (`:412`) |
+| `app/api/papers/report/route.ts` | 159, 224 | direct helper, same file | via `providerCtx()` (`:138-152`); its local `ReportUsageCtx` becomes the branded type. **Note `ctx?: ReportUsageCtx` is optional at both — the optionality cascades one level deeper than the route and must be closed here too** |
+| `lib/figures/semantic-match.ts` | 66 | direct helper of `api/figure` | from `args.ctx`; `FigureMatchContext` either **becomes** the brand or gains it |
+| `lib/figures/vision-match.ts` | 137 | direct helper of `api/figure` | same |
+| `lib/feed/tier2-rerank.ts` | 65 | **pool-build closure** | see the union below |
+| `lib/opportunities/query-gen.ts` | 319 | **pool-build closure** | see the union below |
+
+The figure chain is `api/figure/route.ts:35` (guard) → `:48` builds the ctx → `extract.ts:34`
+(`ExtractInput.ctx`, required) → `:1350` → `:586-591` `chooseCandidate` → `:653`/`:679` → the two
+matchers. **Five more sites, all inside `extract.ts`, all direct helpers of one AI route** — that is
+inside the boundary, and it *strengthens* R-SEC-1, because `FigureMatchContext.userId` is
+`string | null` today, so `{ userId: null, byok: false }` currently satisfies it and compiles.
+
+**The two pool-build closures are handled without any cascade at all**, and this is the part I
+tested most carefully because it is what decides the item. Make the second parameter **required but
+a union**:
+
+```ts
+export type ProviderContext = EntitledContext | SpendJustification;
+export type SpendJustification =
+  | { readonly kind: "entitlement-proved-by-tier-ceiling"; readonly where: string }
+  | { readonly kind: "byok-only-never-operator-funded"; readonly where: string };
+```
+
+Compiled and attacked: forgetting the argument, passing a look-alike object, **inventing a
+justification kind** (`TS2322: Type '"i-am-sure-it-is-fine"' is not assignable`) and passing
+`undefined` are **all compile errors**, while both legitimate paths compile. The justification is a
+**module-local object literal** — it is not data, so **no request type widens, no pipeline signature
+changes, and the cron is untouched**. Two lines in two files replace an invisible absence with a
+written claim a reviewer can argue with, which is the whole of what Ruling 7 point 3 asked for.
+
+**Cost of half A:** 1 new module, 1 signature, ~10 production call sites, the `extract.ts` chain, and
+`registry.test.ts`. **No pipeline, no pool closure, no cron.** Inside the boundary.
+
+**HALF B — the operator-search availability gate: the escape clause FIRES. Recommend recording it and leaving the heuristic scan as the guard.**
+
+`systemSearchAllowed` is not a parameter — it is **request data that travels through six type
+declarations and three pipelines** before any gate sees it:
+
+```
+route (jobs/feed:196, events/feed:178, entitlement.systemSearchAllowed)
+  -> JobsFeedRequest.systemSearchAllowed?    (jobs/types.ts:153)
+  -> pipeline sets query.webSearch           (jobs/pipeline.ts:161, events/pipeline.ts:183,
+                                              feed/pipeline.ts:129 hard-codes false)
+  -> JobsQuery.webSearch.systemSearchAllowed? (jobs/types.ts:112, events/types.ts:68,103,
+                                               sources/types.ts:43 — ALL OPTIONAL)
+  -> adapter                                  (jobweb.ts:2131/2157, eventweb.ts:2740/2762,
+                                               web-search.ts:61/85)
+  -> operatorSearchAvailability / resolveSystemSearchKeys
+```
+
+I tested the cheapest possible version of this — brand the **field**, not add a parameter, so the
+field name and every signature stay put:
+
+```ts
+export type SystemSearchGrant = boolean & { readonly [grantBrand]: true };
+```
+
+It defeats every accidental caller (a raw `true`, a plain `boolean` variable, a literal `false` in a
+request object — all TS2322). **But it also fails on the line every adapter already writes:**
+
+```
+gate.ts(37,5): error TS2322: Type 'boolean' is not assignable to type 'SystemSearchGrant'.
+```
+
+That is `query.webSearch?.systemSearchAllowed === true` — the **exact idiom used at all three
+adapters** (`jobweb.ts:2157`, `eventweb.ts:2762`, `web-search.ts:85`) **and at both pipelines**
+(`jobs/pipeline.ts:161`, `events/pipeline.ts:183`). A brand cannot survive `=== true`, because that
+expression's type is plain `boolean`. So the change is not type-only after all: it rewrites the
+`?: boolean` + `=== true` idiom at **eight sites across six files**, plus
+`web/src/app/api/jobs/dispatch-digests/route.ts`, which today passes **nothing** and relies on the
+`=== true` default (`:219` is only the comment saying so) and would have to start naming a denial
+constant explicitly.
+
+**That reaches the pool-build closures and the digest cron — beyond "the AI routes and their direct
+helpers". The escape clause applies. I am stopping the design here and recording the cost, which
+Ruling 7 point 3 calls a legitimate outcome.**
+
+**What stays the guard for half B, and what it costs:** scan 3 (`spend-scans.test.ts:87-160`, which
+pins the credential reads and the availability-helper callers to a known set of files) and scan 5
+(`:190-232`). **The cost, written down as the ruling requires:** scan 5's `canSpend` is a
+**three-marker closed list** — `resolveProvider(`, `GoogleGenAI`, `systemSearchAllowed`
+(`:216-219`) — over an open class, so a new route reaching an operator search key through a helper
+naming none of those three is caught by nothing. It also only scans `src/app/api/**/route.ts`, so a
+spending path added anywhere else is outside its window entirely. **Half A shrinks this exposure but
+does not remove it**: after half A, `resolveProvider` is compile-enforced and the search gate is
+not, so scan 3 and scan 5 become load-bearing specifically for search.
+
+**One cheap, in-boundary improvement I do recommend even under the escape clause**, because it costs
+nothing and closes a fail-quiet hole: `resolveWebSearchProvider`'s availability parameter has
+`vertexAvailable` **optional** (`web/src/lib/sources/gemini-search.ts:200`). Omitting it defaults to
+falsy, so it fails *closed* and is not a spend risk — but making it required costs three call sites
+that already pass it and removes a silent default from the one function that decides which paid
+search provider runs.
+
+##### A recorded decision that Ruling 7 point 3 supersedes — flagged, not reversed
+
+`registry.ts:149-158` says in the source, from item 1-03/1-11:
+
+> *"**The second argument is optional and stays optional**: making it required would be a
+> thirteen-site edit..."*
+
+Ruling 7 point 3 (2026-09-05) is later and binding and directs the opposite, so this is a
+supersession the manager has already made, **not** something I am asking to reverse — no POLICY flag.
+Two notes for C: the comment **must be rewritten in the same commit**, or the file will argue with
+itself; and its "thirteen-site" figure is **stale**, counting acquisition sites before 1-07 gave the
+figure matchers a required context. **The measured count is ten production call sites, eight of
+which already pass a context** — so the edit is roughly half what the comment threatens.
+
+##### Tests at risk — grepped, with what each assertion becomes
+
+| File | Lines | Today | After half A |
+|---|---|---|---|
+| `web/src/lib/llm/providers/registry.test.ts` | 77, 93, 104, 117, 131, 142, 151, 162, 179 | **9 real invocations, all contextless; 6 pass no arguments at all** | every call takes the test-only minted context. **The biggest single edit in the item**, and it must go through the named escape hatch so the brand is not weakened for production |
+| `web/src/lib/security/spend-scans.test.ts` | 161-184 (scan 4) | bans zero-argument `resolveProvider()` | **becomes redundant for its stated purpose** — `tsc` now rejects it. **Keep it anyway**, rewritten to say it is a belt whose braces are the type; and **add a sixth scan banning `?: EntitledContext`**, which is the one shape that re-opens the hole |
+| same | 190-232 (scan 5) | the three-marker `canSpend` list | **unchanged and now more important**, because it is what still covers search. Its exemption list stays as-is: the cron is untouched by half A |
+| same | 124-136 | pins `isGemini/VertexSearchAvailable` callers to three files | **unchanged** — half B is not being built |
+| `web/src/lib/usage/quota-exemptions.test.ts` | 117-126 | asserts each exempt path's source `.toContain("resolveProvider")` | **unchanged, but fragile**: it depends on the literal identifier surviving. **C must not rename `resolveProvider`** while doing this |
+| `web/src/app/api/ai-route-personas.test.ts` | 15, 37, 153, 197 | `vi.fn()` mock plus `resolveProvider` never-called assertions for anonymous | mock signature only; the never-called assertions are the ones that must stay green |
+| `digest/route.test.ts` :66 · `jobs/report/route.test.ts` :98, :200 · `events/report/route.test.ts` :93, :121, :347 | | `toHaveBeenCalledWith` on the exact ctx object | **each becomes an assertion about a minted context** — C should assert the fields, not object identity, or these become brittle |
+| `feed/route.test.ts`, `papers/report/route.test.ts`, `paper-daily-cache.test.ts`, `query-gen.test.ts` | | `vi.fn()` mocks | mock signatures only |
+| `web/src/lib/figures/*` suites, `ai-request.test.ts` | | | `FigureMatchContext` construction moves behind the mint |
+
+##### What the field shows when every candidate is rejected
+
+**Nothing changes for any reader — and that is the point of the item.** `resolveProvider` still
+returns `null` on the tier-0 path D1 preserves, and every one of the ten call sites already handles
+`null` (`provider?.generateJsonText` guards in digest and the report routes, `return null` in both
+figure matchers). This item moves **zero** runtime behaviour: no persona sees a different byte, no
+route changes status, no payload changes shape. **A's measurement should be identical before and
+after**, and if it is not, something else broke.
+
+##### Blast radius
+
+**Half A: bounded and inside the ruling's boundary.** One new module, one signature, ten production
+call sites, five sites in `extract.ts`, two two-line justifications in the pool closures, one heavily
+edited test file and mock-signature touch-ups in eight more. **No pipeline signature, no request
+type, no pool-build closure, no cron, no migration, no payload.**
+
+**Half B: not built.** Recorded above with its cost. **If a later round reverses this, the entry
+point is `sources/types.ts:43` and the `=== true` idiom, not the gate function** — the gate itself
+is already correct and one line.
+
+##### Ordering note for C
+
+**3-01 first, then 3-02** (Ruling 8 point 2). They touch disjoint files, so there is no build
+dependency — but 3-01 is user-visible wrong data and 3-02 changes nothing a reader can see, and the
+standing rank rule puts wrong data first. If budget runs out mid-round, **the right thing to bank is
+3-01 complete rather than both half-done.**
