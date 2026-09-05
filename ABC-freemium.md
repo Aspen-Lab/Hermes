@@ -5609,3 +5609,199 @@ design leaves alone. No route response shape changes; no cache key changes; the 
 events pipelines keep their existing call shapes. The visible effect on Vercel today is **nil** —
 every one of these names is already banned there — which is exactly why this is defence in depth for
 a self-host and a developer machine rather than a live leak, and it should be reported that way.
+
+---
+
+#### 2-05 — the metering wrapper: "never zero" is a real hole, "never two" is already broken, and the wrapper is the wrong single writer
+
+**Class: `WRONG SHAPE` (the wrapper guarantees nothing on the success path) + `WRONG DATA` (one
+logical call already writes several rows).** Ruling 5 point 6 · A's R-METER-1 note.
+
+Ruling 5 point 6 offers two roads and invites B to show the first is the wrong seam. **It is, and
+for two independent reasons — and the investigation turned up a defect running in the opposite
+direction from the one the ruling anticipated.**
+
+##### What is actually there, re-read this turn
+
+- `web/src/lib/llm/providers/metered.ts:43-70` — `meterCall`. It opens an async-local scope
+  (`{...ctx, recorded: false}`), runs the call, and in the **`catch` only** writes an `ok:false` row
+  `if (!scope.recorded)`. **The success path writes nothing and checks nothing.**
+- `web/src/lib/llm/usage-log.ts:29-67` — `logLlmUsage`. It prints the `[llm]` console line
+  (`:30-39`), sets `ctx.recorded = true` (`:50-51`), and writes the row (`:52-66`). This is where
+  the token counts are.
+- `web/src/lib/usage/context.ts:32-40` — `UsageCallScope.recorded`, whose stated job is "so the
+  wrapper knows whether a row already exists for this call and does not write a second one".
+- `web/src/lib/llm/providers/registry.ts:160-173` — the single wrap point, `resolveProvider`'s only
+  return.
+- Wrapped methods: `generateDigest`, `testConnection`, `generateJsonText`,
+  `generateVisionJsonText` — **that is all four members of `DigestProvider`**
+  (`providers/types.ts:41-67`). I checked for a fifth, unwrapped method; there is none.
+
+##### Reason 1 the wrapper cannot be the single writer: it does not have the numbers
+
+R-METER-1's row carries `input_tokens`, `output_tokens` and `thinking_tokens`. Those come out of
+each SDK's own response object — `usageMetadata.promptTokenCount` etc. in
+`providers/gemini.ts:99-116`, `usage.input_tokens` in `providers/anthropic.ts:36-52` — and they are
+consumed at the point of the call, inside the provider. The wrapper sees only the method's return
+value, which for `generateJsonText` is a bare `string`. For the wrapper to write the success row,
+either every provider method's return type grows a usage envelope — a change to `DigestProvider`
+and to all thirteen acquisition sites — or `logLlmUsage` stops writing and starts **stashing** the
+numbers on the scope for the wrapper to write on the way out. The second is achievable and is worth
+naming as the only viable version of Ruling 5's option (a), but it buys nothing over the much
+smaller fix below and it moves the write further from the facts. `usage-log.ts:46-49` already
+states this reasoning; I re-derived it rather than inheriting it, and it holds.
+
+##### Reason 2, and it is a defect nobody has recorded: one call already writes SEVERAL rows
+
+**The Gemini providers fall back down a model chain, and every attempt logs.**
+
+- Vertex path: `providers/gemini.ts:221` (`generateDigest`), `:245` and `:268` — `for (const { id,
+  location } of …)` around `callModel`, and `callModel` (`:157-180`) calls `logGemini` on **both**
+  its success (`:174`) and its failure (`:177`).
+- **System-key path — the one D1 hands every signed-in free user**: `createGeminiApiProvider` does
+  the same at `:371` (`generateDigest`), `:392` (`generateJsonText`) and `:411`
+  (`generateVisionJsonText`), around `callApiModel` / `callApiVisionModel`.
+
+So one `generateJsonText` that falls back from model A to model B writes **two** `usage_events`
+rows; one that exhausts the chain writes **N** `ok:false` rows and then throws, at which point the
+wrapper sees `scope.recorded === true` and adds none. Worse for the ledger: at `:373-377` and
+`:391-397` a model that returns **empty text** logs `ok: true` and the loop continues, so a row can
+say a call succeeded when the caller received nothing from it.
+
+**"One row per call, never two, never zero" is therefore already violated — in the `two` direction,
+today, on the busiest provider in the product.** A's note and Ruling 5 point 6 both anticipated the
+`zero` direction only, which is hypothetical (all five providers log today). The `two` direction is
+the normal degradation path.
+
+##### POLICY — manager decides: what is a "call"?
+
+The two readings give opposite fixes, and I am not choosing for the owner:
+
+- **One row per provider REQUEST (my recommendation).** Every model attempt is a separate billed
+  HTTP request. A ledger whose purpose is "where did the money go" (R-METER-1, and the whole point
+  of `usage_events`) should have one row per thing that was billed. Under this reading today's
+  provider-level `logLlmUsage` is the **correct** writer and nothing about the chain is a defect —
+  only the `ok:true`-on-empty row at `gemini.ts:374`/`:395` is, and it is a one-word fix (log
+  `ok: text.trim().length > 0`). Ruling 5 point 6's "never two" is then restated as *never two rows
+  for one provider request*, which is true and testable.
+- **One row per wrapped method call.** Cleaner for "how many reports did this user generate", but it
+  hides the retries the owner is paying for, and it needs the stash-on-the-scope rewrite above.
+
+Until this is ruled, C implements the recommendation, which is strictly additive and cannot lose
+data either way.
+
+##### The fix — five lines, and it closes "never zero" by construction
+
+The real hole Ruling 5 point 6 names is genuine: `meterCall` only consults `scope.recorded` in the
+`catch`. A provider that returns successfully without logging is **silently unmetered**, and nothing
+in the type system or the tests would say so. Move the check so it covers both exits:
+
+```ts
+return async (...args: A): Promise<R> => {
+  const scope: UsageCallScope = { ...ctx, recorded: false };
+  const started = Date.now();
+  let ok = false;
+  try {
+    const result = await withUsageContext(scope, () => fn.apply(provider, args));
+    ok = true;
+    return result;
+  } finally {
+    // R-METER-1 / Ruling 5 point 6 — AT LEAST ONE row per call. The provider is
+    // still the writer whenever it logged (it has the token counts); this only
+    // covers the provider that logged nothing at all.
+    if (!scope.recorded) {
+      recordUsageEvent({
+        user_id: ctx.userId,
+        kind: "llm",
+        path: ctx.path ?? fallbackPath,
+        provider: provider.id,
+        model: null,
+        latency_ms: Date.now() - started,
+        ok,
+        byok: ctx.byok,
+      });
+    }
+  }
+};
+```
+
+Three properties this has and the current shape does not:
+
+1. **Never zero**, for any provider present or future, without the provider having to remember.
+2. **Never a duplicate** — `scope.recorded` still suppresses it whenever the provider logged.
+3. The `throw` behaviour is unchanged: `finally` does not swallow, so `metered.ts:23`'s "a throw
+   still throws" holds and every existing degrade path is untouched. **C must verify this
+   explicitly** — a `catch`-to-`finally` conversion is exactly where a re-throw gets lost.
+
+##### The protective test Ruling 5 point 6 asks for
+
+Table-driven over **every registered provider**, so a sixth cannot be added without appearing here:
+
+1. For each provider id in the registry, a stubbed client that returns a normal success → the call
+   produces **at least one** row, and the row's `provider` matches the id.
+2. A hand-built provider whose method resolves **without** calling `logLlmUsage` → wrapped, it
+   produces **exactly one** row, with `model: null` and `ok: true`. *This is the case that fails
+   today* — C proves the test by reverting the source change (§2 Agent C).
+3. The same provider throwing → exactly one row, `ok: false` — the existing behaviour, pinned so
+   the `finally` conversion cannot regress it.
+4. A provider that logs once → still exactly one row (no duplicate from the wrapper).
+5. **The chain case, asserted as a documented fact rather than left implicit:** a Gemini provider
+   whose first model fails and whose second succeeds produces **two** rows, one `ok:false` and one
+   `ok:true`, both attributed to the same user. Whichever way the manager rules the POLICY above,
+   the number stops being an accident.
+
+##### A correction to the brief: there are no provider tests asserting on log lines
+
+The brief says "Name the tests at risk (there are provider tests that assert on log lines)." I
+grepped for the marker the line carries — `grep -rn "\[llm\]" src/` — and the **only** hit in the
+whole tree is `usage-log.ts:31`, the line's own definition. No test spies on `console.log` for it
+and no test asserts its text. So the console line is unconstrained by the suite and C can leave it
+exactly as it is (which `usage-log.ts:41-44` asks for: it is the API-efficiency measurement layer
+and predates this loop).
+
+**The tests actually at risk**, all in `web/src/lib/llm/providers/metered.test.ts`, eight cases
+(`:55-230`):
+
+| Case | Line | Effect of the `finally` change |
+|---|---|---|
+| copies method presence rather than assuming it | `:56` | none |
+| preserves the provider id | `:68` | none |
+| records one row per call, with the tokens the provider reported | `:77` | none — the stub logs, so the wrapper still adds nothing |
+| attributes a BYOK call to the user's own key | `:120` | none |
+| re-throws, and records `ok:false` when nothing else logged | `:142` | **the case that pins the re-throw** — must stay green byte for byte |
+| does not write a second row when the provider already logged the failure | `:162` | **the duplicate-suppression case** — must stay green |
+| never records a key-shaped field | `:189` | none |
+| attributes concurrent calls separately | `:213` | none — `AsyncLocalStorage` is untouched |
+
+Any provider test that counts `recordUsageEvent` calls for a **non-logging** stub will newly see one
+row where it saw zero; that is the fix working, and the assertion is rewritten to the new contract,
+never deleted (§3).
+
+##### Two model clients that the wrapper can never reach — named so they are not mistaken for coverage
+
+`meterProvider` wraps a `DigestProvider`. Two places construct a Google client directly and are
+therefore outside LLM metering entirely:
+
+- `web/src/lib/sources/gemini-search.ts:274` — `new GoogleGenAI({ vertexai: true, project,
+  location })`, the **grounding search** client. It is search, not a `DigestProvider`, so it writes
+  no `llm` row — and per 2-04 it writes no `search` row either. The two items meet here: **2-04's
+  usage row is what covers this spend**, not 2-05's.
+- `web/src/app/api/digest/test/route.ts:13` — `new GoogleGenAI(...)` in the local-only diagnostic
+  that answers **404** unless `canUseLocalServerProvider()`. A named it in scan 5; recorded again
+  here so a later round does not read it as an unmetered production path.
+
+##### What the field shows when every candidate is rejected
+
+`resolveProvider` returns `null` when no key resolves (`registry.ts:167`), so no wrapper exists and
+**no row is written — correctly**: nothing was spent. The eleven call sites already degrade on
+`provider?.generateJsonText` and the routes return their existing no-LLM payload. This item must not
+add a row for a call that never happened; "zero rows for zero calls" is the honest value and is
+different from the "never zero" hole above, which is about a call that **did** happen.
+
+##### Blast radius
+
+One function body in `metered.ts`; optionally one boolean expression in `gemini.ts` (the
+`ok:true`-on-empty row) if the manager takes the recommendation. No interface changes, no provider
+changes, no route changes, `resolveProvider` stays synchronous. `recordUsageEvent` is
+fire-and-forget, so no call site becomes `await`-ing. The risk is concentrated in one place — the
+`catch` → `finally` conversion — and cases `:142` and `:162` are the net under it.
