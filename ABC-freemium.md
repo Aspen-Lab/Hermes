@@ -119,10 +119,14 @@ lock by rebasing onto the holder's head.
 
 ```
 HELD BY:          free
-ROUND:            2
+ROUND:            3
 WHOSE TURN:       A
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T01:34Z
-STATUS:           ROUND 2 — C HAS LANDED ALL SEVEN ITEMS, 2-01 … 2-07, in the manager's
+STATUS:           ROUND 3 — A MEASURES. The manager accepted round-2 C after an independent
+                  cold gate run (identical figures) and two spot-checks (Ruling 7, §1h);
+                  C's three doubts ruled; one structural round-3 item added (point 3).
+                  Round-2 C's own summary follows.
+                  ROUND 2 — C HAS LANDED ALL SEVEN ITEMS, 2-01 … 2-07, in the manager's
                   order, one commit each, each pushed immediately. Nothing reordered. The
                   gate is GREEN and has been green cold after every item since 2-01.
 
@@ -230,38 +234,16 @@ GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0
            (2717), all three in `deep-report-quota.test.ts` and exactly the three B named.
            Net +112 tests across the turn, all additive; no count anywhere fell, and no test
            was deleted. `benchmark.test.ts` is still the one skip and did not flake once.
-TODO:      ROUND-3 A RE-MEASURES. Questions a fixture cannot settle, and the standing tallies
-           to carry by name:
-           (1) Does a reader actually SEE the quota message? 2-07 asserts the component and
-               the placement; nobody in this loop can look at a rendered page. Related: on
-               jobs and events the signal is set only when the enrichment fetch runs, and
-               that fetch is skipped when `canAttemptOpportunityEnrichment` is false — so
-               which persona, if any, is refused a deep report but never shown the notice?
-           (2) Is the papers `web` source's silence in local development acceptable to the
-               owner in practice? Ruling 6 point 3 accepted it as a design decision; only
-               using the app says whether it reads as a bug.
-           (3) Does the `[quota] store unavailable` line actually survive where it matters?
-               With the row gone it is the only durable trace of an outage, and a log line
-               does not survive a cold shutdown the way an awaited row did.
-           (4) THE PAPERS `userId` GAP (finding 1 above) — confirm it is still unpopulated and
-               still harmless, and that nobody has un-gated the surface without fixing it.
-           (5) Do the three structured job sources (Adzuna/JSearch/USAJobs) still bill by
-               free-tier quota rather than per request? Ruling 6 point 4's threshold turns on
-               exactly that, and only the owner's accounts can answer it.
-           STANDING TALLIES, every one to be reported even when zero — several are now
-           ASSERTIONS in `src/lib/security/spend-scans.test.ts`, so A can run them rather than
-           recount them:
-           · the five scans (1 and 2 already tests; 3, 4 and 5 became tests this turn)
-           · routes resolving a provider before the guard (was 7 in round 1, 0 expected)
-           · persona/route pairs behaving per spec — denominator **41/45** (Ruling 5 point 8)
-           · operator-key searches on `anonymous` + `free-no-key`, per surface (must be 0;
-             now also asserted in `src/app/api/ai-route-personas.test.ts`)
-           · papers operator-key searches (must be 0; now 0 in EVERY runtime)
-           · anonymous-BYOK feed requests → tier 0, never a provider (Ruling 4 point 1)
-           · `[quota] store unavailable` occurrences (expect 0 in a healthy run)
-           · `local-no-auth` reachability in a deployed runtime (expect ABSENT again)
-           · structured-source key reads outside the gate — **expect 3** (Ruling 6 point 4),
-             now asserted by name and by count
+TODO:      ROUND-3 A MEASURES under Ruling 5 point 1 (two numbers: code-side % over 31, and the
+           BLOCKED list by name) and Ruling 7 (§1h). Score every R-* item against behaviour;
+           verify each of round-2's seven differences closed; run the persona suite
+           (`src/app/api/ai-route-personas.test.ts`) and the four route suites as the harness
+           (41/45 denominator, extended if C added pairs); re-run every standing tally by name
+           (Ruling 5 point 8, Ruling 6 point 4, Ruling 7 point 5); enumerate every blocked
+           half explicitly. Ruling 7 point 3 (branded entitlement context at the chokepoint)
+           is a round-3 fix item — A scores R-SEC-2 PARTIAL until it lands and says so.
+           If code-side is 0%: say so plainly, list the blocked halves, and hand to the
+           manager (who re-measures independently before telling the owner).
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -272,18 +254,7 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            then. (6) NEW (Ruling 6 point 4): confirm ADZUNA_APP_ID/APP_KEY, JSEARCH_API_KEY
            and USAJOBS_API_KEY are set on Vercel if the free jobs surface is meant to have
            them — nobody in the loop can see the Vercel env.
-OPEN FOR MANAGER:  Three doubts C flagged rather than judged, none blocking:
-           (a) `GET /api/profile` now performs one extra counter read for free and trial
-               readers. C judged it in scope because Ruling 4 point 3 asks for budget minus
-               used from the counter store in as many words, and there is nowhere else to get
-               `used`. A separate allowance fetch would be a shape change, not a correction.
-           (b) `web-search.ts` now imports the usage modules for machinery the gate makes
-               unreachable. C judged a gate with a meter behind it better than a gate with
-               nothing, but it is a real cost.
-           (c) scan 5's "can this route spend" predicate is a deliberately BROAD heuristic
-               (mentions `resolveProvider`, `GoogleGenAI` or `systemSearchAllowed`) with a
-               written exemption list. It over-includes rather than under-includes; a route
-               reaching a provider through a helper naming none of those three would slip.
+OPEN FOR MANAGER:  none — C's three doubts ruled in §1h (Ruling 7 points 1–3).
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -561,6 +532,47 @@ green) and their key assertion read (`requestsCarrying(OPERATOR_SENTINEL)` is em
 6. **Round-2 guide is seven items, 2-01 … 2-07**, in B's order with 2-07 last. C confirms the
    gate green **by landing 2-01** (the three red cases are its subject), then runs it cold after
    every later item.
+
+---
+
+## §1h. RULING 7 — after round-2 C; ROUND 3 OPENS (2026-09-05, BINDING)
+
+**Manager's independent check before accepting the round:** the gate re-run cold — tsc 0 ·
+eslint 1 (standing) · vitest 123/1 files, 2825/1 tests, 0 failed — identical to C's figures.
+Round-3 A re-measures every closure; this ruling accepts the round, it does not close anything.
+
+1. **C's doubt (a) — accepted.** One non-incrementing counter read per `GET /api/profile` for
+   free and trial readers is exactly what "budget minus used, from the counter store" costs;
+   there is nowhere else to get `used`. Not a shape change.
+2. **C's doubt (b) — accepted as a recorded cost with a lead.** `web-search.ts` now carries a
+   meter behind a gate that keeps it unreachable on the papers surface; the `userId` the meter
+   would need is not in the papers pipeline's scope and C left it **unpopulated and recorded**
+   rather than widening the feed request type inline — correct under Ruling 2's culture.
+   **Design lead, not authorised:** anyone who ever un-gates the papers web source threads a
+   user id through `runFeedPipeline` first. A protective marker exists already (the hard
+   `false` at the call site); A keeps the "papers operator-key searches = 0" tally.
+3. **C's doubt (c) — the broad heuristic stays as a belt; round 3 adds the braces.** A scan
+   that greps for three marker names is a closed list sampling an open class: a route that
+   reaches a provider through a helper naming none of them slips. The structural fix is at the
+   chokepoint, the shape C already used for the figure matchers: **`resolveProvider` and the
+   operator-search availability gate take a required context whose type can only be produced by
+   `requireEntitledAiRequest`** (a branded/opaque type), so an unguarded caller is a compile
+   error, not a grep miss. **Round-3 item, B designs.** Escape clause: if it forces a signature
+   cascade beyond the AI routes and their direct helpers, stop and record — the heuristic scan
+   then stays the guard and the cost is written down.
+4. **Round 3 opens; A measures under Ruling 5 point 1's two numbers.** Expected: the six
+   code-side items of round 2 closed or reduced to recorded decisions; the **blocked list
+   enumerated by name** (every half that only an applied migration or a live key can prove).
+   If A reports **0% code-side**, the manager re-runs A's measurement independently before
+   telling the owner the code side is closed (SKILL: never close alone) — and the loop then
+   **waits on the owner** for the blocked halves; the resume clock stands down on
+   `blocked: needs the owner` ticks.
+5. **Standing tallies for round 3** — everything in Ruling 5 point 8 and Ruling 6 point 4,
+   plus: `[quota] store unavailable` occurrences (now expected ≥ 1 in the outage test, 0 in
+   production paths); usage rows per provider request (1, never 2, never 0); the C-recorded
+   fixture pitfalls (a digest body with no papers returns 200 above the guard; events/report
+   needs `event.name`; the papers shallow builder needs `summaryExperimentKeywords`) are **not
+   findings** — A cites this point if it meets them.
 
 ---
 
