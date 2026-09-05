@@ -192,12 +192,13 @@ GATE NOW:  tsc exit 0 · eslint 1 error (the standing quiz.tsx:46) · vitest **1
            Re-run cold by B this turn, byte-for-byte A's figures — B changed nothing. The three
            failures are 2-01's subject and reproduce running the file alone (3 failed | 12
            passed). `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      C WORKS THE ROUND-2 GUIDE FROM 2-01 (§4 "Round 2 — Agent B"), top to bottom, one
-           commit per item, pushed. 2-01 first: it is what makes the gate green, so §2's
-           "confirm the gate is green cold before your first edit" is satisfied by landing it
-           rather than by finding it already green. Tests live INSIDE each item. Four POLICY
-           questions are open below — C lands the direction each entry names meanwhile and
-           records that it did so; none of them blocks starting.
+TODO:      C WORKS THE ROUND-2 GUIDE 2-01 … 2-07 under Ruling 6 (§1g): 2-01 first (it is what
+           turns the gate green — confirm green BY landing it, then cold after every later
+           item); 2-02 with NO breaker row on an outage (point 1), in both the deep-report and
+           system-search checks; 2-03 JSON-safe shape; 2-04 one gate for every operator-funded
+           search provider, papers stays zero everywhere (point 3), Adzuna/JSearch/USAJobs do
+           NOT join and are NOT banned (point 4); 2-05 on the provider-request reading (point
+           5) incl. the ok-on-empty fix; 2-06 tests; 2-07 the UI half of R-QUOTA-1 (point 2).
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -205,28 +206,8 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            the four variables may be set — but DO NOT DEPLOY THIS BRANCH until round-3 A
            reports the gate green (it is red today on a test-clock defect) and it is merged.
            (5) Local .env.local keys whenever ready — live-model halves stay BLOCKED until then.
-OPEN FOR MANAGER:  FIVE from round-2 B, none of them a reversal of any decision; full reasoning
-           in the close-out at the end of §4. C is not blocked by any of them.
-           (1) 2-02 — the FALSE `breaker` usage row an outage writes for a paid user. Ruling 4
-               point 2 requires the log line and is silent on the row. Keeping it records a trip
-               that did not happen; removing it loses the only durable trace of the outage;
-               changing its `kind` collides with R-QUOTA-2's assertions. Same shape in
-               `consumeSystemSearches`. Meanwhile C fixes only the log line and the payload.
-           (2) 2-02 — SCOPE. R-QUOTA-1's UI half is entirely MISSING (`quotaMessage` has zero
-               production callers; every client drops `quota`). It is in the requirement's own
-               text, so not a widening — but it is the larger half. One item or two?
-           (3) 2-04 — THE PAPERS SURFACE IN LOCAL DEV. Gating Vertex and grounding uniformly
-               makes the papers `web` source return `[]` locally as well as in production, where
-               Rulings 75/79c deliberately kept it alive. B recommends accepting it; C lands
-               that direction meanwhile because it is the safer one and can be relaxed later.
-           (4) 2-04 — ADZUNA / JSEARCH / USAJOBS read `request key || operator env key` with no
-               gate, no breaker, no usage row, and are on NEITHER guard list. B recorded rather
-               than widened. Cheap partial answer: four more names on `FORBIDDEN_ON_VERCEL`.
-               **What is actually set on Vercel is the owner's to check — nobody here can see
-               it.**
-           (5) 2-05 — WHAT IS A "CALL"? A provider request (billing truth, B's recommendation)
-               or a wrapped method call? Today's model fallback chains already write several
-               rows per wrapped call, so "never two" is decided by this answer, not by a bug.
+OPEN FOR MANAGER:  none — B's five questions ruled in §1g (Ruling 6 points 1–5); the guide is
+           seven items (point 6).
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -462,6 +443,48 @@ green) and their key assertion read (`requestsCarrying(OPERATOR_SENTINEL)` is em
    headline number may *rise* when blocked halves are enumerated (point 1) — that is accounting,
    not regression; say so in the round-3 note. `local-no-auth` absent in deployed runtimes
    (503 ×3) is a closed check — keep the tally line, expect "absent" again.
+
+---
+
+## §1g. RULING 6 — after round-2 B (2026-09-05, BINDING)
+
+1. **P1 — no `breaker` row on an outage.** A `kind: "breaker"` row means "a cap tripped"; on a
+   store outage none did, so writing one is wrong data in the ledger. On an outage the server
+   writes the `[quota] store unavailable` error line and **no `usage_events` row** — the log is
+   the durable trace this round (the table's `kind` check admits only `llm | search |
+   breaker`, and the owner has not yet applied the first three migrations, so no schema change
+   now). Same fix in `consumeSystemSearches`. R-QUOTA-2's tests keep asserting `breaker` for
+   real trips. **Design lead, not authorised:** a future migration adds `'outage'` to the kind
+   list and the row comes back with the honest kind.
+2. **P2 — R-QUOTA-1's UI half is its own item, 2-07.** `quotaMessage` has zero production
+   callers and every client fetcher drops `quota`; the three report pages must read it and
+   render the exhausted copy + upgrade prompt, or the unavailable copy, never nothing. It is the
+   requirement's own text, so not a widening. R-QUOTA-1 stays `PARTIAL` until 2-02 **and** 2-07
+   land.
+3. **P3 — accepted: the papers surface spends nothing on any key in any runtime.** B's option
+   1. Rulings 75 and 79c of the report-parity loop, which kept the papers `web` source alive
+   locally through grounding, are **superseded for the papers surface** by D3 and Ruling 3
+   point 5; nobody restores them. The gate stays one predicate with no runtime test inside a
+   spend path.
+4. **P4 — Adzuna, JSearch and USAJobs are not operator-funded search in D2's sense.** They are
+   the free structured backbone (spec §4's table) and their keys buy free-tier quota, not
+   per-call billing. They do **not** join the gate and are **not** added to the ban list — that
+   would kill the free product's jobs sources. They stay env-only, bounded by the existing
+   per-user hourly buckets. **Accepted-cost machinery:** A tallies "structured-source key reads
+   outside the gate" every round (3 today); **threshold** — if any of the three ever bills per
+   request, it joins Ruling 5 point 2's mechanism the same round. **Owner action:** confirm
+   those three names are set on Vercel if the free jobs surface is meant to have them — nobody
+   in the loop can see the Vercel env.
+5. **P5 — a metered "call" is a provider request.** Billing truth, B's recommendation adopted.
+   One `usage_events` row per HTTP request to a model, each attempt in a fallback chain its own
+   row with its own `ok` and `model`. The provider-level `logLlmUsage` stays the writer; the
+   wrapper writes only when a request throws before logging; the `ok: true`-on-empty row in the
+   Gemini providers is fixed to `ok: text.trim().length > 0`. **Ruling 5 point 6 is amended,
+   not reversed:** "never two" means never two rows for one provider request; "never zero"
+   stands. Spec R-METER-1 amended (dated). 2-05's fix is the provider-request reading.
+6. **Round-2 guide is seven items, 2-01 … 2-07**, in B's order with 2-07 last. C confirms the
+   gate green **by landing 2-01** (the three red cases are its subject), then runs it cold after
+   every later item.
 
 ---
 

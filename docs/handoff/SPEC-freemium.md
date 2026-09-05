@@ -82,6 +82,9 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   `latency_ms`, `ok`. Implemented as a wrapper around the `DigestProvider` returned by
   `resolveProvider`, so every caller is counted without threading a user id through call sites.
   BYOK calls write the same row with `byok = true` and no cost attribution. **Never the key.**
+  **Amendment 2026-09-05 (Ruling 6, binding):** a "call" is a **provider request** — one row per
+  HTTP request to a model, each attempt in a fallback chain its own row with its own `ok` and
+  `model`. Never two rows for one provider request; never zero. An empty response is `ok: false`.
 - **R-METER-2.** Every system-Tavily search writes a `usage_events` row (`kind = search`,
   `surface`, `query_count`), attributed to the user whose request triggered the pool build.
 - **R-METER-3.** Per-user counters — `deep_reports_month`, `deep_reports_today`,
@@ -175,6 +178,10 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   writes one error-level log line prefixed `[quota] store unavailable`.
 - **R-QUOTA-2.** Trial cap 20 total; paid breaker 200/day; system-search breaker 500/day. A trip
   writes an error-level log line and a `usage_events` row (`kind = breaker`).
+  **Amendment 2026-09-05 (Ruling 6, binding):** a counter-store **outage** is not a trip. It
+  writes the `[quota] store unavailable` error line and **no `usage_events` row** — a `breaker`
+  row on an outage would record a cap that never tripped. Applies to the deep-report check and
+  to the system-search check alike.
 - **R-QUOTA-3.** Shallow (abstract-only) paper reports, ranking, digest and query generation are
   **not** counted against the deep-report quota.
 
