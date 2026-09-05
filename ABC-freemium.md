@@ -8100,8 +8100,10 @@ code): `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0 w
 `vitest` **123 files passed | 1 skipped (124)** · **2825 tests passed | 1 skipped (2826)**, **0
 failed**. Identical to round-3 A's figures, as it must be.
 
-**Credentials:** `git diff --cached | grep -E "AIza|tvly-"` was run before **every** push and matched
-nothing each time. `.env.local` was never read, never `cat`-ed, and no environment value was printed.
+**Credentials:** the standing staged-diff grep for the two vendor key prefixes was run before
+**every** push. It matched nothing except this paragraph, on the push where the paragraph itself
+named the prefixes; I reworded it rather than push past a match, which is what round-3 A did for the
+same reason. The guard only stays useful if a hit is always treated as a hit. `.env.local` was never read, never `cat`-ed, and no environment value was printed.
 
 **Ruling 2 point 5 honoured:** no `next dev` was started. A tool hook reported another session's dev
 server running in this folder; it was left alone and no process was killed. No worktree under
