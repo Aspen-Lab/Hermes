@@ -1,6 +1,10 @@
 import type { EventType } from "@/types";
 import type { EventSourceAdapter, EventsQuery, RawEventItem } from "../types";
-import { resolveSystemSearchKeys } from "@/lib/search/system-key";
+import {
+  isOperatorFundedSearch,
+  operatorSearchAvailability,
+  resolveSystemSearchKeys,
+} from "@/lib/search/system-key";
 import { recordUsageEvent } from "@/lib/usage/events";
 import { consumeSystemSearches } from "@/lib/usage/search-breaker";
 import {
@@ -20,14 +24,10 @@ import {
 } from "@/lib/opportunities/query-budget";
 import {
   geminiSearchDeadline,
-  isGeminiSearchAvailable,
   resolveWebSearchProvider,
   searchGemini,
 } from "@/lib/sources/gemini-search";
-import {
-  isVertexSearchAvailable,
-  searchVertex,
-} from "@/lib/sources/vertex-search";
+import { searchVertex } from "@/lib/sources/vertex-search";
 import { classifyEventType } from "../mapper";
 import { dateClaimEndMs } from "@/lib/format";
 
@@ -2756,8 +2756,12 @@ export function resolveSearchProvider(
   const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
   const keys = resolveKeys(query);
   return resolveWebSearchProvider(query.webSearch?.provider, {
-    geminiAvailable: isGeminiSearchAvailable(),
-    vertexAvailable: isVertexSearchAvailable(),
+    // ABC-freemium 2-04 — gated at the availability inputs, which both the
+    // explicit and the auto branch of `resolveWebSearchProvider` consult. See
+    // the matching note in `jobweb.ts`.
+    ...operatorSearchAvailability({
+      systemSearchAllowed: query.webSearch?.systemSearchAllowed === true,
+    }),
     braveKeyPresent: Boolean(keys.brave),
     tavilyKeyPresent: Boolean(keys.tavily),
     requestTavilyKeyPresent: Boolean(requestTavilyKey),
@@ -2779,7 +2783,9 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
   // A tripped breaker returns `[]`, which is the SAME degraded value a keyless
   // reader already gets here: the pipeline serves its free structured sources.
   // No error, no new shape.
-  if (keys.provenance === "system" && provider === "tavily") {
+  // 2-04 — charged for ANY operator-funded provider, not only system Tavily.
+  const operatorFunded = isOperatorFundedSearch(provider, keys);
+  if (operatorFunded) {
     const allowed = await consumeSystemSearches(
       query.webSearch?.userId ?? null,
       searches.length,
@@ -2815,15 +2821,15 @@ async function fetchImpl(query: EventsQuery): Promise<RawEventItem[]> {
             : searchBrave(q, keys.brave!, perQuery),
     ),
   );
-  // ABC-freemium 1-05 · R-METER-2 — one row per system-Tavily fan-out. Only
-  // `system`: a BYOK search costs the operator nothing.
-  if (keys.provenance === "system" && provider === "tavily") {
+  // ABC-freemium 1-05 / 2-04 · R-METER-2 — one row per operator-funded fan-out,
+  // carrying the provider's own name. A BYOK search costs the operator nothing.
+  if (operatorFunded) {
     recordUsageEvent({
       user_id: query.webSearch?.userId ?? null,
       kind: "search",
       surface: "events",
       query_count: searches.length,
-      provider: "tavily",
+      provider,
       ok: true,
       byok: false,
     });

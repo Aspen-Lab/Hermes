@@ -146,6 +146,58 @@ describe("assert-byok-production-env", () => {
       expect(output).toContain("PEER_FEED_AI_TIER");
     });
 
+    // ── ABC-freemium 2-04 · Ruling 5 point 2 — the GOOGLE_VERTEX_ prefix ────
+    //
+    // The explicit list named 4 of the 11 `GOOGLE_VERTEX_` variables the tree
+    // reads, so seven could be set on a deployment without the guard saying a
+    // word. They all configure the same operator-funded project.
+    for (const name of [
+      "GOOGLE_VERTEX_LOCATION",
+      "GOOGLE_VERTEX_SEARCH_MIN_RESULTS",
+      "GOOGLE_VERTEX_SEARCH_FALLBACK",
+      "GOOGLE_VERTEX_SEARCH_SERVING_CONFIG",
+      // A name nothing reads today — the prefix bans the FAMILY, so a variable
+      // added next round is banned before anyone remembers to list it.
+      "GOOGLE_VERTEX_SOMETHING_INVENTED",
+    ]) {
+      it(`fails the build on ${name}, which is on no explicit list`, () => {
+        const { status, output } = runGuard({
+          VERCEL: "1",
+          ...ALL_REQUIRED,
+          [name]: SENTINEL,
+        });
+
+        expect(status).toBe(1);
+        expect(output).toContain(name);
+      });
+    }
+
+    it("does NOT fire on a near-miss that merely starts similarly", () => {
+      // `GOOGLE_API_KEY` is on the REQUIRED list, so a prefix that caught it
+      // would break every build; `GOOGLE_VERTEXES` is a deliberate near-miss
+      // on the boundary of the prefix itself.
+      const { status } = runGuard({
+        VERCEL: "1",
+        ...ALL_REQUIRED,
+        GOOGLE_VERTEXES: SENTINEL,
+        GOOGLE_VERTEX: SENTINEL,
+      });
+
+      expect(status).toBe(0);
+    });
+
+    it("names a prefix-matched variable exactly once, not twice", () => {
+      // An explicitly-listed name also matches the prefix. The two sources are
+      // de-duplicated, so the failure message does not repeat itself.
+      const { output } = runGuard({
+        VERCEL: "1",
+        ...ALL_REQUIRED,
+        GOOGLE_VERTEX_PROJECT: SENTINEL,
+      });
+
+      expect(output.split("GOOGLE_VERTEX_PROJECT").length - 1).toBe(1);
+    });
+
     it("no longer bans GOOGLE_API_KEY — D1 makes it required", () => {
       // This is the assertion that would have caught the old guard: it banned
       // the very key the product now runs on, so the first deploy after R-KEY-1

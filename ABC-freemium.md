@@ -122,7 +122,7 @@ HELD BY:          C-round2 @ 2026-09-05T00:40Z
 ROUND:            2
 WHOSE TURN:       C
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:35Z
-STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03.
+STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03, 2-04.
 
                   DEVIATIONS FROM B'S GUIDE, each traced before it was taken:
                   - 2-02: B put the `[quota] store unavailable` writer in a PRIVATE helper in
@@ -6429,3 +6429,154 @@ the summary "carries a real `deepReportsRemaining` = budget − used from the co
 many words, and there is no other place to get `used`. If the manager would rather the profile
 screen fetch the allowance separately, that is a shape change, not a correction, and it belongs to a
 later round.
+
+---
+
+#### 2-04 — LANDED. One gate, one breaker and one named row for all four operator-funded search providers
+
+**Gate after this item:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, **0
+warnings**) · `vitest` **118 files passed | 1 skipped (119)** · **2773 tests passed | 1 skipped
+(2774)**, **0 failed**. Up 21 from 2-03's 2752.
+
+**What changed, nine files (one new):**
+
+| File | Change |
+|---|---|
+| `web/src/lib/search/system-key.ts` | Brave gated at the env read; new `operatorSearchAvailability()` and `isOperatorFundedSearch()`; the header now describes a four-provider gate and names what is deliberately excluded |
+| `web/src/lib/sources/gemini-search.ts` | the auto order rewritten to R-KEY-3's arrow chain; the two clauses that jumped Vertex and grounding to the front are gone |
+| `web/src/lib/jobs/sources/jobweb.ts` · `web/src/lib/events/sources/eventweb.ts` | availability comes from the gate, not the environment; the breaker and the R-METER-2 row are charged under `isOperatorFundedSearch` and the row carries `provider` as a **variable** |
+| `web/src/lib/sources/web-search.ts` | both ungated capability reads replaced by the gate; **gains a breaker and a usage row it never had** |
+| `web/src/lib/sources/types.ts` | `webSearch.userId?` added for shape parity (see the gap recorded below) |
+| `web/scripts/assert-byok-production-env.mjs` | `GOOGLE_VERTEX_` banned **by prefix**, unioned with and de-duplicated against the explicit list |
+| **NEW** `web/src/lib/sources/web-search.test.ts` | 5 cases — the papers source had no suite at all |
+| four existing suites | 16 assertions rewritten to the new contract; 13 new cases added |
+
+**B'S POINT 1 IS THE WHOLE ITEM AND I BUILT TO IT.** Rewriting the auto order alone would have
+closed nothing for jobs and events: the pipeline sets an explicit `provider` from the server's own
+environment, so `resolveWebSearchProvider` returns from its **explicit** branch before any ordering
+clause runs. The gate therefore goes on the **availability inputs**, which both branches consult.
+There is a dedicated case per surface (`refuses an EXPLICIT gemini or vertex preference when the
+reader is not entitled`), and it is the single most important new assertion in the item — it fails
+loudly on an order-only fix.
+
+**I took B's recommended shared helper, not three inline copies.** `operatorSearchAvailability()`
+lives in `system-key.ts` beside the key resolution, so "who may spend the operator's search money"
+is answered for all four providers in one file. Three copies of `systemSearchAllowed && isXAvailable()`
+is how the fourth call site forgets. No import cycle: `system-key.ts` had no imports at all and the
+two search modules do not import it.
+
+**`webSearchOptions` needed no change**, which I verified rather than assumed. It still returns
+`{ provider: "vertex" }` from the environment — but that value now meets a gated `vertexAvailable`
+at the resolver and the explicit branch returns `null`. Gating the inputs made the producer
+harmless without touching it.
+
+**The auto order, as landed**, with the reason on each line in the source:
+
+```
+1. requestTavilyKeyPresent -> "tavily"   BYOK — costs the operator nothing
+2. tavilyKeyPresent        -> "tavily"   system Tavily — gated AND metered
+3. braveKeyPresent         -> "brave"    local-only
+4. vertexAvailable         -> "vertex"   local-only
+5. geminiAvailable         -> "gemini"   local-only
+6.                            null       the free structured sources
+```
+
+Group 3's internal order is **Ruling 5 point 2's own written order** (`Brave / Vertex / Gemini`),
+recorded here as the choice the ruling left to me. Once every one of them is charged and metered,
+the ruling's principle — an uncounted provider never outranks the gated, metered one — holds under
+any order within the group. I also **removed the `!requestTavilyKeyPresent` conditions** that the
+old Vertex and grounding clauses carried: with BYOK Tavily first outright, that three-way
+interaction has nothing left to express.
+
+**Metering, as landed.** `isOperatorFundedSearch(provider, keys)` returns `keys.provenance ===
+"system"` for Tavily and **`true` for the other three** — there is no BYOK path to Brave, Vertex or
+grounding, which I confirmed in source: `searchConnectors` carries only a Tavily key and
+`SystemSearchKeys` has no Brave request field. The breaker and the row now use that one predicate,
+and the row's `provider` is the variable. **I did not widen `provenance`'s meaning** — B's reasoning
+holds: doing so would need the provider known before the keys are resolved, reversing the call order
+at all three adapters. Its comment now says so explicitly.
+
+**Papers — Ruling 6 point 3 implemented, option 1, and B's correction to A confirmed in source.**
+The hard `systemSearchAllowed: false` was permanent **only for Tavily**; Brave came from the ungated
+env read and `isGeminiSearchAvailable()` / `isVertexSearchAvailable()` were called directly in
+`web-search.ts`, so all three walked past it. The surface now spends nothing on any operator key in
+**any runtime**, local development included, and there is a case asserting the absence of a
+runtime exemption so nobody restores one. It also **gains the breaker and the usage row it never
+had** — grepped and confirmed the file previously contained neither symbol. That machinery is
+unreachable today, and that is the point: a gate with no meter behind it is how the same defect
+returns wearing a new name.
+
+**A GAP I AM RECORDING RATHER THAN WIDENING INLINE (§2 Agent C, standard 3).** The papers
+`SourceQuery.webSearch` type had **no `userId`**, and `feed/pipeline.ts` has no user in scope at
+all — threading one would mean changing the feed request type and the `api/feed` route, which is
+wider than this item. I added `userId?: string | null` to the type for shape parity with jobs and
+events, documented it at the field, and **left it unpopulated**. It does not matter today because
+the gate makes the metering branch unreachable. **It is the first thing anyone un-gating this
+surface must do**: with it unset the breaker sees a `null` user and declines to charge, which is a
+meter that looks present and counts nothing. Round-3 A should carry this as a named watch point.
+
+**The guard — prefix, with the explicit names kept.** `configuredForbiddenNames` returns the
+de-duplicated union of the explicit list and every `Object.keys(env)` entry matching
+`/^GOOGLE_VERTEX_/`. The explicit names stay so the message names a variable the reader recognises.
+**Only names are collected, never values, so R-GUARD-2 is untouched.** I re-read `vitest.config.ts`
+before writing this: Ruling 3 point 3's prefix ban is about *injecting* names INTO the test process
+and stays an explicit allow-list — opposite direction, different file, and that file's own comment
+about the near-miss `GOOGLE_VERTEX_PROJECT_ID` says catching it is what should happen here. Seven
+new guard cases, including a de-duplication case (an explicitly-listed name also matches the prefix
+and must be named **once**) and a near-miss case pinning that `GOOGLE_VERTEXES`, `GOOGLE_VERTEX` and
+the **required** `GOOGLE_API_KEY` do not fire.
+
+**Adzuna, JSearch and USAJobs untouched, per Ruling 6 point 4.** They do not join the gate and are
+not added to the ban list. I wrote the ruling's reasoning and its threshold into `system-key.ts`'s
+header under "WHAT IS DELIBERATELY NOT HERE", so the next reader who finds the same
+`request key || env key` shape does not re-open it. **Standing tally for A: structured-source key
+reads outside the gate = 3**, unchanged.
+
+**ESCAPE CLAUSE (Ruling 5 point 2) — I looked and found no provider that cannot be routed through
+the gate.** All four take their availability from either a key `resolveSystemSearchKeys` returns or
+a boolean passed into `resolveWebSearchProvider`, both already parameterised. Vertex AI Search was
+the one that looked like it might resist, because its availability is a capability rather than a
+key — and it does not, because `operatorSearchAvailability` returns capabilities the same way. The
+nearest thing to a fifth is the three structured job sources, which are flagged above rather than
+routed, by ruling.
+
+**16 assertions rewritten to the new contract, never deleted** (§3), each with a comment naming this
+item. The four that changed meaning rather than merely gaining an entitlement:
+
+| Assertion | Was | Now |
+|---|---|---|
+| `system-key.test.ts` "leaves Brave ungated, because D2 bans it on Vercel anyway" | an unentitled caller got the Brave key | **renamed** `gates Brave exactly like the system Tavily key`; both halves asserted. A ban on Vercel is not a gate on a self-host. |
+| `gemini-search.test.ts` "auto picks gemini when Vertex is present and Tavily is NOT enabled" | grounding beat an available system Tavily key | **renamed** `auto puts the METERED providers ahead of the local-only ones`; Tavily wins |
+| `gemini-search.test.ts` "reproduces the shipped auto order exactly" | Brave beat the system Tavily key | one line moved; renamed to say which pair changed |
+| `jobweb`/`eventweb` "keeps the shipped Brave behaviour exactly" | Brave resolved with no entitlement | **renamed** `spends the operator's env Brave key only when the request is entitled`, split in two |
+
+**13 new cases.** Per surface: the explicit-preference gate (the order-only-fix catcher); the auto
+chain asserted as a **sequence** (remove the winner, the next steps up — five providers, one test);
+a row naming **`gemini`** rather than the literal `"tavily"`; the 500/day breaker charged for a
+grounding fan-out, with the fan-out proved not to run; a BYOK Tavily fan-out charging **neither**;
+an unentitled reader with **every** credential configured spending nothing; the five papers cases;
+and the seven guard cases.
+
+**Proved the new tests test the fix (§2 Agent C, standard 1).** I `git stash`-ed the five source
+files (keeping the tests) and re-ran the five affected suites: **20 failed**, and every one of this
+item's new or rewritten assertions is in the list by name. Restored, re-ran, green.
+
+**Standing locks re-verified** (§2 Agent C, standard 2): `registry.test.ts` green — and I re-read
+its header note before touching the guard, as B advised; **`resolveProvider`, `registry.ts` and
+R-KEY-1 are untouched**, which was the boundary to keep. `ai-tier.test.ts`, the four harness-driven
+route suites, `deep-report-quota.test.ts`, `counters.test.ts`, the `search-breaker` cases,
+`ui-vocabulary.test.ts`, `no-client-dev-flags.test.ts` and the guard script test are all green in
+the cold full run above. `pool-refresh-gates.test.ts` — which drives the breaker through a real pool
+build and whose charging predicate just widened — is green and unmodified.
+
+**The visible effect on the current Vercel deployment is NIL, and it should be reported that way.**
+Every name this item gates is already banned there. This is defence in depth for a self-host and a
+developer machine, not a live leak being closed.
+
+**Doubt flagged, not judged.** Two.
+
+1. The papers `userId` gap above. Confirmed, recorded, not widened.
+2. `web-search.ts` now imports `consumeSystemSearches` and `recordUsageEvent`, so the papers source
+   pulls the usage modules into its import graph for machinery that cannot fire under the current
+   gate. I judged that the right trade — the alternative is a gate with nothing behind it — but it
+   is a real cost and the manager may prefer it stated in the spec rather than only in a comment.

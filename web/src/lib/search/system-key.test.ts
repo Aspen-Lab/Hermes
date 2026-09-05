@@ -69,16 +69,43 @@ describe("resolveSystemSearchKeys", () => {
     ).toBe("none");
   });
 
-  it("leaves Brave ungated, because D2 bans it on Vercel anyway", () => {
+  it("gates Brave exactly like the system Tavily key", () => {
+    // REWRITTEN, NOT DELETED — ABC-freemium 2-04 · Ruling 5 point 2.
+    //
+    // This case used to be called "leaves Brave ungated, because D2 bans it on
+    // Vercel anyway" and asserted that an unentitled caller still got the key.
+    // The reasoning was that the build guard's ban made it unreachable — but a
+    // ban on Vercel is not a gate on a self-host or a developer machine, and
+    // Brave is operator-funded on both. It is one of the four providers Ruling
+    // 5 point 2 puts behind one predicate.
     vi.stubEnv("TAVILY_API_KEY", "");
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "BRAVE-NOT-A-KEY");
 
-    const keys = resolveSystemSearchKeys({ systemSearchAllowed: false });
+    const denied = resolveSystemSearchKeys({ systemSearchAllowed: false });
+    const allowed = resolveSystemSearchKeys({ systemSearchAllowed: true });
 
-    expect(keys.brave).toBe("BRAVE-NOT-A-KEY");
-    // Provenance describes the TAVILY key, which is the only thing R-METER-2
-    // counts. No Tavily key resolved, so nothing to attribute.
-    expect(keys.provenance).toBe("none");
+    expect(denied.brave).toBeUndefined();
+    expect(allowed.brave).toBe("BRAVE-NOT-A-KEY");
+    // Provenance still describes the TAVILY key specifically — its meaning is
+    // deliberately not widened (2-04). No Tavily key resolved either way.
+    expect(denied.provenance).toBe("none");
+    expect(allowed.provenance).toBe("none");
+  });
+
+  it("withholds Brave from a BYOK caller who is not entitled", () => {
+    // 2-04 — the BYOK branch returns early and used to carry the ungated Brave
+    // key out with it, so a reader's own Tavily key doubled as a free pass to
+    // the operator's Brave account.
+    vi.stubEnv("BRAVE_SEARCH_API_KEY", "BRAVE-NOT-A-KEY");
+
+    const keys = resolveSystemSearchKeys({
+      requestTavilyKey: "USER-NOT-A-KEY",
+      systemSearchAllowed: false,
+    });
+
+    expect(keys.provenance).toBe("byok");
+    expect(keys.tavily).toBe("USER-NOT-A-KEY");
+    expect(keys.brave).toBeUndefined();
   });
 
   it("returns nothing when no candidate survives", () => {

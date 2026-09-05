@@ -2575,28 +2575,62 @@ describe("RULING 75 — eventweb provider resolution", () => {
     expect(eventweb.enabled(baseQuery)).toBe(false);
   });
 
+  // ABC-freemium 2-04 — an ENTITLED query. Vertex and grounding sit behind
+  // `systemSearchAllowed` now, exactly as the Tavily and Brave keys do.
+  const entitledQuery = {
+    ...baseQuery,
+    webSearch: { systemSearchAllowed: true },
+  };
+
   it("comes back on when Vertex is present and the query asks for gemini", () => {
+    // REWRITTEN, NOT DELETED — 2-04 adds the entitlement to the query.
     withoutKeys();
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
-    const query = { ...baseQuery, webSearch: { provider: "gemini" as const } };
+    const query = {
+      ...baseQuery,
+      webSearch: { provider: "gemini" as const, systemSearchAllowed: true },
+    };
     expect(resolveSearchProvider(query)).toBe("gemini");
     expect(eventweb.enabled(query)).toBe(true);
   });
 
-  it("picks gemini on auto when Tavily is not enabled", () => {
+  it("refuses an EXPLICIT gemini or vertex preference when the reader is not entitled", () => {
+    // The case an order-only fix would have left open (2-04): the pipeline sets
+    // `provider` from the server's own environment, so an unentitled caller
+    // lands on the explicit branch and never reaches the auto order.
     withoutKeys();
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
-    expect(resolveSearchProvider(baseQuery)).toBe("gemini");
+    vi.stubEnv("GOOGLE_VERTEX_SEARCH_ENGINE_ID", "peer-web");
+
+    for (const provider of ["gemini", "vertex"] as const) {
+      const query = {
+        ...baseQuery,
+        webSearch: { provider, systemSearchAllowed: false },
+      };
+      expect(resolveSearchProvider(query)).toBeNull();
+      expect(eventweb.enabled(query)).toBe(false);
+    }
+  });
+
+  it("picks gemini on auto when the reader is entitled and Tavily is not enabled", () => {
+    // REWRITTEN, NOT DELETED — 2-04 adds the entitlement and the unentitled
+    // half beside it.
+    withoutKeys();
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
+    expect(resolveSearchProvider(entitledQuery)).toBe("gemini");
+    expect(resolveSearchProvider(baseQuery)).toBeNull();
   });
 
   // CREDIT MIGRATION — the new default, pinned in the same block as the old
   // one so the pair reads as the order it is: a configured Search App takes
   // the server-Vertex slot, grounding keeps it when there is none.
   it("picks vertex on auto once a Search App is configured", () => {
+    // REWRITTEN, NOT DELETED — 2-04 adds the entitlement to the query.
     withoutKeys();
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
     vi.stubEnv("GOOGLE_VERTEX_SEARCH_ENGINE_ID", "peer-web");
-    expect(resolveSearchProvider(baseQuery)).toBe("vertex");
+    expect(resolveSearchProvider(entitledQuery)).toBe("vertex");
+    expect(resolveSearchProvider(baseQuery)).toBeNull();
   });
 
   it("still yields to a caller-supplied Tavily key", () => {
@@ -2608,12 +2642,24 @@ describe("RULING 75 — eventweb provider resolution", () => {
   });
 
   it("an explicit brave preference wins over an available Vertex project", () => {
+    // REWRITTEN, NOT DELETED — 2-04. The preference still wins; the query has
+    // to be entitled first, because Brave is operator-funded too.
     withoutKeys();
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "brave-key");
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "some-project");
     expect(
-      resolveSearchProvider({ ...baseQuery, webSearch: { provider: "brave" as const } }),
+      resolveSearchProvider({
+        ...baseQuery,
+        webSearch: { provider: "brave" as const, systemSearchAllowed: true },
+      }),
     ).toBe("brave");
+    // ...and is refused outright without one.
+    expect(
+      resolveSearchProvider({
+        ...baseQuery,
+        webSearch: { provider: "brave" as const, systemSearchAllowed: false },
+      }),
+    ).toBeNull();
   });
 
   // ABC-freemium 1-05 · R-KEY-3 — REWRITTEN, NOT DELETED. This case asserted
@@ -2638,12 +2684,17 @@ describe("RULING 75 — eventweb provider resolution", () => {
     expect(eventweb.enabled(entitled)).toBe(true);
   });
 
-  it("keeps the shipped Brave behaviour exactly when Vertex is absent", () => {
-    // Brave is env-only and D2 bans it on Vercel, so R-KEY-3 leaves it ungated.
+  it("spends the operator's env Brave key only when the request is entitled", () => {
+    // REWRITTEN, NOT DELETED — ABC-freemium 2-04 · Ruling 5 point 2. Was
+    // "keeps the shipped Brave behaviour exactly", with a comment saying
+    // R-KEY-3 leaves Brave ungated because D2 bans it on Vercel. A ban on
+    // Vercel is not a gate on a self-host or a developer machine.
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "");
     vi.stubEnv("TAVILY_API_KEY", "");
     vi.stubEnv("BRAVE_SEARCH_API_KEY", "env-brave");
-    expect(resolveSearchProvider(baseQuery)).toBe("brave");
+
+    expect(resolveSearchProvider(baseQuery)).toBeNull();
+    expect(resolveSearchProvider(entitledQuery)).toBe("brave");
   });
 });
 
@@ -2667,7 +2718,7 @@ describe("RULING 75 — eventweb hands the gemini adapter its deny list", () => 
       topics: ["molten salt"],
       queries: ["molten salt conference"],
       limit: 80,
-      webSearch: { provider: "gemini" },
+      webSearch: { provider: "gemini", systemSearchAllowed: true },
     });
 
     expect(geminiSearchMock).toHaveBeenCalledTimes(1);

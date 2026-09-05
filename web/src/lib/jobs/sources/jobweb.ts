@@ -1,5 +1,9 @@
 import type { JobSourceAdapter, JobsQuery, RawJobItem } from "../types";
-import { resolveSystemSearchKeys } from "@/lib/search/system-key";
+import {
+  isOperatorFundedSearch,
+  operatorSearchAvailability,
+  resolveSystemSearchKeys,
+} from "@/lib/search/system-key";
 import { recordUsageEvent } from "@/lib/usage/events";
 import { consumeSystemSearches } from "@/lib/usage/search-breaker";
 import { looksLikeHostBrand, urlHashId } from "@/lib/opportunities/shared";
@@ -9,14 +13,10 @@ import {
 } from "@/lib/opportunities/query-budget";
 import {
   geminiSearchDeadline,
-  isGeminiSearchAvailable,
   resolveWebSearchProvider,
   searchGemini,
 } from "@/lib/sources/gemini-search";
-import {
-  isVertexSearchAvailable,
-  searchVertex,
-} from "@/lib/sources/vertex-search";
+import { searchVertex } from "@/lib/sources/vertex-search";
 import {
   cleanJobDescription,
   cleanJobSubtitlePart,
@@ -2145,8 +2145,18 @@ export function resolveSearchProvider(
   const requestTavilyKey = query.webSearch?.tavilyApiKey?.trim();
   const keys = resolveKeys(query);
   return resolveWebSearchProvider(query.webSearch?.provider, {
-    geminiAvailable: isGeminiSearchAvailable(),
-    vertexAvailable: isVertexSearchAvailable(),
+    // ABC-freemium 2-04 — these two used to be read straight from the
+    // environment, so a free or anonymous caller reached Vertex AI Search or
+    // Gemini grounding on the operator's project with no gate at all. They now
+    // come from the same predicate the Tavily and Brave keys do.
+    //
+    // **Gating the availability inputs is what closes the hole**, not the
+    // ordering: the pipeline sets an explicit `provider` from the server's own
+    // environment, so `resolveWebSearchProvider` returns from its explicit
+    // branch before any ordering clause runs. Both branches read this object.
+    ...operatorSearchAvailability({
+      systemSearchAllowed: query.webSearch?.systemSearchAllowed === true,
+    }),
     braveKeyPresent: Boolean(keys.brave),
     tavilyKeyPresent: Boolean(keys.tavily),
     requestTavilyKeyPresent: Boolean(requestTavilyKey),
@@ -2168,7 +2178,11 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
   // A tripped breaker returns `[]`, which is the SAME degraded value a keyless
   // reader already gets here: the pipeline serves its free structured sources.
   // No error, no new shape.
-  if (keys.provenance === "system" && provider === "tavily") {
+  // 2-04 — the predicate is now `isOperatorFundedSearch`, so Brave, Vertex and
+  // grounding are charged too. They were free of the cap before, which meant
+  // the 500/day breaker protected only one of the four ways to spend money.
+  const operatorFunded = isOperatorFundedSearch(provider, keys);
+  if (operatorFunded) {
     const allowed = await consumeSystemSearches(
       query.webSearch?.userId ?? null,
       searches.length,
@@ -2196,17 +2210,21 @@ async function fetchImpl(query: JobsQuery): Promise<RawJobItem[]> {
         : searchBrave(jobQuery, keys.brave!, perQuery, query.topics);
     }),
   );
-  // ABC-freemium 1-05 · R-METER-2 — one row per system-Tavily fan-out. This is
-  // the one place that knows the surface, the key's provenance and the query
-  // count. Only `system`: a BYOK search costs the operator nothing, so
-  // attributing it would be noise.
-  if (keys.provenance === "system" && provider === "tavily") {
+  // ABC-freemium 1-05 / 2-04 · R-METER-2 — one row per operator-funded fan-out,
+  // whichever provider ran it. This is the one place that knows the surface, who
+  // is paying and the query count. A BYOK search costs the operator nothing, so
+  // attributing it would be noise and `isOperatorFundedSearch` excludes it.
+  //
+  // `provider` is the VARIABLE, not the literal `"tavily"` it used to be — that
+  // literal made a Brave or Vertex fan-out impossible to tell apart from a
+  // Tavily one in the ledger, on the rare occasion it wrote a row at all.
+  if (operatorFunded) {
     recordUsageEvent({
       user_id: query.webSearch?.userId ?? null,
       kind: "search",
       surface: "jobs",
       query_count: searches.length,
-      provider: "tavily",
+      provider,
       ok: true,
       byok: false,
     });

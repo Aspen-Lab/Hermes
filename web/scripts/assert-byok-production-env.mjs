@@ -67,8 +67,45 @@ function missingRequiredNames(env) {
   return REQUIRED_ON_VERCEL.filter((name) => !isSet(env, name));
 }
 
+/**
+ * Every operator-funded name that must not be set on a deployment, whether it
+ * is on the explicit list or merely starts with a banned prefix.
+ *
+ * ── WHY A PREFIX, ADDED BY ABC-freemium 2-04 (Ruling 5 point 2) ──────────────
+ *
+ * The explicit list named **4** `GOOGLE_VERTEX_` variables. The tree reads
+ * **11**, so seven — including `GOOGLE_VERTEX_LOCATION`,
+ * `GOOGLE_VERTEX_SEARCH_LOCATION` and `GOOGLE_VERTEX_SEARCH_FALLBACK` — could
+ * be set on a deployment without the guard saying a word. They all configure
+ * the same operator-funded project, so the ban is on the family, not on a
+ * hand-maintained subset that drifts every time a variable is added.
+ *
+ * **The explicit names stay.** They are what makes the failure message name a
+ * variable the reader recognises, and keeping them means the message is
+ * identical for the four cases anyone has actually hit.
+ *
+ * **This is NOT the prefix Ruling 3 point 3 forbids.** That rule is about
+ * `vitest.config.ts` *injecting* environment names INTO the test process, which
+ * must stay an explicit allow-list. Banning on a Vercel build and injecting
+ * into vitest are opposite directions through different files —
+ * `vitest.config.ts` even reasons about the near-miss `GOOGLE_VERTEX_PROJECT_ID`
+ * that "the prefix match alone would" catch, and catching it is exactly what
+ * should happen here.
+ *
+ * R-GUARD-2 is unaffected: only NAMES are collected, never values.
+ */
+const FORBIDDEN_PREFIXES_ON_VERCEL = ["GOOGLE_VERTEX_"];
+
 function configuredForbiddenNames(env) {
-  return FORBIDDEN_ON_VERCEL.filter((name) => isSet(env, name));
+  const explicit = FORBIDDEN_ON_VERCEL.filter((name) => isSet(env, name));
+  const byPrefix = Object.keys(env).filter(
+    (name) =>
+      FORBIDDEN_PREFIXES_ON_VERCEL.some((prefix) => name.startsWith(prefix)) &&
+      isSet(env, name),
+  );
+  // De-duplicated, and the explicit ones stay first so the message reads the
+  // same way it always has for the four names that were already on the list.
+  return Array.from(new Set([...explicit, ...byPrefix]));
 }
 
 /**
