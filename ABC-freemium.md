@@ -7118,3 +7118,143 @@ machine's meet.
 never `cat` and never a printed value (four names checked — both spendable keys and both Supabase
 names, all **0**); `web/supabase/migrations/` (five files, the three ABC-freemium ones unapplied);
 and `vitest.setup.ts`, which deletes both spendable keys before every suite and every test.
+
+#### Part 2 — the five personas through the real routes, and round 2's seven differences verified by behaviour
+
+**The harness.** Ruling 2 point 7 and Ruling 4 point 8 say to use C's permanent suites rather than
+rebuild a probe, so I ran them first and read what they assert: `ai-route-personas.test.ts` (16),
+`jobs/feed/route.test.ts` (9), `events/feed/route.test.ts` (7), `figure/route.test.ts` (3),
+`profile/route.test.ts` (15), `test-digest/route.test.ts` (3), `feed/route.test.ts` (3) —
+**7 files, 54 cases, all green**, driven off `src/test-support/route-harness.ts`.
+
+C's suites cover `anonymous` and `free-no-key` on the four routes that had none, and all five
+personas on the two feeds. They do **not** cover `trial`, `paid` or `free-byok-tavily` on digest,
+the three reports, figure or profile. I extended in **throwaway copies** — never by editing C's
+files — and drove all 45 pairs myself. **Denominator: 45**, unchanged from round 2 (five personas ×
+the same nine routes), so the trend is comparable. `POST /api/test-digest` is now covered by a
+permanent suite as well and is reported separately below rather than folded into the 45.
+
+Runtime for every table below: `VERCEL=1`, `VERCEL_ENV=production`, Supabase auth configured, every
+key a sentinel. Nothing real was contacted.
+
+##### The operator-key search count — counted by me from the outgoing requests
+
+| Persona | jobs/feed operator · own | events/feed operator · own | Round 2 |
+|---|---|---|---|
+| `anonymous` | **0** · 0 | **0** · 0 | 0 · 0 |
+| `free-no-key` | **0** · 0 | **0** · 0 | 0 · 0 |
+| `free-byok-tavily` | **0** · 2 | **0** · 7 | 0 · 2 and 0 · 7 |
+| `trial` | 2 · 0 | 7 · 0 | 2 · 0 and 7 · 0 |
+| `paid` | 2 · 0 | 7 · 0 | 2 · 0 and 7 · 0 |
+
+**Operator-key searches on `anonymous` + `free-no-key`, per surface: 0 and 0**, held from round 2 —
+and this round I re-measured it with **all four** operator search credentials armed at once, not
+only Tavily, which is the condition round 2's difference 5 was about. **Papers operator-key
+searches: 0** on every persona, in the deployed **and** the local-dev runtime.
+
+##### Per persona, per route — 45 of 45
+
+**`anonymous`** — 9 of 9. Feeds `POST /api/feed`, `/api/jobs/feed`, `/api/events/feed`: **200 at
+tier 0, 0 operator requests, 0 `resolveProvider` calls**. `POST /api/digest`, all three reports,
+`GET /api/figure`, `GET /api/profile`: **401**, 0 providers, and figure fetched nothing.
+
+**`free-no-key`** — 9 of 9 (round 2: 8 of 9). All three feeds 200 with **0** operator requests;
+digest and all three reports 200 with a provider resolved; figure 200; and **`GET /api/profile` now
+reports a real remainder that moves — 5 before a report, 4 after.** That is the pair that failed in
+round 2, on this persona.
+
+**`free-byok-tavily`** — 9 of 9 (round 2: 8 of 9). Jobs sends the user's key **2×** and the
+operator's **0×**; events **7×** and **0×**. `POST /api/feed` is 200 with **0** searches on any key —
+D3 / Ruling 3 point 5, and now Ruling 6 point 3: the papers `web` source returns `[]` in local
+development too. **That is the accepted decision, not a regression**, and §1's reading note says so.
+Profile: 5 -> 4.
+
+**`trial`** — 9 of 9 (round 2: 8 of 9). Jobs 2 operator searches, events 7, each charged to the
+500/day breaker and each writing one named usage row. Profile: **20 -> 19**, counted on the trial
+key, not the monthly one.
+
+**`paid`** — 9 of 9 (round 2: 8 of 9). Jobs 2, events 7. Profile: `{ unlimited: true,
+deepReportsRemaining: null }` with **no `reason` key**, and no `Infinity` in the serialised text.
+
+**Part 2 verdict: 45 of 45 persona/route pairs behave as the spec requires** (round 2: 41 of 45).
+The four that failed in round 2 were the same defect seen four times on `GET /api/profile`, and all
+four are closed.
+
+**Tenth route, reported separately so the denominator stays comparable:** `POST /api/test-digest` —
+signed-out **401** with the pipeline and the mailer both proved unreached; **0** operator requests
+for a signed-in free caller; and the pipeline never asked for `systemSearchAllowed: true`.
+
+**One cross-cutting fault mode, counted separately so it is not double-counted in the 45 — and it
+is new this round.** A `paid` reader whose 200/day breaker has tripped is shown an **upgrade
+prompt**. The route payload is correct (`{"kind":"breaker","reason":"exhausted"}` is exactly what
+R-QUOTA-2 specifies), so no pair in the table above fails; the fault is one layer up, in what the
+three report pages render from that payload. Three pages × one persona. See difference 1.
+
+##### Round 2's seven differences, verified by behaviour — all seven CLOSED
+
+**When a fix's target is confirmed gone, what stands in its place is written down.**
+
+| # | Round-2 difference | Now | What I measured, and what stands in its place |
+|---|---|---|---|
+| 1 | An outage is reported as exhaustion | **CLOSED** | On all three report routes, with the counter store forced to fail: `{"kind":"deep_report","reason":"unavailable","remaining":0,...}`, **exactly 1** `[quota] store unavailable` error line, **0** `usage_events` rows. Real exhaustion on the same three routes: `reason: "exhausted"`, **0** unavailable lines. A real **paid** trip: `reason: "exhausted"`, **1** `kind: "breaker"` row, **0** unavailable lines. Both directions checked, both ways round. **In its place:** the outage copy now reaches a reader (difference 1 below is a different sentence, on the exhaustion branch). |
+| 2 | `deepReportsRemaining` is a plan budget that never moves | **CLOSED** | `GET /api/profile` before and after a **really consumed** report on `POST /api/jobs/report`: `free` **5 -> 4**, `trial` **20 -> 19**. The server-only `deepReportsBudget` is absent from every payload — I checked with `hasOwnProperty`, not by reading the type. |
+| 3 | A paid reader's remainder arrives as bare `null` | **CLOSED** | Parsed objects, not strings, as the brief requires: `paid` -> `{ unlimited: true, deepReportsRemaining: null }` and `hasOwnProperty("reason")` is **false**. Raw text contains no `Infinity`. The reserved outage sentinel is now reachable only from a real outage: forcing a 500 from the store gives `{ unlimited: false, deepReportsRemaining: null, reason: "unavailable" }`. |
+| 4 | The gate is red — three quota tests aged out at UTC midnight | **CLOSED, with the fixture unchanged** | `deep-report-quota.test.ts:23` still reads `const NOW = new Date("2026-09-04T12:00:00.000Z")`, and that instant is now **more than a day in the past** — a stronger test of the fix than round 2 could run. All 22 cases green, including the three named ones. The fix is in the seam: `InMemoryCounterStore.prune()` sweeps against the caller's clock. |
+| 5 | Vertex AI Search and Gemini grounding are ungated operator spend | **CLOSED** | Measured with **every** operator search credential armed simultaneously, in **two** runtimes. `anonymous` and `free-no-key`: **0** searches and **0** usage rows on jobs and events, deployed **and** local-dev. `trial` and `paid`: the search runs, a **second counter RPC** fires (the 500/day breaker), and **one** usage row is written carrying `provider: "vertex"` — the provider's own name. **In its place:** on a developer's machine with Vertex configured, the local-dev default is `free`, so nothing spends until `PEER_DEV_ENTITLEMENT=paid` is set — which I confirmed flips it on, so the zero is the gate and not an inert runtime. |
+| 6 | The guard bans four `GOOGLE_VERTEX_*` names; the tree reads eleven | **CLOSED** | Proved with an invented twelfth name. Real script, synthetic Vercel build, four required names set, plus `GOOGLE_VERTEX_ZZZ=invented`: **exit 1**, `Remove these operator-funded AI settings from Vercel: GOOGLE_VERTEX_ZZZ.` Identical run without it: **exit 0**. The message named the variable and never its value, which also re-confirms R-GUARD-2 by execution. |
+| 7 | Brave outranks the operator's Tavily key | **CLOSED** | The auto order now reads `requestTavily -> tavily -> brave -> vertex -> gemini`. With a system Tavily key **and** a Brave key both present and the reader entitled, Tavily is chosen. No uncounted provider outranks the gated, metered one — and since 2-04 every one of the four is charged and metered anyway, so the ordering is no longer load-bearing for the money. |
+
+**Plus the four contract checks the brief names, each measured this turn.**
+
+- **One provider request -> exactly one usage row.** My own recorder on the metering wrapper: a
+  success that logged nothing itself -> **1 row, `ok: true`**. Never zero, which was the real hole.
+- **A throwing request -> exactly one row, and it still throws.** -> **1 row, `ok: false`**, and the
+  error propagated.
+- **An empty response -> `ok: false`.** The Gemini providers' four `ok: true`-on-empty rows are gone;
+  `gemini.test.ts` drives a request that returns empty text and gets `ok: false`, one that returns
+  real text and gets `ok: true`, and a fallback chain that writes **one row per attempt** — Ruling 6
+  point 5's billing truth, asserted rather than assumed.
+- **The three report pages.** A render harness exists, so I drove the component myself rather than
+  reading it: `exhausted` -> the sentence **plus** the prompt; `unavailable` -> the outage copy and
+  **no** prompt (neither "Peer Pro" nor the settings link appears); **no signal -> the empty
+  string**, not an empty panel. No CJK, no tier vocabulary in any of the five states I rendered. All
+  three pages import `QuotaNotice`, read `quota` off the response into **separate** state, and render
+  it beside the degraded report; the placement itself is asserted as source text rather than by
+  rendering three ~2500-line page components, which is a real limit on that half and I am naming it.
+
+##### The one doubt C flagged for me, resolved
+
+C asked which persona cannot reach the notice on jobs and events, because
+`loadConfiguredOpportunityEnrichment` returns early when `canAttemptOpportunityEnrichment` is false.
+**Answer: `anonymous`, and it is harmless.** That predicate is
+`aiAvailability(profile, entitlement) !== "none"`, which is false only for a reader with no
+`entitlement.userId` and no BYOK override — and such a reader is answered **401** by all three report
+routes, so there is no refusal to explain and nothing to say. No signed-in persona is affected.
+
+##### Two extra runtimes, stated explicitly because these checks cannot fire on silence
+
+**Ruling 4 point 4 — is `local-no-auth` reachable in a deployed runtime? ABSENT.** Drove
+`POST /api/jobs/feed` with no Supabase configuration at all, with every operator credential armed,
+under each of the three shapes a deployment can take:
+
+| Runtime | Result |
+|---|---|
+| `VERCEL_ENV=production`, no Supabase config | **503** · 0 searches |
+| `VERCEL=1`, no Supabase config | **503** · 0 searches |
+| `NODE_ENV=production`, no Supabase config | **503** · 0 searches |
+
+**No synthesised user is reachable from any deployed runtime.** The check fired; it did not pass on
+silence.
+
+**Local development**, `NODE_ENV=development` and no `VERCEL*`, every operator search credential set:
+
+| Probe | Result | Reading |
+|---|---|---|
+| `POST /api/jobs/feed`, no `PEER_DEV_ENTITLEMENT` | **0 searches · 0 usage rows** | Ruling 3 point 2's `free` default. A developer's machine spends nothing by default even with Vertex, Brave and Tavily all configured. |
+| same, `PEER_DEV_ENTITLEMENT=paid` | **1 metered `provider: "vertex"` row** | R-ENT-5 working — and the proof that the zero above is the gate rather than an inert runtime. |
+| **deployed** runtime, `PEER_DEV_ENTITLEMENT=paid`, signed-in **free** user | **0 searches** | The override is ignored in a deployment by execution, not only by the build guard. |
+
+**Anonymous with their own BYOK key on a feed** (Ruling 4 point 1's standing tally): `POST
+/api/jobs/feed` signed out, `aiTier: 2` in the body, own Tavily key in `searchConnectors`, all four
+operator credentials armed -> **200 · 0 operator requests · 0 usage rows · 2 fetches on the key the
+caller supplied themselves**. Tier 0, no provider, no operator money. Unchanged from round 2.
