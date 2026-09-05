@@ -42,6 +42,7 @@ import {
   endOfUtcDay,
   endOfUtcMonth,
   getCounterStore,
+  logStoreUnavailable,
 } from "./counters";
 import { recordUsageEventAwaited } from "./events";
 
@@ -56,7 +57,29 @@ export { SYSTEM_SEARCHES_PER_DAY };
  * could land before the UI half.
  */
 export interface QuotaSignal {
+  /**
+   * **Which cap said no** — the monthly/trial allowance, or the daily wallet
+   * breaker.
+   */
   kind: "deep_report" | "breaker";
+  /**
+   * **How we know** (ABC-freemium 2-02 · Ruling 4 point 2 · Ruling 6 point 1).
+   *
+   * `kind` and `reason` are orthogonal on purpose, and a third
+   * `kind: "unavailable"` was rejected for exactly that reason: an outage
+   * happens on the `breaker` path too, so collapsing the two axes would make a
+   * paid outage and a free outage indistinguishable in the payload — losing the
+   * information this field exists to add.
+   *
+   * **Required, not optional.** The whole defect this field fixes was a branch
+   * that forgot to say which state it was in; an optional field lets the next
+   * branch forget again, and `tsc` is the cheapest available reviewer.
+   *
+   * The vocabulary is **two values and stays two**. In particular the no-user
+   * branch below says `exhausted` rather than inventing a third: it never
+   * reaches the store, so there is nothing unavailable about it.
+   */
+  reason: "exhausted" | "unavailable";
   remaining: number;
   /** ISO instant at which the allowance comes back. */
   resetsAt: string;
@@ -75,6 +98,14 @@ export interface DeepReportDecision {
  * testable without rendering anything.
  */
 export function quotaMessage(quota: QuotaSignal, now = new Date()): string {
+  // `reason` is tested BEFORE `kind` (2-02). An outage is not a cap, so it must
+  // never borrow a cap's wording — and it happens on both `kind` paths, so a
+  // `kind` test could not have caught it. The copy is Ruling 4 point 2's,
+  // verbatim, and deliberately promises nothing about a number of days: during
+  // an outage we do not know the count, and a reset date would be a second lie.
+  if (quota.reason === "unavailable") {
+    return "Deep reports are temporarily unavailable — your allowance is unchanged. Try again shortly.";
+  }
   const days = Math.max(
     1,
     Math.ceil(
@@ -107,6 +138,10 @@ export async function consumeDeepReport(
       allowed: false,
       quota: {
         kind: "deep_report",
+        // `exhausted`, NOT a third value (2-02). This branch never touches the
+        // store, so nothing here is unavailable — the reader simply has no
+        // allowance. Two values is the ruled vocabulary; keep it at two.
+        reason: "exhausted",
         remaining: 0,
         resetsAt: endOfUtcMonth(now).toISOString(),
       },
@@ -126,7 +161,22 @@ export async function consumeDeepReport(
     );
     if (breakerTripped(reading, PAID_DEEP_REPORTS_PER_DAY)) {
       const resetsAt = endOfUtcDay(now).toISOString();
-      // D4 names three things a trip does: an error-level line, a `breaker`
+      // **The decision is the same either way — only the explanation differs**
+      // (2-02). `breakerTripped` fails CLOSED on an unreadable counter, and that
+      // direction is Ruling-level behaviour that this item does not touch: a
+      // wallet that cannot be read is not spent. What changes is that we stop
+      // *claiming the cap tripped* when it did not.
+      if (!reading.ok) {
+        // Ruling 6 point 1 — the log line and NO usage row. A `kind: "breaker"`
+        // row on an outage is a false trip record for a call that spent
+        // nothing, in the one artefact built to say where the money went.
+        logStoreUnavailable("deep-report", userId);
+        return {
+          allowed: false,
+          quota: { kind: "breaker", reason: "unavailable", remaining: 0, resetsAt },
+        };
+      }
+      // D4 names three things a REAL trip does: an error-level line, a `breaker`
       // usage row, and degradation for the rest of the UTC day. The third is a
       // property of the key, not of extra state — the date segment changes at
       // midnight and the breaker untrips itself.
@@ -143,7 +193,10 @@ export async function consumeDeepReport(
         ok: false,
         byok: false,
       });
-      return { allowed: false, quota: { kind: "breaker", remaining: 0, resetsAt } };
+      return {
+        allowed: false,
+        quota: { kind: "breaker", reason: "exhausted", remaining: 0, resetsAt },
+      };
     }
     return { allowed: true };
   }
@@ -156,10 +209,16 @@ export async function consumeDeepReport(
     if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {
       return { allowed: true };
     }
+    if (!reading.ok) logStoreUnavailable("deep-report", userId);
     return {
       allowed: false,
       quota: {
         kind: "deep_report",
+        // 2-02 — an outage and a spent allowance used to produce byte-identical
+        // payloads, so the reader was told they had used up something they had
+        // not touched. Never a `usage_events` row here (Ruling 6 point 1); this
+        // branch never wrote one anyway.
+        reason: reading.ok ? "exhausted" : "unavailable",
         remaining: 0,
         // Honest value, and NOT the next month: a trial's twenty do not come
         // back monthly. What changes is the plan — at `trialEndsAt` the reader
@@ -181,10 +240,13 @@ export async function consumeDeepReport(
   if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {
     return { allowed: true };
   }
+  if (!reading.ok) logStoreUnavailable("deep-report", userId);
   return {
     allowed: false,
     quota: {
       kind: "deep_report",
+      // 2-02 — see the trial branch above. Same fix, same reason.
+      reason: reading.ok ? "exhausted" : "unavailable",
       remaining: 0,
       resetsAt: endOfUtcMonth(now).toISOString(),
     },

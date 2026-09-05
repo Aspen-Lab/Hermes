@@ -22,6 +22,7 @@ import {
   breakerTripped,
   endOfUtcDay,
   getCounterStore,
+  logStoreUnavailable,
   systemSearchDayKey,
 } from "./counters";
 import { recordUsageEventAwaited } from "./events";
@@ -54,8 +55,20 @@ export async function consumeSystemSearches(
   );
   if (!breakerTripped(reading, SYSTEM_SEARCHES_PER_DAY)) return true;
 
-  // D4 names three things a trip does: an error-level line, a `breaker` usage
-  // row, and degradation for the rest of the UTC day.
+  // **The decision is the same either way — only the explanation differs**
+  // (2-02 · Ruling 6 point 1). `breakerTripped` fails CLOSED on an unreadable
+  // counter and that direction is untouched: the searches are still refused and
+  // the surface still serves its free structured sources. What changes is that
+  // an outage stops fabricating a trip that never happened — the log line says
+  // what actually went wrong, and NO `usage_events` row is written, because a
+  // `kind: "breaker"` row means "a cap tripped" and on an outage none did.
+  if (!reading.ok) {
+    logStoreUnavailable("system-search", userId);
+    return false;
+  }
+
+  // D4 names three things a REAL trip does: an error-level line, a `breaker`
+  // usage row, and degradation for the rest of the UTC day.
   console.error(
     `[quota] system-search breaker tripped for ${userId} (limit ${SYSTEM_SEARCHES_PER_DAY}/day)`,
   );

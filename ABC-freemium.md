@@ -122,7 +122,18 @@ HELD BY:          C-round2 @ 2026-09-05T00:40Z
 ROUND:            2
 WHOSE TURN:       C
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:35Z
-STATUS:           ROUND 2 — B HAS WRITTEN THE FIX GUIDE. Six items, 2-01 … 2-06, in the
+STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02.
+
+                  DEVIATIONS FROM B'S GUIDE, each traced before it was taken:
+                  - 2-02: B put the `[quota] store unavailable` writer in a PRIVATE helper in
+                    `deep-report-quota.ts`. C exported it from `counters.ts` instead, because
+                    the sibling `consumeSystemSearches` lives in `search-breaker.ts` and needs
+                    the identical line — B's own placement would have produced two copies
+                    across two modules, which is the drift B's single-writer rule exists to
+                    prevent. Both modules already import `counters.ts`; no new import edge.
+
+                  --- B's original classification, kept for reference ---
+                  ROUND 2 — B HAS WRITTEN THE FIX GUIDE. Six items, 2-01 … 2-06, in the
                   manager's order from Ruling 5, one commit each, all pushed. Nothing reordered.
                   B changed no code; the gate is unchanged and still red on 2-01's three tests.
 
@@ -6178,3 +6189,121 @@ life of the process, bounded by user count and gone on every cold start. Unchang
 
 **Doubt flagged, not judged (§2 Agent C, "C does not judge whether something should be fixed").**
 None for this item. The seam change does exactly what Ruling 5 point 3 specifies and nothing else.
+
+---
+
+#### 2-02 — LANDED. An outage now says "unavailable", and writes no breaker row
+
+**Gate after this item:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **116 files passed | 1 skipped (117)** · **2725 tests passed | 1 skipped (2726)**, **0
+failed**. Up 7 from 2-01's 2719 — the seven new cases this item adds.
+
+**What changed, four files:**
+
+| File | Change |
+|---|---|
+| `web/src/lib/usage/deep-report-quota.ts` | `QuotaSignal` gains a **required** `reason: "exhausted" \| "unavailable"`. All four construction sites name it. The paid branch splits on `reading.ok`: an outage logs and returns `{kind:"breaker", reason:"unavailable"}` **without** the `usage_events` row; a real trip is byte-for-byte what it was. Trial and free carry `reason: reading.ok ? "exhausted" : "unavailable"` and log on an outage. `quotaMessage` tests `reason` **before** `kind`. |
+| `web/src/lib/usage/search-breaker.ts` | the same split: an outage logs the new line and returns `false` with **no** row; a real trip is unchanged |
+| `web/src/lib/usage/counters.ts` | new exported `logStoreUnavailable(path, userId)` — the single writer of the `[quota] store unavailable` line |
+| `web/src/lib/usage/deep-report-quota.test.ts` | two assertions rewritten to the new contract, seven cases added |
+
+**I took `reason` as a field, not a third `kind`** — B's recommendation, and the manager's first
+option. B's argument decided it and I re-verified the load-bearing half in source: an outage happens
+on the **`breaker`** path too, so `kind` and `reason` are genuinely orthogonal and a third `kind`
+would make a paid outage and a free outage indistinguishable in the payload. The field is
+**required**, not optional, so `tsc` refuses a fifth branch that forgets to say which state it is in
+— which is precisely the defect being fixed.
+
+**DEVIATION FROM B'S GUIDE, traced first, and it is small.** B wrote: "Put the line in a single
+private helper **in `deep-report-quota.ts`**". I put it in **`counters.ts`** and exported it. B's
+stated reason for the helper is "three copies is how the prefix drifts" — but the sibling
+`consumeSystemSearches` lives in `search-breaker.ts` and needs the identical line, so a private
+helper in `deep-report-quota.ts` would have produced **two** copies across two modules, which is the
+same drift B was guarding against, one level up. `counters.ts` is the module both already import
+(no new import edge, no cycle), and it is where the other two failure-rule helpers
+(`underLimit`, `breakerTripped`) already live. So the deviation serves B's own reason better than
+B's own placement. **One writer, four call sites, one prefix.** Recorded in §1's STATUS line.
+
+**Ruling 6 point 1 implemented exactly: NO `usage_events` row on an outage, in BOTH checks.** B
+raised this as `POLICY — manager decides` and left the row in place pending a ruling; the ruling
+came, and it removes the row. Both sites now return before `recordUsageEventAwaited` when
+`reading.ok` is false. **R-QUOTA-2's `breaker` assertions for real trips are untouched and green** —
+`writes exactly one breaker row and one error line per trip` and the two system-search cases all
+pass, and I did not modify any of them.
+
+**The log line.** `[quota] store unavailable for <path> (user <id>); the allowance is unchanged and
+nothing was spent`. Both traps B named are avoided, and I re-read `warnOnce` to confirm both: it is
+`console.warn` not error level, its text is `[usage] counter store unreachable…`, and it is gated by
+a module-level `warnedOnce` that only `resetCounterStoreForTests` clears — so it is once per process
+and useless as an occurrence count. It is left exactly where it is; the new line is separate and
+un-throttled. **A's tally can now count occurrences**, and the count is asserted rather than assumed
+(case 4 below).
+
+**The four branches, as landed** — matching B's exhaustive table:
+
+| Branch | `kind` | `reason` | Error line | `usage_events` row |
+|---|---|---|---|---|
+| paid, real trip | `breaker` | `exhausted` | the existing "breaker tripped" line | **yes**, unchanged |
+| paid, outage | `breaker` | `unavailable` | `[quota] store unavailable` | **none** |
+| trial / free, real exhaustion | `deep_report` | `exhausted` | none | none |
+| trial / free, outage | `deep_report` | `unavailable` | `[quota] store unavailable` | none |
+| no `userId` | `deep_report` | `exhausted` | none | none |
+| `consumeSystemSearches`, real trip | — | — | the existing "breaker tripped" line | **yes**, unchanged |
+| `consumeSystemSearches`, outage | — | — | `[quota] store unavailable` | **none** |
+
+The no-`userId` branch says `exhausted` and **not** a third value, with a comment saying why: it
+never reaches the store, so nothing about it is unavailable. Two values is the ruled vocabulary and
+it stays at two.
+
+**The copy, byte-for-byte**, asserted on **both** `kind` values because an outage reaches both:
+*"Deep reports are temporarily unavailable — your allowance is unchanged. Try again shortly."*
+It deliberately promises **no** day count — during an outage we do not know the number, and a reset
+date would be a second lie on top of the first. There is a dedicated case pinning that (`never
+promises a reset date during an outage`) so a later reader cannot "make it consistent" with the
+other two strings.
+
+**Seven new cases** (all in `deep-report-quota.test.ts`):
+
+1. `fails CLOSED when the counter store is unreachable` — **strengthened, not added**: it asserted
+   only `kind` before, and passed just as well while the payload lied. It now asserts `reason`.
+2. `tells an outage apart from a spent allowance (2-02)` — both payloads in one test, asserted
+   `not.toEqual`, so "byte-identical" can never come back.
+3. `a PAID outage is a breaker that did not trip (Ruling 6 point 1)` — the case that did not exist
+   and the one that caught the false audit row. Asserts the full payload **and** `rows` empty.
+4. `writes one [quota] store unavailable line per outage, and none on a real exhaustion` — counts
+   lines matching the prefix with `startsWith`, so the prefix is pinned byte-for-byte; asserts 0 on
+   a real exhaustion, then 1, then 2, which is what makes it an occurrence count rather than a flag.
+5. `the system-search breaker does the same (2-02)` — the sibling, asserting no row and one line.
+6. `says the outage copy verbatim, on BOTH kinds (2-02)`.
+7. `never promises a reset date during an outage (2-02)`.
+   Plus `says the breaker string, unchanged, for a real trip`, which pins the two existing strings
+   byte-for-byte while a third is added beside them.
+
+**Two assertions rewritten to the new contract, never deleted** (§3): `:82-87`'s
+`expect(sixth.quota).toEqual({…})` and `:162-166`'s paid-trip `toEqual`, both gaining
+`reason: "exhausted"` with a comment naming this item. The three `quotaMessage` literal cases gained
+`reason` for the same reason (the field is required). The existing CJK guard now runs over **three**
+strings including the new one.
+
+**Proved the new tests test the fix (§2 Agent C, standard 1).** I reverted **both** source files to
+their 2-01 state with `git checkout HEAD --` and re-ran the suite: **9 failed**, and every one of
+this item's assertions is in the list by name, including the two rewritten `toEqual` cases. Restored,
+re-ran, green.
+
+**Standing locks re-verified** (§2 Agent C, standard 2): `deep-report-quota.test.ts` 24 cases green,
+`counters.test.ts` 14 green, `search-breaker` behaviour green through the system-search block. The
+whole `src/lib/usage` directory is 42 green. `registry.test.ts`, `ai-tier.test.ts`, the four
+harness-driven route suites, the guard script test, `ui-vocabulary.test.ts` and
+`no-client-dev-flags.test.ts` are all green in the cold full run above.
+
+**No route response shape changed.** The three report routes spread the `quota` object conditionally
+and were not edited; `tsc` at 0 confirms every construction site names the new field. B's finding
+that the field reaches no browser reader **still stands after this item** — that is 2-07's subject,
+and R-QUOTA-1 stays `PARTIAL` until it lands (Ruling 6 point 2).
+
+**Doubt flagged, not judged.** None on the mechanism. One observation for round-3 A, offered as a
+fact rather than a recommendation: with the row gone, **the log line is now the only durable trace of
+an outage**, and a log line does not survive a serverless cold shutdown the way an awaited row did.
+Ruling 6 point 1 chose this knowingly and names the future migration that brings the row back with
+an honest `'outage'` kind. A should count `[quota] store unavailable` occurrences from a captured
+log, not from `usage_events`, and should expect **0** in a healthy local run.

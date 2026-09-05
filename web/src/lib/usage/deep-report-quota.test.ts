@@ -61,6 +61,17 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
+/**
+ * The error lines carrying 2-02's stable prefix. A's standing tally counts
+ * these, so the prefix is asserted byte-for-byte rather than by substring.
+ */
+function storeUnavailableLines(): string[] {
+  const spy = vi.mocked(console.error);
+  return spy.mock.calls
+    .map((call) => String(call[0]))
+    .filter((line) => line.startsWith("[quota] store unavailable"));
+}
+
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
@@ -81,6 +92,10 @@ describe("free monthly quota (R-QUOTA-1, D4)", () => {
     expect(sixth.allowed).toBe(false);
     expect(sixth.quota).toEqual({
       kind: "deep_report",
+      // 2-02 — the contract gained a required `reason`. Rewritten, not deleted:
+      // a real exhaustion says `exhausted`, and an outage now says something
+      // different (see "the two failure directions" below).
+      reason: "exhausted",
       remaining: 0,
       // First instant of the next UTC month, asserted against a stubbed clock.
       resetsAt: "2026-10-01T00:00:00.000Z",
@@ -161,6 +176,9 @@ describe("paid breaker (R-QUOTA-2, D4)", () => {
     expect(overCap.allowed).toBe(false);
     expect(overCap.quota).toEqual({
       kind: "breaker",
+      // 2-02 — a REAL trip. R-QUOTA-2's `breaker` vocabulary is unchanged for
+      // this case; only the outage case below stops borrowing it.
+      reason: "exhausted",
       remaining: 0,
       resetsAt: "2026-09-05T00:00:00.000Z",
     });
@@ -221,19 +239,90 @@ describe("the system-search breaker (R-QUOTA-2)", () => {
 });
 
 describe("the two failure directions", () => {
-  it("fails CLOSED when the counter store is unreachable", async () => {
-    // A deep-report allowance is a spend cap, so it takes the breaker's
-    // direction. The reader still gets a complete deterministic report.
+  /** Point the store at a URL no admin client can be built from in-process. */
+  function breakTheStore(): void {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "SERVICE-ROLE-NOT-A-KEY");
     resetCounterStoreForTests();
+  }
 
-    // No admin client can be built from that URL in this process, so every
-    // increment reports not-ok.
+  it("fails CLOSED when the counter store is unreachable", async () => {
+    // A deep-report allowance is a spend cap, so it takes the breaker's
+    // direction. The reader still gets a complete deterministic report.
+    breakTheStore();
+
     const decision = await consumeDeepReport(FREE, NOW);
 
     expect(decision.allowed).toBe(false);
     expect(decision.quota?.kind).toBe("deep_report");
+    // 2-02 — strengthened. Before this item the assertion above was the whole
+    // test, and it passed just as well when the payload claimed the reader had
+    // spent an allowance they had not touched.
+    expect(decision.quota?.reason).toBe("unavailable");
+  });
+
+  it("tells an outage apart from a spent allowance (2-02)", async () => {
+    // These two produced BYTE-IDENTICAL payloads before this item, which is the
+    // whole defect: the reader was told they had used up something they had
+    // not touched. One test, both payloads, so "identical" can never come back.
+    for (let i = 0; i < 6; i += 1) await consumeDeepReport(FREE, NOW);
+    const exhausted = await consumeDeepReport(FREE, NOW);
+
+    breakTheStore();
+    const outage = await consumeDeepReport(FREE, NOW);
+
+    expect(exhausted.quota?.reason).toBe("exhausted");
+    expect(outage.quota?.reason).toBe("unavailable");
+    expect(outage.quota).not.toEqual(exhausted.quota);
+  });
+
+  it("a PAID outage is a breaker that did not trip (Ruling 6 point 1)", async () => {
+    // The case that did not exist before 2-02, and the one that caught the
+    // false audit row: an outage used to write `kind:"breaker", ok:false` and
+    // an error line claiming the 200/day cap had tripped — for a call that
+    // spent nothing. `kind` stays `breaker` (that IS the cap in play for a paid
+    // reader) and `reason` carries the truth.
+    breakTheStore();
+
+    const decision = await consumeDeepReport(PAID, NOW);
+
+    expect(decision.allowed).toBe(false);
+    expect(decision.quota).toEqual({
+      kind: "breaker",
+      reason: "unavailable",
+      remaining: 0,
+      resetsAt: "2026-09-05T00:00:00.000Z",
+    });
+    // Ruling 6 point 1 — NO usage row on an outage. A `breaker` row means "a
+    // cap tripped"; none did.
+    expect(rows).toHaveLength(0);
+  });
+
+  it("writes one [quota] store unavailable line per outage, and none on a real exhaustion", async () => {
+    // A's standing tally counts occurrences, so the line must be per-decision
+    // rather than once per process — which is why `warnOnce` in counters.ts is
+    // deliberately NOT reused for it.
+    for (let i = 0; i < 6; i += 1) await consumeDeepReport(FREE, NOW);
+    expect(storeUnavailableLines()).toHaveLength(0);
+
+    breakTheStore();
+    await consumeDeepReport(FREE, NOW);
+    expect(storeUnavailableLines()).toHaveLength(1);
+
+    await consumeDeepReport(PAID, NOW);
+    expect(storeUnavailableLines()).toHaveLength(2);
+  });
+
+  it("the system-search breaker does the same (2-02)", async () => {
+    // `consumeSystemSearches` had the identical shape: an outage fabricated a
+    // `kind:"breaker", path:"system-search"` row and an error line claiming the
+    // 500/day cap tripped. Same fix, same ruling.
+    breakTheStore();
+
+    expect(await consumeSystemSearches("user-1", 3, NOW)).toBe(false);
+
+    expect(rows).toHaveLength(0);
+    expect(storeUnavailableLines()).toHaveLength(1);
   });
 });
 
@@ -243,6 +332,7 @@ describe("quotaMessage (R-QUOTA-1, Ruling 3 point 1)", () => {
       quotaMessage(
         {
           kind: "deep_report",
+          reason: "exhausted",
           remaining: 0,
           resetsAt: "2026-10-01T00:00:00.000Z",
         },
@@ -256,6 +346,7 @@ describe("quotaMessage (R-QUOTA-1, Ruling 3 point 1)", () => {
       quotaMessage(
         {
           kind: "deep_report",
+          reason: "exhausted",
           remaining: 0,
           resetsAt: "2026-09-05T00:00:00.000Z",
         },
@@ -264,13 +355,71 @@ describe("quotaMessage (R-QUOTA-1, Ruling 3 point 1)", () => {
     ).toContain("Resets in 1 day.");
   });
 
-  it("contains no CJK characters", () => {
-    // The product is English-only; the spec's original Chinese was the
-    // manager's shorthand (Ruling 3 point 1).
+  it("says the breaker string, unchanged, for a real trip", () => {
+    // 2-02 pinned byte-for-byte: the existing two strings must not drift while
+    // the outage branch is added beside them.
+    expect(
+      quotaMessage(
+        {
+          kind: "breaker",
+          reason: "exhausted",
+          remaining: 0,
+          resetsAt: "2026-09-05T00:00:00.000Z",
+        },
+        NOW,
+      ),
+    ).toBe("Peer is at today's limit for deep reports. Resets in 1 day.");
+  });
+
+  it("says the outage copy verbatim, on BOTH kinds (2-02)", () => {
+    // Ruling 4 point 2's copy, byte-for-byte. It is asserted on both `kind`
+    // values because an outage happens on the breaker path too — that is why
+    // `reason` is a separate axis and not a third `kind`.
+    const expected =
+      "Deep reports are temporarily unavailable — your allowance is unchanged. Try again shortly.";
+
+    for (const kind of ["deep_report", "breaker"] as const) {
+      expect(
+        quotaMessage(
+          { kind, reason: "unavailable", remaining: 0, resetsAt: "2026-10-01T00:00:00.000Z" },
+          NOW,
+        ),
+      ).toBe(expected);
+    }
+  });
+
+  it("never promises a reset date during an outage (2-02)", () => {
+    // We do not know the count during an outage, so a day number would be a
+    // second lie on top of the first. This is what stops a later reader
+    // "making it consistent" with the other two strings.
     const message = quotaMessage(
-      { kind: "breaker", remaining: 0, resetsAt: "2026-09-05T00:00:00.000Z" },
+      { kind: "deep_report", reason: "unavailable", remaining: 0, resetsAt: "2026-10-01T00:00:00.000Z" },
       NOW,
     );
-    expect(/[一-鿿]/.test(message)).toBe(false);
+    expect(message).not.toMatch(/Resets in/);
+  });
+
+  it("contains no CJK characters", () => {
+    // The product is English-only; the spec's original Chinese was the
+    // manager's shorthand (Ruling 3 point 1). 2-02 extends the guard to the
+    // new outage string.
+    const messages = [
+      quotaMessage(
+        { kind: "breaker", reason: "exhausted", remaining: 0, resetsAt: "2026-09-05T00:00:00.000Z" },
+        NOW,
+      ),
+      quotaMessage(
+        { kind: "deep_report", reason: "exhausted", remaining: 0, resetsAt: "2026-10-01T00:00:00.000Z" },
+        NOW,
+      ),
+      quotaMessage(
+        { kind: "deep_report", reason: "unavailable", remaining: 0, resetsAt: "2026-10-01T00:00:00.000Z" },
+        NOW,
+      ),
+    ];
+
+    for (const message of messages) {
+      expect(/[一-鿿]/.test(message)).toBe(false);
+    }
   });
 });

@@ -390,3 +390,36 @@ export function breakerTripped(
   if (!reading.ok) return true;
   return reading.value > limit;
 }
+
+/**
+ * The durable trace of a counter-store outage (ABC-freemium 2-02 · Ruling 6
+ * point 1).
+ *
+ * **This is the ONLY writer of this line, for every caller.** It lives here
+ * rather than inside `deep-report-quota.ts` because `search-breaker.ts` needs
+ * the identical line and both modules already import this one — two private
+ * copies is exactly how the prefix drifts, which is the drift the single-writer
+ * rule exists to prevent.
+ *
+ * Three things it deliberately is **not**:
+ *
+ *  - **Not `warnOnce` above.** That is the store's own diagnostic: `console.warn`
+ *    rather than error level, a different text, and once per process. A
+ *    once-per-process flag would make an occurrence count meaningless.
+ *  - **Not a `usage_events` row.** Ruling 6 point 1: a `kind: "breaker"` row
+ *    means "a cap tripped", and on an outage none did. Writing one injects a
+ *    false trip into the owner's audit trail for a call that spent nothing.
+ *    The `kind` check on the table admits only `llm | search | breaker`, so
+ *    the log line is the durable trace this round. A later migration may add
+ *    an `'outage'` kind and bring the row back honestly.
+ *  - **Not throttled or deduplicated.** One line per outage-affected decision,
+ *    so occurrences can be counted.
+ *
+ * The prefix `[quota] store unavailable` is stable and is what a reviewer
+ * greps for; keep it byte-for-byte.
+ */
+export function logStoreUnavailable(path: string, userId: string): void {
+  console.error(
+    `[quota] store unavailable for ${path} (user ${userId}); the allowance is unchanged and nothing was spent`,
+  );
+}
