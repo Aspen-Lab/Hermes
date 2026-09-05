@@ -4739,3 +4739,182 @@ sentinel; `.env.local` was never `cat`-ed and no environment value was printed. 
 for the two key prefixes was run before **every** push and returned nothing each time. No `next dev`
 was started (Ruling 2 point 5) — a hook reported another session's dev server running in this folder
 and it was left alone — and no process was killed.
+
+---
+
+### Round 2 — Agent B
+
+**How this guide was built.** Every citation below was re-grepped or re-read on
+`freemium-system-key @ b764a86`; A's and the manager's line numbers are corrected in place where
+they had drifted. Every gap was reproduced **by execution** before it was written up, and every fix
+direction was adversarially tested in a throwaway harness in the session scratchpad — never in the
+tree. Where I looked and found nothing, I say so. Six items: **2-01 … 2-06**.
+
+---
+
+#### 2-01 — the red gate: `prune()` reads the process clock while its caller passes a fixture clock
+
+**Class: `WRONG SHAPE`** — the seam is missing a parameter, so two clocks exist where the contract
+needs one. Not `WRONG DATA`: no user-visible value is wrong. In production `now` **is** the real
+clock, so nothing prunes early and no reader is affected. This is a defect in the production seam
+that only a fixture can see, which is exactly what Ruling 5 point 3 names.
+
+**Where it is, verified by reading the file (A cited `~198-205`; exact):**
+
+- `web/src/lib/usage/counters.ts:197-204` — `private prune(): void`. **Line 198 is the whole
+  defect:** `const now = Date.now();`. Line 200 compares `entry.windowEndsAt.getTime() <= now`.
+- `web/src/lib/usage/counters.ts:179-189` — `increment(key, windowEndsAt, by = 1)`. **There is no
+  `now` in the signature at all**, so Ruling 5's "the same injected `now` the increment uses" has
+  nothing to reuse — the parameter has to be added, not threaded.
+- `web/src/lib/usage/counters.ts:191-194` — `read(key)`, same absence.
+- `web/src/lib/usage/counters.ts:70-80` — the `CounterStore` interface, which both implementations
+  and every caller are typed against.
+- `web/src/lib/usage/deep-report-quota.test.ts:23` — `const NOW = new Date("2026-09-04T12:00:00.000Z")`.
+  **This fixture does not change.**
+
+**Reproduced by execution.** `npx vitest run src/lib/usage/deep-report-quota.test.ts` from `web/`,
+this turn: `Tests 3 failed | 12 passed (15)`. The three, verbatim:
+
+```
+paid breaker (R-QUOTA-2, D4) > is unlimited to the reader until the daily cap                       :161
+the system-search breaker (R-QUOTA-2) > allows the day's searches and refuses the one past the cap  :209
+the system-search breaker (R-QUOTA-2) > charges the whole fan-out, not one per call                 :219
+```
+
+All three assert `false` and receive `true` — the breaker does not trip.
+
+**The mechanism, traced call by call** (failing case 1, `:148-167`):
+
+1. `store.increment("deep:user-1:2026-09-04", null, 199)` — the test's own pre-spend. `windowEndsAt`
+   is `null`, so `prune` can never touch it.
+2. `consumeDeepReport(PAID, NOW)` -> `increment(key, endOfUtcDay(NOW))`. `prune` finds only the
+   null-window entry, deletes nothing. Value `200`, `breakerTripped(200, 200)` is `false` -> allowed.
+   **The entry is rewritten with `windowEndsAt = 2026-09-05T00:00:00Z`.**
+3. `consumeDeepReport(PAID, NOW)` again -> `prune` compares that stored `2026-09-05T00:00:00Z`
+   against the **real** `Date.now()`, which is past it from `2026-09-05T00:00:00Z` onward -> the
+   entry is deleted -> value `1` -> not tripped -> `allowed: true`. The assertion fails.
+
+**A correction to A's reading, small but it matters for C.** A wrote that "the two neighbouring
+cases that pre-spend with a `null` window still pass, which is the tell". **All three paid cases
+pre-spend with a `null` window** (`:151-155`, `:171-175`, `:191-195`) — that is not the
+discriminator. The real discriminator: a case fails **iff it needs a counter to survive two
+increments that each write a *daily* `windowEndsAt`.** Cases 2 and 3 trip on the *first*
+`consumeDeepReport` (they pre-spend the full 200, not 199), so there is no second daily-window
+increment to prune against. That is why they pass. C should carry the corrected rule, because it is
+the rule that says which other tests are latent.
+
+**Fix direction — the seam, not the patch.** `now` becomes an explicit parameter of the store's
+mutating surface, defaulted to the real clock, and `prune` uses it:
+
+```ts
+increment(key: string, windowEndsAt: Date | null, by?: number, now?: Date): Promise<CounterReading>
+read(key: string, now?: Date): Promise<CounterReading>
+private prune(now: Date = new Date()): void      // compares against now.getTime()
+```
+
+Three reasons this is the right seam and not a wider change:
+
+- **Every production caller already has `now` in hand.** There are exactly four, and I grepped for
+  them rather than trusting the brief — `web/src/lib/security/ai-request.ts:155-159` (`const now =
+  new Date()` on the line above), `web/src/lib/usage/deep-report-quota.ts:120-123`, `:151`, `:170-173`
+  (`now` is the function's own parameter, `:99`), and `web/src/lib/usage/search-breaker.ts:47-51`
+  (`now` is its parameter, `:42`). Passing it costs one argument each and no new plumbing.
+- **`prune` is memory hygiene, never a decision.** `counters.ts:196` says so — "Keys already carry
+  their period; this only stops the map growing forever" — and the migration says the same on the
+  SQL side (`20260904000000_usage_counters.sql:15-16`: "`window_ends_at` is stored for housekeeping
+  only — nothing reads it to decide anything"). Today housekeeping silently changes a decision.
+  Honouring the caller's clock restores the documented contract rather than inventing one.
+- **`by` must be passed explicitly at three of the four sites** (`, 1, now`) because `now` follows
+  it. That is a wart, and it is still better than an options object, which would churn the ten test
+  call sites listed below for no behavioural gain. C may use an options object instead **if** it
+  keeps every existing call compiling; state the choice in the log either way.
+
+**Adversarially tested, in the scratchpad, not in the tree.** I re-implemented
+`InMemoryCounterStore` verbatim in two variants (current / seam) plus the paid, trial and free
+branches of `consumeDeepReport` and all of `consumeSystemSearches`, and replayed all eleven
+fixtures from the real test file plus three adversarial ones, with the real clock at
+`2026-09-05T00:13Z`. Result: **fixed by the seam: 4 · broken by the seam: 0.** The three real
+failures flip to PASS with **the fixture unchanged**; the eight passing cases stay PASS. The fourth
+that flips is an adversarial case worth C's attention: under today's code **two different users
+counting on the same UTC day sweep each other's entries** — `user-b`'s increment deletes `user-a`'s
+— which is the same bug wearing different clothes and is not covered by any existing test.
+
+**Protective test for C, and it is deliberately immune to the passage of time** — the property that
+the current fixture lacks. Belongs in `web/src/lib/usage/counters.test.ts` next to the
+`InMemoryCounterStore` block (`:58-82`):
+
+```ts
+it("prunes against the caller's clock, not the process clock", async () => {
+  const store = new InMemoryCounterStore();
+  const past = new Date("2020-01-01T12:00:00.000Z"); // already past on any real clock, forever
+  await store.increment("k", endOfUtcDay(past), 1, past);
+  expect((await store.increment("k", endOfUtcDay(past), 1, past)).value).toBe(2);
+});
+```
+
+Run in the harness both ways: **current -> `1` (FAIL), seam -> `2` (PASS)**. It uses a date that is
+already in the past, so unlike `NOW` it cannot age into a false pass or a false failure. Add a
+second case for the adversarial finding — two users, same day, one clock, both entries survive.
+C proves both by reverting the source change and re-running (§2 Agent C).
+
+**The Supabase-backed store: I looked for the same shape and it is ABSENT.** Stated explicitly so
+this cannot fire on silence. `SupabaseCounterStore` (`counters.ts:257-308`) contains no `Date.now()`,
+no `new Date()` and no sweep; `increment` only serialises the `windowEndsAt` it was handed
+(`:274`) and `read` is a plain select. On the SQL side, `increment_usage_counter`
+(`supabase/migrations/20260904000000_usage_counters.sql:54-73`) calls `now()` **twice and only for
+`updated_at`** (`:65`, `:69`); nothing in the function or the table compares `window_ends_at`
+against anything, and the migration ships no delete job (`:25-29` says so). So the two stores agree
+today only because the period is in the key — and the seam moves the in-memory store **towards**
+the Supabase one, not away from it. No change is needed on the Supabase side.
+
+**Tests at risk — found by grepping every `.increment(` and `.read(` caller, not by guessing.**
+Ten test call sites, all of which keep compiling under a defaulted `now`:
+
+| File:line | What it does | Under the seam |
+|---|---|---|
+| `usage/counters.test.ts:65-67` | `increment("k", null)` x2 then `read("k")` | unaffected — null window is never pruned in either mode |
+| `usage/counters.test.ts:75` | 50 concurrent `increment("k", null)` | unaffected — the atomicity property is untouched by `prune` |
+| `usage/counters.test.ts:91,107` | `SupabaseCounterStore` | unaffected — no prune there at all |
+| `usage/deep-report-quota.test.ts:151,171,191` | the three paid pre-spends, `null` window | unaffected; three assertions downstream flip red -> green |
+| `opportunities/pool-refresh-gates.test.ts:115,136` | pre-spend `systemSearchDayKey(USER, NOW)` with `null` | **passes today and keeps passing — but it is latent, see below** |
+
+**A second reader of the store with ZERO production callers.** `CounterStore.read()` is called from
+exactly one place in the whole tree — `usage/counters.test.ts:67`. I grepped `\.read(` across
+`web/src`: the only other four hits are `ReadableStream` readers in `figures/extract.ts:149`,
+`opportunities/page-fetch.ts:42`, `papers/full-text.ts:110` and `papers/report-stream.ts:46`,
+which are unrelated. So the gate goes green even if only `increment` gains the parameter. Give
+`read` the same parameter anyway: it is the method a future breaker will reach for, and leaving it
+on the process clock re-opens this exact defect the day someone uses it.
+
+**One latent case C should fix while in here, found by reading rather than by a failure.**
+`web/src/lib/opportunities/pool-refresh-gates.test.ts:43` is
+`const NOW = new Date(2026, 6, 27, 12, 0, 0)` — a **local-time** constructor, unlike every other
+fixture in this loop, so it is both in the past *and* timezone-dependent. It survives today only
+because each of its cases performs exactly **one** daily-window increment inside
+`buildDailyJobPool`. The moment a case there needs two, it fails the same way, on a clock nobody
+changed. Not a gate item this round; name it in the log so round 3 does not rediscover it.
+
+**Pre-existing property, unchanged by this fix, named so it is not read as a regression.** Entries
+written with `windowEndsAt: null` are **never** pruned in either variant — proved in the harness
+with a sweep dated 2030. That is the trial key `deep:<user>:trial` (`counters.ts:120-122`, no
+period segment **on purpose**, `:111-119`). In-process, one entry per trial user accumulates for the
+life of the process. Bounded by user count, not by traffic, and gone on every cold start. Not a fix
+item; not silence either.
+
+**What the field shows when every candidate is rejected.** `prune` has no output and no failure
+mode — it cannot reject anything. The honest-emptiness question for this item belongs to its
+callers and is already answered and ruled: an unreachable store returns `{ value: 0, ok: false }`
+(`:270`, `:279`, `:286`, `:291`, `:299`, `:305`), rate limits fail **open** (`underLimit`, `:341-344`)
+and breakers fail **closed** (`breakerTripped`, `:351-357`). This item changes neither direction,
+and C must not let it: if any of the `ok: false` assertions in `counters.test.ts` or the
+"fails CLOSED when the counter store is unreachable" case
+(`deep-report-quota.test.ts:223-238`) moves, the change has gone too far.
+
+**Blast radius.** The `CounterStore` interface is reached by four production call sites in three
+modules — `security/ai-request.ts`, `usage/deep-report-quota.ts`, `usage/search-breaker.ts` — plus
+the two test files above. No route, no component and no cache key changes. No payload changes. The
+observable effect is three tests going green and R-TEST-2 becoming scoreable.
+
+**Gate expectation after 2-01:** `tsc` 0 · `eslint` 1 (the standing `quiz.tsx:46`) · `vitest`
+**0 failed, 2716 passed, 1 skipped (2717)** across 116 passed / 1 skipped files — plus whatever
+the two new protective cases add. Anything else is a regression.
