@@ -118,11 +118,63 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          B-round3 @ 2026-09-05T02:07Z
+HELD BY:          free
 ROUND:            3
-WHOSE TURN:       B
-STOPPED BECAUSE:  finished the turn @ 2026-09-05T02:02Z
-STATUS:           ROUND 3 — A HAS MEASURED, all three parts banked and pushed. **Code-side
+WHOSE TURN:       C
+STOPPED BECAUSE:  finished the turn @ 2026-09-05T02:24Z
+STATUS:           ROUND 3 — B HAS WRITTEN THE FIX GUIDE. **Three items, 3-01 / 3-02 / 3-03,
+                  one commit each, each pushed; no production code changed; five throwaway
+                  files written outside the repo and the tree clean throughout.**
+                  Classifications: **3-01 WRONG DATA · 3-02 MISSING (structural) · 3-03
+                  MISSING (a third difference, POLICY-flagged).**
+                  1. **3-01 — the paid upsell. Recommendation (a), the client entitlement
+                     summary, and it is not close.** `ClientEntitlement` already ships `plan`
+                     AND `effectivePlan` (`entitlement/allowance.ts:128-143`), the store holds
+                     it, and **all three pages already have the plan in scope at the render
+                     site** — `QuotaNotice` sits on the line immediately above
+                     `TierUpgradeBlock`, which already takes `effectivePlan`. So it is a
+                     one-prop, three-line change with ZERO server work. (b), a field on
+                     `QuotaSignal`, is a valid fallback but needs all five producers to
+                     remember and breaks four payload-equality tests. **TWO defects A did not
+                     name:** one boolean at `quota-notice.tsx:48` drives the heading AND the
+                     upsell, so the obvious fix also breaks the heading; and the reset-unit bug
+                     is the OPPOSITE of Ruling 8's description — `Math.max(1, ...)` already
+                     makes "0 days" impossible and instead renders **"Resets in 1 day" on every
+                     breaker trip**, including one that resets in 30 minutes. Proved by
+                     execution. Ruling 8's remedy is right; only its stated symptom names a
+                     state that cannot occur.
+                  2. **3-02 — the branded context. The item SPLITS, and the split is the
+                     answer.** **Half A (`resolveProvider`): the brand SURVIVES — recommend
+                     building it.** Proved in a scratchpad harness on the repo's own tsc:
+                     five accidental-caller attacks are all compile errors, including a
+                     correct-looking plain object and an invented symbol. The two contextless
+                     pool-closure callers A did not list (`tier2-rerank.ts:65`,
+                     `query-gen.ts:319` — scan 4 never covered them) are handled by a REQUIRED
+                     UNION of named justifications, which widens no request type and leaves
+                     the cron untouched. **Half B (the operator-search availability gate): the
+                     ESCAPE CLAUSE FIRES — stop, as Ruling 7 point 3 allows.** A brand cannot
+                     survive the `=== true` idiom every adapter uses; the change reaches eight
+                     sites across six files plus the digest cron. The heuristic scan stays the
+                     guard and its cost is written down.
+                  3. **3-03 — A THIRD DIFFERENCE, found by following the doubt A left open.**
+                     2-07 flagged TWO doubts; A answered one. The other is live: on the papers
+                     surface the streaming branch **returns at `papers/report/route.ts:422`,
+                     above the route's only `consumeDeepReport` call at `:438`**, and the
+                     client ALWAYS streams (`report-stream.ts:21`). The stream honours
+                     `deepReport` (`:240` -> `tier2`, full text). So **a deep papers report
+                     never decrements the monthly allowance and never charges D4's 200/day
+                     paid breaker.** It stays authenticated and metered — uncounted is not
+                     unmetered. Every test missed it because `quota-exemptions.test.ts:94-115`
+                     asserts the counter's POSITION IN THE FILE, not its reachability, and A
+                     drove the route without the NDJSON header — a real path, but not the one
+                     the app takes. **POLICY-flagged, see OPEN FOR MANAGER.**
+GATE THIS TURN:   Re-run cold to prove the turn moved nothing (B changes no code): `tsc` exit
+                  **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0 warnings) ·
+                  `vitest` **123 files passed | 1 skipped (124)** · **2825 tests passed | 1
+                  skipped (2826)**, **0 failed**, 9.48 s. Identical to round-3 A's figures.
+PRIOR STATUS (round-3 A, kept because the measurement still stands):
+                  **Code-side fell 19.4% -> 6.5% (2 of 31, exclusions: none) and every one of round-2
+                  A's seven differences is CLOSED, each re-verified by behaviour rather
                   fell 19.4% -> 6.5% (2 of 31, exclusions: none) and every one of round-2
                   A's seven differences is CLOSED, each re-verified by behaviour rather
                   than read off a commit message.** The gate is green. Persona coverage is
@@ -177,6 +229,11 @@ STATUS:           ROUND 3 — A HAS MEASURED, all three parts banked and pushed.
                     override flips it on, so the zero is the gate, not an inert runtime.
 LAST DIFFERENCE:  **6.5% code-side (2/31, exclusions: none)** — R-SEC-2, R-UI-3 · **blocked: 7
                   — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2**
+                  **NOT re-measured by B — measuring is A's job and this number is A's.** But
+                  round-3 B found a THIRD code-side difference (3-03, the papers streaming
+                  quota bypass) that is POLICY-blocked, so **round-4 A should expect 3 or 2
+                  depending on the manager's ruling, not 2 minus what C fixes.** Read this
+                  number as "A's last measurement", not as "what is left".
 GATE (0% unexplained, both measurements):  NOT MET — code-side is 6.5%, not 0%, and seven
            items carry a blocked half. The blocked half CANNOT close without the owner even
            if B and C close the code side next round.
@@ -192,15 +249,22 @@ GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0
            (2826)**, **0 failed**, 9.32 s. Run cold TWICE by round-3 A — once on the tree as
            found, once after deleting every throwaway — identical figures both times.
            `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      B WRITES THE ROUND-3 FIX GUIDE under Ruling 8 (§1i): 3-01 the paid upsell — the
-           quota notice must take the plan from the server's entitlement (client summary's
-           `unlimited`, or a field on `QuotaSignal`), never infer it from `reason`; paid at the
-           daily breaker → breaker sentence only, hours when under a day; protective render
-           test. 3-02 the branded entitlement context at the chokepoint (Ruling 7 point 3):
-           `resolveProvider` and the operator-search availability gate take a context type only
-           `requireEntitledAiRequest` can produce; escape clause on a signature cascade. 3-03
-           tests inside each. Nothing else is open on the code side; the blocked list (7) is
-           the owner's.
+TODO:      **C WORKS THE ROUND-3 GUIDE FROM 3-01**, in order, one commit per item, pushed.
+           The guide is in §4 under `### Round 3 — Agent B`; each item carries its seam, its
+           contract, its tests-at-risk table with line numbers, and its blast radius.
+           **3-01 first** — it is user-visible wrong data and 3-02 changes nothing a reader can
+           see; they touch disjoint files, so if budget runs short the right thing to bank is
+           **3-01 complete rather than both half-done**. Two things in 3-01 C should not
+           improvise on: the `effectivePlan` prop is **required, not optional** (a `"free"`
+           default is a fail-open default on the exact property being fixed — the one-line test
+           helper change is the answer, not an optional prop), and the prompt must still show
+           for **trial** readers, which is where `TierUpgradeBlock`'s own predicate would
+           mislead a copy-paste. **3-02: build HALF A only** (`resolveProvider` + the union for
+           the two pool-closure callers); **half B is recorded and NOT authorised** under
+           Ruling 7 point 3's escape clause. C must also rewrite `registry.ts:149-158`, whose
+           comment says the second argument "stays optional" — Ruling 7 point 3 supersedes it
+           and the file would otherwise argue with itself. **3-03 needs a manager ruling before
+           C touches it** (see OPEN FOR MANAGER). The blocked list (7) is still the owner's.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -217,8 +281,24 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            Vercel if the free jobs surface is meant to have them — nobody in the loop can see
            the Vercel env. **(7) THE BLOCKED LIST IS NOW THE LARGER HALF OF THE GATE:** seven
            named items, two causes, both owner actions. No agent can close any of them.
-OPEN FOR MANAGER:  none — A's question ruled in §1i (Ruling 8 point 1): the property lives in
-           R-UI-3 and covers every upsell surface; R-QUOTA-1's prompt is free/trial only.
+OPEN FOR MANAGER:  **ONE, and it blocks part of C's turn. `POLICY — manager decides`: is the
+           papers STREAMING path meant to be exempt from the deep-report quota?** The two texts
+           disagree. **R-QUOTA-3 exempts "shallow (abstract-only) paper reports, ranking,
+           digest and query generation" — streaming is not in that list**, and a streamed
+           `deepReport: true` request is `tier2` and fetches full text, so it is not
+           abstract-only. **The route's own comment (`papers/report/route.ts:429-432`) claims
+           R-QUOTA-3 covers it.** On the spec's plain words R-QUOTA-1 — "each deep-report route
+           checks and increments the monthly counter atomically" — is NOT met on papers, and
+           the 200/day paid breaker does not fire there either. **B did not score it and did
+           not fix it**, because it reverses a choice C wrote down deliberately and A scored
+           MET twice. If ruled a defect: the seam is the ORDERING at `:418-422` (move the quota
+           check above the stream branch and emit the refusal as a stream event, which is what
+           `ReportStreamEvent` was flagged for in 2-07), **not** a second `consumeDeepReport`
+           call inside `streamReport` — two call sites is how a route double-counts. Round-4 A
+           will need to know whether R-QUOTA-1 and R-QUOTA-3 keep their MET scores.
+           (A's earlier question stays ruled in §1i, Ruling 8 point 1: the no-upsell property
+           lives in R-UI-3 and covers every upsell surface; R-QUOTA-1's prompt is free/trial
+           only.)
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
