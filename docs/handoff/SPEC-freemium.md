@@ -104,6 +104,12 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   `deepReportsBudget`. `deepReportsRemaining` means **budget minus used**, read from the counter
   store, and is what the client summary (R-ENT-3) carries; when the store is unreachable it is
   `null` with `reason: "unavailable"` — never a guessed or constant number.
+  **Amendment 2026-09-05 (Ruling 5, binding):** the client summary's shape is
+  `{ unlimited: boolean, deepReportsRemaining: number | null, reason?: "unavailable" }`.
+  Paid → `unlimited: true, deepReportsRemaining: null`, no `reason`. Store unreachable →
+  `unlimited: false, deepReportsRemaining: null, reason: "unavailable"`. Free/trial →
+  `unlimited: false` and the real remainder. **`Infinity` never appears in a payload** — JSON
+  serialises it to `null`, which is the reserved outage sentinel.
 - **R-ENT-3.** The entitlement summary is delivered to the client (extend `GET /api/profile` or
   equivalent) and held in the store. `feedsUseAi`, `reportProviderConfigured` and
   `canAttemptOpportunityEnrichment` collapse into **one** predicate reading
@@ -142,6 +148,13 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
 - **R-KEY-3.** `resolveKeys` in `jobweb.ts` / `eventweb.ts`: request BYOK Tavily →
   (`entitlement.systemSearchAllowed` ? `process.env.TAVILY_API_KEY` : none) → Brave env (banned on
   Vercel) → none. The system Tavily key is never used for a free user.
+  **Amendment 2026-09-05 (Ruling 5, binding):** the rule generalises to **every operator-funded
+  search provider** — the system Tavily key, Brave-from-env, Vertex AI Search, Gemini grounding.
+  All of them sit behind the same `systemSearchAllowed` gate, are charged to the R-QUOTA-2
+  500/day search breaker, and write an R-METER-2 row carrying their `provider` name. Provider
+  preference: BYOK Tavily → system Tavily → (Brave / Vertex / Gemini, local-only) → none; an
+  uncounted provider never outranks the gated, metered one. The guard bans `GOOGLE_VERTEX_` by
+  **prefix**.
 - **R-KEY-4.** `UserAiProvider` value `"default"` now means "Peer's AI (included)". Profile copy
   reflects it; `welcome/completeness.ts` no longer treats `"default"` as incomplete.
 

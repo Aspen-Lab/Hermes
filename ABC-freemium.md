@@ -187,7 +187,8 @@ STATUS:           ROUND 2 — A HAS MEASURED, ALL THREE PARTS BANKED. The build 
                     by the wrapper — the wrapper only writes when a call throws before logging.
                     All five providers call it today; a sixth that forgot would be unmetered on
                     success. Worth a note in B's guide, not a fix item.
-LAST DIFFERENCE:  19.4% (6/31; exclusions: none)
+LAST DIFFERENCE:  19.4% code-side (6/31; exclusions: none) · BLOCKED on owner action: R-ENT-1
+                  live half (Ruling 5 point 1; round-3 A enumerates every other blocked half)
 GATE (0% unexplained, both measurements):  NOT MET
 
 DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 28 ITEMS.
@@ -198,70 +199,26 @@ GATE NOW:  tsc exit 0 · eslint 1 error (the standing quiz.tsx:46) · vitest **1
            File and test TOTALS are unchanged from C's 117/2717; three tests moved from passed to
            failed, all three in `deep-report-quota.test.ts`, all three the daily-window breaker
            cases. See difference 4. `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      B WRITES THE ROUND-2 FIX GUIDE from A's seven differences, in A's order, with
-           difference 4 FIRST so C never builds on a red gate. Round-2 items the manager already
-           ordered are differences 1-3 (Ruling 4 points 2-3); differences 4-7 are new this round.
-           B classifies each MISSING / WRONG DATA / WRONG SHAPE / WRONG ORDER / EXTRA, establishes
-           by execution whether 2 and 3 share one mechanism (they are in the same function but
-           they are not the same bug), and adversarially tests each fix direction in a throwaway
-           harness before recommending it. For every fix, say what the field shows when every
-           candidate is rejected — differences 1 and 3 are both "what does this show when we
-           cannot tell", and a guard alone is not a fix.
-
-           STANDING TALLIES, round 1 -> round 2, each reported even at zero:
-           scan 1 rendered tier vocabulary 22 -> 0 (four survivors, all read: three JSX comments,
-           one console.warn) · scan 2 browser-shipped NODE_ENV dev tests 6 -> 0 (four server-only
-           survivors, each classified) · scan 3 ungated TAVILY_API_KEY reads 3 -> 0 (three hits,
-           all inside the one gated resolver) · scan 4 no-argument resolveProvider() 2 -> 0 (three
-           hits, all comment lines) · scan 5 routes that can spend without a guard 4 -> 0 (all 21
-           api routes enumerated) · routes resolving a provider BEFORE the guard 7 -> 0 ·
-           persona/route pairs behaving per spec 2 of 13 -> 41 of 45 · operator-key searches
-           anonymous jobs 2 -> 0 events 7 -> 0 · free-no-key jobs 2 -> 0 events 7 -> 0 · papers
-           operator-key searches 1 -> 0 · anonymous-BYOK feed request -> tier 0, 0 providers,
-           0 operator searches · `[quota] store unavailable` occurrences 0 (the fix has not
-           landed) · `local-no-auth` in a deployed runtime ABSENT.
-
-           STILL BLOCKED — a blocked item is neither met nor failed, and the gate cannot close
-           while one stands. Nobody in this loop can clear any of them:
-           - the system provider on a real GOOGLE_API_KEY (`BLOCKED: no key`; both keys measured
-             absent by `grep -c`, never `cat`);
-           - the counters against real Supabase, including whether the RPC's `on conflict do
-             update` adds rather than overwrites under two instances;
-           - `handle_new_user` creating a real 14-day trial;
-           - the ISO-week key on a non-UTC server (asserted across four stubbed zones only).
-PENDING USER ACTION: UNCHANGED, and item (2)'s precondition is now MET.
-           (1) APPLY THE THREE MIGRATIONS, all under web/supabase/migrations/ —
-               20260904000000_usage_counters.sql, 20260904000100_usage_events.sql,
-               20260904000200_profile_plan.sql. A read all three; they match R-ENT-1 exactly.
-               ORDER MATTERS ON DEPLOY: the R-QUOTA-2 breakers fail CLOSED, so a deployed runtime
-               that HAS Supabase but NOT usage_counters would degrade every paid user to no-LLM.
-               Apply all three before or with the deploy. DECIDE whether existing users get a
-               backfilled 14-day trial (the migration gives them `free`). Save a profile once
-               afterwards to confirm the column-level revoke did not break the profile sync.
-           (2) SET THE FOUR VERCEL VARIABLES — GOOGLE_API_KEY, TAVILY_API_KEY,
-               NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY — but only after (1), and only
-               together. **THE DO-NOT-YET IS LIFTED:** round-2 A re-measured `anonymous` and
-               `free-no-key` at ZERO operator searches on both surfaces, which is the condition
-               Ruling 2 point 3 and Ruling 4 point 6 set. 1-10 makes all four REQUIRED, so the
-               first Vercel build fails until every one is set — that is the interlock working.
-               Timing is now the owner's to choose, not the loop's to gate.
-           (3) REGISTER GOOGLE_API_KEY + TAVILY_API_KEY into local .env.local when you want
-               live-model passes. Both are absent today (measured 0/0 by `grep -c`). The test
-               process deletes both before every suite, so adding them cannot make the gate spend
-               money.
-OPEN FOR MANAGER:  TWO POLICY ITEMS, both scoring conventions, neither assumed by A.
-           P1. Does an unapplied migration FILE score MET? A scored R-ENT-1 MET on the file's
-               content, because writing it is the whole of what this loop can do (§0b point 5)
-               and the consuming half is observed under R-ENT-2. Round 1 scored it NOT MET, when
-               no file existed. If an unapplied migration cannot score MET: 19.4% -> 22.6%.
-           P2. Is difference 7 a difference? R-KEY-3's arrow chain may describe the key resolver
-               (`resolveSystemSearchKeys`, which IS correct) rather than the provider preference
-               (`gemini-search.ts:233-235`, where Brave outranks the system Tavily key). If the
-               manager reads it as the resolver: R-KEY-3 -> MET, 19.4% -> 16.1%.
-           NOT a policy item, but the manager should see it: if difference 4 is ruled a standing
-           flake in the `benchmark.test.ts` class, R-TEST-2 returns to MET and the number becomes
-           16.1%. A did NOT assume that — a red gate is a red gate — but it is a one-line fixture
-           fix and B can land it first, which makes the ruling unnecessary.
+TODO:      B WRITES THE ROUND-2 FIX GUIDE from A's seven differences, under Ruling 5 (§1f):
+           2-01 FIRST: the red gate — inject the test's clock into `prune()` and every other
+           time read in the counter store (Ruling 5 point 3; fix the seam, never the fixture
+           window). Then: quota `reason` + outage copy + `[quota] store unavailable` line
+           (Ruling 4 point 2); `deepReportsBudget` vs a real `deepReportsRemaining` AND the
+           JSON-safe `{ unlimited, deepReportsRemaining, reason? }` shape (Ruling 4 point 3 +
+           Ruling 5 point 4); ONE gate for every operator-funded search provider + breaker +
+           usage row + `GOOGLE_VERTEX_` prefix ban + auto order (Ruling 5 point 2, merges A's
+           5/6/7); the metering wrapper as single writer (Ruling 5 point 6). Number items
+           2-01, 2-02, …; tests inside each item.
+PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
+           whether existing users get a backfilled 14-day trial (the migration gives them
+           `free`). (3) After applying, save a profile once in the app to confirm sync still
+           works. (4) The Vercel do-not-yet on TAVILY_API_KEY is LIFTED (Ruling 5 point 7):
+           the four variables may be set — but DO NOT DEPLOY THIS BRANCH until round-3 A
+           reports the gate green (it is red today on a test-clock defect) and it is merged.
+           (5) Local .env.local keys whenever ready — live-model halves stay BLOCKED until then.
+OPEN FOR MANAGER:  none — P1 and P2 ruled in §1f (Ruling 5 points 1–2); A's difference 4 ruled a
+           fixture defect, not a flake (point 3); differences 3 and the R-METER-1 note became
+           fix items (points 4, 6).
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -446,6 +403,60 @@ green) and their key assertion read (`requestsCarrying(OPERATOR_SENTINEL)` is em
 
 ---
 
+## §1f. RULING 5 — after round-2 A (2026-09-05, BINDING)
+
+1. **P1 — an unapplied migration file does not score `MET`.** Ruling 2 point 1 stands: `MET`
+   means the mechanism exists **and behaves under observation**. A file that has never executed
+   has not behaved, and nobody in this loop can execute it — so it is neither `MET` nor `NOT
+   MET`: it is **`BLOCKED: owner action`**. Same for every live half the loop cannot observe
+   (the Supabase counter store's atomicity, `usage_events` persistence, `createGeminiApiProvider`
+   on a real key, trial expiry from a trigger-written row). **From this round the loop reports
+   two numbers:** the headline **code-side** percentage — (NOT MET + PARTIAL) ÷ 31, comparable
+   with rounds 1–2 — and a **blocked** list by name with its own count. The gate needs both at
+   zero. Round 2 stands at **19.4% code-side**; R-ENT-1 is re-marked `BLOCKED` (its file half is
+   done); round-3 A enumerates every other blocked half explicitly.
+2. **P2 — difference 7 is a difference, and it merges with 5 and 6 into one structural item.**
+   R-KEY-3's arrow chain is the spend order for the operator-funded path; a provider that is
+   uncounted and unmetered must never outrank the gated, metered one. Required, as **one
+   mechanism**: every operator-funded search provider — the system Tavily key, Brave-from-env,
+   Vertex AI Search, Gemini grounding — sits behind the same `systemSearchAllowed` gate, is
+   charged to the 500/day breaker, and writes an R-METER-2 row with its `provider` name; the
+   auto order becomes BYOK Tavily → system Tavily → (Brave / Vertex / Gemini, local-only) →
+   none; the guard bans `GOOGLE_VERTEX_` **by prefix**. Spec R-KEY-3 amended (dated). **Escape
+   clause:** if C finds a provider that cannot be routed through the gate, stop and record.
+   R-KEY-3 stays `PARTIAL` until this lands.
+3. **Difference 4 is not a flake and not the `benchmark.test.ts` class.** It is a deterministic
+   fixture defect: the test injects a fixed clock but `prune()` reads the real one. **B lands it
+   first; C fixes it in the production seam** — `prune()` (and anything else in the counter store
+   that reads time) takes the same injected `now` the increment uses, so the test's clock is the
+   only clock. **New standing rule (§3):** a test that injects a fixed clock must inject it
+   everywhere the code under test reads time; a fixture-vs-real-clock split is a defect, and the
+   fix belongs in the seam, never in widening the fixture window. R-TEST-2 stays `NOT MET` until
+   the gate is green cold.
+4. **Difference 3 — `Infinity` serialises to `null`.** Spec R-ENT-2 amended (dated) to a shape
+   JSON can carry: `{ unlimited: boolean, deepReportsRemaining: number | null, reason?:
+   "unavailable" }` — paid → `unlimited: true, deepReportsRemaining: null`, no `reason`; store
+   down → `unlimited: false, deepReportsRemaining: null, reason: "unavailable"`; free/trial →
+   `unlimited: false` and a real remainder. **Never `Infinity` in a payload.** Protective test:
+   a paid summary round-trips through `JSON.parse(JSON.stringify(…))` unchanged.
+5. **Differences 1 and 2 stand as ruled in Ruling 4 points 2–3**; A reproduced both at the route.
+6. **A's R-METER-1 note becomes a fix item.** Success rows are written by each provider's own
+   `logLlmUsage`; the wrapper writes only on a throw. A sixth provider that forgets to log would
+   be unmetered on success. Required: the wrapper is the **single writer** for both success and
+   failure (providers keep `logLlmUsage` for the console line only, or the wrapper calls it), or
+   — if B shows that is the wrong seam — a protective test that every registered provider
+   produces exactly one usage row per call. One row per call, never two, never zero.
+7. **The Vercel do-not-yet is LIFTED.** A measured `anonymous` and `free-no-key` at 0 and 0
+   operator searches on both surfaces independently. The four Vercel variables may be set. The
+   branch is still not deployable: the gate is red (point 3) and it is not merged — set the
+   variables, do not deploy this branch until round-3 A reports green.
+8. **Reading notes for round-3 A.** Persona denominator is now 41/45 pairs — keep it. The
+   headline number may *rise* when blocked halves are enumerated (point 1) — that is accounting,
+   not regression; say so in the round-3 note. `local-no-auth` absent in deployed runtimes
+   (503 ×3) is a closed check — keep the tally line, expect "absent" again.
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
@@ -561,6 +572,9 @@ C does **not** judge whether something should be fixed.
 - **Supabase is not configured locally** (`.env.local` has the vars commented out). Tests and
   `next dev` run on the in-memory fallbacks (R-METER-4, R-ENT-5). Do not "fix" this by adding
   credentials.
+- **A test that injects a fixed clock must inject it everywhere the code under test reads time**
+  (Ruling 5 point 3). A fixture-vs-real-clock split is a defect in the production seam — fix the
+  seam (take `now` as a parameter), never widen the fixture window, never mark it a flake.
 - Commit messages: plain sentences in the repo's existing style
   (`feat(scope): …`, `fix(scope): …`, `refactor(scope): …`), ending with
   `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
