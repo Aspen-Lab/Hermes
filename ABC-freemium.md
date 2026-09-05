@@ -5111,3 +5111,190 @@ route response shape changes (a field is added inside an object every route alre
 conditionally). Client, if the MISSING half lands in the same item: three page components and one
 type. No cache key changes; no entitlement change; nothing touches the counter store, so 2-01
 cannot be disturbed. Existing clients ignore an unknown key, so the server half can land alone.
+
+---
+
+#### 2-03 — `deepReportsRemaining` is a plan budget, and for a paid reader it reaches the browser as `null`
+
+**Class: `WRONG DATA`** (two of them, sharing one field). Ruling 4 point 3 · Ruling 5 point 4 ·
+A's differences 2 and 3. A is right on both counts and I reproduced both; what follows corrects two
+structural assumptions in the brief and names the one architectural constraint that decides the
+whole design.
+
+**Where it is, all re-read this turn:**
+
+- `web/src/lib/entitlement/types.ts:44` — `deepReportsRemaining: number;`, with `:33-43` stating
+  in a comment that it is the budget and not budget-minus-used. The name is the lie; the comment
+  is honest.
+- `web/src/lib/entitlement/resolve.ts:124` — `deepReportsRemaining: deepReportBudget(effectivePlan)`.
+  Note the private producer at `:83-92` is **already** called `deepReportBudget`. Only the field is
+  misnamed, so the rename makes the field agree with the function that fills it.
+- `web/src/lib/entitlement/resolve.ts:85-86` — `case "paid": return Number.POSITIVE_INFINITY;`
+- `web/src/lib/entitlement/types.ts:78` — `deepReportsRemaining: 0` on `ANONYMOUS_ENTITLEMENT`.
+- `web/src/app/api/profile/route.ts:167-170` — `entitlement: await resolveEntitlement(user.id)`.
+  **The whole `Entitlement` object is the payload**, field for field. That is the fact that makes
+  `Infinity` a wire problem rather than an internal one.
+
+**Proved by execution — and the proof turned up a trap in the protective test the brief asks for.**
+
+```
+today's paid entitlement on the wire:
+  {"plan":"paid",…,"deepReportsRemaining":null,…}
+naive fix, Infinity - used = Infinity  ->  JSON: {"r":null}
+```
+
+So A's difference 3 is exactly right: a budget-minus-used fix does not help, because
+`Infinity - anything` is `Infinity`.
+
+**The trap: the obvious protective test passes today and proves nothing.**
+`JSON.stringify(JSON.parse(JSON.stringify(x))) === JSON.stringify(x)` is **`true` for today's
+broken paid entitlement** — both sides stringify to `null`, because the first `stringify` has
+already destroyed the value. C must compare the *parsed object* against the *original object*:
+
+```ts
+expect(JSON.parse(JSON.stringify(summary))).toEqual(summary);   // fails today for paid
+```
+
+not two serialised strings. I ran both forms; the string form is green on the current code.
+
+**THE architectural constraint, which the brief does not mention and which decides the design.**
+`resolveEntitlement` must **not** read the counter store. It is called on **every AI request** —
+`web/src/lib/security/ai-request.ts:102`, `:123`, `:133`, `:180` — as well as at
+`api/profile/route.ts:168`. Putting a counter read inside it would add a Supabase round trip to
+every feed load, every report and every digest, to compute a number only the profile screen wants.
+`types.ts:37-42` already says the resolver "is an input to both, not a consumer of either" — that
+is a decision, not an accident, and I am not recommending reversing it. **Therefore the subtraction
+happens in the delivery layer (`GET /api/profile`), never in the resolver.**
+
+**Fix direction — three parts, in this order.**
+
+**(a) Rename the resolver's field.** `Entitlement.deepReportsRemaining` → `deepReportsBudget: number`.
+Server-only meaning; `Infinity` for paid is fine **inside the process** and is what the two
+comparison sites want. Rewrite the `types.ts:33-43` comment: it currently ends "until 1-20 has
+landed and this comment says otherwise" — 1-20 has landed, so the comment is now stale and is
+itself a small `EXTRA` to clean up.
+
+**(b) A JSON-safe allowance, built by a pure function.** New export next to the resolver
+(`lib/entitlement/summary.ts` or inside `types.ts` — C's call, but it must be importable by the
+browser, so **no Supabase import**):
+
+```ts
+export interface DeepReportAllowance {
+  unlimited: boolean;
+  deepReportsRemaining: number | null;
+  reason?: "unavailable";
+}
+
+export function deepReportAllowance(
+  entitlement: Pick<Entitlement, "effectivePlan" | "deepReportsBudget">,
+  used: CounterReading,          // { value, ok } — never a bare number
+): DeepReportAllowance;
+```
+
+Rules, exhaustive:
+
+| Case | Result |
+|---|---|
+| `effectivePlan === "paid"` | `{ unlimited: true, deepReportsRemaining: null }` — **no `reason`**, and no counter read is needed at all |
+| `!used.ok` (store unreachable) | `{ unlimited: false, deepReportsRemaining: null, reason: "unavailable" }` |
+| free / trial, store readable | `{ unlimited: false, deepReportsRemaining: Math.max(0, budget - used.value) }` |
+| no `userId` (the anonymous client default) | `{ unlimited: false, deepReportsRemaining: 0 }` — `0`, **not** `null`. A signed-out reader has no allowance; `null` is reserved for "we cannot tell". |
+
+`Math.max(0, …)` matters: the counter is incremented before the comparison, so a reader who has
+just been refused sits at `budget + 1` used, and a bare subtraction would ship `-1`.
+
+**(c) Read the counter without spending it — and this is `CounterStore.read()`'s first production
+caller.** 2-01 records that `read()` has none today. The key depends on the plan and C must not
+guess it:
+
+- free → `deepReportMonthKey(userId, now)` (`counters.ts:102-104`)
+- trial → `deepReportTrialKey(userId)` (`counters.ts:120-122`, **no period segment**)
+- paid → no read; `unlimited` is decided by the plan alone
+
+Never call `increment` here. A profile fetch that consumed a deep report would be the worst bug in
+this file.
+
+**The wire shape, and the one client type that has to move.** `GET /api/profile` stops shipping the
+raw `Entitlement` and ships the client view:
+
+```ts
+export type ClientEntitlement = Omit<Entitlement, "deepReportsBudget"> & DeepReportAllowance;
+```
+
+`deepReportsBudget` is dropped on the way out, so **`Infinity` cannot reach a payload by
+construction** rather than by remembering. The three allowance keys are inlined at the top level,
+which is Ruling 5 point 4's literal shape. Every existing client consumer keeps compiling, because
+they all take a `Pick` of fields that survive — I checked each: `Pick<Entitlement, "userId">` at
+`store/feed.ts:259`, `:374`, `app/welcome/completeness.ts:74`, `:144`,
+`lib/opportunities/enrichment.ts:983`, `lib/feed/ai-tier.ts:71`, `:84`; and
+`Pick<Entitlement, "effectivePlan" | "trialEndsAt">` at `lib/feed/ai-tier.ts:115`, `:140`.
+
+**Every reader of `deepReportsRemaining`, grepped rather than guessed, and what each must do:**
+
+| File:line | What it is | Must change to |
+|---|---|---|
+| `lib/entitlement/types.ts:44` | the field | rename to `deepReportsBudget` |
+| `lib/entitlement/types.ts:33-43` | the comment saying it is a budget | rewrite — it is now correct by name, and its closing sentence is stale |
+| `lib/entitlement/types.ts:78` | `ANONYMOUS_ENTITLEMENT` | rename the key; value stays `0` |
+| `lib/entitlement/resolve.ts:124` | the producer | rename the key |
+| `lib/usage/deep-report-quota.ts:153` | trial comparison `reading.value <= entitlement.deepReportsRemaining` | read `deepReportsBudget` — **this is a budget comparison and always was**, which is the clearest evidence the rename is right |
+| `lib/usage/deep-report-quota.ts:175` | free comparison | same |
+| `app/api/profile/route.ts:167-170` | ships the raw entitlement | ship `ClientEntitlement` built from the resolver + one `store.read` |
+| `store/profile.ts:59-60` | `entitlement: Entitlement`, `setEntitlement` | hold `ClientEntitlement` |
+| `store/profile.ts:354` | default `ANONYMOUS_ENTITLEMENT` | a client anonymous constant carrying `{unlimited:false, deepReportsRemaining:0}` |
+| `components/profile-sync.tsx:120,154` | the only place the client installs it | the response type only |
+
+**No component displays this number today.** I grepped `deepReportsRemaining` across all of
+`web/src`: outside the entitlement and quota modules the only hits are five test files. So the
+rename cannot break a rendered screen — but the wrong number **is** on the wire, and R-ENT-3
+requires the summary to be delivered and held, which it is. Ruling 4 point 3 is about the value
+being false, not about it being displayed; both differences stand.
+
+**Tests at risk — grepped, four files, and three assertions must be rewritten (never deleted):**
+
+| File:line | Assertion | Under the fix |
+|---|---|---|
+| `lib/entitlement/resolve.test.ts:61` | `deepReportsRemaining).toBe(20)` (trial) | rename to `deepReportsBudget` |
+| `lib/entitlement/resolve.test.ts:79`, `:114` | `.toBe(5)` (free, expired trial) | rename |
+| `lib/entitlement/resolve.test.ts:90` | `.toBe(Number.POSITIVE_INFINITY)` (paid) | rename; the resolver may keep `Infinity`, and this assertion is what pins that it stays **inside** the process |
+| `lib/usage/deep-report-quota.test.ts:34,39,45,136` | fixture entitlements | rename the key; `:45`'s `Number.POSITIVE_INFINITY` stays |
+| `lib/feed/ai-tier.test.ts:51` | fixture entitlement | rename the key |
+| `app/api/profile` route tests, if any | — | I found **none**: `ls src/app/api/profile/` has no `route.test.ts`. A drove this route from a throwaway suite that was deleted. **C must add one** — see below. |
+
+**New tests this item owes:**
+
+1. **The round-trip, written the right way.** For each of paid / free / trial / store-down:
+   `expect(JSON.parse(JSON.stringify(summary))).toEqual(summary)`. Never compare two
+   `JSON.stringify` outputs — I proved that form passes on today's broken code.
+2. **`Infinity` never reaches a payload**, asserted structurally rather than by example:
+   `JSON.stringify(clientEntitlement)` contains no `null` for `deepReportsRemaining` **unless**
+   `unlimited === true` or `reason === "unavailable"`. That is the one property that ties
+   differences 2 and 3 together, and it is what stops a future field re-introducing the sentinel
+   collision.
+3. **Paid and store-down are distinguishable**, asserted directly — proved distinguishable in the
+   harness (`{"unlimited":true,…null}` vs `{"unlimited":false,…null,"reason":"unavailable"}`).
+4. **The number actually moves.** Consume a deep report, then read the summary, and assert
+   `deepReportsRemaining` went 5 → 4. This is the assertion whose absence let the defect ship: every
+   existing test asserts the *constant*.
+5. **A `route.test.ts` for `GET /api/profile`** on C's `src/test-support/route-harness.ts`, covering
+   the five personas — the route has no suite at all today, which is why A had to build a
+   throwaway one and why nothing caught this.
+6. **The profile fetch never increments.** Call `GET /api/profile` N times and assert the deep
+   counter is unchanged.
+
+**What the field shows when every candidate is rejected.** Store unreachable →
+`{ unlimited: false, deepReportsRemaining: null, reason: "unavailable" }` and the UI says nothing
+about a number. Signed out → the route already answers **401** (A observed it on all five
+personas), and the client falls back to its frozen anonymous constant reading
+`{ unlimited: false, deepReportsRemaining: 0 }`. Migrations unapplied → `resolveEntitlement`
+already degrades every signed-in user to `free` (`resolve.ts:189`, `:199-201`), so the summary is
+`free`'s five minus used — honest, and it is what the reader actually gets. In no branch is a
+number guessed.
+
+**Blast radius.** One field renamed across four production files and five test files; one new pure
+function; one route gains a single non-incrementing counter read; one client store field changes
+type. The extra Supabase round trip lands **only** on `GET /api/profile` — not on any feed, report
+or digest path — which is the whole point of keeping it out of the resolver. Nothing touches
+`resolveEntitlement`'s signature, so the four `ai-request.ts` call sites are untouched and R-SEC-2
+cannot move. 2-02 and 2-03 both add a `reason: "unavailable"`, in two different payloads that never
+meet; C should land them in this order so the vocabulary is set once.
