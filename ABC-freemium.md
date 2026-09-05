@@ -5320,3 +5320,292 @@ directory after committing and it is there. What is true, and what the entry sho
 I record this rather than quietly fixing it because the same discipline is what the loop asks of A
 and C: the citation was checked by `grep` for the field name, which the file does not contain, and
 not by `ls` on the directory. Grepping for a symbol does not prove a file's absence.
+
+---
+
+#### 2-04 — one gate, one breaker and one usage row for every operator-funded search provider
+
+**Class: `MISSING` (the gate and the metering for three of the four providers) + `WRONG ORDER`
+(the auto preference).** Ruling 5 point 2, which merges A's differences 5, 6 and 7 · spec R-KEY-3
+amendment of 2026-09-05. This is the largest item and it has one seam, not four.
+
+##### The producing path, enumerated end to end, every line re-read this turn
+
+| Step | Where | What it does today |
+|---|---|---|
+| 1 | `lib/jobs/pipeline.ts:155-163` · `lib/events/pipeline.ts:177-185` | build `query.webSearch`. **Either** `{ tavilyApiKey }` when the user's Tavily connector is on, **or** `webSearchOptions(req.searchConnectors)` — never both. Then `systemSearchAllowed` and `userId` ride on top. |
+| 1p | `lib/feed/pipeline.ts:127-130` | the papers surface: `{ ...webSearchOptions(...), systemSearchAllowed: false }` — a hard `false` (D3). |
+| 2 | `lib/sources/vertex-search.ts:211-217` | `webSearchOptions` returns `{ provider: "vertex" }` if `isVertexSearchAvailable()`, else `{ provider: "gemini" }` if `isGeminiSearchAvailable()`, else `undefined`. **Env only.** |
+| 3 | `lib/sources/vertex-search.ts:198-200` | `isVertexSearchAvailable()` = a project **and** an app id, from `GOOGLE_VERTEX_SEARCH_PROJECT` ∥ `GOOGLE_VERTEX_PROJECT` (`:175-176`) and `GOOGLE_VERTEX_SEARCH_ENGINE_ID` ∥ `GOOGLE_VERTEX_SEARCH_DATA_STORE_ID` (`:182-184`). **Reads no entitlement.** |
+| 4 | `lib/sources/gemini-search.ts:179-181` | `isGeminiSearchAvailable()` = `Boolean(GOOGLE_VERTEX_PROJECT)`. **Reads no entitlement.** |
+| 5 | `lib/search/system-key.ts:61-76` | `resolveSystemSearchKeys`. Tavily **is** gated (`:72` `input.systemSearchAllowed && process.env.TAVILY_API_KEY`). **Brave is NOT** — `:67` reads `process.env.BRAVE_SEARCH_API_KEY` unconditionally and hands it back on every branch, including `provenance: "none"`. |
+| 6 | `jobweb.ts:2142-2153` · `eventweb.ts:2757-2765` · `web-search.ts:267-280` | `resolveSearchProvider` passes `geminiAvailable: isGeminiSearchAvailable()`, `vertexAvailable: isVertexSearchAvailable()`, `braveKeyPresent: Boolean(keys.brave)` — **three ungated booleans** — plus the two Tavily flags. |
+| 7 | `gemini-search.ts:191-237` | `resolveWebSearchProvider`. **Explicit** preference at `:207-218`; **auto** at `:219-236`. |
+| 8 | `jobweb.ts:2171-2179` · `eventweb.ts:2782-2790` | the 500/day breaker, charged **only** when `keys.provenance === "system" && provider === "tavily"`. |
+| 9 | `jobweb.ts:2203-2213` · `eventweb.ts:2820-2830` | the R-METER-2 row, same predicate, with `provider: "tavily"` hard-coded. |
+| 10 | `lib/sources/web-search.ts` | **no breaker and no usage row anywhere in the file** — grepped for both symbols, zero hits. |
+
+##### THE correction that changes the fix — fixing the auto order alone does not close the hole
+
+A described the defect as "both sit ahead of Tavily in the auto branch" (`:227-231`), and Ruling 5
+prescribes a new auto order. **For jobs and events the auto branch is usually not reached at all.**
+Trace step 1 → step 7 with a free or anonymous caller who has no Tavily connector:
+`webSearchOptions` returns `{ provider: "vertex" }`, that becomes `query.webSearch.provider`, and
+`resolveWebSearchProvider` takes the **explicit** branch at `:207-209` —
+`if (preferred === "vertex") return availability.vertexAvailable ? "vertex" : null;` — and returns
+before any ordering clause executes. **A C who rewrites `:227-235` and stops has changed nothing
+for the persona the item is about.**
+
+The good news is that the same trace hands us the seam: **both branches consult the same
+`availability` object.** `resolveWebSearchProvider` is already pure and already takes availability
+as an argument — it reads no environment itself. So gating the three booleans closes the explicit
+branch and the auto branch in one move, and `gemini-search.ts` needs no change for the gate at all.
+
+I also checked whether the caller can force a provider: **it cannot.** `query.webSearch.provider` is
+set only by `webSearchOptions` from the server's own environment (step 2); the request body reaches
+it only through `searchConnectors.gemini.enabled === false`, which can turn the provider **off** and
+never on (`vertex-search.ts:213`). So there is no R-SEC-3-style elevation here, and C must not add a
+body-parsed provider while restructuring.
+
+##### Fix direction — one mechanism, in four edits
+
+**(a) Gate Brave where the env is read, not at the call sites.** `system-key.ts` is the one module
+allowed to read operator search environment (that is scan 3's whole property), so the Brave gate
+belongs there beside the Tavily one:
+
+```ts
+const brave = input.systemSearchAllowed
+  ? process.env.BRAVE_SEARCH_API_KEY || undefined
+  : undefined;
+```
+
+This alone makes `braveKeyPresent` correct at all three call sites with no change to any of them.
+
+**(b) Gate Vertex and grounding at the three `resolveSearchProvider` sites**, because their
+availability is a capability check rather than a key the resolver returns:
+
+```ts
+const systemAllowed = query.webSearch?.systemSearchAllowed === true;
+…
+geminiAvailable: systemAllowed && isGeminiSearchAvailable(),
+vertexAvailable: systemAllowed && isVertexSearchAvailable(),
+```
+
+C may instead move both behind a single `operatorSearchAvailability({ systemSearchAllowed })` helper
+in `lib/search/system-key.ts` so that "who may spend the operator's search money" is answered in one
+file for all four providers. **I recommend the helper** — three copies of `systemAllowed && …` is how
+the fourth call site forgets — but the behaviour is identical either way and C should state the
+choice. `web-search.ts:66-72`'s early return needs the same treatment or the papers source will
+still call `isVertexSearchAvailable()` ungated before it ever reaches `resolveProvider`.
+
+**(c) The auto order** (`gemini-search.ts:233-235`, replacing the current
+`requestTavily → brave → tavily`, and deleting the two `:227-232` clauses that jump the queue):
+
+```ts
+if (availability.requestTavilyKeyPresent) return "tavily";   // BYOK — costs the owner nothing
+if (availability.tavilyKeyPresent)        return "tavily";   // system Tavily — gated AND metered
+if (availability.braveKeyPresent)         return "brave";    // local-only
+if (availability.vertexAvailable)         return "vertex";   // local-only
+if (availability.geminiAvailable)         return "gemini";   // local-only
+return null;
+```
+
+Ruling 5 writes the third group as "(Brave / Vertex / Gemini, local-only)" and does not order
+within it; I have used the ruling's own written order. C records the choice in the log. The
+principle the ruling states — "an uncounted provider never outranks the gated, metered one" —
+holds under any internal order once (d) lands, because none of them stays uncounted.
+
+**(d) One metering predicate, replacing the two hard-coded pairs.** Put it next to the keys so all
+three surfaces share it:
+
+```ts
+/** True when the spend lands on the operator's account rather than the reader's. */
+export function isOperatorFundedSearch(
+  provider: "tavily" | "brave" | "vertex" | "gemini",
+  keys: Pick<SystemSearchKeys, "provenance">,
+): boolean {
+  return provider === "tavily" ? keys.provenance === "system" : true;
+}
+```
+
+Brave, Vertex and grounding are **always** operator-funded — there is no BYOK path to any of them
+(checked: `searchConnectors` carries only a Tavily key; `SystemSearchKeys` has no Brave request
+field). Then at `jobweb.ts:2171` / `eventweb.ts:2782` charge the breaker under that predicate, and
+at `jobweb.ts:2203` / `eventweb.ts:2820` write the row with `provider` — the **variable**, not the
+literal `"tavily"` — which is Ruling 5's "with its `provider` name".
+
+**Do not change `SystemSearchKeys.provenance`'s meaning.** Its comment (`system-key.ts:52-58`) says
+it is about the Tavily key specifically, and `provenance === "byok"` is what tells the breaker to
+stay out of a reader's own spend. Widening it to "the chosen provider's provenance" would need the
+provider to be known before the keys are resolved, which reverses the call order at all three sites.
+The helper above keeps both facts and mixes them at the one point of use.
+
+##### The papers surface — a real consequence, and a POLICY question
+
+`web-search.ts` charges **nothing**: no `consumeSystemSearches`, no `recordUsageEvent`, in the whole
+file. Today that is harmless for Tavily, because `feed/pipeline.ts:129` passes a hard `false`. It is
+**not** harmless for the other three: `braveKeyPresent` comes from the ungated env read at
+`system-key.ts:67`, and `isVertexSearchAvailable()` / `isGeminiSearchAvailable()` are read directly
+at `web-search.ts:70-71` and `:276-277`. So on a self-host or a developer machine with any of those
+three set, the papers `web` source runs operator-funded search **for an anonymous caller**, with no
+gate, no breaker and no row.
+
+**This corrects A.** A wrote "Papers operator-key searches: 0 on every persona, and permanently so —
+`feed/pipeline.ts:129` passes a hard `false`". The hard `false` is permanent **only for Tavily**.
+Brave, Vertex and grounding walk straight past it. A's measurement is still correct — none of those
+names is set in this checkout (`grep -c "^NAME=." .env.local` → 0 for `BRAVE_SEARCH_API_KEY`,
+`GOOGLE_VERTEX_PROJECT` and `GOOGLE_VERTEX_SEARCH_ENGINE_ID`, values never printed) and the guard
+bans them on Vercel — but the reason A gave for it being permanent does not hold.
+
+**POLICY — manager decides.** Applying the gate uniformly means the papers `web` source returns
+`[]` **in local development too**, not only in production. Ruling 3 point 5 accepted `[]` "in
+production"; Rulings 75 and 79c deliberately kept that source alive locally via grounding
+(`feed/pipeline.ts:143-145` says so in as many words: "the gemini branch is what keeps the paper
+surface's web source alive"). Three ways out, and I am recommending, not deciding:
+
+1. **Accept it** — papers spends nothing on any key, in any runtime. Most consistent with D3, and
+   the gate stays one predicate with no runtime tests in it. **My recommendation.**
+2. Papers passes `systemSearchAllowed: isLocalDevRuntime()` — keeps the developer's surface alive
+   but puts a runtime test back inside a spend path, which is the shape 1-06 and R-ENT-5 spent a
+   round removing.
+3. Exempt the papers surface from the gate — reverses Ruling 5 point 2 for one surface. I am not
+   recommending this and do not think it should be chosen.
+
+Until this is ruled, C lands (a)–(d) for jobs and events, and for papers lands **the gate without
+option 2's exemption** (i.e. option 1) since it is strictly the safer direction and can be relaxed
+later; C records that it did so. Papers also gains the breaker and the row under (d) so that the
+surface is metered if it is ever un-gated.
+
+##### The guard — ban `GOOGLE_VERTEX_` by prefix
+
+`web/scripts/assert-byok-production-env.mjs:39-56` lists **4** `GOOGLE_VERTEX_` names. I enumerated
+what the tree actually reads (`grep -rhon "GOOGLE_VERTEX_[A-Z_]*" src/ | sort -u`) — **11 distinct
+names**, confirming A's count exactly:
+
+banned today — `GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_SEARCH_PROJECT`,
+`GOOGLE_VERTEX_SEARCH_ENGINE_ID`, `GOOGLE_VERTEX_SEARCH_DATA_STORE_ID`;
+unbanned — `GOOGLE_VERTEX_LOCATION`, `GOOGLE_VERTEX_ALLOW_GLOBAL_FALLBACK`,
+`GOOGLE_VERTEX_SEARCH_COLLECTION`, `GOOGLE_VERTEX_SEARCH_FALLBACK`,
+`GOOGLE_VERTEX_SEARCH_LOCATION`, `GOOGLE_VERTEX_SEARCH_MIN_RESULTS`,
+`GOOGLE_VERTEX_SEARCH_SERVING_CONFIG`.
+
+Fix: `configuredForbiddenNames` returns the **union** of the explicit list that is set and every
+`Object.keys(env)` entry matching `/^GOOGLE_VERTEX_/`, de-duplicated. **Keep the explicit names** —
+they are what makes the message name a variable the reader recognises, and R-GUARD-2 (never print a
+value) is unaffected because only names are interpolated (`:66-72`).
+
+Two things C must not confuse:
+
+- **This prefix ban is not the prefix that Ruling 3 point 3 forbids.** That ruling is about
+  `vitest.config.ts` *injecting* env names into the test process, which must stay an explicit
+  allow-list (`vitest.env-allowlist.ts`). Banning on a Vercel build and injecting into vitest are
+  different directions through different files. `vitest.config.ts:29-30` already reasons about the
+  near-miss `GOOGLE_VERTEX_PROJECT_ID` that "the prefix match alone would" catch — a prefix ban is
+  exactly what should catch it.
+- The guard test builds its environment explicitly (`assert-byok-production-env.test.ts:60-68`
+  passes an `env:` object to `spawnSync`), so a developer's own shell cannot make the new prefix
+  case flake.
+
+New guard tests: a name that is **not** on the list — e.g. `GOOGLE_VERTEX_SEARCH_MIN_RESULTS` — fails
+a Vercel build and is named in the message; a nearby non-match — `GOOGLE_VERTEXES` or
+`GOOGLE_API_KEY` — does **not** fail (`GOOGLE_API_KEY` is on the *required* list, so a false prefix
+hit would break every build); and the existing `:149` "no longer bans `GOOGLE_API_KEY`" case still
+passes.
+
+##### NEW — three more `request key || operator env key` reads, outside the ruling's four
+
+Not in A's list and not in any ruling, found by enumerating every operator-ish env read under
+`src/lib` rather than by grepping for `TAVILY_API_KEY` (which is all scan 3 does):
+
+| File:line | Pattern |
+|---|---|
+| `lib/jobs/sources/adzuna.ts:128-129` | `query.apiKeys?.adzunaAppId ∥ process.env.ADZUNA_APP_ID` (and `…APP_KEY`) |
+| `lib/jobs/sources/jsearch.ts:81` | `query.apiKeys?.jsearchApiKey ∥ process.env.JSEARCH_API_KEY` |
+| `lib/jobs/sources/usajobs.ts:93-95` | `query.apiKeys?.usajobsApiKey ∥ process.env.USAJOBS_API_KEY` (and `…USER_AGENT`) |
+
+This is **the exact shape** `system-key.ts:6-12` describes as the original Tavily defect — "three
+readers, identical in shape, each `request key || env key`". None is gated by an entitlement, none
+is charged to a breaker, none writes a usage row, and **none is on the guard's ban list or its
+require list**, so nothing stops any of them being set on Vercel. These are structured job sources
+that run for every persona (R-POOL-3 requires exactly that), so a set key would be spent by an
+anonymous caller on the first feed load.
+
+**Reachability today: none in this checkout.** `grep -c "^NAME=." web/.env.local` → **0** for
+`ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `JSEARCH_API_KEY` and `USAJOBS_API_KEY`; no value was printed and
+`.env.local` was never `cat`-ed. What is set on Vercel is **the owner's to check** — nobody in this
+loop can see it, and it is the one thing that decides whether this is theoretical.
+
+**POLICY — manager decides**, and I am deliberately not folding it into C's work: Ruling 5 point 2
+names four providers, these are not search providers in that sense, and Ruling 2 point 2's culture
+is that an agent who finds a wider shape stops and records rather than widening inline. The cheapest
+partial answer, if the manager wants one this round, is to add the four names to
+`FORBIDDEN_ON_VERCEL` — that costs one line each, needs no code change, and makes the deployment
+question moot without touching the sources.
+
+##### What a free (or anonymous) reader gets when every candidate is rejected
+
+Unchanged from today, and it is already the honest answer rather than an error: `resolveKeys`
+returns `{ provenance: "none" }`, all four availability booleans are `false`,
+`resolveWebSearchProvider` returns `null` (`gemini-search.ts:236`), and both adapters return `[]`
+(`jobweb.ts:2159` and the matching line in `eventweb.ts`, both `if (!provider) return [];`). The
+pipeline then serves the **structured sources** it already has, so jobs and events answer **200**
+with real content and no operator spend — R-POOL-3's "still respond from the free structured sources
+immediately", which A measured as 200 with 0 searches for `anonymous` and `free-no-key`. On papers
+the `web` source returns `[]` and the other paper sources are unaffected. No error status, no new
+shape, nothing new to render an emptiness into. `system-key.ts:28-36` already writes this down; the
+change adds three more providers to the same "none" and does not invent a branch.
+
+##### Escape clause (Ruling 5 point 2) — I looked for a provider that cannot be routed through the gate, and found none
+
+All four take their availability from either a key returned by `resolveSystemSearchKeys` or a
+boolean passed into `resolveWebSearchProvider`, and both are already parameterised. The one that
+looked like it might resist is Vertex AI Search, because its availability is a capability rather
+than a key — and it does not, because step 6 already passes it as an argument. **C should still stop
+and record if a fifth appears**; the three sources in the section above are the nearest thing, and
+they are flagged rather than routed.
+
+##### Tests at risk, grepped
+
+| File | Why |
+|---|---|
+| `src/lib/sources/gemini-search.test.ts` | the auto order changes; assertions must be **rewritten to the new contract**, never deleted (§3) |
+| `src/lib/sources/vertex-search.test.ts` | `webSearchOptions` and `isVertexSearchAvailable` are its subject |
+| `src/lib/jobs/sources/jobweb.test.ts` · `src/lib/events/sources/eventweb.test.ts` | `resolveSearchProvider` now returns `null` for a free/anonymous caller where it returned `"vertex"`/`"gemini"`/`"brave"` |
+| `src/lib/sources/` — **there is no `web-search.test.ts`** (`ls` run this turn: only `gemini-search.test.ts` and `vertex-search.test.ts`) | the papers `web` source has no suite of its own, which is part of why the ungated Brave/Vertex reads at `:66-72` were never caught. C adds one. |
+| `src/scripts/assert-byok-production-env.test.ts:124-137` | the forbidden loop; add prefix cases beside it |
+| `src/lib/opportunities/pool-refresh-gates.test.ts` | it drives the breaker through a real pool build; the predicate that charges it widens |
+| `src/lib/llm/providers/registry.test.ts:10` | mentions `GOOGLE_VERTEX_*` in its header comment — read it before touching the guard so R-KEY-1's boundary is not crossed by accident |
+| C's three route suites (`api/jobs/feed`, `api/events/feed`, `api/figure`) | the persona assertions on operator searches must stay at 0 — these are the regression net for the whole item |
+
+C runs `npx vitest run src/lib/sources src/lib/jobs/sources src/lib/events/sources src/scripts` first
+to see the real list; the table is a starting point, not a complete one (§2 Agent C).
+
+##### New tests this item owes
+
+1. **The explicit branch is gated**, per provider: `resolveSearchProvider` with
+   `webSearch: { provider: "vertex", systemSearchAllowed: false }` returns `null`. This is the case
+   that would have survived an order-only fix, and it is the single most important new test in the
+   item.
+2. **The auto order**, asserted as a sequence rather than one pair: with every candidate present and
+   `systemSearchAllowed: true`, BYOK Tavily wins; remove it and system Tavily wins; remove that and
+   Brave; then Vertex; then grounding; then `null`.
+3. **A free persona gets `null` from all three surfaces** with Brave, Vertex and grounding all
+   configured — the local-runtime persona A's harness could not reach because the names are banned
+   on Vercel.
+4. **The breaker and the row are charged for a non-Tavily operator provider**, with the row carrying
+   `provider: "vertex"` (and `"brave"`, `"gemini"`) — today the literal `"tavily"` makes this
+   impossible to get wrong-but-passing.
+5. **A BYOK Tavily fan-out still charges neither.**
+6. **The guard prefix cases** listed above.
+
+##### Blast radius
+
+Four files change behaviour (`system-key.ts`, `gemini-search.ts`, `jobweb.ts`, `eventweb.ts`), two
+more take the same treatment for consistency (`web-search.ts`, and whichever module hosts the shared
+helper), and one build script. **Nothing about the model provider changes** — `resolveProvider`,
+`registry.ts` and R-KEY-1 are untouched, and C must keep it that way: `gemini-search.ts:172-177`
+records that `canUseLocalServerProvider()` governs model spend and is a recorded decision this
+design leaves alone. No route response shape changes; no cache key changes; the papers, jobs and
+events pipelines keep their existing call shapes. The visible effect on Vercel today is **nil** —
+every one of these names is already banned there — which is exactly why this is defence in depth for
+a self-host and a developer machine rather than a live leak, and it should be reported that way.
