@@ -5805,3 +5805,107 @@ One function body in `metered.ts`; optionally one boolean expression in `gemini.
 changes, no route changes, `resolveProvider` stays synchronous. `recordUsageEvent` is
 fire-and-forget, so no call site becomes `await`-ing. The risk is concentrated in one place — the
 `catch` → `finally` conversion — and cases `:142` and `:162` are the net under it.
+
+---
+
+#### 2-06 — the tests that belong to no single item
+
+**Class: `MISSING`.** Per the brief, each item's own tests live **inside 2-01 … 2-05** and C writes
+them in the same commit as the fix. This item is only the residue: coverage A's round-2 work shows
+is absent but which does not belong to one of the five fixes. C works it **last**, and may split it
+across commits.
+
+##### (a) A's round-2 probe becomes permanent suites — the same call Ruling 2 point 7 already made once
+
+A built and then deleted three throwaway suites this round: `zz-round2-persona.test.ts` (43 cases),
+`zz-round2-provider.test.ts` (14), `zz-round2-meter.test.ts` (8). Deleting them was correct — they
+were A's scaffolding — but it means **65 cases of persona coverage were reconstructed from prose and
+thrown away, for the second round running.** Ruling 2 point 7 turned round-1 A's probe into C's
+three route suites for exactly this reason; the same argument applies unchanged.
+
+I inventoried what exists rather than trusting either agent's count. **21 route handlers, 10
+`route.test.ts` files, and only 4 of those drive the real handler through
+`src/test-support/route-harness.ts`:**
+
+| Route | has `route.test.ts` | drives the handler via the harness |
+|---|---|---|
+| `api/feed` (papers) | yes | **yes** |
+| `api/jobs/feed` | yes | **yes** |
+| `api/events/feed` | yes | **yes** |
+| `api/figure` | yes | **yes** |
+| `api/digest` | yes | no — imports the handler, no harness |
+| `api/jobs/report` | yes | no |
+| `api/events/report` | yes | no |
+| `api/papers/report` | yes | no |
+| `api/profile` | yes | no — pure functions only (see the 2-03 correction) |
+| `api/jobs/dispatch-digests` | yes | no |
+| `api/test-digest` | **no** | — |
+| the other ten | no | — (none is an AI route) |
+
+**Correction to A, small:** A wrote "C's three route suites". There are **four** harness-driven
+suites — `api/feed` (papers) uses the harness too. A's own persona table covers the papers feed, so
+the coverage was measured; only the count in the prose is off.
+
+**What C adds:** harness-driven persona cases for the five AI routes that lack them — `api/digest`,
+`api/jobs/report`, `api/events/report`, `api/papers/report`, and `GET /api/profile` — added **to the
+existing files**, not as new ones. The five personas are already constructible exactly as C's 1-09
+built them (`signedIn`/`signedOut` + a stubbed `profiles` row + `deployedRuntimeEnv`), so this is
+assembly, not invention. Each route's minimum: the anonymous 401 (or tier-0 200 for a feed), a
+signed-in 200, **zero requests carrying `OPERATOR_SENTINEL`** for `anonymous` and `free-no-key`, and
+the route's own quota/entitlement assertion. That single sentinel assertion is the one A's tallies
+depend on and the one that would catch a regression of round-1's differences 1–3.
+
+##### (b) `api/test-digest` — a guarded AI route with no suite at all
+
+It is one of the **nine** routes carrying `requireEntitledAiRequest` (A's scan 5) and the only one
+with no `route.test.ts`. Its comment (`route.ts:85`) claims it "still spends nothing" because it
+passes `systemSearchAllowed: false` — a claim nothing checks. One case: a signed-in free caller
+produces **zero** `OPERATOR_SENTINEL` requests. Cheap, and it turns a comment into a gate.
+
+##### (c) `src/lib/sources/web-search.ts` has no test file
+
+Established in 2-04 by `ls`: `src/lib/sources/` holds `gemini-search.test.ts` and
+`vertex-search.test.ts` only. The papers `web` source is the module where the ungated Brave and
+Vertex reads live (`:66-72`, `:275-279`), and the absence of a suite is a large part of why they were
+never caught. C creates it as part of 2-04 if the gate work touches the file; otherwise here.
+
+##### (d) The standing tallies should be assertions, not a manual count
+
+Two of A's five scans already ship as gate tests (`lib/feed/ui-vocabulary.test.ts` for scan 1,
+`lib/env/no-client-dev-flags.test.ts` for scan 2 — both A-verified this round). **Scans 3, 4 and 5
+are still recomputed by hand every round**, which is how a count drifts between agents. They are the
+same shape as the two that landed:
+
+- **scan 3** — `process.env.TAVILY_API_KEY` appears only inside `src/lib/search/system-key.ts`,
+  excluding `*.test.ts` and `src/test-support/` (Ruling 4 point 7). **Under 2-04 this should widen
+  to every operator search name** — `BRAVE_SEARCH_API_KEY` and the `GOOGLE_VERTEX_` prefix — since
+  the gate is no longer Tavily-only.
+- **scan 4** — no `resolveProvider()` call site without an argument. A notes this is now true "by
+  construction" because both figure matchers take a required context; a test makes that permanent.
+- **scan 5** — every `route.ts` under `src/app/api` that can reach a provider or a search key calls
+  `requireEntitledAiRequest`. This is the most valuable of the three and the most tedious by hand:
+  enumerate the route files, and for each assert either a guard call or membership in a short,
+  **justified** exclusion list (`dispatch-digests` → `CRON_SECRET` + D9; `digest/test` → 404 off a
+  developer machine; the eight with no provider and no key). The list is checked for staleness the
+  way `ui-vocabulary.test.ts` already checks its own.
+
+`src/scripts/assert-byok-production-env.test.ts` is the precedent for a source-text gate test, and
+`src/lib/usage/quota-exemptions.test.ts` is the precedent for asserting on file contents rather than
+behaviour — both already in the tree, both green.
+
+##### (e) What must NOT be turned into a test
+
+The four blocked questions (Ruling 5 point 1) are blocked because no fixture can answer them: a live
+`GOOGLE_API_KEY` call, the Supabase RPC's `on conflict do update` under two instances,
+`handle_new_user` writing a real trial, and the ISO-week key on a non-UTC server. **C must not write
+a test that appears to cover any of them.** A stub that returns what the real thing would return
+proves the stub, and a green test named after a blocked question is worse than the blocked line,
+because the next A will score it MET. If C wants the shape recorded, the sanctioned form is a
+`it.skip` naming the blocked reason — `benchmark.test.ts` is the standing precedent for exactly
+this and Ruling 3 point 3(c) keeps it skipping cleanly.
+
+##### Gate expectation
+
+Every case above is additive. `tsc` 0 · `eslint` 1 (the standing `quiz.tsx:46`) · `vitest` 0 failed,
+with the file and test totals rising. A count that **falls** anywhere means a test was deleted, which
+§3 forbids.
