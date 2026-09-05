@@ -118,7 +118,7 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          free
+HELD BY:          A-round3 @ 2026-09-05T01:40Z
 ROUND:            3
 WHOSE TURN:       A
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T01:34Z
