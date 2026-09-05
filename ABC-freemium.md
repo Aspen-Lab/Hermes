@@ -5298,3 +5298,25 @@ or digest path — which is the whole point of keeping it out of the resolver. N
 `resolveEntitlement`'s signature, so the four `ai-request.ts` call sites are untouched and R-SEC-2
 cannot move. 2-02 and 2-03 both add a `reason: "unavailable"`, in two different payloads that never
 meet; C should land them in this order so the vocabulary is set once.
+
+**Correction to 2-03, issued rather than edited in (§4 is append-only).** In the "tests at risk"
+table above I wrote that `src/app/api/profile/` has no `route.test.ts`. **That is wrong — the file
+exists**, `web/src/app/api/profile/route.test.ts`, 118 lines, three describes. I ran `ls` on the
+directory after committing and it is there. What is true, and what the entry should have said:
+
+- The suite tests **`profileRowToProfile` / `profilePatchToRow` as pure functions**, not the route
+  handler: work-authorisation mapping (`:40-71`) and R-ENT-1's "the plan is server-owned"
+  (`:78-117`, two cases — `plan` cannot be written through `PUT`, and it does not leak into the
+  profile object the browser holds).
+- It **never calls `GET`** and never asserts on the delivered entitlement, so **nothing in it reads
+  `deepReportsRemaining` and nothing in it breaks under the rename** — the "at risk" verdict was
+  wrong in both directions.
+- New test 5 in the list above still stands, restated correctly: C **adds `GET` cases to the
+  existing file** rather than creating a new one, driving the real handler on
+  `src/test-support/route-harness.ts` for the five personas. Adding to a file that already asserts
+  "the plan does not leak" is the right home for "the allowance is delivered and is a real
+  remainder".
+
+I record this rather than quietly fixing it because the same discipline is what the loop asks of A
+and C: the citation was checked by `grep` for the field name, which the file does not contain, and
+not by `ls` on the directory. Grepping for a symbol does not prove a file's absence.
