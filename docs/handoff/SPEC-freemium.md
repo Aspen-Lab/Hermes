@@ -189,6 +189,12 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   to the system-search check alike.
 - **R-QUOTA-3.** Shallow (abstract-only) paper reports, ranking, digest and query generation are
   **not** counted against the deep-report quota.
+  **Amendment 2026-09-05 (Ruling 9, binding):** the exemption is a **depth**, never a
+  **transport**. A streamed `deepReport: true` request fetches full text and is a deep report;
+  it counts against the monthly allowance and the paid daily breaker exactly as a non-streamed
+  one does, through the same single check. Every route carrying an entitlement, quota or
+  breaker check has a test proving the check is reached on the request shape the app actually
+  sends.
 
 ### R-UI — what the user sees
 

@@ -249,22 +249,14 @@ GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0
            (2826)**, **0 failed**, 9.32 s. Run cold TWICE by round-3 A — once on the tree as
            found, once after deleting every throwaway — identical figures both times.
            `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      **C WORKS THE ROUND-3 GUIDE FROM 3-01**, in order, one commit per item, pushed.
-           The guide is in §4 under `### Round 3 — Agent B`; each item carries its seam, its
-           contract, its tests-at-risk table with line numbers, and its blast radius.
-           **3-01 first** — it is user-visible wrong data and 3-02 changes nothing a reader can
-           see; they touch disjoint files, so if budget runs short the right thing to bank is
-           **3-01 complete rather than both half-done**. Two things in 3-01 C should not
-           improvise on: the `effectivePlan` prop is **required, not optional** (a `"free"`
-           default is a fail-open default on the exact property being fixed — the one-line test
-           helper change is the answer, not an optional prop), and the prompt must still show
-           for **trial** readers, which is where `TierUpgradeBlock`'s own predicate would
-           mislead a copy-paste. **3-02: build HALF A only** (`resolveProvider` + the union for
-           the two pool-closure callers); **half B is recorded and NOT authorised** under
-           Ruling 7 point 3's escape clause. C must also rewrite `registry.ts:149-158`, whose
-           comment says the second argument "stays optional" — Ruling 7 point 3 supersedes it
-           and the file would otherwise argue with itself. **3-03 needs a manager ruling before
-           C touches it** (see OPEN FOR MANAGER). The blocked list (7) is still the owner's.
+TODO:      C WORKS THE ROUND-3 GUIDE under Ruling 9 (§1j): 3-01 the paid upsell via the client
+           entitlement summary (one prop; hours-under-a-day copy; render test); 3-02 half A only
+           — the branded `EntitledContext` required by `resolveProvider`, thread the two
+           no-context call sites or the named harness escape hatch; half B stays the 2-06 scan;
+           3-03 the papers STREAMING quota fix — move the check ABOVE the stream branch at
+           `papers/report/route.ts:418-422`, one `consumeDeepReport` call site, refusal as a
+           `ReportStreamEvent` carrying `quota`, correct the route comment — then 3-03's tests
+           incl. a reachability test that drives the STREAMED request shape the app sends.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -281,24 +273,8 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            Vercel if the free jobs surface is meant to have them — nobody in the loop can see
            the Vercel env. **(7) THE BLOCKED LIST IS NOW THE LARGER HALF OF THE GATE:** seven
            named items, two causes, both owner actions. No agent can close any of them.
-OPEN FOR MANAGER:  **ONE, and it blocks part of C's turn. `POLICY — manager decides`: is the
-           papers STREAMING path meant to be exempt from the deep-report quota?** The two texts
-           disagree. **R-QUOTA-3 exempts "shallow (abstract-only) paper reports, ranking,
-           digest and query generation" — streaming is not in that list**, and a streamed
-           `deepReport: true` request is `tier2` and fetches full text, so it is not
-           abstract-only. **The route's own comment (`papers/report/route.ts:429-432`) claims
-           R-QUOTA-3 covers it.** On the spec's plain words R-QUOTA-1 — "each deep-report route
-           checks and increments the monthly counter atomically" — is NOT met on papers, and
-           the 200/day paid breaker does not fire there either. **B did not score it and did
-           not fix it**, because it reverses a choice C wrote down deliberately and A scored
-           MET twice. If ruled a defect: the seam is the ORDERING at `:418-422` (move the quota
-           check above the stream branch and emit the refusal as a stream event, which is what
-           `ReportStreamEvent` was flagged for in 2-07), **not** a second `consumeDeepReport`
-           call inside `streamReport` — two call sites is how a route double-counts. Round-4 A
-           will need to know whether R-QUOTA-1 and R-QUOTA-3 keep their MET scores.
-           (A's earlier question stays ruled in §1i, Ruling 8 point 1: the no-upsell property
-           lives in R-UI-3 and covers every upsell surface; R-QUOTA-1's prompt is free/trial
-           only.)
+OPEN FOR MANAGER:  none — B's question ruled in §1j (Ruling 9 points 1–2): streaming is a
+           transport, not an exemption; the fix is authorised in B's ordering shape.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -655,6 +631,46 @@ Round-3 A re-measures every closure; this ruling accepts the round, it does not 
 
 ---
 
+## §1j. RULING 9 — after round-3 B (2026-09-05, BINDING)
+
+1. **The papers streaming path is NOT exempt. Streaming is a transport; the exemption is a
+   depth.** R-QUOTA-3 exempts *shallow (abstract-only)* reports. A streamed `deepReport: true`
+   request is tier 2 and fetches full text — it is a deep report and it counts against the
+   monthly allowance and the 200/day paid breaker exactly as the non-streamed one does. The
+   route comment at `papers/report/route.ts:429-432` is wrong and is corrected. Spec R-QUOTA-3
+   amended (dated). **R-QUOTA-1 and R-QUOTA-3 are `PARTIAL` on the papers surface until the fix
+   lands** — the two earlier `MET` scores stand in the log as history and are noted as corrected
+   here, not rewritten.
+2. **The fix is authorised, in B's shape and no other:** the seam is the **ordering** at
+   `papers/report/route.ts:418-422` — the quota check moves **above** the stream branch so both
+   transports pass through the one `consumeDeepReport` call site; the refusal is emitted as a
+   `ReportStreamEvent` carrying the `quota` signal so the reader gets the deterministic report
+   plus the notice 2-07 already renders. **Never a second `consumeDeepReport` inside
+   `streamReport`** — two call sites is how a route double-counts. This is item **3-03**
+   (B's "third difference"), landed before the tests of 3-03 that cover it.
+3. **Root cause is a class, not an instance — new standing rule (§3):** for every route that
+   carries an entitlement, quota or breaker check, a test asserts the check is **reached on
+   the request shape the app actually sends** (drive the route as the client does — streaming
+   included), never "where the counter sits in the file". A guard on one branch with an
+   unguarded sibling branch is the whack-a-mole class this loop exists to stop. Round-4 A owes
+   a tally: "quota/breaker checks reachable on the app's real request shape, per route".
+4. **3-01 ratified as (a):** the plan reaches the quota notice from the client entitlement
+   summary the page already holds (`plan` / `effectivePlan`), one prop, alongside
+   `TierUpgradeBlock` which already takes it. The **"Resets in 1 day"** bug B found by execution
+   replaces Ruling 8's "0 days" diagnosis — the ruling's fix (hours when under a day) stands.
+5. **3-02 ratified as B built it:** half A (a branded `EntitledContext` only
+   `requireEntitledAiRequest` and the named test-harness escape hatch can construct; required by
+   `resolveProvider`) is **built**, proved in a throwaway harness on the repo's own compiler; the
+   two no-context call sites A missed become compile errors and C threads the context or the
+   named escape hatch. Half B (the search availability gate) **stops at the escape clause** —
+   the permission travels as data through six type declarations, three pipelines and the cron,
+   and a brand cannot survive `=== true`; the 2-06 scan stays the guard and the cost is written
+   down. Correct outcome, not a failure.
+6. **Round-4 tallies** — Ruling 8 point 5 plus point 3's reachability tally and "`resolveProvider`
+   call sites without a context" (must be 0, enforced by the compiler after 3-02).
+
+---
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
@@ -773,6 +789,9 @@ C does **not** judge whether something should be fixed.
 - **A test that injects a fixed clock must inject it everywhere the code under test reads time**
   (Ruling 5 point 3). A fixture-vs-real-clock split is a defect in the production seam — fix the
   seam (take `now` as a parameter), never widen the fixture window, never mark it a flake.
+- **Every route with an entitlement, quota or breaker check has a reachability test** that
+  drives the request shape the app actually sends — streaming included — and asserts the check
+  ran (Ruling 9 point 3). "Where the counter sits in the file" is not evidence.
 - Commit messages: plain sentences in the repo's existing style
   (`feat(scope): …`, `fix(scope): …`, `refactor(scope): …`), ending with
   `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
