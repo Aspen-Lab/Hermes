@@ -6077,3 +6077,104 @@ file alone as well (`Tests 3 failed | 12 passed (15)`). `benchmark.test.ts` is s
 did not flake. **C confirms the gate is green cold only after 2-01 lands** — it cannot be green
 before, so §2's "confirm the gate is green before your first edit" is satisfied for this round by
 landing 2-01 first, which is why the manager put it first.
+
+---
+
+### Round 2 — Agent C
+
+**Cold gate before the first edit, run in full from `web/`:** `tsc` exit **0** · `eslint` **1 error**
+(the standing `quiz.tsx:46` `react-hooks/set-state-in-effect`) · `vitest` **1 file failed | 115
+passed | 1 skipped (117)** · **3 tests failed | 2713 passed | 1 skipped (2717)**. Byte-for-byte A's
+and B's figures. All three failures are in `src/lib/usage/deep-report-quota.test.ts` and are exactly
+the three B named — confirmed by running the file alone (`3 failed | 12 passed (15)`):
+`paid breaker (R-QUOTA-2, D4) > is unlimited to the reader until the daily cap`,
+`the system-search breaker (R-QUOTA-2) > allows the day's searches and refuses the one past the cap`,
+`the system-search breaker (R-QUOTA-2) > charges the whole fan-out, not one per call`. Nothing else
+was red, so the round proceeds at 2-01 as instructed.
+
+---
+
+#### 2-01 — LANDED. `prune()` now sweeps against the caller's clock
+
+**Gate after this item:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`) ·
+`vitest` **116 files passed | 1 skipped (117)** · **2718 tests passed | 1 skipped (2719)**, **0
+failed**. The three red cases are green; the total rose by exactly the two protective cases this
+item adds (2717 → 2719).
+
+**What changed, five files:**
+
+| File | Change |
+|---|---|
+| `web/src/lib/usage/counters.ts` | `CounterStore.increment` gains a fourth parameter `now?: Date`; `read` gains `now?: Date`. `InMemoryCounterStore.increment`/`read` default it to `new Date()` and hand it to `prune`. `prune(now: Date = new Date())` compares against `now.getTime()` instead of `Date.now()`. |
+| `web/src/lib/security/ai-request.ts` | the rate-limit `increment` passes `1, now` — the same `now` declared on the line above that already builds the key |
+| `web/src/lib/usage/deep-report-quota.ts` | all three `increment` calls (paid day key, trial key, free month key) pass `1, now` — `now` is the function's own parameter |
+| `web/src/lib/usage/search-breaker.ts` | the system-search `increment` passes `count, now` — `now` is the function's own parameter |
+| `web/src/lib/usage/counters.test.ts` | two new cases (below) |
+
+**I took B's positional-parameter option, not the options object.** B offered either and asked C to
+state the choice. Positional wins because it needed no change at any of the ten existing test call
+sites and none at the two `SupabaseCounterStore` methods — the whole diff is 92 insertions across
+five files, and an options object would have churned every call site in the tree for no behavioural
+gain. The `by`-must-be-spelled-out wart B predicted is real: three of the four production sites now
+pass a literal `1` they did not pass before, and each carries a one-line comment saying why.
+
+**The fixture was NOT touched.** `deep-report-quota.test.ts` does not appear in `git status` for this
+commit. That is the manager's specific requirement for 2-01 and it is the whole point of Ruling 5
+point 3: the fix is in the production seam, and the test that pinned `2026-09-04T12:00:00.000Z` still
+pins it.
+
+**`SupabaseCounterStore` — the same shape is ABSENT, checked rather than assumed.** I re-read both
+methods and the migration. There is no sweep, no `Date.now()` and no `new Date()` anywhere in the
+class; `increment` serialises the `windowEndsAt` it is handed and `read` is a plain select. I
+deliberately did **not** declare the `now` parameter on its two methods (TypeScript lets an
+implementation omit trailing parameters), because an argument the class ignores would advertise a
+clock dependency that does not exist — and I wrote that reasoning into a comment above the class so
+the next reader does not "fix the inconsistency". If a later round adds a sweep on the SQL side, it
+takes the parameter then. B's finding stands exactly as written.
+
+**Two new protective cases, both immune to the passage of time** (`counters.test.ts`, in the
+`InMemoryCounterStore` block):
+
+1. `prunes against the caller's clock, not the process clock` — increments the same key twice with
+   `now` pinned to `2020-01-01T12:00:00.000Z` and its own `endOfUtcDay`, and asserts the second
+   reading is `2` and a `read` on the same clock still sees `2`. The date is in the past on **any**
+   real clock, forever, so unlike the `NOW` fixture that produced this round's red gate it can never
+   age into either a false pass or a false failure.
+2. `does not let one user's day-window entry sweep another's` — B's adversarial finding, which no
+   existing test covered: two users, one shared UTC day window, one pinned clock; both entries must
+   survive. Under the old code `user-b`'s increment deleted `user-a`'s live entry.
+
+**Proved the new tests test the fix (§2 Agent C, standard 1).** I reverted the one line — `const
+cutoff = now.getTime()` back to `Date.now()` — and re-ran `counters.test.ts` alone: **2 failed | 12
+passed (14)**, and the two failures are exactly the two new cases by name. Restored, re-ran, green.
+
+**The two directions I was warned off, both re-verified as unmoved.** `breakerTripped`'s fail-closed
+direction and `underLimit`'s fail-open direction are untouched — I changed neither function — and
+`the two failure rules` describe block plus `deep-report-quota.test.ts`'s "fails CLOSED when the
+counter store is unreachable" case (`:223-238`) are green in the full run. B's tripwire for "the
+change has gone too far" did not fire.
+
+**Standing locks re-verified because this item is in their code family** (§2 Agent C, standard 2):
+`counters.test.ts` 14 cases green, `deep-report-quota.test.ts` 15 green (was 12 green / 3 red),
+`search-breaker` behaviour covered by the `deep-report-quota.test.ts` system-search block — the two
+cases that were red there are now green. `registry.test.ts`, `ai-tier.test.ts`, the four
+harness-driven route suites, `ui-vocabulary.test.ts`, `no-client-dev-flags.test.ts` and the guard
+script test all green in the full cold run above; none of them is in this item's blast radius and
+none moved.
+
+**The latent case B asked me to name rather than fix.**
+`web/src/lib/opportunities/pool-refresh-gates.test.ts:43` is
+`const NOW = new Date(2026, 6, 27, 12, 0, 0)` — a **local-time** constructor, so it is both in the
+past and timezone-dependent, unlike every other fixture in this loop. It survives today only because
+each of its cases performs exactly one daily-window increment inside `buildDailyJobPool`; the moment
+a case there needs two, it fails the same way on a clock nobody changed. **It is green now and it
+was green before** (I ran the file: green in the full run). Not a gate item; recorded so round 3 does
+not rediscover it. Round-3 A should not read a future failure there as a new defect class.
+
+**The pre-existing property that is not a regression**, carried forward from B: entries written with
+`windowEndsAt: null` are never pruned in either variant. That is the trial key
+(`deep:<user>:trial`, no period segment, on purpose). One entry per trial user accumulates for the
+life of the process, bounded by user count and gone on every cold start. Unchanged by this item.
+
+**Doubt flagged, not judged (§2 Agent C, "C does not judge whether something should be fixed").**
+None for this item. The seam change does exactly what Ruling 5 point 3 specifies and nothing else.

@@ -120,6 +120,9 @@ export async function consumeDeepReport(
     const reading = await store.increment(
       deepReportDayKey(userId, now),
       endOfUtcDay(now),
+      // `by` is spelled out because `now` follows it (2-01). One clock.
+      1,
+      now,
     );
     if (breakerTripped(reading, PAID_DEEP_REPORTS_PER_DAY)) {
       const resetsAt = endOfUtcDay(now).toISOString();
@@ -148,7 +151,7 @@ export async function consumeDeepReport(
   if (entitlement.effectivePlan === "trial") {
     // D4 — 20 over the WHOLE trial. The key carries no period segment, so it
     // never rolls over; the trial expires by date instead (D5).
-    const reading = await store.increment(deepReportTrialKey(userId), null);
+    const reading = await store.increment(deepReportTrialKey(userId), null, 1, now);
     // `reading.ok` first: an unreadable counter fails CLOSED (see the header).
     if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {
       return { allowed: true };
@@ -170,6 +173,9 @@ export async function consumeDeepReport(
   const reading = await store.increment(
     deepReportMonthKey(userId, now),
     endOfUtcMonth(now),
+    // `by` is spelled out because `now` follows it (2-01). One clock.
+    1,
+    now,
   );
   // `reading.ok` first: an unreadable counter fails CLOSED (see the header).
   if (reading.ok && reading.value <= entitlement.deepReportsRemaining) {

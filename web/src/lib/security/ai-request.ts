@@ -156,6 +156,10 @@ export async function requireEntitledAiRequest(
   const reading = await getCounterStore().increment(
     rateKey(scope, user.id, now),
     endOfUtcHour(now),
+    // `by` is spelled out because `now` follows it (2-01). One clock: the same
+    // `now` that built the key also drives the store's housekeeping sweep.
+    1,
+    now,
   );
 
   if (!underLimit(reading, limitPerHour)) {

@@ -48,6 +48,9 @@ export async function consumeSystemSearches(
     systemSearchDayKey(userId, now),
     endOfUtcDay(now),
     count,
+    // One clock (2-01): the same `now` that built the key drives the store's
+    // housekeeping sweep, so a caller who pins time keeps its own entries.
+    now,
   );
   if (!breakerTripped(reading, SYSTEM_SEARCHES_PER_DAY)) return true;
 

@@ -6,6 +6,7 @@ import {
   deepReportDayKey,
   deepReportMonthKey,
   deepReportTrialKey,
+  endOfUtcDay,
   endOfUtcHour,
   endOfUtcMonth,
   getCounterStore,
@@ -65,6 +66,39 @@ describe("InMemoryCounterStore", () => {
     expect((await store.increment("k", null)).value).toBe(1);
     expect((await store.increment("k", null)).value).toBe(2);
     expect((await store.read("k")).value).toBe(2);
+  });
+
+  it("prunes against the caller's clock, not the process clock", async () => {
+    // ABC-freemium 2-01 · Ruling 5 point 3. `prune` used to read `Date.now()`
+    // while its caller passed a pinned `now`, so an entry written with a window
+    // that is "in the future" by the caller's clock was swept on the very next
+    // call because the real clock had already passed it.
+    //
+    // The date below is in the past on ANY real clock, forever, so unlike a
+    // fixture pinned near today this case can never age into a false pass or a
+    // false failure. Under the old code the second increment returns 1.
+    const store = new InMemoryCounterStore();
+    const past = new Date("2020-01-01T12:00:00.000Z");
+
+    await store.increment("k", endOfUtcDay(past), 1, past);
+
+    expect((await store.increment("k", endOfUtcDay(past), 1, past)).value).toBe(2);
+    expect((await store.read("k", past)).value).toBe(2);
+  });
+
+  it("does not let one user's day-window entry sweep another's", async () => {
+    // ABC-freemium 2-01 — the same defect wearing different clothes, and no
+    // existing test covered it: with the process clock past the shared day
+    // boundary, `user-b`'s increment deleted `user-a`'s live entry.
+    const store = new InMemoryCounterStore();
+    const past = new Date("2020-01-01T12:00:00.000Z");
+    const windowEnd = endOfUtcDay(past);
+
+    await store.increment("deep:user-a:2020-01-01", windowEnd, 1, past);
+    await store.increment("deep:user-b:2020-01-01", windowEnd, 1, past);
+
+    expect((await store.read("deep:user-a:2020-01-01", past)).value).toBe(1);
+    expect((await store.read("deep:user-b:2020-01-01", past)).value).toBe(1);
   });
 
   it("hands N concurrent increments N distinct values", async () => {

@@ -68,13 +68,22 @@ export interface CounterReading {
 }
 
 export interface CounterStore {
-  /** Add `by` (default 1) and return the post-increment value. */
+  /**
+   * Add `by` (default 1) and return the post-increment value.
+   *
+   * `now` is **the caller's clock**, defaulted to the real one (ABC-freemium
+   * 2-01 · Ruling 5 point 3). Every production caller already has a `now` in
+   * hand and must pass it: the in-memory store's housekeeping sweep compares
+   * stored window ends against it, and a sweep on a second, different clock is
+   * how a fixture that pins time still watches its own entries disappear.
+   */
   increment(
     key: string,
     windowEndsAt: Date | null,
     by?: number,
+    now?: Date,
   ): Promise<CounterReading>;
-  read(key: string): Promise<CounterReading>;
+  read(key: string, now?: Date): Promise<CounterReading>;
   /** R-METER-4 — which implementation actually answered. */
   readonly label: "supabase" | "in-memory";
 }
@@ -180,24 +189,39 @@ export class InMemoryCounterStore implements CounterStore {
     key: string,
     windowEndsAt: Date | null,
     by = 1,
+    now: Date = new Date(),
   ): Promise<CounterReading> {
-    this.prune();
+    this.prune(now);
     const existing = this.entries.get(key);
     const value = (existing?.value ?? 0) + by;
     this.entries.set(key, { value, windowEndsAt });
     return Promise.resolve({ value, ok: true });
   }
 
-  read(key: string): Promise<CounterReading> {
-    this.prune();
+  read(key: string, now: Date = new Date()): Promise<CounterReading> {
+    this.prune(now);
     return Promise.resolve({ value: this.entries.get(key)?.value ?? 0, ok: true });
   }
 
-  /** Keys already carry their period; this only stops the map growing forever. */
-  private prune(): void {
-    const now = Date.now();
+  /**
+   * Keys already carry their period; this only stops the map growing forever.
+   *
+   * **It sweeps against the caller's clock, never the process clock**
+   * (ABC-freemium 2-01 · Ruling 5 point 3). Reading `Date.now()` here made
+   * housekeeping silently change a decision: a caller that passed a pinned
+   * `now` would write an entry whose window ends "later" by its own clock, and
+   * the very next increment would sweep it away because the real clock had
+   * already passed that instant. That is a defect in the seam, not in any
+   * fixture — in production the two clocks agree, so only a test can see it.
+   *
+   * The same bug bites two real users on one UTC day: `user-b`'s increment
+   * used to delete `user-a`'s live entry whenever the process clock had
+   * crossed the shared day boundary that `user-a`'s entry recorded.
+   */
+  private prune(now: Date = new Date()): void {
+    const cutoff = now.getTime();
     for (const [key, entry] of this.entries) {
-      if (entry.windowEndsAt && entry.windowEndsAt.getTime() <= now) {
+      if (entry.windowEndsAt && entry.windowEndsAt.getTime() <= cutoff) {
         this.entries.delete(key);
       }
     }
@@ -254,6 +278,17 @@ function warnOnce(error: unknown): void {
   );
 }
 
+/**
+ * **This store has no clock and needs none** (ABC-freemium 2-01). It sweeps
+ * nothing: `increment` only serialises the `windowEndsAt` it was handed, `read`
+ * is a plain select, and `increment_usage_counter` in the migration calls
+ * `now()` only for `updated_at`. Nothing here compares `window_ends_at` against
+ * anything to decide anything, so the `now` parameter of `CounterStore` is
+ * deliberately not declared on these two methods — TypeScript allows an
+ * implementation to omit trailing parameters, and declaring an argument this
+ * class ignores would suggest a clock dependency that does not exist. If a
+ * later round adds a sweep on the SQL side, take the parameter then.
+ */
 export class SupabaseCounterStore implements CounterStore {
   readonly label = "supabase" as const;
   private readonly client: CounterSupabaseClient | null;
