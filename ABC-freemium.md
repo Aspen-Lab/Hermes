@@ -8735,3 +8735,185 @@ zones; a real deploy is the only place Vercel's clock and this machine's meet.
 **Where I looked before calling any of these unmeasurable:** `web/.env.local` by `grep -c` only,
 four names, all **0**; `web/supabase/migrations/`; and `vitest.setup.ts`, which deletes both
 spendable keys before every suite and every test.
+
+#### Part 2 — the five personas through the real routes, and round 3's three items verified by behaviour
+
+**The harness.** Ruling 2 point 7 and Ruling 4 point 8 say to use C's permanent suites rather than
+rebuild a probe, so I ran them first and read what they assert:
+`ai-route-personas.test.ts`, `jobs/feed/route.test.ts`, `events/feed/route.test.ts`,
+`figure/route.test.ts`, `profile/route.test.ts`, `test-digest/route.test.ts`, `feed/route.test.ts`,
+`spend-scans.test.ts`, `entitled-context.test.ts` — **9 files, 77 cases, all green**, driven off
+`src/test-support/route-harness.ts`. They still do not cover `trial`, `paid` or `free-byok-tavily`
+on digest, the three reports, figure or profile, so I extended in **throwaway copies** — never by
+editing C's files — and drove all 45 pairs myself. **Denominator: 45**, unchanged from rounds 2 and
+3 (five personas × the same nine routes), so the trend is comparable. `POST /api/test-digest` is
+reported separately below rather than folded in.
+
+Runtime for every table: `VERCEL=1`, `VERCEL_ENV=production`, Supabase auth configured, every key a
+sentinel, `SUPABASE_SERVICE_ROLE_KEY` set so the entitlement resolver can read a stored plan.
+Nothing real was contacted.
+
+##### Three fixture faults of my own, recorded because each one produced a plausible false reading
+
+Ruling 10 point 2's spirit is that a green run against the wrong thing is worse than a red one.
+Three of mine, all found by disbelieving a zero:
+
+1. **An admin stub with no `rpc`.** The counter store threw, the 500/day search breaker **failed
+   closed**, and `trial` and `paid` recorded **0 operator searches** — a number that looks exactly
+   like a policy win and was a broken mock. It is also, incidentally, the only direct evidence this
+   turn that the breaker fails closed on an unreachable counter, which is D4's stated direction.
+2. **One shared `Response` object** returned from a `fetch` stub. A body can be read once, so every
+   call after the first silently failed. Fixed to a fresh `Response` per call.
+3. **A table-blind admin stub.** `GET /api/profile` reads `usage_counters` without incrementing
+   (Ruling 7 point 1); my stub answered every table with the *plan* row, so the remainder appeared
+   **not to move** — round 2's difference 2 apparently regressed. It had not. The stub is now
+   table-aware and the remainder moves.
+
+**None of the three is a product finding.** They are recorded so the next reader does not read my
+first numbers out of a transcript, and because two of them would have been reported as regressions
+by anyone who stopped at the first green.
+
+##### The operator-key search count — counted by me from the outgoing requests
+
+**Tavily alone armed** (the arming in which the key string is a faithful count):
+
+| Persona | jobs/feed operator · own | events/feed operator · own | Round 3 |
+|---|---|---|---|
+| `anonymous` | **0** · 0 | **0** · 0 | 0 · 0 |
+| `free-no-key` | **0** · 0 | **0** · 0 | 0 · 0 |
+| `free-byok-tavily` | **0** · 2 | **0** · 7 | 0 · 2 and 0 · 7 |
+| `trial` | 2 · 0 | 7 · 0 | 2 · 0 and 7 · 0 |
+| `paid` | 2 · 0 | 7 · 0 | 2 · 0 and 7 · 0 |
+
+**All four armed** (Tavily, Brave, Vertex, Gemini) — counted as **`kind:"search"` usage rows**,
+which is the honest count when a provider that does not carry the Tavily key can win the order:
+
+| Persona | jobs/feed rows | events/feed rows | papers (`POST /api/feed`) rows | the other six routes |
+|---|---|---|---|---|
+| `anonymous` | **0** | **0** | **0** | **0** each |
+| `free-no-key` | **0** | **0** | **0** | **0** each |
+| `free-byok-tavily` | **0** | **0** | **0** | **0** each |
+| `trial` | 1 · `provider:"vertex"` | 1 · `provider:"vertex"` | **0** | **0** each |
+| `paid` | 1 · `provider:"vertex"` | 1 · `provider:"vertex"` | **0** | **0** each |
+
+**Operator-key searches on `anonymous` + `free-no-key`, per surface: 0 and 0**, held from rounds 2
+and 3, and re-measured this round in **both** armings. **Papers operator-key searches: 0** on every
+persona — D3 / Ruling 3 point 5 / Ruling 6 point 3, the accepted decision.
+
+##### Per persona, per route — 45 of 45
+
+**`anonymous`** — 9 of 9. All three feeds `200 at tier 0, 0 operator requests, 0 `resolveProvider`
+calls`. `POST /api/digest`, all three reports, `GET /api/figure`, `GET /api/profile`: **401**, 0
+providers, nothing fetched.
+
+**`free-no-key`** — 9 of 9. Three feeds 200 with **0** operator requests; digest and all three
+reports 200 with a provider resolved; figure 200; `GET /api/profile` reports a real remainder that
+**moves — 5 before a report, 4 after**.
+
+**`free-byok-tavily`** — 9 of 9. Jobs sends the user's key **2×** and the operator's **0×**; events
+**7×** and **0×**. `POST /api/feed` is 200 with **0** searches on any key — D3, the accepted
+decision, not a regression. Profile 5 -> 4.
+
+**`trial`** — 9 of 9. Jobs 2 operator searches, events 7, each charged to the 500/day breaker and
+each writing one named usage row. Profile **20 -> 19**, counted on the trial key.
+
+**`paid`** — 9 of 9. Jobs 2, events 7. Profile `{ unlimited: true, deepReportsRemaining: null }`
+with **no `reason` key** and no `Infinity` in the serialised text.
+
+**Part 2 verdict: 45 of 45 persona/route pairs behave as the spec requires** (round 3: 45 of 45;
+round 2: 41 of 45). **And the cross-cutting fault round-3 A counted separately — a paid reader shown
+an upgrade prompt on three report pages — is gone**, so there is no longer a number outside the 45.
+
+**Tenth route, kept out of the denominator so the trend stays comparable:** `POST /api/test-digest`
+— its permanent suite runs green; a signed-out caller is **401** with the pipeline and the mailer
+both proved unreached, a signed-in free caller makes **0** operator requests, and the pipeline never
+asks for `systemSearchAllowed: true`.
+
+##### Round 3's three items, verified by behaviour — all three CLOSED
+
+**When a fix's target is confirmed gone, what stands in its place is written down.**
+
+**3-01 — the paid upsell. CLOSED.** Rendered by me at a real breaker signal built from the route's
+own `endOfUtcDay(now)`, with the clock held at 30 minutes before the day rolls over.
+
+| Reader | What renders | Prompt? |
+|---|---|---|
+| `paid`, 200/day breaker | `Deep reports` · *"Peer is at today's limit for deep reports. Resets in 1 hour."* | **none** — no "Pro", no "own key", no `<a>`, no `href` |
+| `trial`, same signal | same sentence | **yes** — *"Peer Pro lifts the monthly limit. Add your own key to keep going now."* + `/settings` link |
+| `free`, monthly exhaustion | *"You've used this month's deep reports. Resets in 26 days."* | **yes** |
+| `paid`, monthly exhaustion | same sentence | **none** — keyed on the plan, not on which cap tripped |
+| any plan, `unavailable` | `Deep reports unavailable` · the outage copy | **none** |
+| any plan, no signal | the empty string | — |
+
+**Proved by planting, twice.** (a) The predicate reverted to the pre-3-01 `const showUpgradePrompt =
+exhausted` -> **2 of my cases failed**; reverted back, `git diff` **empty**. (b) The formatter's
+hours branch forced to `0` -> **2 failed**; reverted, `git diff` **empty**. Every substitution
+asserted by count before the run was read.
+
+**The reset formatter, six fixtures.** 1 second out -> *1 hour*; 30 minutes -> *1 hour*; 23 h -> *23
+hours*; just under 24 h -> *24 hours*; 25 h -> *2 days*; **already in the past -> *1 hour***. So the
+days branch can no longer produce "1 day" at all, "Resets in 0 days" cannot render, and a reader one
+tick early sees a floor rather than a zero or a negative. **In its place:** the breaker sentence is
+now the *only* thing a paid reader sees, and it is true.
+
+**3-02 — the branded entitlement context. HALF A CLOSED; half B correctly not built.** Scored in
+R-SEC-2 above with the five compiler messages. Three further readings:
+
+- **The two contextless pool closures carry a written `SpendJustification`** — `lib/feed/tier2-rerank.ts`
+  and `lib/opportunities/query-gen.ts`, both `kind: "entitlement-proved-by-tier-ceiling"` with a
+  `where`. Those are the only two in the tree, and an invented fourth `kind` is `TS2322`.
+- **`resolveProvider` call sites without a context: 0**, and now **by construction**. Ten real call
+  sites, each threaded; three grep hits are comment lines; the eleventh apparent hit,
+  `lib/sources/web-search.ts:99`, calls a **local function of the same name** declared at `:322` that
+  picks a *search* provider and has nothing to do with the registry — `web-search.ts` does not import
+  the registry at all. **In its place:** round-3 A's honest caveat ("0 by vigilance, not by
+  construction") is retired; the zero-argument form is `TS2554`.
+- **`FigureMatchContext` requires the entitlement.** `{ userId: null, byok: false }` is `TS2353`.
+  **In its place:** the figure chain can no longer acquire a provider on a hand-made context that no
+  entitlement check ever saw — the hole 1-07 left open.
+
+**3-03 — the streamed papers quota. CLOSED.** Driven on the NDJSON shape `lib/papers/report-stream.ts`
+actually sends, with the counter observed directly by spying on the store's `increment` rather than
+inferred from a response.
+
+| Probe | Result |
+|---|---|
+| streamed `deepReport: true` | **1** deep key incremented (`deep:<user>:2026-09`), `mode: tier2`, report delivered |
+| streamed **shallow** | **0** deep keys — R-QUOTA-3's real exemption, intact |
+| past the free monthly cap, streamed | events `["quota","mode","stage","report","stage"]` — **`quota` before `mode`**, `{kind:"deep_report",reason:"exhausted",remaining:0}`, and the reader still gets a report |
+| `paid`, streamed | charges the **day** key `deep:dev-local:2026-09-05` — the 200/day breaker, not the monthly one |
+| `paid` past 200/day, streamed | **`quota` before `mode`**, `{kind:"breaker",reason:"exhausted",resetsAt:"<end of UTC day>"}` |
+| non-streamed JSON | **1** — same count, other transport |
+| `body.stream: true` without the header | **1** — the second way in is counted too |
+
+**Proved by planting, twice.** (a) The pre-3-03 shape restored — the quota decision skipped whenever
+the request streams -> **5 of my 7 cases failed**. (b) The `quota` event moved **after** the `mode`
+event -> **2 failed**, exactly the two ordering cases. Both reverted; the route restored from a
+scratchpad backup with `git diff` **empty** and a `grep -c PLANT` of **0**.
+
+**A CRLF trap, met and recorded** (Ruling 10 point 2c): my first ordering plant was a multi-line
+literal with `\n` separators and matched **0 times** on a CRLF file. The assertion caught it; a
+whitespace-tolerant regex matched 1. This is the same family that bit C in round 3 and it is still
+live.
+
+##### One thing that is NOT a new difference, recorded so it is not lost
+
+**A paid reader past the 200/day breaker still makes one model call per papers request.** Measured:
+the refused stream emits `mode: tier1`, not `tier0` — it degrades to the **shallow** report, which
+calls the model when one is available. The jobs and events reports differ: their refusal returns
+`{ enrichment: null, noLlm: true, ... }` with **zero** model calls.
+
+This is **not** a round-4 finding and I am not counting it as a difference. It is round-1 B's
+written design, ratified by the manager and unchanged since: *"On exhaustion each route returns the
+payload it already returned when no provider resolved — the shallow report on papers, the no-LLM
+object on the other two"*, with round-1 B's own note that *"shallow is not no-LLM"*. It is
+internally consistent (both transports behave identically) and it matches D4's other sentence, which
+puts shallow reads in the "unlimited for everyone (metered, never capped)" group.
+
+What I am flagging, because §2 says A raises a recorded decision rather than reversing it:
+**D4 calls the 200/day thing a "hard circuit breaker" that "degrades to the existing no-LLM path",
+and on the papers surface it degrades to a cheaper LLM path instead.** The spend is metered and it
+is the same spend any shallow reader makes, so no bill is unbounded that was not already unbounded
+by design — but the words in D4 and the behaviour on papers are not the same words.
+**`POLICY — manager decides`** whether that is a spec wording fix, an accepted cost to write down,
+or nothing at all. It does not move either number.
