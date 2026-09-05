@@ -7494,3 +7494,209 @@ grep for the two vendor key prefixes was run before **every** push and returned 
 push past it). No `next dev` was started (Ruling 2 point 5) — a hook reported another session's
 dev server running in this folder and it was left alone — and no process was killed. No worktree
 under `.claude/worktrees/` was touched. No PR was opened.
+
+---
+
+### Round 3 — Agent B
+
+**Turn opened 2026-09-05T02:07Z.** Lock claimed on a clean tree, branch `freemium-system-key`
+confirmed by `git branch --show-current`. **No production code changed** (§2 Agent B). Five
+throwaway files — four TypeScript, one Node script — were written **outside the repo**, in the
+session scratchpad, so the working tree stayed clean throughout. Working Ruling 8 point 2's order:
+3-01, then 3-02, with 3-03's tests folded into each.
+
+---
+
+#### 3-01 — the paid upsell. **WRONG DATA.** Recommendation: **(a), the client entitlement summary.**
+
+**Classification: `WRONG DATA`**, and it is three defects in one component, not the one A reported.
+
+##### The code, grepped and read
+
+| Where | Line | What it does |
+|---|---|---|
+| `web/src/components/reports/quota-notice.tsx` | **48** | `const exhausted = quota.reason === "exhausted";` |
+| same | **58** | heading: `{exhausted ? "Deep reports" : "Deep reports unavailable"}` |
+| same | **63-74** | the upsell, gated on `exhausted` alone — "Peer Pro lifts the monthly limit." plus a `<Link href="/settings">Add your own key</Link>` |
+| same | **38-45** | the whole prop surface: `quota?: QuotaSignal` and `className?` — **nothing else** |
+| `web/src/lib/usage/deep-report-quota.ts` | **59-86** | `QuotaSignal` — four required fields, `kind` / `reason` / `remaining` / `resetsAt`. **No plan field** |
+| same | **100-119** | `quotaMessage(quota, now = new Date())` — the reset wording |
+
+**A's half is confirmed exactly.** One boolean decides the upsell and `QuotaSignal` carries nothing
+that separates a free reader out of five monthly reports from a paid reader who tripped D4's 200/day
+wallet breaker.
+
+**Half-built code: none.** I checked, because C has left scaffolding before. `QuotaSignal`'s five
+producers are all in one file (`deep-report-quota.ts:139-147, :176, :198, :215-227, :246-252`) and
+not one emits a plan, tier or `unlimited` key; `quota-notice.tsx` contains the word "plan" exactly
+once, in prose at line 20. `git status --porcelain` empty. **Nothing is half-done — this is
+unstarted, which is the cleaner thing to hand C.**
+
+##### Defect 2, which A did not name — one boolean drives TWO things
+
+Line 48's `exhausted` feeds **both** the heading (58) and the upsell (63). The obvious fix — make
+`exhausted` plan-aware — silently changes the heading too, so a paid reader at the breaker would be
+told **"Deep reports unavailable"**: a third wrong string, and one that reads like an outage the
+reader should wait out. **The contract is two booleans:**
+
+- `exhausted` — unchanged; picks the heading and which sentence `quotaMessage` returns;
+- `showUpgradePrompt` — **new**: `exhausted && effectivePlan !== "paid"`.
+
+C must not reuse the first name for the second.
+
+##### Defect 3, which A did not name — the reset-unit bug is the *opposite* of the one Ruling 8 describes
+
+Ruling 8 point 1 and R-QUOTA-1's amendment both say *"Resets in 0 days" never renders*. **That state
+is already impossible**: `deep-report-quota.ts:109` clamps with `Math.max(1, ...)`. I proved the real
+behaviour by execution rather than reading — a Node script in the scratchpad replicating lines
+109-118 exactly:
+
+| Path | True wait | What renders today |
+|---|---|---|
+| paid daily breaker, 00:30Z | 23.5 h | **"Resets in 1 day"** |
+| paid daily breaker, 18:30Z | 5.5 h | **"Resets in 1 day"** |
+| paid daily breaker, 23:30Z | **0.5 h** | **"Resets in 1 day"** |
+| free/trial monthly, Sep 30 22:00Z | 2.0 h | **"Resets in 1 day"** |
+| free/trial monthly, Sep 15 12:00Z | 372 h | "Resets in 16 days" — correct |
+
+The breaker's `resetsAt` is `endOfUtcDay(now)` (`:163`), so it is **always under 24 hours by
+construction** — the breaker sentence therefore says "1 day" on **every single trip**, overstating
+the wait by up to 48x at the end of the day. The monthly path has the same fault on its last two
+days. A reset instant already in the past also clamps to "1 day".
+
+**Ruling 8's remedy is right and I recommend it unchanged; only its stated symptom names a state the
+clamp already prevents.** This is a correction to the diagnosis, not a reversal of the ruling, so it
+is **not** a POLICY item. The real defect is worse than the described one: it fires always, not at an
+edge.
+
+##### The decision Ruling 8 point 1 asked me to make: **(a)** — and it is not close
+
+**The plan already reaches all three call sites with no new plumbing.** `ClientEntitlement`
+(`web/src/lib/entitlement/allowance.ts:117-118`) is `Omit<Entitlement, "deepReportsBudget"> &
+DeepReportAllowance`, and `toClientEntitlement()` (`:128-143`) ships **`plan` and `effectivePlan`
+as well as `unlimited`**. The store holds it (`web/src/store/profile.ts:59`, default
+`ANONYMOUS_CLIENT_ENTITLEMENT`, filled by `profile-sync.tsx:154`). At the render site:
+
+| Page | `<QuotaNotice>` | The plan, already in scope |
+|---|---|---|
+| `web/src/app/papers/[id]/page.tsx` | **1583** | `entitlement` at **582**; the next sibling passes `entitlement.effectivePlan` at **1590** |
+| `web/src/app/jobs/[id]/page.tsx` | **1541** | `effectivePlan` destructured at **958**; sibling uses it at **1548** |
+| `web/src/app/events/[id]/page.tsx` | **2321** | `effectivePlan` destructured at **1752**; sibling uses it at **2338** |
+
+On all three pages the notice sits **immediately above** `TierUpgradeBlock`, which already takes the
+plan. So (a) is a **one-prop, three-line** change with **zero** server work.
+
+**The trade-off, stated rather than asserted.**
+
+- **(a) client summary — a stale read.** The store is refreshed by the profile fetch, not by the
+  report response, so a reader who upgrades in another tab could hold `free` for the life of the
+  page. **Cost of being wrong: a paid reader sees an upsell — the exact defect.** But this is
+  *already* the risk `TierUpgradeBlock` runs on the next line, so (a) adds no new class of
+  staleness; it makes two adjacent components fail the same way instead of one failing invisibly.
+  The store is also **deliberately not persisted** (`store/profile.ts:703` partialize keeps only
+  `profile`), which bounds the staleness to one page life.
+- **(b) a field on `QuotaSignal` — fresh, but a wider payload.** Every producer holds
+  `entitlement.effectivePlan` already, so it is cheap to write. But it widens a **wire type** that
+  R-QUOTA-1 calls "additive and optional", puts the reader's plan into three more response bodies,
+  and — decisively — **must be added at all five producers**; one that forgets re-creates this
+  defect in a shape no render test can catch, because the notice would just fall back to "not paid".
+  It also breaks four payload-equality tests that pin all four fields
+  (`deep-report-quota.test.ts:93-102, :177-184, :290-295`).
+
+**Recommendation: (a).** Smaller, no new server field, and it takes the plan from the same server
+entitlement, in the same place, as the upsell already beside it — which is exactly what Ruling 8
+requires ("from the server's entitlement, never inferred from the shape of a refusal"). **(b) is a
+valid fallback the ruling also permits, but it is not needed and costs more.**
+
+##### One place I disagree with the obvious implementation — the prop must be REQUIRED
+
+The convenient move is an **optional** `effectivePlan` prop defaulting to `"free"`, because
+`quota-notice.test.tsx:32-34` builds the component as `createElement(QuotaNotice, { quota })` and a
+required prop stops that line type-checking. **Do not do this.** A default of `"free"` is a
+**fail-open default on the exact property being fixed**: the fourth call site that forgets the prop
+shows the upsell to a paid reader, silently, which is the defect this item exists to close. The
+objection is answered by a **one-line change to the test helper** (`render(quota?, effectivePlan:
+Plan = "free")`), which §2 Agent C explicitly permits — rewrite the assertion to state the new
+contract. `match-context.ts:13-16` already records this same reasoning for `FigureMatchContext`:
+*"Required, not optional, on purpose"*. Follow the precedent that exists, not the one that compiles
+fastest.
+
+**Related, and NOT this item's job to fix:** `JobReport` (`jobs/[id]/page.tsx:958`) and
+`EventReport` (`events/[id]/page.tsx:1752`) already default `effectivePlan = "free"`. Both parents do
+pass it (`jobs:1712`, `events:2537`), so nothing is broken today. Recording it as a watch point, not
+widening this item's scope.
+
+**Also rejected: having `QuotaNotice` read the store itself.** It costs zero call-site edits and is
+the wrong seam. All three report trees are rendered in tests through `renderToStaticMarkup` with **no
+store setup**, so a store read would always return `ANONYMOUS_CLIENT_ENTITLEMENT` (`effectivePlan:
+"free"`) and the paid path could never be asserted without mutating global state. No component under
+`components/reports/` reads the store today; this would be the first.
+
+##### The contract C should build
+
+1. `QuotaNotice` gains a **required** `effectivePlan: Plan` prop.
+2. Split line 48 into `exhausted` and `showUpgradePrompt = exhausted && effectivePlan !== "paid"`.
+   Heading and sentence keep using `exhausted`.
+3. `quotaMessage` picks its unit: **under 24 h then hours, otherwise days**, `Math.ceil` on both,
+   singular/plural extended to hours. Because `Math.ceil` stays, **"Resets in 1 day" becomes
+   unreachable** (25 h renders "2 days") — that is correct, and the existing singular case must be
+   **re-pointed at a 1-hour fixture**, not deleted.
+4. **What the field shows when every candidate is rejected.** A paid reader at the breaker sees:
+   heading "Deep reports", sentence *"Peer is at today's limit for deep reports. Resets in N
+   hours."*, **and nothing else** — no third paragraph, no link, and specifically **not** an empty
+   bordered panel. The `<aside>` still renders, because the sentence is real information the reader
+   needs; only the prompt is dropped. A guard that rendered nothing at all would hide a true
+   statement from the one reader who cannot act on it.
+
+##### Tests at risk — grepped, not guessed
+
+| File | Line | Today | Becomes |
+|---|---|---|---|
+| `web/src/lib/usage/deep-report-quota.test.ts` | **355** | `.toContain("Resets in 1 day.")` on a **12-hour** fixture | `"Resets in 12 hours."` — **this assertion IS the bug, written down** |
+| same | **371** | `.toBe("Peer is at today's limit for deep reports. Resets in 1 day.")`, also 12 hours | `"... Resets in 12 hours."` |
+| same | **341** | `"... Resets in 27 days."` (26.5 days) | **unchanged** — days branch still applies |
+| same | **399** | outage copy has no `Resets in` | unchanged |
+| same | **93-102, 177-184, 290-295** | `toEqual` pinning all four `QuotaSignal` fields | **unchanged under (a)**; these are what (b) would break |
+| `web/src/components/reports/quota-notice.test.tsx` | **32-34** | `createElement(QuotaNotice, { quota })` | one-line helper gains a plan parameter |
+| same | **43-49** | exhaustion sentence **and** "Peer Pro" | must now pass `"free"` explicitly |
+| same | **51-62** | outage: no "Peer Pro", no `/settings` | unchanged behaviour, gains the prop |
+| same | **73-82** | see below | **rewritten** |
+| same | **104-136** | source-text placement: each page matches `/setQuota\(/`, contains `"<QuotaNotice"`, matches `/useState<QuotaSignal \| undefined>\(undefined\)/` | **still passes** — `<QuotaNotice` survives as a literal token; should gain "and passes a plan" |
+| `web/src/app/jobs/[id]/page.test.ts` · `web/src/app/events/[id]/page.test.ts` · `web/src/components/reports/plate-type-system.test.ts` | helpers already set `effectivePlan` | indirect only — they render the **enclosing** components, which already take the plan | unchanged |
+
+**The existing test at `quota-notice.test.tsx:73` is the sharpest thing in this item.** It is named
+*"says the daily-breaker sentence **for a paid reader** at the cap"* and it (i) passes **no plan**,
+because there is none to pass, (ii) uses `resetsAt: "2099-01-01"` — **73 years out**, so it renders a
+five-digit day count and exercises nothing daily, and (iii) asserts only the sentence, never the
+absence of the upsell. **It names the exact property Ruling 8 requires and asserts none of it, which
+is why it is green while the defect ships.** Ruling 8's protective test is best written as the repair
+of this case rather than as a new one beside it.
+
+##### 3-03 for this item — the protective tests
+
+1. **The ruling's own test.** Render `{kind:"breaker", reason:"exhausted"}` with
+   `effectivePlan="paid"` and a **real end-of-UTC-day** `resetsAt`: assert `not.toContain("Peer
+   Pro")`, `not.toContain("/settings")`, `not.toContain("Add your own key")`, **and
+   `toContain("hours")`**. The fourth assertion is what stops the unit regressing quietly.
+2. **The negative twin.** Same signal, `effectivePlan="free"` — the prompt **is** present. Case 1
+   alone would also pass if C simply deleted the upsell, which would break R-QUOTA-1's free reader.
+3. **A trial case.** Ruling 8 says the prompt is for free **and trial**. `TierUpgradeBlock` uses
+   `effectivePlan === "free" && aiMode !== "byok"` (`tier-upgrade-block.tsx:47`) and so shows
+   **nothing to a trial reader** — a deliberate difference, not an inconsistency to tidy up. Without
+   a trial case, C may copy that predicate across and silently drop the prompt for trial readers,
+   who are exactly the group with 20 reports to exhaust. **This is the most likely way this item
+   gets fixed wrongly.**
+4. **The unit boundary**, in `deep-report-quota.test.ts`: 23 h 59 m gives hours; 24 h 1 m gives days;
+   1 h gives **"1 hour"** singular; a reset instant already past does not render a negative or zero;
+   and no output ever contains the substring `"0 "`.
+5. **Prove they test the fix** (§2 Agent C): reverting the component must fail cases 1 and 3;
+   reverting the formatter must fail case 4.
+
+##### Blast radius
+
+**Small and contained.** Three page files (one prop each), one component, one pure function, two test
+files, three placement suites. **No server file, no route, no payload, no migration, no cache key** —
+and `QuotaSignal` is untouched, so R-QUOTA-2's payload, which A measured as correct, stays correct.
+Nothing outside the three report surfaces imports `QuotaNotice` or `quotaMessage` (grepped
+repo-wide: 9 files, 2 of them markdown). `TierUpgradeBlock` is not touched and
+`tier-upgrade-block.test.tsx` must stay green **and unmodified**.
