@@ -33,6 +33,23 @@ import {
   hasUsableProviderOverride,
   resolveProvider,
 } from "./registry";
+import { unsafeEntitledContextForTests } from "@/lib/security/entitled-context";
+
+/**
+ * ABC-freemium 3-02 · R-SEC-2 · Ruling 7 point 3.
+ *
+ * `resolveProvider`'s second argument is now **required and branded**: a plain
+ * object with every field correct no longer compiles, which is the whole point
+ * of the item. This file tests the **resolution ladder** — which key wins — and
+ * has no entitlement to hand; building a real one here would make these cases
+ * assert the entitlement layer instead of the ladder.
+ *
+ * So they go through the **one named escape hatch**, and it says `unsafe` in its
+ * own name so that any production use is a single grep away. `spend-scans.test.ts`
+ * scan 6 fails the build if this identifier appears outside a test file — the
+ * brand is not weakened for production by anything on this line.
+ */
+const TEST_CTX = unsafeEntitledContextForTests({ path: "registry.test" });
 
 const SERVER_AI_ENV = [
   "PEER_DIGEST_PROVIDER",
@@ -54,14 +71,14 @@ afterEach(() => {
   vi.unstubAllEnvs();
   vi.clearAllMocks();
   // Belt and braces on top of `vitest.setup.ts` (item 1-00): after 1-11 a
-  // lingering `GOOGLE_API_KEY` makes `resolveProvider()` return a LIVE provider,
+  // lingering `GOOGLE_API_KEY` makes `resolveProvider(null, TEST_CTX)` return a LIVE provider,
   // so it must not survive a test.
   for (const key of SERVER_AI_ENV) delete process.env[key];
 });
 
 describe("provider resolution", () => {
   // ABC-freemium 1-11 — REWRITTEN. This case used to assert that
-  // `resolveProvider()` is **null** in production with every operator credential
+  // `resolveProvider(null, TEST_CTX)` is **null** in production with every operator credential
   // set, which was the BYOK-only lock. D1 removes that lock for one specific
   // credential and for no others, so the case now asserts exactly that split.
   it("uses the system key in production and ignores every other operator credential", () => {
@@ -74,7 +91,7 @@ describe("provider resolution", () => {
     vi.stubEnv("QWEN_API_KEY", "OPERATOR-NOT-A-KEY");
     vi.stubEnv("DEEPSEEK_API_KEY", "OPERATOR-NOT-A-KEY");
 
-    const provider = resolveProvider();
+    const provider = resolveProvider(null, TEST_CTX);
 
     // The system key wins, and it is the API-key factory that ran — not the
     // Vertex singleton, and not the OpenAI provider `PEER_DIGEST_PROVIDER` asked
@@ -90,7 +107,7 @@ describe("provider resolution", () => {
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "operator-project");
     vi.stubEnv("ANTHROPIC_API_KEY", "OPERATOR-NOT-A-KEY");
 
-    expect(resolveProvider()).toBeNull();
+    expect(resolveProvider(null, TEST_CTX)).toBeNull();
   });
 
   it("never lets GOOGLE_VERTEX_PROJECT outrank the system key", () => {
@@ -101,7 +118,7 @@ describe("provider resolution", () => {
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "operator-project");
     vi.stubEnv("GOOGLE_API_KEY", SYSTEM_KEY);
 
-    expect(resolveProvider()?.id).toBe("gemini");
+    expect(resolveProvider(null, TEST_CTX)?.id).toBe("gemini");
     expect(mocks.createGeminiApiProvider).toHaveBeenCalledWith(SYSTEM_KEY);
   });
 
@@ -114,7 +131,7 @@ describe("provider resolution", () => {
     vi.stubEnv("PEER_DIGEST_PROVIDER", "gemini");
 
     expect(canUseLocalServerProvider()).toBe(false);
-    expect(resolveProvider()).toBeNull();
+    expect(resolveProvider(null, TEST_CTX)).toBeNull();
   });
 
   // ABC-freemium 1-11 — REWRITTEN. This case asserted that
@@ -128,7 +145,7 @@ describe("provider resolution", () => {
     vi.stubEnv("PEER_DIGEST_PROVIDER", "gemini");
 
     expect(canUseLocalServerProvider()).toBe(true);
-    expect(resolveProvider()?.id).toBe("gemini");
+    expect(resolveProvider(null, TEST_CTX)?.id).toBe("gemini");
     // The singleton, not the API-key factory: this is the Vertex path.
     expect(mocks.createGeminiApiProvider).not.toHaveBeenCalled();
   });
@@ -139,7 +156,7 @@ describe("provider resolution", () => {
     vi.stubEnv("VERCEL_ENV", "");
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "local-project");
 
-    expect(resolveProvider()).toBeNull();
+    expect(resolveProvider(null, TEST_CTX)).toBeNull();
   });
 
   it("uses an explicit user key in production", () => {
@@ -148,7 +165,8 @@ describe("provider resolution", () => {
     vi.stubEnv("GOOGLE_VERTEX_PROJECT", "operator-project");
 
     expect(
-      resolveProvider({ provider: "openai", apiKey: " user-key " })?.id,
+      resolveProvider({ provider: "openai", apiKey: " user-key " }, TEST_CTX)
+        ?.id,
     ).toBe("openai");
   });
 
@@ -159,10 +177,10 @@ describe("provider resolution", () => {
     vi.stubEnv("VERCEL", "1");
     vi.stubEnv("GOOGLE_API_KEY", SYSTEM_KEY);
 
-    const provider = resolveProvider({
-      provider: "anthropic",
-      apiKey: "USER-NOT-A-KEY",
-    });
+    const provider = resolveProvider(
+      { provider: "anthropic", apiKey: "USER-NOT-A-KEY" },
+      TEST_CTX,
+    );
 
     expect(provider?.id).toBe("anthropic");
     expect(mocks.createGeminiApiProvider).not.toHaveBeenCalled();
@@ -176,7 +194,10 @@ describe("provider resolution", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("GOOGLE_API_KEY", SYSTEM_KEY);
 
-    const provider = resolveProvider({ provider: "openai", apiKey: "   " });
+    const provider = resolveProvider(
+      { provider: "openai", apiKey: "   " },
+      TEST_CTX,
+    );
 
     expect(provider?.id).toBe("gemini");
     expect(mocks.createGeminiApiProvider).toHaveBeenCalledWith(SYSTEM_KEY);

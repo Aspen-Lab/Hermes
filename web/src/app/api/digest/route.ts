@@ -8,6 +8,7 @@ import type {
   ProviderOverrideConfig,
 } from "@/lib/llm/providers/types";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
+import { entitledContext } from "@/lib/security/entitled-context";
 
 interface DigestRequest {
   papers: PaperLite[];
@@ -77,11 +78,17 @@ export async function POST(req: NextRequest) {
   if (gate instanceof NextResponse) return gate;
   const { entitlement } = gate;
 
-  const provider = resolveProvider(body.llmOverride ?? null, {
-    userId: entitlement.userId,
-    byok: hasUsableProviderOverride(body.llmOverride ?? null),
-    path: "digest",
-  });
+  // ABC-freemium 3-02 — minted from the entitlement the gate above resolved,
+  // so the acquisition carries compile-checked proof a check ran, not a
+  // hand-built object that merely looks like one.
+  const provider = resolveProvider(
+    body.llmOverride ?? null,
+    entitledContext(
+      entitlement,
+      "digest",
+      hasUsableProviderOverride(body.llmOverride ?? null),
+    ),
+  );
   if (!provider) {
     // No provider configured — graceful Tier 0 fallback.
     return NextResponse.json(emptyResponse(true));

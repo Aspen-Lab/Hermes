@@ -18,6 +18,8 @@ import { getFullText } from "@/lib/papers/full-text";
 import { getFigurePool } from "@/lib/figures/extract";
 import type { ReportStreamEvent } from "@/lib/papers/report-stream";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
+import { entitledContext } from "@/lib/security/entitled-context";
+import type { Entitlement } from "@/lib/entitlement/types";
 import { consumeDeepReport } from "@/lib/usage/deep-report-quota";
 
 export const dynamic = "force-dynamic";
@@ -136,25 +138,40 @@ const SHALLOW_SYSTEM = [
  * them re-reading a session.
  */
 interface ReportUsageCtx {
-  userId: string | null;
+  /**
+   * ABC-freemium 3-02 — the **entitlement itself**, not a copied user id. It is
+   * the only thing an `EntitledContext` can be minted from, so carrying it is
+   * what lets every acquisition on this route prove a check ran.
+   */
+  entitlement: Entitlement;
   path: string;
 }
 
+/**
+ * ABC-freemium 3-02 · R-SEC-2 — mint the branded context for one acquisition.
+ *
+ * **`ctx` is required here and at both helpers below.** It used to be
+ * `ctx?: ReportUsageCtx` with a `?? "paper-report"` fallback, which pushed the
+ * optionality Ruling 7 point 3 closes at `resolveProvider` one level deeper into
+ * this file — the argument was compile-checked at the chokepoint and still
+ * omittable here. `byok` stays per-call because the override differs between
+ * the shallow helper's own parameter and the route body's.
+ */
 function providerCtx(
-  ctx: ReportUsageCtx | undefined,
+  ctx: ReportUsageCtx,
   override: ProviderOverrideConfig | null | undefined,
 ) {
-  return {
-    userId: ctx?.userId ?? null,
-    byok: hasUsableProviderOverride(override ?? null),
-    path: ctx?.path ?? "paper-report",
-  };
+  return entitledContext(
+    ctx.entitlement,
+    ctx.path,
+    hasUsableProviderOverride(override ?? null),
+  );
 }
 
 async function generateShallowReport(
   body: PaperReportRequest,
-  override?: ProviderOverrideConfig,
-  ctx?: ReportUsageCtx,
+  override: ProviderOverrideConfig | undefined,
+  ctx: ReportUsageCtx,
 ): Promise<PaperReport> {
   const provider = resolveProvider(override ?? null, providerCtx(ctx, override));
   const fallback = buildFallbackPaperReport(body.paper, body.contextHint);
@@ -196,7 +213,7 @@ function bestPaperUrl(paper: PaperReportRequest["paper"]): string | null {
   return paper.linkPaper ?? paper.linkArxiv ?? null;
 }
 
-function streamReport(body: ExtendedRequest, ctx?: ReportUsageCtx): Response {
+function streamReport(body: ExtendedRequest, ctx: ReportUsageCtx): Response {
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
@@ -412,7 +429,7 @@ export async function POST(req: NextRequest) {
   const gate = await requireEntitledAiRequest("paper-report", 20);
   if (gate instanceof NextResponse) return gate;
   const ctx: ReportUsageCtx = {
-    userId: gate.entitlement.userId,
+    entitlement: gate.entitlement,
     path: "paper-report",
   };
 

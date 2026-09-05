@@ -168,9 +168,23 @@ describe("scan 4 — every resolveProvider call carries a context", () => {
     // figure matchers take a required context; a test is what makes it stay
     // true when the next matcher is written.
     //
-    // A bare `resolveProvider()` is the shape being banned. Calls that pass an
-    // override but no context are legal — `tier2-rerank.ts` and `query-gen.ts`
-    // are both R-QUOTA-3-exempt paths that still meter through the wrapper.
+    // ── ABC-freemium 3-02 — THIS SCAN IS NOW A BELT WHOSE BRACES ARE THE TYPE ──
+    //
+    // `resolveProvider`'s second argument became **required and branded**, so
+    // `tsc` rejects every shape this regex was looking for, and more besides.
+    // The scan is kept rather than deleted for two reasons: a regex survives a
+    // signature being loosened back to optional by someone who does not read
+    // this file, and the failure message here names the offending file, which a
+    // TS2554 at a call site does not.
+    //
+    // **Its old comment was also wrong in a way worth recording.** It said
+    // "calls that pass an override but no context are legal — `tier2-rerank.ts`
+    // and `query-gen.ts` are both R-QUOTA-3-exempt paths that still meter". The
+    // metering half was true and beside the point: R-SEC-2 is about a caller
+    // that skips the *entitlement* check, and a usage row for spend nobody
+    // authorised is a receipt, not a guard. Those two callers were safe because
+    // of a numeric tier ceiling, not because they metered — and that reason is
+    // now written at each of them as a `SpendJustification` the compiler checks.
     const offenders = productionFiles().filter((file) => {
       const source = code(file);
       // The declaration itself, and the unrelated local helper in
@@ -180,6 +194,70 @@ describe("scan 4 — every resolveProvider call carries a context", () => {
     });
 
     expect(offenders.map(relative)).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCAN 6 — the entitled-context brand is not quietly re-opened
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The module that owns the brand, and the only place it may be asserted. */
+const ENTITLED_CONTEXT_MODULE = "src/lib/security/entitled-context.ts";
+
+describe("scan 6 — nothing re-opens the entitled-context hole (3-02)", () => {
+  it("declares no OPTIONAL entitled or provider context anywhere", () => {
+    // ABC-freemium 3-02 · Ruling 7 point 3 — **the one attack the brand does
+    // not stop on its own.** Round-3 B compiled it: a helper that declares
+    // `ctx?: EntitledContext` type-checks perfectly and re-opens the exact hole
+    // this item closed, because its callers may then omit it again. A brand
+    // proves provenance; it cannot make a parameter mandatory.
+    //
+    // Optionality is banned in every spelling of it, including the union alias
+    // and the `| undefined` form a formatter may produce.
+    const offenders = productionFiles().filter((file) =>
+      /\b\w+\?\s*:\s*(EntitledContext|ProviderContext)\b|:\s*(EntitledContext|ProviderContext)\s*\|\s*undefined/.test(
+        code(file),
+      ),
+    );
+
+    expect(offenders.map(relative)).toEqual([]);
+  });
+
+  it("keeps the test-only escape hatch out of production code", () => {
+    // There is exactly one way to mint a context without an entitlement and it
+    // says `unsafe` in its own name so that this scan can be one word long. A
+    // production file reaching for it is the brand being talked around rather
+    // than satisfied.
+    // `entitled-context.ts` is exempt: it DECLARES the hatch, which is how
+    // there comes to be exactly one.
+    const offenders = productionFiles()
+      .map(relative)
+      .filter((file) => file !== ENTITLED_CONTEXT_MODULE)
+      .filter((file) =>
+        code(path.join(process.cwd(), file)).includes(
+          "unsafeEntitledContextForTests",
+        ),
+      );
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("asserts no cast to the brand outside the module that owns it", () => {
+    // `as EntitledContext` compiles — TypeScript always allows it, and B
+    // measured that rather than assuming otherwise. The win of a brand is that
+    // asserting provenance you have not got becomes **greppable**, so this is
+    // the grep. `entitled-context.ts` itself is exempt: the two casts inside it
+    // are how the brand is applied at all.
+    const offenders = productionFiles()
+      .map(relative)
+      .filter((file) => file !== ENTITLED_CONTEXT_MODULE)
+      .filter((file) =>
+        /\bas\s+(EntitledContext|ProviderContext)\b/.test(
+          code(path.join(process.cwd(), file)),
+        ),
+      );
+
+    expect(offenders).toEqual([]);
   });
 });
 

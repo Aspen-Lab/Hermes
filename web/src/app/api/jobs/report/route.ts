@@ -10,6 +10,7 @@ import {
 } from "@/lib/opportunities/enrichment";
 import type { Job } from "@/types";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
+import { entitledContext } from "@/lib/security/entitled-context";
 import { consumeDeepReport } from "@/lib/usage/deep-report-quota";
 import { fetchPageHtml } from "@/lib/opportunities/page-fetch";
 import {
@@ -79,11 +80,15 @@ export async function POST(req: NextRequest) {
   // no provider resolves, with one field added.
   const quotaDecision = await consumeDeepReport(entitlement);
   const provider = quotaDecision.allowed
-    ? resolveProvider(body.llmOverride ?? null, {
-        userId: entitlement.userId,
-        byok: hasUsableProviderOverride(body.llmOverride ?? null),
-        path: "job-report",
-      })
+    ? // ABC-freemium 3-02 — minted from the gate's entitlement.
+      resolveProvider(
+        body.llmOverride ?? null,
+        entitledContext(
+          entitlement,
+          "job-report",
+          hasUsableProviderOverride(body.llmOverride ?? null),
+        ),
+      )
     : null;
   if (!provider?.generateJsonText) {
     return NextResponse.json(

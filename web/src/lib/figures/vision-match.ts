@@ -3,6 +3,7 @@
 
 import { resolveProvider } from "@/lib/llm/providers/registry";
 import type { FigureMatchContext } from "./match-context";
+import { entitledContext } from "@/lib/security/entitled-context";
 import type { VisionImageInput } from "@/lib/llm/providers/types";
 import { cleanDisplayText } from "@/lib/text/clean";
 
@@ -134,11 +135,13 @@ export async function matchFigureVisually(args: {
   candidates: VisionMatchCandidate[];
   ctx: FigureMatchContext;
 }): Promise<VisionFigureMatch | null> {
-  const provider = resolveProvider(args.ctx.override ?? null, {
-    userId: args.ctx.userId,
-    byok: args.ctx.byok,
-    path: "figure:vision",
-  });
+  // ABC-freemium 3-02 — minted from the entitlement `api/figure` resolved, so
+  // this acquisition carries compile-checked proof rather than a hand-made
+  // `{ userId, byok }` that anyone could have written.
+  const provider = resolveProvider(
+    args.ctx.override ?? null,
+    entitledContext(args.ctx.entitlement, "figure:vision", args.ctx.byok),
+  );
   if (!provider?.generateVisionJsonText) return null;
   if (!args.query.trim() || args.candidates.length === 0) return null;
 

@@ -1,5 +1,6 @@
 import { resolveProvider } from "@/lib/llm/providers/registry";
 import type { FigureMatchContext } from "./match-context";
+import { entitledContext } from "@/lib/security/entitled-context";
 import { cleanDisplayText } from "@/lib/text/clean";
 
 interface MatchCandidate {
@@ -63,11 +64,13 @@ export async function matchFigureSemantically(args: {
   candidates: MatchCandidate[];
   ctx: FigureMatchContext;
 }): Promise<SemanticFigureMatch | null> {
-  const provider = resolveProvider(args.ctx.override ?? null, {
-    userId: args.ctx.userId,
-    byok: args.ctx.byok,
-    path: "figure:semantic",
-  });
+  // ABC-freemium 3-02 — minted from the entitlement `api/figure` resolved, so
+  // this acquisition carries compile-checked proof rather than a hand-made
+  // `{ userId, byok }` that anyone could have written.
+  const provider = resolveProvider(
+    args.ctx.override ?? null,
+    entitledContext(args.ctx.entitlement, "figure:semantic", args.ctx.byok),
+  );
   if (!provider?.generateJsonText) return null;
   if (!args.query.trim() || args.candidates.length === 0) return null;
 

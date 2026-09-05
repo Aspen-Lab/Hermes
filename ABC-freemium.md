@@ -8294,3 +8294,113 @@ warnings) · `vitest` **123 files passed | 1 skipped (124)** · **2837 tests pas
 (2838)**, **0 failed**. +12 tests, 0 regressions. `tier-upgrade-block.test.tsx` untouched and green.
 
 **Standing tally, answerable now:** paid readers shown any upsell — **0**, pinned by render test.
+
+---
+
+#### 3-02 — the branded entitlement context. **HALF A LANDED. Half B not built, as Ruling 9 point 5 directs.**
+
+New module `web/src/lib/security/entitled-context.ts`, built in B's shape: a module-private
+`unique symbol` that is **never exported**, so an `EntitledContext` cannot be written down outside
+that file. `resolveProvider`'s second argument is now **required** and typed `ProviderContext =
+EntitledContext | SpendJustification`.
+
+**One change to B's design, traced first.** B's mint took loose fields; mine takes the
+**`Entitlement` itself** — `entitledContext(entitlement, path, byok)`. The reason is that a brand
+only proves "this came from the right factory", and a factory anyone can call with a made-up string
+proves less than it looks. The only supported way to hold an `Entitlement` is to have gone through
+`requireEntitledAiRequest`, so making it the parameter puts the proof in the type of the argument as
+well as in the brand. Same reasoning applied to `FigureMatchContext`, below.
+
+**The ten call sites, all threaded, none left contextless:**
+
+| Call site | What it passes |
+|---|---|
+| `api/digest/route.ts` · `api/events/report/route.ts` · `api/jobs/report/route.ts` | minted from `gate.entitlement` |
+| `api/papers/report/route.ts` ×3 (`:159`, `:224`, `:440`) | via `providerCtx`, which now mints |
+| `figures/semantic-match.ts` · `figures/vision-match.ts` | minted from `args.ctx.entitlement`, one per path name |
+| `feed/tier2-rerank.ts` · `opportunities/query-gen.ts` | a named `SpendJustification` |
+
+**Two optional shapes closed one level below the chokepoint, which B flagged and which matter more
+than they look.** `papers/report/route.ts` had `ctx?: ReportUsageCtx` on **both**
+`generateShallowReport` and `streamReport`, with a `?? "paper-report"` fallback inside `providerCtx`
+— so the argument was compile-checked at `resolveProvider` and still omittable two frames up. Both
+are now required. `ReportUsageCtx` holds the `Entitlement` rather than a copied `userId`.
+
+**`FigureMatchContext` now carries the `Entitlement` too, and this is a real strengthening of
+R-SEC-1, not bookkeeping.** 1-07 made the context *required*, which stops a caller **forgetting**
+it; it never stopped a caller **inventing** one, and a bare `{ userId: null, byok: false }`
+satisfied the old shape and compiled. The figure chain could therefore acquire a provider on a
+hand-made context no entitlement check had ever seen. It cannot now. **The five `extract.ts` sites B
+predicted needed no edit** — they pass the context through by name and never construct one, so the
+cascade was one line at `api/figure/route.ts` and not six.
+
+**The two pool-build closures, per Ruling 9 point 5 — a required union, no cascade.** Each now
+passes a module-local `as const` literal naming which *other* guard is doing the work and where
+(`entitlement-proved-by-tier-ceiling`, with the file and predicate). Inventing a third kind is a
+compile error. **No request type widened, no pipeline signature changed, the digest cron untouched**
+— verified by the diff: neither `jobs/types.ts`, `events/types.ts`, `sources/types.ts` nor
+`dispatch-digests/route.ts` appears in it.
+
+**The stale source comment is rewritten in the same commit**, as B required — `registry.ts` said
+*"the second argument is optional and stays optional… a thirteen-site edit"*, which Ruling 7 point 3
+supersedes. Its defence ("a call site that omits it still meters") is recorded as **true and beside
+the point**: R-SEC-2 is about a caller that skips the *entitlement* check, and a usage row for spend
+nobody authorised is a receipt, not a guard. Scan 4's comment carried the same error and is
+corrected too.
+
+**Scan 6 — new, and it is what makes this item worth anything in a year.** Three assertions, each
+proved to bite by planting the offending line and re-running:
+
+| Assertion | Planted offender | Result |
+|---|---|---|
+| no optional entitled/provider context | `function planted(ctx?: EntitledContext)` | **2 failed** |
+| the escape hatch stays out of production | the test-only mint called in `lib/feed` | **1 failed** |
+| no cast to the brand outside the owning module | an empty object cast to `EntitledContext` | **2 failed** |
+
+B named the first of these as *"the one shape that re-opens the hole"* and was right.
+
+**A defect in my own first cut, recorded because it is the exact failure mode the rules exist for.**
+Scan 6's regexes were generated through a script and their word-boundary anchors were written into
+the file as **literal backspace characters (0x08)**, not as regex anchors. The suite went green,
+which proved nothing: the first alternation branch could never match. Caught by dumping the bytes
+rather than reading the rendered line. **A guard that passes is not a guard that works** — the
+plant-and-re-run table above exists because of this, and every scan added from here should be proved
+by planting an offender, never by watching it pass.
+
+**Type-level proof: `entitled-context.test.ts`.** Five `@ts-expect-error` cases — no context; a
+plain object with **every visible field correct**; an invented justification kind; explicit
+`undefined`; a caller's own forged symbol. These are checked by **`tsc`, not vitest** (test files
+are in the program), so a weakened brand fails the gate's first step. **Proved by reverting**: with
+the pre-3-02 optional signature restored, `tsc` reports **5 errors, three of them TS2578 "unused
+`@ts-expect-error`"** — the directives fail *because the errors stopped happening*, which is exactly
+what they are for.
+
+**The three attacks the brand does NOT stop are written into the test file as passing cases**, not
+implied: spread-and-tamper compiles (a brand proves provenance, not that fields were left alone); a
+direct cast compiles (scan 6 makes it greppable); an optional parameter re-opens the hole (scan 6
+bans it). B measured all three; recording them as tests stops a later round mistaking the brand for
+more than it is.
+
+**Half B — the operator-search availability gate — NOT BUILT**, per Ruling 9 point 5. The 2-06 scan
+stays the guard. Nothing in `search/system-key.ts`, the three adapters or the cron was touched.
+
+**Behaviour moved zero bytes**, as B predicted: `resolveProvider` still returns `null` on the tier-0
+path, every call site already handled `null`, and the route suites' `toHaveBeenCalledWith` context
+assertions still pass **because the brand is type-only and has no runtime property** — the minted
+object is `{ userId, byok, path }`, byte-identical to the literal it replaced. Those assertions were
+therefore left alone rather than loosened to field checks; they are still asserting something true.
+
+**Standing locks re-verified, all green and unmodified except where named:** `registry.test.ts`
+(9 call sites rewritten to the escape hatch, **none deleted**), `spend-scans.test.ts` (scan 4 comment
+corrected, scans 3 and 5 untouched, scan 6 added), `quota-exemptions.test.ts` (unchanged —
+`resolveProvider` was **not** renamed, which its `.toContain` assertions depend on),
+`ai-route-personas.test.ts`, `ai-tier.test.ts`, the four route suites, `ui-vocabulary.test.ts`,
+`no-client-dev-flags.test.ts`.
+
+**Gate after 3-02:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0
+warnings) · `vitest` **124 files passed | 1 skipped (125)** · **2851 tests passed | 1 skipped
+(2852)**, **0 failed**. +14 tests, +1 file, 0 regressions.
+
+**Standing tallies:** `resolveProvider` call sites without a context — **0, now enforced by the
+compiler**. Compile-time enforcement of the entitlement context — **PRESENT for `resolveProvider`,
+ABSENT for the operator-search availability gate**, and that split is deliberate.

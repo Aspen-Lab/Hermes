@@ -10,6 +10,10 @@ import { qwenProvider, createQwenProvider } from "./qwen";
 import { deepseekProvider, createDeepseekProvider } from "./deepseek";
 import { isLocalDevRuntime } from "@/lib/env/local-dev";
 import { meterProvider } from "./metered";
+import {
+  isEntitledContext,
+  type ProviderContext,
+} from "@/lib/security/entitled-context";
 
 const providers: Record<ProviderId, DigestProvider> = {
   anthropic: anthropicProvider,
@@ -147,28 +151,54 @@ function resolveSystemProvider(): DigestProvider | null {
  *      matchers), and 1-11 touches none of them.
  *
  * ABC-freemium 1-03 · R-METER-1 — the result is wrapped by `meterProvider` at
- * this single return point, so all thirteen acquisition sites are metered
- * without a user id threaded through any of them. **The second argument is
- * optional and stays optional**: making it required would be a thirteen-site
- * edit and a call site that omits it still meters, with a null `user_id`, which
- * is the honest value for a library-level call inside a request the route has
- * already authenticated (feed reranking, opportunity query generation).
+ * this single return point, so every acquisition site is metered without a user
+ * id threaded through any of them.
+ *
+ * ── ABC-freemium 3-02 · R-SEC-2 · Ruling 7 point 3 · Ruling 9 point 5 ────────
+ *
+ * **The second argument is now REQUIRED and branded.** This supersedes the note
+ * that stood here from 1-03/1-11 — *"the second argument is optional and stays
+ * optional… making it required would be a thirteen-site edit"* — which Ruling 7
+ * point 3 (2026-09-05) reverses, so the comment is rewritten rather than left to
+ * argue with the code. Its "thirteen" was also stale: it counted acquisition
+ * sites before 1-07 gave the figure matchers a required context. **The measured
+ * figure is ten production call sites, eight of which already passed a
+ * context.**
+ *
+ * The old note's defence of the optional form was that "a call site that omits
+ * it still meters, with a null `user_id`, which is the honest value for a
+ * library-level call". That is true about *metering* and it was never the
+ * question: R-SEC-2 is about a caller that forgets the **entitlement check**,
+ * and a metered row for spend nobody authorised is a receipt, not a guard.
+ *
+ * A caller must now supply either an `EntitledContext` — mintable only from a
+ * real `Entitlement`, i.e. only downstream of `requireEntitledAiRequest` — or a
+ * named `SpendJustification` saying which *other* guard is doing the work and
+ * where. Both are compile-checked; forgetting the argument, passing a
+ * correct-looking plain object, and inventing a justification kind are all
+ * compile errors. See `@/lib/security/entitled-context` for what the brand does
+ * and, as importantly, the three attacks it does not stop.
  *
  * This function stays **synchronous** — eleven call sites use its result without
  * `await`, and wrapping is pure object construction.
  */
 export function resolveProvider(
-  override?: ProviderOverrideConfig | null,
-  ctx?: { userId?: string | null; byok?: boolean; path?: string },
+  override: ProviderOverrideConfig | null | undefined,
+  ctx: ProviderContext,
 ): DigestProvider | null {
   const byok = hasUsableProviderOverride(override);
   const provider = byok
     ? resolveUserProvider(override)
     : resolveSystemProvider();
   if (!provider) return null;
+  // A justification carries no reader: the two pool-build closures run outside
+  // any entitled request, and `null` is the honest `user_id` for them — the
+  // same value the optional form used to produce, now stated rather than
+  // defaulted into existence.
+  const entitled = isEntitledContext(ctx) ? ctx : null;
   return meterProvider(provider, {
-    userId: ctx?.userId ?? null,
-    byok: ctx?.byok ?? byok,
-    path: ctx?.path,
+    userId: entitled?.userId ?? null,
+    byok: entitled?.byok ?? byok,
+    path: entitled?.path,
   });
 }

@@ -22,6 +22,7 @@ import {
 } from "@/lib/opportunities/page-text";
 import type { Event } from "@/types";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
+import { entitledContext } from "@/lib/security/entitled-context";
 import { consumeDeepReport } from "@/lib/usage/deep-report-quota";
 
 export const dynamic = "force-dynamic";
@@ -125,11 +126,15 @@ export async function POST(req: NextRequest) {
   // `api/jobs/report/route.ts`. Same counter, same degraded payload.
   const quotaDecision = await consumeDeepReport(entitlement);
   const provider = quotaDecision.allowed
-    ? resolveProvider(body.llmOverride ?? null, {
-        userId: entitlement.userId,
-        byok: hasUsableProviderOverride(body.llmOverride ?? null),
-        path: "event-report",
-      })
+    ? // ABC-freemium 3-02 — minted from the gate's entitlement.
+      resolveProvider(
+        body.llmOverride ?? null,
+        entitledContext(
+          entitlement,
+          "event-report",
+          hasUsableProviderOverride(body.llmOverride ?? null),
+        ),
+      )
     : null;
   if (!provider?.generateJsonText) {
     return NextResponse.json(

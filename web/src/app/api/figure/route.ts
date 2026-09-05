@@ -45,7 +45,9 @@ export async function GET(req: NextRequest) {
     // No BYOK override reaches this route — figures are requested by the card,
     // which carries no key — so `byok` is false and the matchers fall to the
     // system provider or to null.
-    ctx: { userId: gate.entitlement.userId, byok: false },
+    // ABC-freemium 3-02 — the entitlement itself, not a copy of its user id:
+    // holding one is the proof a check ran.
+    ctx: { entitlement: gate.entitlement, byok: false },
   });
   const cacheControl = result.imageUrl
     ? "public, s-maxage=86400, stale-while-revalidate=604800"
