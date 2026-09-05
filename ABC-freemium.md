@@ -7970,3 +7970,141 @@ is already correct and one line.
 dependency — but 3-01 is user-visible wrong data and 3-02 changes nothing a reader can see, and the
 standing rank rule puts wrong data first. If budget runs out mid-round, **the right thing to bank is
 3-01 complete rather than both half-done.**
+
+---
+
+#### 3-03 — the tests, and one gap A's round-3 list does not contain
+
+The protective tests for 3-01 and 3-02 are written inside those items, where C will be reading. This
+entry holds only what does not belong to either: a **third difference**, found by following the one
+thing A's turn left open.
+
+##### How I found it: A resolved ONE of C's two flagged doubts
+
+2-07 closes with *"Doubt flagged, not judged. **Two**, both for round-3 A rather than for me."* A's
+turn answers the first under the heading *"The **one** doubt C flagged for me, resolved"* — the
+`anonymous` persona and `canAttemptOpportunityEnrichment`, correctly answered. **C's second doubt is
+not addressed anywhere in A's turn.** It was:
+
+> *"The papers stream path carries no `quota`. It does not need to today, because a refusal comes
+> back as JSON — but if a later round streams a refusal, the signal would be dropped silently."*
+
+C called it latent. **I checked, and it is live, and it is worse than a dropped signal.**
+
+##### The finding: on papers, the app's own deep reports never reach the quota at all
+
+`web/src/app/api/papers/report/route.ts`, in order:
+
+| Line | Code |
+|---|---|
+| **412** | `const gate = await requireEntitledAiRequest("paper-report", 20);` |
+| **418-420** | `const wantsStream = req.headers.get("accept")?.includes("application/x-ndjson") === true \|\| body.stream === true;` |
+| **421-422** | `if (wantsStream) { return streamReport(body, ctx); }` |
+| **427** | `if (body.deepReport) {` |
+| **438** | `const quotaDecision = await consumeDeepReport(gate.entitlement);` — **the route's only call; grepped, exactly one** |
+
+**The streaming branch returns at 422, above the only quota check.** And the client always streams:
+`web/src/lib/papers/report-stream.ts:21` sends `Accept: application/x-ndjson` on every request, and
+`web/src/app/papers/[id]/page.tsx:788-792` builds `{ paper, contextHint, deepReport:
+deepReportRequested, llmOverride }` and hands it to `streamPaperReport` at `:847`.
+
+**And the streaming branch honours `deepReport`.** `streamReport` at `:240` reads
+`const aiMode = body.deepReport ? "tier2" : "tier1";` and the tier-2 arm goes on to fetch full text
+(`:265` `getFullText(...)`) and write a deep report. So this is not a shallow read taking a shortcut
+— **it is the deep read, on the deep path, skipping the counter.**
+
+The JSON path that does count is reached only from the page's `catch` block
+(`papers/[id]/page.tsx:908-911`), i.e. **only when the stream throws.** On every successful deep
+report, `consumeDeepReport` is never called.
+
+**Consequences, stated plainly:**
+
+1. A free or trial reader's papers deep reports **do not decrement the monthly allowance**.
+2. A paid reader's papers deep reports **are not charged to D4's 200/day wallet breaker** — the
+   operator's own spend ceiling does not fire on this surface.
+3. `QuotaNotice` can never render on papers from a real read, because no signal is ever produced.
+   2-07 wired the papers page to a field the streaming path does not emit.
+
+**What it is NOT:** it is not unauthenticated spend and not unmetered spend. The guard at `:412` runs
+**above** the stream branch, so R-SEC-2 is untouched; and `streamReport` acquires its provider through
+`resolveProvider` at `:224`, so 1-03's wrapper still writes the R-METER-1 usage row. **Uncounted is
+not unmetered** — the operator can still see the money; the cap just does not stop it.
+
+**Classification: `MISSING`** — a check that is absent on the path the product actually uses. By my
+own ranking rule this sits with wrong data rather than below it: a cap that does not fire is a bill.
+
+##### Why every green test and every measurement missed it
+
+- **`quota-exemptions.test.ts:94-115`** asserts that `consumeDeepReport` appears exactly once and
+  that it sits **inside** `if (body.deepReport)`. Both are true. It never asserts the branch is
+  **reachable**, and the early return at `:422` sits above it, so the assertion is about position in
+  the file rather than position in the control flow.
+- **The route's own comment at `:429-432`** states *"the streaming path above [is one of]
+  R-QUOTA-3's exempt cases and must never reach the counter"* — a confident claim, written down,
+  and it is what makes the gap invisible to a reader of the file.
+- **Round-3 A drove the route without the `Accept: application/x-ndjson` header**, which is why the
+  probe reached `consumeDeepReport` and returned `{"kind":"deep_report","reason":"exhausted"}`.
+  A measured a real path; it is just not the path the app takes for a deep papers report. **This is
+  the "measure the product, not the handler" lesson, and it is worth a standing tally.**
+
+##### `POLICY — manager decides`
+
+**Is the streaming path meant to be exempt?** The two texts disagree:
+
+- **R-QUOTA-3 (spec)** exempts *"Shallow (abstract-only) paper reports, ranking, digest and query
+  generation"*. **Streaming is not in that list, and a streamed `deepReport: true` request is not
+  abstract-only** — it is `tier2` and it fetches full text.
+- **The route comment** claims R-QUOTA-3 covers it.
+
+On the spec's plain words, R-QUOTA-1 — *"Each deep-report route checks and increments the monthly
+counter atomically"* — is **not met on papers**, and I would score it PARTIAL. But this reverses a
+choice C wrote down deliberately and A scored MET twice, so **I am not scoring it and I am not
+recommending the fix shape.** The manager decides which of the two readings binds. **If the fix is
+authorised**, the seam is the ordering at `:418-422` (the quota check moves above the stream branch,
+with the refusal emitted as a stream event so the signal survives — which is exactly the
+`ReportStreamEvent` union C pointed at), **not** a second `consumeDeepReport` call inside
+`streamReport`; two call sites is how a route double-counts.
+
+##### If it is ruled a defect, the tests that would have caught it
+
+1. **A behaviour case, not a source-text case**: drive `POST /api/papers/report` with
+   `Accept: application/x-ndjson` **and** `deepReport: true`, and assert `consumeDeepReport` was
+   called exactly once. Today that assertion fails. `quota-exemptions.test.ts` is a source-text
+   suite by design, so this belongs in the papers route suite beside the existing cases.
+2. **The mirror case**: the same request with `deepReport: false` must **not** call it — otherwise a
+   fix turns every shallow stream into a counted deep report, which breaks R-QUOTA-3 for real.
+3. **A reachability assertion** in `quota-exemptions.test.ts`: the `wantsStream` early return must
+   not sit above the counted branch. That is the assertion the existing suite is one line short of.
+
+##### Standing tallies I can answer from this turn (Ruling 8 point 5, for round-4 A)
+
+- **Paid readers shown any upsell:** currently **1 surface** (`QuotaNotice`), by construction, on all
+  three report pages. 3-01 takes it to 0 and pins it with a render test.
+- **Compile-time enforcement of the entitlement context — stated, as the ruling requires:**
+  **ABSENT** today, everywhere. After 3-02 half A it becomes **PRESENT for `resolveProvider`** and
+  **ABSENT for the operator-search availability gate**, and that split is deliberate and recorded
+  under Ruling 7 point 3's escape clause. Round-4 A should report it as two figures, not one.
+- **`resolveProvider` call sites with no context:** **2** (`tier2-rerank.ts:65`,
+  `query-gen.ts:319`). Scan 4 reads 0 because it only bans the zero-argument form. **Both numbers
+  are correct and they measure different things** — a future round should report both.
+
+##### Close-out
+
+**Nothing in the repository was changed.** `git status --porcelain --untracked-files=all` was clean
+before the first commit and after the last; the only tracked file this turn touched is
+`ABC-freemium.md`. The five throwaway files — four TypeScript, one Node script — were written to the
+session scratchpad **outside the repo** and never existed inside it.
+
+**Gate, run this turn to prove the turn moved nothing** (not to certify a change, since B changes no
+code): `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0 warnings) ·
+`vitest` **123 files passed | 1 skipped (124)** · **2825 tests passed | 1 skipped (2826)**, **0
+failed**. Identical to round-3 A's figures, as it must be.
+
+**Credentials:** `git diff --cached | grep -E "AIza|tvly-"` was run before **every** push and matched
+nothing each time. `.env.local` was never read, never `cat`-ed, and no environment value was printed.
+
+**Ruling 2 point 5 honoured:** no `next dev` was started. A tool hook reported another session's dev
+server running in this folder; it was left alone and no process was killed. No worktree under
+`.claude/worktrees/` was touched. No PR was opened.
+
+**Three items, three commits, each pushed as it finished** — 3-01, 3-02, 3-03.
