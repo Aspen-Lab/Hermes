@@ -8610,3 +8610,128 @@ uncommitted work is in the tree.**
 
 **Handing to A** with `WHOSE TURN: A` and `ROUND: 3` left as the manager opens round 4. The lock is
 released.
+
+---
+
+### Round 4 — Agent A
+
+**Turn opened 2026-09-05T02:58Z.** Lock claimed on a clean tree at `96fde89`; branch
+`freemium-system-key` confirmed by `git branch --show-current`. Measured under Ruling 5 point 1's
+**two numbers**, Ruling 8, Ruling 9 and Ruling 10. **Nothing in this turn changed production code.**
+Six throwaway measurement files were created under `web/src/zz-round4/` (plus one `.ts` compile
+probe) and all were deleted before the final commit; every plant into a production file was
+restored from a scratchpad backup and the restore asserted by an **empty `git diff`**, per Ruling 10
+point 2.
+
+**Said once, as §0c requires: nothing in this loop can reach a real Supabase table.** Counted, never
+printed: `grep -c "^GOOGLE_API_KEY=." web/.env.local` -> **0** · `grep -c "^TAVILY_API_KEY=."` ->
+**0** · `NEXT_PUBLIC_SUPABASE_URL` -> **0** · `SUPABASE_SERVICE_ROLE_KEY` -> **0**. So every
+live-model half is `BLOCKED: no key` and every "Supabase" reading below is a stub inside the test
+process. `.env.local` was never `cat`-ed and no environment value was printed anywhere this turn.
+
+#### Part 1 — fixture checklist (all 31 R-* items) and the blocked-halves table
+
+**Exclusions: none.** Denominator 31, unchanged since round 1.
+
+**R-SEC — no unauthenticated or unentitled spend**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-SEC-1 | **MET** | `GET /api/figure` driven through the real handler in a deployed runtime, all five personas: `anonymous` -> **401 · 0 outgoing fetches · 0 `resolveProvider` calls**; the four signed-in personas -> 200. **New this round:** the hole 1-07 left is closed *by the compiler*. A hand-made `{ userId: null, byok: false }` figure context — which satisfied the old required shape and compiled — is now `error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type 'FigureMatchContext'`. I proved that by writing the offending literal into a throwaway `.ts` file, planting it (removing the `@ts-expect-error`) and reading the compiler's own message. |
+| R-SEC-2 | **MET** — was PARTIAL in round 3 | **Ruling 7 point 3's branded entitlement context has landed and I scored it by behaviour, not by the commit.** Five bad shapes, each planted into a throwaway `.ts` file and each read back from `tsc` by name: (1) a **plain object shaped exactly like the context** — `resolveProvider(null, { userId: "u1", byok: false, path: "probe" })` -> `TS2345: Argument of type '{ userId: string; byok: false; path: string; }' is not assignable to parameter of type 'ProviderContext'`; (2) the context **omitted** -> `TS2554: Expected 2 arguments, but got 1`; (3) the **zero-argument** form scan 4 greps for -> `TS2554: Expected 2 arguments, but got 0`; (4) an **invented** `SpendJustification` kind -> `TS2322: Type '"because-i-said-so"' is not assignable to type '"byok-only-never-operator-funded"'`; (5) the pre-3-02 figure context -> `TS2353`. A **sixth** probe carrying a real `SpendJustification` compiles, so the five failures are the brand working rather than the file being broken. **This is the difference between round 3 and round 4:** an unguarded caller was a grep miss and is now a compile error. Behaviour is unchanged and re-measured: nine routes call `requireEntitledAiRequest` before any provider, and `anonymous` records `providers=0` on all nine. |
+| R-SEC-3 | **MET** | An `anonymous` `POST /api/jobs/feed` carrying **both** `aiTier: 2` **and** `searchConnectors.tavily` with a key, deployed runtime, operator credentials armed: **200 · 0 operator requests · 0 `resolveProvider` calls · 2 fetches on the key the caller supplied themselves.** The body cannot buy anything of the operator's. |
+| R-SEC-4 | **MET** | `api/jobs/dispatch-digests/route.ts` carries the `R-SEC-4 · D9` comment and passes `aiTier: 0`; it passes **no** `systemSearchAllowed` and `resolveSystemSearchKeys` defaults that flag `false`. It is also the **only** one of the twelve unguarded API routes with any spend-path marker at all — I grepped all twelve for `resolveProvider`, `resolveSystemSearchKeys`, the three pipelines, `systemSearchAllowed`, `createGeminiApiProvider` and `TAVILY_API_KEY`; eleven scored **0** and this one scored 3, all inside the cron's own no-LLM wiring. |
+
+**R-METER — every operator-funded call is recorded**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-METER-1 | **MET (mechanism)** · `BLOCKED (live)` | Measured with my own recorder on the wrapper (`meterProvider`), not read off C's assertions. A provider request that logs nothing itself -> **exactly 1 row**: `{user_id, kind:"llm", path, provider, model, latency_ms, ok:true, byok:false}`. A request that **throws** -> **exactly 1 row, `ok:false`**, and the error still propagates. No key-shaped value in either row (searched for both vendors' prefixes). `BLOCKED: no key` — `createGeminiApiProvider` has never run against a real key. `BLOCKED: migrations unapplied` — no row has ever reached a real `usage_events` table. |
+| R-METER-2 | **MET (mechanism)** · `BLOCKED (live)` | Measured through the real feed routes with **all four** operator search providers armed at once. `trial` and `paid` on jobs and on events each wrote **exactly one** `kind: "search"` row carrying `provider: "vertex"` — the provider's own name. `anonymous`, `free-no-key` and `free-byok-tavily` wrote **0** search rows on **every one of the nine routes**. `BLOCKED: migrations unapplied`. |
+| R-METER-3 | **MET (mechanism)** · `BLOCKED (live)` | The shared store is the one in play: with the Supabase env pair present the counter RPC (`increment_usage_counter`) fires and the profile route's non-incrementing `usage_counters` **read** answers from the same store; with the pair absent, 0 RPCs and the in-memory store answers. **A finding from my own fixture, recorded because it is the strongest evidence the store is real:** my first admin stub had no `rpc`, the counter threw, and the 500/day search breaker **failed closed** — `trial` and `paid` made **zero** operator searches. A breaker that fails closed on an unreachable counter is D4's stated direction, and I met it by accident. |
+| R-METER-4 | **MET** | Selection is the **env pair**, exercised both ways: pair present -> the Supabase store (RPCs observed); pair absent -> the labelled in-memory store. Never `NODE_ENV`. |
+
+**R-ENT — entitlement is a server concept**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-ENT-1 | **`BLOCKED: owner action`** | Unchanged and not moved. The file half is done; the trigger has never run and cannot run from here — `web/.env.local` carries neither Supabase variable, so no migration in this repo has ever been applied. Neither MET nor NOT MET; it holds the gate open on its own. |
+| R-ENT-2 | **MET** · `BLOCKED (live)` | Re-measured, not inherited. `GET /api/profile` before and after a **really consumed** report on `POST /api/jobs/report`: `free` **5 -> 4**, `trial` **20 -> 19**. The number moves. `deepReportsBudget` is absent from every payload I parsed (`Object.hasOwn`, not a type read). Store unreachable -> `{ unlimited: false, deepReportsRemaining: null, reason: "unavailable" }`, measured by making the counter **read** reject, not only the increment. |
+| R-ENT-3 | **MET** | `paid` parses to exactly `{ unlimited: true, deepReportsRemaining: null }` with **no `reason` key present** (`Object.hasOwn` -> false), and the serialised text contains no `Infinity`. Scan 2 (browser-shipped `NODE_ENV` dev tests) = **0**, re-grepped and each survivor re-read in context. |
+| R-ENT-4 | **MET** | `anonymous`, deployed runtime, operator credentials armed: three feeds **200 at tier 0 with 0 operator requests and 0 providers**; digest, all three reports, figure and profile **401**. |
+| R-ENT-5 | **MET** | Six probes. Local dev with the variable **unset** -> `free`, `dev-local`, `systemSearchAllowed: false` (Ruling 3 point 2). `free`/`trial`/`paid` -> the matching plan, with `trial` carrying a live 14-day `trialEndsAt` and both `trial` and `paid` carrying `systemSearchAllowed: true`. **A typo (`PAIDD`) resolves to `free`** — ignored, never defaulted, which is the property that stops a misspelling granting paid. And a **deployed** runtime with `PEER_DEV_ENTITLEMENT=paid` and a signed-in **free** user -> `effectivePlan: "free"`, `systemSearchAllowed: false`, `source: "supabase"`: the override is ignored in a deployment by execution, not only by the build guard. |
+
+**R-POOL — weekly cadence**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-POOL-1 | **MET** | `pool-cache.test.ts` run this turn, green: papers stay on a **daily** key while jobs and events go **weekly**; two days in one ISO week share a key; the key changes across a Monday boundary; the v5 shape is gone. |
+| R-POOL-2 | **MET** | C's jobs/feed suite run this turn: a **free** user's forced rebuild is refused, still answers **200**, and charges **0**; a **paid** user's granted refresh charges **exactly one more**. The body may ask; only the entitlement grants. |
+| R-POOL-3 | **MET** | `free-no-key` on jobs and events with every operator credential armed: **200 · 0 operator requests · 0 search rows**, structured sources served. Same for `anonymous`. |
+
+**R-KEY — the system keys**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-KEY-1 | **MET (mechanism)** · `BLOCKED (live)` | `registry.test.ts` run this turn, green: the system key wins in production over every other operator credential; `GOOGLE_VERTEX_PROJECT` never outranks it; a Vercel preview is not local development; the local Vertex path stays behind an explicit opt-in; no key -> `null`; a usable BYOK override beats the system key and an unusable one falls through. `BLOCKED: no key`. |
+| R-KEY-2 | **MET** | Per persona in a deployed runtime: `anonymous` -> **0** providers constructed on all nine routes; `free-no-key`, `free-byok-tavily`, `trial`, `paid` -> a provider resolved on every AI route. D1 holds — free gets Peer's model. |
+| R-KEY-3 | **MET** | Measured **twice**, in two armings, because the arming is the whole point. (a) **Tavily alone armed:** `trial` and `paid` send the operator's key **2×** on jobs and **7×** on events; `anonymous`, `free-no-key` and `free-byok-tavily` send it **0×** on both. (b) **All four armed** (Tavily, Brave, Vertex project/location, the three `GOOGLE_VERTEX_SEARCH_*` names): `trial` and `paid` write **one** `kind:"search"` row naming `provider: "vertex"` on jobs and on events; everyone else writes **none**. **Reading note for whoever measures next, because it cost me an hour:** with Vertex armed it *outranks* Tavily by the documented order, and a Vertex search does not carry the Tavily key string — so counting the key string alone reports a false **0** for `trial` and `paid`. The honest count with all four armed is the **usage row**, not the key string. |
+| R-KEY-4 | **MET** | The `"default"` option reads "Peer's AI (included)"; the "Tier 0 — no AI API" option is gone; `welcome/completeness.ts` reads `aiAvailability(...) !== "none"`. |
+
+**R-QUOTA — counting deep reports**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-QUOTA-1 | **MET** — was PARTIAL on papers by Ruling 9 | Scored on the **streamed** shape this time, which is what Ruling 9 point 1 requires. All three report routes with the counter store forced to fail: **200** each, `"unavailable"` in the payload, **exactly 1** `[quota] store unavailable` error line, **0** `usage_events` rows. Real exhaustion on the same three: `"exhausted"`, **0** unavailable lines. And the UI half rendered by me: `exhausted` -> the sentence **plus** the prompt for free and trial; `unavailable` -> the outage copy and **no** prompt on **every** plan; no signal -> the empty string. |
+| R-QUOTA-2 | **MET (mechanism)** · `BLOCKED (live)` | A `paid` reader past 200/day on the real streamed route: the refusal carries `{"kind":"breaker","reason":"exhausted","remaining":0,"resetsAt":"<end of UTC day>"}`, **0** `[quota] store unavailable` lines. An outage on the same path writes the line and **no** row (Ruling 6 point 1). The 500/day search breaker is charged for all four providers. `BLOCKED: migrations unapplied`. |
+| R-QUOTA-3 | **MET** — was PARTIAL on papers by Ruling 9 | **Scored by driving the streamed request shape, per the brief.** A streamed `deepReport: true` request increments **exactly one** deep-report key (`deep:<user>:2026-09`); a **shallow** streamed request increments **zero**. Both transports count once and only once: NDJSON header -> 1, `body.stream: true` without the header -> 1, plain JSON -> 1. Never 2. The exemption that survives is the depth, exactly as Ruling 9 point 1 ruled. |
+
+**R-UI — what the user sees**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-UI-1 | **MET** | Scan 1 = **0 rendered.** 66 non-test lines -> **4** after dropping comment-leading lines, and I read all four in their surrounding source rather than by line number: two `/* */` and `{/* */}` comment blocks in `app/jobs/[id]/page.tsx`, one `{/* */}` JSX comment in `app/page.tsx`, and one server `console.warn` in `lib/feed/tier2-rerank.ts`. **The rerank hit moved `:135` -> `:155` because 3-02 inserted the justification block above it — the same `console.warn`, not a new occurrence.** |
+| R-UI-2 | **MET** | The "Tier 0 — no AI API" option is gone; the default option reads "Peer's AI (included)"; the "use my own key" providers remain. |
+| R-UI-3 | **MET** — was PARTIAL, and this is round 3's headline fix | **Rendered by me, all six states, with the clock held 30 minutes before the UTC day rolls over so the breaker's own `endOfUtcDay(now)` reset is genuinely under a day.** A **paid** reader at the 200/day breaker renders exactly: heading `Deep reports`, sentence *"Peer is at today's limit for deep reports. **Resets in 1 hour.**"*, and **nothing else** — no "Pro", no "own key", no `<a>`, no `href`, and no `Resets in N day(s)` anywhere in the markup. A **trial** reader at the identical signal keeps *"Peer Pro lifts the monthly limit. Add your own key to keep going now."* with the `/settings` link — the trap B named. A **free** reader exhausted keeps the sentence plus the prompt. `unavailable` keeps the outage copy and **no** prompt on all three plans. No signal renders the empty string on all three plans. And a **paid** reader on the *monthly* path is not upsold either, so the property is keyed on the plan rather than on which cap tripped. **The heading did not move**: a paid reader is not retitled into "Deep reports unavailable". |
+| R-UI-4 | **MET** | Both report/digest cache keys carry an AI-mode segment and the `"tier0"` literal is gone; the quota signal is held in separate state on all three pages and never enters a cached object. |
+
+**R-GUARD — the build refuses to ship the wrong shape**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-GUARD-1 | **MET** | The real script run as a child process on a synthetic Vercel build, three ways. With the four required names set **plus an invented `GOOGLE_VERTEX_ZZZ=invented-value`**: **exit 1**, `Remove these operator-funded AI settings from Vercel: GOOGLE_VERTEX_ZZZ.` The identical run without that variable: **exit 0**. With `GOOGLE_API_KEY` removed: **exit 1**, `Missing required settings: GOOGLE_API_KEY.` The ban is on the `GOOGLE_VERTEX_` family by prefix, not on a hand-maintained subset. |
+| R-GUARD-2 | **MET** | Observed in my own run: the failure named the variable `GOOGLE_VERTEX_ZZZ` and never printed its value `invented-value`. |
+
+**R-TEST — the gate**
+
+| Item | Score | Evidence (behaviour) |
+|---|---|---|
+| R-TEST-1 | **MET** | Every suite the requirement names exists and I ran it rather than listing it: entitlement resolution, quota increment/exhaustion, breaker trip, figure-route auth, the guard script as a child process, and the weekly pool key. Two scans ship as gates (`ui-vocabulary`, `no-client-dev-flags`), three more in `spend-scans.test.ts`, and 3-03 added a **reachability** suite that drives the NDJSON shape the app actually sends. |
+| R-TEST-2 | **MET** | Gate green cold, figures verbatim in Part 3. `deep-report-quota.test.ts`'s fixed `NOW` is now a full day further in the past than in round 3 and all its cases still pass. |
+
+**Part 1 tally:** 31 items · **30 MET** · **0 PARTIAL** · **0 NOT MET** · **1 BLOCKED with no
+code-side score** (R-ENT-1). **Exclusions: none.**
+
+##### The blocked-halves table — every half this loop cannot observe, by name
+
+Unchanged from round 3: **seven items carry a blocked half; one of them (R-ENT-1) is blocked
+outright.** None is a defect; each is a question nobody in this loop can answer, and each holds the
+gate open on its own.
+
+| Item | The exact thing that cannot be observed | Blocked by |
+|---|---|---|
+| **R-ENT-1** | `handle_new_user` has never fired, so **no trial row has ever been written by the trigger**; and the column-level `revoke update (plan, trial_started_at, trial_ends_at, plan_updated_at)` has never been tested **against a real profile sync** | migrations unapplied · owner action |
+| **R-ENT-2** | **trial expiry from a trigger-written row.** Expiry-at-read-time is verified against a *stubbed* `trial_ends_at`; a real `now() + interval '14 days'` written by the trigger has never been read back | migrations unapplied |
+| **R-METER-1** | **`createGeminiApiProvider` on a real key** — token counts, latency and `ok` on a real response are unverified. Separately: **no `usage_events` row has ever reached a real table** | no key · migrations unapplied |
+| **R-METER-2** | the search row's **persistence** — every row I observed was caught by a recorder inside the test process | migrations unapplied |
+| **R-METER-3** | **the RPC's `on conflict do update` has never executed.** Whether it adds rather than overwrites, under two concurrent instances, is the whole point of R-METER-3 and is unobservable here | migrations unapplied |
+| **R-KEY-1** | that the resolved system provider **bills correctly against a real `GOOGLE_API_KEY`** | no key |
+| **R-QUOTA-2** | the breaker's counter against **real Supabase**: whether 200/day and 500/day hold when the counter is shared across instances rather than held in one process | migrations unapplied |
+
+**One further question that is not any item's blocked half, kept on the list so it is not lost:**
+does the ISO-week pool key hold on a server whose timezone is not UTC? Asserted across stubbed
+zones; a real deploy is the only place Vercel's clock and this machine's meet.
+
+**Where I looked before calling any of these unmeasurable:** `web/.env.local` by `grep -c` only,
+four names, all **0**; `web/supabase/migrations/`; and `vitest.setup.ts`, which deletes both
+spendable keys before every suite and every test.
