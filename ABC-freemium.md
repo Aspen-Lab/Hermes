@@ -118,140 +118,125 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          A-round4 @ 2026-09-05T02:58Z
+HELD BY:          free
 ROUND:            4
-WHOSE TURN:       A
-STOPPED BECAUSE:  finished the turn @ 2026-09-05T02:53Z
-STATUS:           ROUND 4 — A MEASURES. The manager accepted round-3 C after an independent
-                  cold gate run (identical figures) and a read of the streamed reachability
-                  suite (Ruling 10, §1k). Round-3 C's own summary follows.
-                  ROUND 3 — **C HAS WORKED THE WHOLE GUIDE. All three items landed, 3-01 /
-                  3-02 / 3-03, one commit each, each pushed as it finished; no deviation
-                  from the ordering; tree clean throughout and every throwaway written
-                  outside the repo.**
-                  1. **3-01 — the paid upsell. CLOSED.** Built as Ruling 9 point 4 ratified:
-                     option (a), the plan from the client entitlement summary, one required
-                     prop at three call sites, zero server work. **All three of B's defects
-                     fixed, not just the one A reported** — the upsell is now
-                     `exhausted && effectivePlan !== "paid"`, the heading keeps its own
-                     boolean so a paid reader is not retitled into an outage, and the reset
-                     formatter says **hours under a day**. B's execution result confirmed:
-                     the old formatter said "Resets in 1 day" on **every** breaker trip,
-                     including one 30 minutes away. `QuotaSignal` untouched, so R-QUOTA-2's
-                     payload is byte-identical. Predicate is `!== "paid"`, so **trial readers
-                     keep the prompt** — the trap B named, with a dedicated test.
-                  2. **3-02 — the branded entitlement context. HALF A CLOSED, half B not
-                     built (correct outcome, Ruling 9 point 5).** New
-                     `lib/security/entitled-context.ts`; `resolveProvider`'s second argument
-                     is **required and branded**. All ten call sites threaded; the two
-                     contextless pool closures carry a compile-checked
-                     `SpendJustification` naming the tier ceiling that guards them. **No
-                     request type widened, no pipeline signature changed, the cron
-                     untouched.** Two changes beyond B's design, both traced: the mint takes
-                     the **`Entitlement` itself** (a factory anyone can call with a made-up
-                     string proves less than it looks), and `FigureMatchContext` carries the
-                     entitlement too — which **closes a hole 1-07 left open**, since
-                     `{ userId: null, byok: false }` satisfied the old required shape and
-                     compiled. **Behaviour moved zero bytes**, as B predicted.
-                  3. **3-03 — the streaming quota bypass. CLOSED, fix then tests.** The
-                     counter moved above the transport branch; **one** `consumeDeepReport`
-                     call site; the refusal travels as a new `ReportStreamEvent` carrying
-                     `quota`, emitted **before** the `mode` event — the only ordering that
-                     works, because the client returns early on `tier0`. Three wrong comments
-                     corrected. **Seven reachability tests** drive the route with the NDJSON
-                     header the app actually sends and watch the counter itself.
-GATE THIS TURN:   Final cold run after the last item: `tsc` exit **0** · `eslint` **1 error**
-                  (the standing `quiz.tsx:46`, 0 warnings) · `vitest` **124 files passed | 1
-                  skipped (125)** · **2859 tests passed | 1 skipped (2860)**, **0 failed**,
-                  9.43 s. Cold baseline before the first edit was **123/124 files, 2825/2826
-                  tests** — identical to round-3 A's and B's, so the turn started on the
-                  measured baseline. **+34 tests, +1 file, 0 regressions, 0 tests deleted.**
-                  `benchmark.test.ts` is still the one skip and did not flake.
-REVERT PROOFS (§2 Agent C — every new test proved against its own fix):
-                  - 3-01 component upsell gate reverted → **2 failed**; formatter reverted →
-                    **7 failed**.
-                  - 3-02 signature weakened to the pre-item optional form → `tsc` **5
-                    errors, three of them TS2578 "unused @ts-expect-error"** — the directives
-                    fail *because the errors stopped happening*.
-                  - 3-02 scan 6 proved by **planting** each offender: optional context → 2
-                    failed; escape hatch in production → 1 failed; cast to the brand → 2
-                    failed.
-                  - 3-03 ordering reverted to pre-fix → **7 failed** (six of the seven new
-                    cases plus the rewritten source assertion). The shallow-exemption case
-                    correctly still passed.
-TWO PROCESS DEFECTS C HIT IN ITS OWN WORK, both recorded because they falsify evidence rather
-                  than break a build:
-                  1. **A revert proof that silently did not apply.** A scripted multi-line
-                     replacement no-op'd on a **CRLF** mismatch and the suite printed "2
-                     passed" against the *unmodified* file. **Always assert the substitution
-                     happened; never read a green run as proof the revert landed.** The same
-                     family bit a source assertion in 3-03 (`toContain` across a `\n` on a
-                     CRLF file, which can never match — now a whitespace-tolerant regex).
-                  2. **A scan that passed while testing nothing.** Scan 6's word-boundary
-                     anchors were written into the file as literal **backspace characters
-                     (0x08)** by a generation script; the suite went green and the first
-                     alternation branch could never match. Found by dumping the bytes.
-                     **A guard that passes is not a guard that works** — the plant-and-rerun
-                     table in §4 exists because of this, and every future scan should be
-                     proved by planting an offender.
-                  **A third, for whoever writes route tests next:** `PEER_DEV_ENTITLEMENT=paid`
-                  **does nothing on its own in a route test.** `isLocalDevRuntime()` is
-                  deliberately false under `NODE_ENV=test`, so the default is the
-                  no-sign-in branch — user `local-no-auth`, plan **free**, budget 5 — and the
-                  dev override is only read on the local-development branch. A paid case must
-                  stub `NODE_ENV=development` with `VERCEL`/`VERCEL_ENV` cleared, which also
-                  changes the user id to `dev-local`. A test that believes it is exercising a
-                  paid reader and is not **passes for the wrong reason**; only asserting the
-                  exact counter key caught it.
-PRIOR STATUS (round-3 A's measurement, kept because it is A's number and C does not measure):
-                  code-side **6.5% (2/31)** · **blocked 7**. That number predates all three
-                  items above. Round-4 A should expect the two named code-side differences
-                  (R-UI-3, R-SEC-2) to be closed on the code side, and 3-03 — which A never
-                  scored, since B found it after A's turn — to be closed too. **Read the
-                  number below as "A's last measurement", not as "what is left".**
-LAST DIFFERENCE:  **6.5% code-side (2/31, exclusions: none)** — R-SEC-2, R-UI-3 · **blocked: 7
-                  — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2.**
-                  NOT re-measured this turn — measuring is A's job.
-GATE (0% unexplained, both measurements):  NOT MET — awaiting round-4 A's re-measurement, and
-           seven items carry a blocked half that cannot close without the owner even if the
-           code side is now 0.
-
+WHOSE TURN:       manager — independent re-measure
+STOPPED BECAUSE:  finished the turn @ 2026-09-05T03:32Z
+STATUS:           ROUND 4 — **A HAS MEASURED. CODE-SIDE IS 0%.** Three parts, one commit each,
+                  each pushed as it finished; no production code changed and
+                  `git diff HEAD -- web/` is empty.
+                  **Ruling 10 point 3 fires: A does NOT hand to B. The manager re-measures
+                  independently before anything is told to the owner.**
+                  1. **Round 3's three items are all CLOSED, verified by behaviour and each
+                     proved by planting the old defect back.** 3-01: a **paid** reader at the
+                     200/day breaker renders the heading `Deep reports`, the sentence *"Peer
+                     is at today's limit for deep reports. Resets in 1 hour."* and **nothing
+                     else** — no "Pro", no "own key", no link; a **trial** reader at the
+                     identical signal keeps the prompt; `unavailable` keeps the outage copy on
+                     every plan; no signal renders the empty string. Reverting the predicate
+                     failed 2 of my cases, forcing the hours branch to 0 failed 2 more, and
+                     both reverts were asserted by an **empty `git diff`**.
+                  2. **3-02: the branded context is enforced by the COMPILER.** Five bad
+                     shapes, five distinct errors, each read back from a planted throwaway
+                     `.ts` probe: a plain object shaped like the context -> **TS2345**; the
+                     context omitted -> **TS2554**; the zero-argument form -> **TS2554**; an
+                     invented `SpendJustification` kind -> **TS2322**; the pre-3-02 figure
+                     context `{ userId: null, byok: false }` -> **TS2353**. A sixth probe
+                     carrying a real justification compiles, so the five failures are the
+                     brand working rather than the probe being broken. Round-3 A's caveat
+                     ("scan 4 is 0 by vigilance, not by construction") is retired.
+                  3. **3-03: the streamed papers quota is CLOSED**, driven on the NDJSON shape
+                     the app actually sends with the counter watched directly. Streamed deep ->
+                     **1** increment; streamed shallow -> **0**; past the cap the stream
+                     carries **`quota` before `mode`**; a paid reader charges the **day** key
+                     and is refused past 200/day with `kind:"breaker"`. Both transports count
+                     once, never twice. Restoring the pre-fix shape failed **5 of 7** cases;
+                     moving the quota event after `mode` failed the **2** ordering cases.
+                  4. **All six scans proved by PLANTING an offender** (Ruling 10 point 4) —
+                     6 of 6, one failure each, then deleted and re-run green.
+                  5. **45 of 45 persona/route pairs**; the cross-cutting fault round-3 A
+                     counted outside the 45 is gone, so there is no number outside it now.
+GATE THIS TURN:   Cold run after every throwaway was deleted: `tsc` exit **0** · `eslint`
+                  **1 error, 0 warnings** (the standing `quiz.tsx:46`) · `vitest` **124 files
+                  passed | 1 skipped (125)** · **2859 tests passed | 1 skipped (2860)**,
+                  **0 failed**, 11.49 s. `src/lib/events/benchmark.test.ts` is the one skip,
+                  named. Identical to round-3 C's figures and the manager's cold re-run.
+A'S OWN FIXTURE FAULTS, recorded because each produced a plausible FALSE reading and two of them
+                  would have been reported as regressions by anyone who stopped at the first
+                  green:
+                  1. **An admin stub with no `rpc`.** The counter store threw, the 500/day
+                     search breaker **failed closed**, and `trial`/`paid` recorded **0**
+                     operator searches — a number that looks like a policy win. (It is also
+                     the only direct evidence this turn that the breaker fails closed on an
+                     unreachable counter, which is D4's stated direction.)
+                  2. **One shared `Response` from a `fetch` stub.** A body reads once, so every
+                     call after the first silently failed.
+                  3. **A table-blind admin stub.** `GET /api/profile` reads `usage_counters`
+                     without incrementing (Ruling 7 point 1); a stub answering every table with
+                     the *plan* row made the remainder appear frozen — round 2's difference 2
+                     apparently regressed. It had not.
+                  **For whoever writes route fixtures next: a stubbed admin client needs `rpc`
+                  AND a table-aware `from`, or one missing method produces three separate false
+                  regressions.** Also live: the **CRLF** trap (Ruling 10 point 2c) — a
+                  multi-line plant literal with `\n` separators matched **0** times; the count
+                  assertion caught it and a whitespace-tolerant regex matched 1.
+LAST DIFFERENCE:  **0.0% code-side (0/31, exclusions: none)** — no differences; the list is
+                  empty · **blocked: 7 — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3,
+                  R-KEY-1, R-QUOTA-2.**
+GATE (0% unexplained, both measurements):  **NOT MET — and the code side is no longer why.**
+           Code-side is 0% and the difference list is empty; seven items carry a blocked half
+           that only the owner can close. `GATE: MET` needs both at zero.
 DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 28 ITEMS.
            Round 2 A: all three parts. Round 2 B: all six items plus one issued correction
            and a close-out; no code changed.
            Round 2 C: ALL SEVEN ITEMS, 2-01 … 2-07, one commit each, each pushed.
-           **Round 3 A: all three parts**, one commit each, each pushed; no code changed.
-           **Round 3 B: all three items**, the fix guide plus Ruling 9's question; no code
-           changed.
-           **Round 3 C: ALL THREE ITEMS, 3-01 / 3-02 / 3-03**, one commit each, each pushed;
-           every new test proved by reverting; no test deleted; no migration.
+           Round 3 A: all three parts. Round 3 B: all three items. Round 3 C: ALL THREE
+           ITEMS, 3-01 / 3-02 / 3-03, every new test proved by reverting.
+           **Round 4 A: all three parts**, one commit each, each pushed; no code changed;
+           every throwaway deleted and every plant restored with an asserted empty diff.
 GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0 warnings**) ·
            vitest **124 files passed | 1 skipped (125)** · **2859 tests passed | 1 skipped
-           (2860)**, **0 failed**, 9.43 s.
-TODO:      ROUND-4 A MEASURES under Rulings 5/7/8/9/10: score every R-* item against behaviour
-           (both numbers; blocked halves by name — expect the same seven); verify round-3's
-           three items closed by behaviour (paid breaker renders no upsell; a plain-object
-           context is a compile error; a streamed deep papers report increments the counter
-           and charges the breaker, the shallow one does not); every standing tally by name
-           (Ruling 9 point 6 + Ruling 10 point 4). If code-side is 0%: say so plainly, set
-           `WHOSE TURN: manager — independent re-measure`, and stop.
+           (2860)**, **0 failed**, 11.49 s.
+TODO:      **MANAGER — RE-MEASURE A's NUMBER INDEPENDENTLY** (Ruling 7 point 4, Ruling 8
+           point 4, Ruling 10 point 3; SKILL: never close alone). Re-run the gate cold; re-score
+           the three round-3 closures yourself rather than reading A's tables — the cheapest
+           independent checks are (a) write a throwaway `.ts` that passes a plain object to
+           `resolveProvider` and confirm `tsc` refuses it, (b) render `QuotaNotice` with a paid
+           breaker signal and confirm no link and no "Pro", (c) drive `POST /api/papers/report`
+           with `Accept: application/x-ndjson` and `deepReport: true` and watch the counter
+           move. Then record both numbers and **tell the owner the code side is closed**, with
+           the blocked list by name and the two actions that clear it. There is nothing for B
+           or C to do: the difference list is empty. **The loop now waits on the owner** — the
+           resume clock stands down on `blocked: needs the owner` ticks and re-engages when
+           `PENDING USER ACTION` is cleared by the owner's word in chat.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
            works — the column-level revoke has never met a real profile sync. (4) The Vercel
            do-not-yet on TAVILY_API_KEY is LIFTED (Ruling 5 point 7): the four variables may
            be set. (5) Local .env.local keys whenever ready — `GOOGLE_API_KEY` and
-           `TAVILY_API_KEY` are both absent. **The two causes split the seven items
-           unevenly:** the keys alone unblock R-KEY-1 and half of R-METER-1; the three
-           migrations are what the other six need (R-ENT-1, R-ENT-2, R-METER-1's persistence
-           half, R-METER-2, R-METER-3, R-QUOTA-2). **Applying the migrations is the larger of
-           the two owner actions.** (6) Confirm ADZUNA_APP_ID/APP_KEY, JSEARCH_API_KEY and
-           USAJOBS_API_KEY are set on Vercel if the free jobs surface is meant to have them —
-           nobody in the loop can see the Vercel env. **(7) THE BLOCKED LIST IS NOW THE LARGER
-           HALF OF THE GATE:** seven named items, two causes, both owner actions. No agent can
-           close any of them. **After round-4 A confirms 0% code-side, the owner's two actions
-           are the ONLY thing between this branch and the gate.**
-OPEN FOR MANAGER:  none — round 3 closed by Ruling 10; nothing pending from C.
+           `TAVILY_API_KEY` are both absent (`grep -c` says 0 for each, this turn). **The two
+           causes split the seven items unevenly:** the keys alone unblock R-KEY-1 and half of
+           R-METER-1; the three migrations are what the other six need (R-ENT-1, R-ENT-2,
+           R-METER-1's persistence half, R-METER-2, R-METER-3, R-QUOTA-2). **Applying the
+           migrations is the larger of the two owner actions.** (6) Confirm ADZUNA_APP_ID/
+           APP_KEY, JSEARCH_API_KEY and USAJOBS_API_KEY are set on Vercel if the free jobs
+           surface is meant to have them — nobody in the loop can see the Vercel env.
+           **(7) THE BLOCKED LIST IS NOW THE WHOLE GATE.** Code-side is 0%. Seven named items,
+           two causes, both owner actions. No agent can close any of them.
+OPEN FOR MANAGER:  **One item, and it moves neither number.** `POLICY — manager decides`:
+           **on the papers surface a refused deep report degrades to the SHALLOW report, which
+           still calls the model** (measured: the refused stream emits `mode: tier1`, not
+           `tier0`), whereas D4 calls the 200/day breaker a "hard circuit breaker" that
+           "degrades to the existing no-LLM path" and R-QUOTA-1 says "the existing degraded
+           (no-LLM) payload". Jobs and events differ — their refusal returns
+           `{ enrichment: null, noLlm: true }` with **zero** model calls. This is **round-1 B's
+           written design, ratified and unchanged** ("the shallow report on papers, the no-LLM
+           object on the other two"), it is consistent across both transports, and it matches
+           D4's other sentence putting shallow reads in the "unlimited for everyone (metered,
+           never capped)" group. A is raising the **wording**, not recommending a reversal
+           (§2). Decide whether it is a spec amendment, an accepted cost to write down, or
+           nothing.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -265,6 +250,7 @@ part-way; a released lock looks identical in both cases.
 | 1 (A) | 93.5% (29/31, exclusions: none) | NOT MET — BYOK-only build; unauthenticated operator-key spend confirmed live on all three feed routes; no entitlement exists |
 | 2 (A) | 19.4% (6/31, exclusions: none) | NOT MET — all 20 round-1 differences closed, all five scans 0, operator-key searches 0 for `anonymous` and `free-no-key` on both surfaces (the Vercel do-not-yet is lifted), `local-no-auth` ABSENT from every deployed runtime. Seven differences remain: three wrong-data (quota outage reads as exhaustion · `deepReportsRemaining` is a budget · a paid reader gets `null`), a red gate (three daily-window quota tests aged out at UTC midnight — deterministic, a fixture not a regression), Vertex/grounding search ungated by entitlement (0 reachability in a deployment), `GOOGLE_VERTEX_*` banned as 4 names not a prefix, and Brave outranking the system Tavily key. Four questions still BLOCKED: no key, migrations unapplied |
 | 3 (A) | **code-side 6.5% (2/31, exclusions: none)** · **blocked 7** — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2 | NOT MET — all seven round-2 differences CLOSED by behaviour; gate green with the quota fixture date unchanged and now a day in the past; personas 45 of 45 (was 41 of 45); all five scans 0, grepped independently and agreeing with C's three new gate tests; the `GOOGLE_VERTEX_` prefix ban proved with an invented `GOOGLE_VERTEX_ZZZ`; all four operator search providers gated, breaker-charged and writing one named usage row; papers 0 on every persona in both runtimes; `local-no-auth` ABSENT (503 ×3). Two differences remain, both NEW: a **paid** reader at the 200/day breaker is shown an upgrade prompt by 2-07's `QuotaNotice` (R-UI-3, the payload is correct and the component is the defect), and Ruling 7 point 3's branded entitlement context has not landed — zero branded/opaque types exist in the tree, so an unguarded caller is still a grep miss rather than a compile error (R-SEC-2). **The blocked count rose 4 -> 7 as accounting, not decay** (Ruling 5 point 8): same two owner-action causes, now enumerated per item by name |
+| **4 (A)** | **code-side 0.0% (0/31, exclusions: none)** · **blocked 7** — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2 | **NOT MET — but the code side is no longer why. The difference list is EMPTY.** Both round-3 differences closed by behaviour and each proved by planting the old defect back: a **paid** reader at the 200/day breaker renders the breaker sentence with **hours** and no upsell of any kind on either the breaker or the monthly path (trial keeps the prompt), and the branded entitlement context is enforced by the **compiler** — five bad shapes, five distinct errors (TS2345 / TS2554 / TS2554 / TS2322 / TS2353), including the `{ userId: null, byok: false }` figure context that used to compile. R-QUOTA-1 and R-QUOTA-3, `PARTIAL` on papers under Ruling 9, are `MET` on the **streamed** shape: streamed deep counts once, streamed shallow counts zero, `quota` precedes `mode`, the paid day-key is charged. Personas 45 of 45 with the cross-cutting fault gone. All five scans 0, grepped independently and agreeing with the gate tests, and **all six proved by planting an offender** (6 of 6, Ruling 10 point 4); `resolveProvider` call sites without a context **0 by construction**; figure matchers reachable with a null-user context **0 by the compiler**; `local-no-auth` ABSENT (503 ×3). **Blocked flat at 7** — two owner actions, three unapplied migrations and no local key, are now the entire gate |
 
 ---
 
@@ -8917,3 +8903,189 @@ is the same spend any shallow reader makes, so no bill is unbounded that was not
 by design — but the words in D4 and the behaviour on papers are not the same words.
 **`POLICY — manager decides`** whether that is a spec wording fix, an accepted cost to write down,
 or nothing at all. It does not move either number.
+
+#### Part 3 — the static scans, the standing tallies, the (empty) difference list, the two numbers
+
+##### The five scans, each reported even at zero — each done twice, and this round each PROVED
+
+The brief says to run the gate tests **and** grep independently and say whether the two agree.
+**They agree, name for name, on all five.** I ran `spend-scans.test.ts`, `ui-vocabulary.test.ts` and
+`no-client-dev-flags.test.ts` (**17 cases, green**) and separately grepped the tree myself.
+
+**Scan 1 — rendered strings matching `Tier 0|Tier 1|Tier 2|BYOK` under `web/src`: 0.**
+66 non-test lines -> **4** after dropping comment-leading lines, and I read all four in surrounding
+source rather than by line number:
+
+| File:line | What it is | Rendered? |
+|---|---|---|
+| `app/jobs/[id]/page.tsx:1347` | inside a `/* … */` comment in an element's attribute list | no |
+| `app/jobs/[id]/page.tsx:1528` | inside a `{/* … */}` JSX comment | no |
+| `app/page.tsx:851` | inside a `{/* … */}` JSX comment | no |
+| `lib/feed/tier2-rerank.ts:155` | `console.warn("[feed/tier2] rerank failed, keeping Tier 1 order:", err)` — a server log | no |
+
+The rerank hit moved `:135` -> `:155` because 3-02 inserted the `SpendJustification` block above it.
+**Same `console.warn`, not a new occurrence** — I compared the surrounding text, not the line number.
+
+**Scan 2 — `NODE_ENV === "development"` in code that ships to the browser: 0.**
+8 grep hits. Four are prose inside comments (`app/papers/[id]/page.tsx:698`, `lib/env/local-dev.ts:12`,
+`lib/feed/ai-tier.ts:28`, `lib/usage/counters.ts:253`). Four are real tests and all four are
+server-only: `app/auth/callback/route.ts:17` (a route handler); `lib/env/local-dev.ts:23`, imported
+by exactly three server modules — `entitlement/resolve.ts`, `llm/providers/registry.ts`,
+`security/ai-request.ts` — and by nothing client-side, re-grepped this turn;
+`lib/opportunities/pool-cache-disk.ts:42` (opens `node:path`); and
+`lib/opportunities/pool-cache-runtime.ts:14`, which chooses between the disk and Supabase pool
+caches and is imported by neither a page nor a component.
+
+**Scan 3 — operator search credentials read outside the single gated resolver: 0.**
+Excluding `*.test.ts` and `src/test-support/`: `process.env.TAVILY_API_KEY` -> 2 hits, both
+`lib/search/system-key.ts:120-121`, both behind `input.systemSearchAllowed &&`;
+`process.env.BRAVE_SEARCH_API_KEY` -> 1 hit, `system-key.ts:114`, behind the same flag;
+`GOOGLE_VERTEX_SEARCH_*` -> inside `lib/sources/vertex-search.ts` only. The two availability helpers
+`isGeminiSearchAvailable` / `isVertexSearchAvailable` are called from `system-key.ts:145-146` — the
+gate — and from their own two modules. **Nothing outside.** `web-search.ts`'s two remaining
+mentions are comments describing what it *used to* do.
+
+**Scan 4 — `resolveProvider()` with no override argument: 0 — and this round, by CONSTRUCTION.**
+Three grep hits, all comment lines (`app/api/figure/route.ts:30`, `lib/figures/match-context.ts:8`,
+`lib/figures/semantic-match.ts:55`). Round-3 A's caveat is retired: `resolveProvider()` with zero
+arguments is now `TS2554: Expected 2 arguments, but got 0`, proved by planting.
+
+**Scan 5 — routes that can spend an operator key without the guard: 0.**
+**Nine** AI routes call `requireEntitledAiRequest`. I also checked the other **twelve** API routes
+for any spend-path marker (`resolveProvider`, `resolveSystemSearchKeys`, the three pipelines,
+`systemSearchAllowed`, `createGeminiApiProvider`, `TAVILY_API_KEY`): **eleven scored 0**, and the
+twelfth is `jobs/dispatch-digests` — the D9 cron exemption, whose three markers are its own hard
+`aiTier: 0` wiring. `digest/test` is the second justified exemption and scores **0 markers** now.
+
+##### Ruling 10 point 4 — guard tests proved by PLANTING: **6 of 6**
+
+C proved scan 6 by planting in round 3. No scan suite carries an inline plant case, so I planted an
+offender against **every** scan myself, in two throwaway files (one `src/zz-round4-offender.tsx`,
+one throwaway route under `src/app/api/`), ran the three suites once, then deleted both and
+re-ran to green (**17 passed**). Each scan failed on **its own** case and no other:
+
+| Scan | Offender planted | Case that fired |
+|---|---|---|
+| 1 | a rendered `Tier 2 … BYOK` paragraph | *has nothing outside the four unrendered exclusions* |
+| 2 | `process.env.NODE_ENV === "development"` in a `"use client"` file | *has no development test outside the allow-list* |
+| 3 | `process.env.TAVILY_API_KEY` read outside the gate | *reads process.env.TAVILY_API_KEY only inside the gate* |
+| 4 | `resolveProvider()` with no arguments | *has no argument-less resolveProvider() call anywhere* |
+| 5 | a new API route reaching a provider with no guard | *leaves no spending route unguarded and unjustified* |
+| 6 | `helper(ctx?: EntitledContext)` | *declares no OPTIONAL entitled or provider context anywhere* |
+
+**Six planted, six caught, one failure each.** A guard that passes is now a guard that has been shown
+to work, on every scan rather than on one.
+
+##### Ruling 10 point 4 — figure matchers reachable with a null-user context: **0, by the compiler**
+
+`const c: FigureMatchContext = { userId: null, byok: false }` is
+`TS2353: Object literal may only specify known properties, and 'userId' does not exist in type
+'FigureMatchContext'`. The context now carries the `Entitlement` itself, and an `Entitlement` can
+only come from `requireEntitledAiRequest` / `resolveEntitlement`. Not a grep result — a compiler
+message, read back from a planted probe.
+
+##### The standing tallies, each reported even at zero
+
+| Tally | Round 1 | Round 2 | Round 3 | **Round 4** |
+|---|---|---|---|---|
+| Scan 1 — rendered tier vocabulary | 22 | 0 | 0 | **0** |
+| Scan 2 — browser-shipped `NODE_ENV` dev tests | 6 | 0 | 0 | **0** |
+| Scan 3 — ungated operator search credential reads | 3 | 0 | 0 | **0** |
+| Scan 4 — no-argument `resolveProvider()` | 2 | 0 | 0 | **0 — now by construction, not vigilance** |
+| Scan 5 — routes that can spend without a guard | 4 | 0 | 0 | **0** |
+| Routes resolving a provider **before** the guard | 7 | 0 | 0 | **0** |
+| Persona/route pairs behaving per spec | 2 of 13 | 41 of 45 | 45 of 45 | **45 of 45** |
+| Operator-key searches, `anonymous`, per surface | jobs 2 · events 7 | jobs 0 · events 0 | jobs 0 · events 0 | **jobs 0 · events 0** (both armings) |
+| Operator-key searches, `free-no-key`, per surface | jobs 2 · events 7 | jobs 0 · events 0 | jobs 0 · events 0 | **jobs 0 · events 0** (both armings) |
+| Papers operator-key searches | 1 | 0 | 0 | **0** on every persona |
+| Anonymous-BYOK feed request | not measured | tier 0 · 0 providers · 0 operator | same + 2 on the caller's own key | **tier 0 · 0 providers · 0 operator · 2 on the caller's own key** |
+| `[quota] store unavailable` occurrences | n/a | 0 (fix not landed) | 1 per outage decision · 0 in production paths | **1 per outage decision** on all three report routes and on `GET /api/profile` · **0** in every production path exercised |
+| `local-no-auth` reachable in a deployed runtime | n/a | ABSENT | ABSENT | **ABSENT — 503 under `VERCEL_ENV=production`, `VERCEL=1` and `NODE_ENV=production`, 0 operator requests in each** |
+| Structured-source key reads outside the gate (accepted, Ruling 6 point 4) | n/a | n/a | 3 | **3** — `jobs/sources/adzuna.ts`, `jsearch.ts`, `usajobs.ts`. (4 raw lines; Adzuna reads two names. The tally counts **sources**, which is what the threshold is about.) |
+| Usage rows per provider request (Ruling 7 point 5) | n/a | n/a | 1 | **1** — never 2, never 0, on both the success and the throw exit |
+| **Paid readers shown any upsell (Ruling 8 point 5)** | n/a | n/a | **3 pages × 1 persona** | **0** — rendered on both the breaker and the monthly path |
+| **Compile-time enforcement of the entitlement context (Ruling 8 point 5)** | n/a | n/a | **ABSENT** | **PRESENT** — five bad shapes, five distinct compiler errors |
+| **Quota/breaker checks reachable on the app's real request shape, per route (Ruling 9 point 3)** | n/a | n/a | not measured | **3 of 3** — `papers/report` on the NDJSON shape **and** on plain JSON **and** on `body.stream`; `jobs/report` and `events/report` on the JSON shape their clients send. Each asserted by watching the **counter**, not the response |
+| **`resolveProvider` call sites without a context (Ruling 9 point 6)** | n/a | n/a | not measured | **0**, enforced by the compiler |
+| **Guard tests proved by planting (Ruling 10 point 4)** | n/a | n/a | 1 of 6 (scan 6, by C) | **6 of 6** |
+| **Figure matchers reachable with a null-user context (Ruling 10 point 4)** | n/a | n/a | reachable | **0, by the compiler** |
+
+**Ruling 6 point 4's threshold is not met:** none of the three structured sources bills per request,
+so none joins the gate. **Owner action stands** — nobody in this loop can see the Vercel environment.
+
+**The three C-recorded fixture pitfalls are not findings** (Ruling 7 point 5, cited because I met
+all three again): a digest body with no papers returns 200 above the guard; `events/report` requires
+`event.name`; the papers shallow builder needs `summaryExperimentKeywords`. I built my fixtures
+around them and re-opened none. **A fourth, which I am adding for whoever writes route fixtures
+next:** a stubbed admin client needs `rpc` **and** a table-aware `from`, or the counter store throws,
+the search breaker fails closed, and the profile remainder appears frozen — three separate false
+regressions from one missing method.
+
+---
+
+#### The numbered difference list
+
+**There are no differences. The list is empty.**
+
+Round 3's two code-side differences are both closed and I verified each by behaviour rather than by
+the commit: R-UI-3's paid upsell is gone from every state I rendered, and R-SEC-2's branded context
+is enforced by the compiler with five distinct error codes. R-QUOTA-1 and R-QUOTA-3, which Ruling 9
+point 1 correctly reduced to `PARTIAL` on the papers surface after round-3 A's turn, are both `MET`
+on the **streamed** shape the app actually sends.
+
+Nothing is carried forward as unresolved. One item is flagged **`POLICY — manager decides`** and it
+does not move either number: **the papers surface's refusal path degrades to a shallow report that
+still calls the model, where D4's wording says "the existing no-LLM path"** (Part 2, last section).
+It is round-1 B's ratified design, unchanged, consistent across both transports, and consistent with
+D4's own "unlimited for everyone" sentence about shallow reads. I am raising the wording, not
+recommending a reversal.
+
+---
+
+#### The two numbers
+
+**Code-side: 0.0% (0 of 31). Exclusions: none.**
+Method: **(NOT MET + PARTIAL) ÷ 31**, the same denominator and the same formula as rounds 1, 2 and 3
+— 0 NOT MET plus 0 PARTIAL over 31 requirements, with `BLOCKED` items carrying no code-side score.
+
+**Blocked: 7, by name — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2.**
+Method: one count per requirement that has a half **nobody in this loop can observe**, each named in
+Part 1's table with the exact unobservable thing and its cause; two causes only, both the owner's —
+**three unapplied migrations** (six items) and **no local `GOOGLE_API_KEY`** (R-KEY-1 and half of
+R-METER-1).
+
+**Trend:** 93.5% -> 19.4% -> 6.5% -> **0.0%** code-side. Blocked: 4 -> 7 -> **7**, unchanged.
+
+##### Reading note
+
+**Nothing on the blocked list is a defect and the count did not move.** Round 3's rise from 4 to 7
+was bookkeeping (Ruling 5 point 8); this round it is flat because no agent can change it. **The code
+side is finished and the blocked half is now the entire gate.** Two owner actions stand between this
+branch and `GATE: MET`: apply the three migrations (unblocks six) and put a `GOOGLE_API_KEY` in
+`.env.local` (unblocks the seventh and the live halves of the persona pass). Applying the migrations
+is the larger of the two.
+
+**A caution about the 0%, stated plainly rather than buried.** 0% code-side means *every requirement
+I can observe from here behaves as the spec says*. It does **not** mean the feature has been seen
+working: no model call has ever been made on a real key, no row has ever reached a real
+`usage_events` table, and no migration has ever run. That is exactly what the blocked list says, and
+it is why `GATE` stays NOT MET at 0%.
+
+#### The gate, run cold after every throwaway was deleted
+
+```
+tsc    exit 0
+eslint 1 error, 0 warnings  — the standing quiz.tsx:46 react-hooks/set-state-in-effect
+vitest Test Files  124 passed | 1 skipped (125)
+       Tests       2859 passed | 1 skipped (2860)
+       0 failed · 11.49 s
+```
+
+Identical to the figures §1 carries from round-3 C and the manager's cold re-run.
+`src/lib/events/benchmark.test.ts` is the one skip, named explicitly. **A does not change code**, and
+`git diff HEAD -- web/` is empty: every plant was restored from a scratchpad backup and every restore
+asserted by an empty diff and a `grep -c PLANT` of 0 before the run was read.
+
+**Handing to the manager, not to B.** Ruling 10 point 3: at 0% code-side the manager re-measures
+independently before anything is told to the owner. `WHOSE TURN: manager — independent re-measure`.
+The lock is released.
