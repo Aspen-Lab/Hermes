@@ -118,143 +118,116 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          A-round3 @ 2026-09-05T01:40Z
+HELD BY:          free
 ROUND:            3
-WHOSE TURN:       A
-STOPPED BECAUSE:  finished the turn @ 2026-09-05T01:34Z
-STATUS:           ROUND 3 — A MEASURES. The manager accepted round-2 C after an independent
-                  cold gate run (identical figures) and two spot-checks (Ruling 7, §1h);
-                  C's three doubts ruled; one structural round-3 item added (point 3).
-                  Round-2 C's own summary follows.
-                  ROUND 2 — C HAS LANDED ALL SEVEN ITEMS, 2-01 … 2-07, in the manager's
-                  order, one commit each, each pushed immediately. Nothing reordered. The
-                  gate is GREEN and has been green cold after every item since 2-01.
-
-                  WHAT EACH ITEM DID, one line each:
-                  2-01  the in-memory counter store's housekeeping sweep now uses the
-                        caller's clock, not the process clock. The three red R-QUOTA-2 cases
-                        went green WITH THE FIXTURE UNCHANGED, which is Ruling 5 point 3's
-                        whole point. Also fixes two users on one UTC day sweeping each
-                        other's live entries — a bug no test covered.
-                  2-02  a counter-store outage stops reading as exhaustion. `QuotaSignal`
-                        gains a REQUIRED `reason: "exhausted" | "unavailable"`, kept
-                        orthogonal to `kind` because an outage happens on the breaker path
-                        too. Per Ruling 6 point 1 an outage writes the `[quota] store
-                        unavailable` line and NO usage row, in both the deep-report check
-                        and `consumeSystemSearches`. Real trips keep their line and row.
-                  2-03  `deepReportsRemaining` (a budget that never moved) becomes
-                        `deepReportsBudget` on the resolver; `GET /api/profile` ships a
-                        JSON-safe `{unlimited, deepReportsRemaining, reason?}` computed from
-                        one NON-INCREMENTING counter read. `Infinity` cannot reach a payload
-                        by construction — the field that could carry it is dropped by type.
-                  2-04  Brave, Vertex AI Search and Gemini grounding join the system Tavily
-                        key behind ONE gate, one 500/day breaker and one usage row carrying
-                        the provider's own NAME. The gate is on the availability inputs, not
-                        the ordering (B's point 1). Papers spends nothing on any operator key
-                        in any runtime (Ruling 6 point 3) and gains the breaker and row it
-                        never had. The build guard bans `GOOGLE_VERTEX_` by PREFIX.
-                  2-05  the metering wrapper's "did the provider already log this" check
-                        moves from a `catch` to a `finally`, closing "never zero" on the
-                        success path; the four Gemini `ok: true`-on-empty rows are fixed to
-                        `ok: text.trim().length > 0`. A fallback chain writing one row per
-                        attempt is now a documented, tested contract (Ruling 6 point 5).
-                  2-06  scans 3, 4 and 5 become gate tests instead of a hand count; the
-                        persona pass becomes a permanent suite instead of being rebuilt and
-                        deleted a third time; `api/test-digest` gets its first suite.
-                  2-07  the three report pages finally RENDER the quota message —
-                        exhausted → sentence + upgrade prompt; unavailable → the outage copy
-                        and NO prompt; no signal → nothing at all.
-
-                  DEVIATIONS FROM B'S GUIDE — three, each traced before it was taken:
-                  - 2-02: B put the `[quota] store unavailable` writer in a PRIVATE helper in
-                    `deep-report-quota.ts`. C exported it from `counters.ts` instead, because
-                    the sibling `consumeSystemSearches` lives in `search-breaker.ts` and needs
-                    the identical line — B's own placement would have produced two copies
-                    across two modules, which is the drift B's single-writer rule exists to
-                    prevent. Both modules already import `counters.ts`; no new import edge.
-                  - 2-06: B said to add persona cases to the four existing route.test.ts
-                    files. C added ONE new suite instead — each of those four already carries
-                    its own module-scope `vi.mock` block and none stubs the Supabase server
-                    client, so adding a session stub to any of them would change the runtime
-                    of every case already in the file. One file also gives A one command for
-                    the whole persona pass.
-                  - 2-07: the obvious wiring is to put `quota` inside the object each page
-                    already holds. C held it in SEPARATE state on all three pages, because
-                    all three of those objects are cached in browser storage and a cached
-                    quota signal is a stale one — it would keep telling a reader they had
-                    spent their allowance after they upgraded, which is the cache-poisoning
-                    shape R-UI-4 exists to prevent.
-
-                  WHAT B AND THE RULINGS GOT WRONG, found by execution this turn — SHORT LIST,
-                  and none of it changed an item's direction:
-                  1. B's `web-search.ts` fix could not be completed as specified: the papers
-                     `SourceQuery.webSearch` type has NO `userId` and `feed/pipeline.ts` has
-                     no user in scope at all. C added the optional field for shape parity,
-                     left it unpopulated, and RECORDED the gap rather than widening the feed
-                     request type inline. It does not matter today (the gate makes the
-                     metering unreachable) and it is THE FIRST THING anyone un-gating that
-                     surface must fix — otherwise the breaker sees a null user and declines
-                     to charge, which is a meter that looks present and counts nothing.
-                  2. Three source-text scans C wrote in 2-06 initially failed on their OWN
-                     PROSE: these modules document what they used to do, and a scan that
-                     reads comments reports the explanation of a fixed defect as the defect.
-                     The scans now strip comments. Worth knowing before writing a fourth.
-                  3. Three of the four persona fixtures were red on their first run and NONE
-                     was a finding — a digest body with no papers returns 200 above the guard
-                     (a "nothing to do" path), events/report requires `event.name`, and the
-                     papers shallow-report builder needs `summaryExperimentKeywords`. Named
-                     so round-3 A does not re-open them.
-
-                  FOR ROUND-3 A, THINGS THAT WILL LOOK LIKE FINDINGS AND ARE NOT:
-                  - The papers `web` source now returns `[]` in LOCAL DEVELOPMENT too, not
-                    only in production. That is Ruling 6 point 3 accepted and implemented,
-                    superseding report-parity Rulings 75 and 79c for this surface.
-                  - The visible effect of 2-04 on the current Vercel deployment is NIL —
-                    every name it gates is already banned there. Defence in depth for a
-                    self-host and a developer machine, not a live leak closed.
-                  - A Gemini fallback chain writes SEVERAL usage rows for one logical call.
-                    That is Ruling 6 point 5's billing truth, now asserted, not a duplicate.
-                  - An outage no longer writes any `usage_events` row, so the `[quota] store
-                    unavailable` LOG LINE is the only durable trace. Count occurrences from a
-                    captured log, never from `usage_events`. Expect 0 in a healthy local run.
-                  - `deepReportsBudget` renames a field nothing rendered; the wire value is
-                    what changed.
-LAST DIFFERENCE:  19.4% code-side at round-2 A (6/31) — ROUND-3 A RE-MEASURES. All seven of
-                  round-2 A's differences have code landed against them; A scores, not C.
-GATE (0% unexplained, both measurements):  NOT MET — round-3 A re-measures
+WHOSE TURN:       B
+STOPPED BECAUSE:  finished the turn @ 2026-09-05T02:02Z
+STATUS:           ROUND 3 — A HAS MEASURED, all three parts banked and pushed. **Code-side
+                  fell 19.4% -> 6.5% (2 of 31, exclusions: none) and every one of round-2
+                  A's seven differences is CLOSED, each re-verified by behaviour rather
+                  than read off a commit message.** The gate is green. Persona coverage is
+                  45 of 45 pairs, up from 41 of 45 — the four that failed were the same
+                  `GET /api/profile` defect and all four are fixed. All five static scans
+                  are 0, grepped independently and agreeing with C's three new gate tests.
+                  Two differences remain, both NEW, both the same shape — a guard that
+                  covers the case it was written for and not the case next door:
+                  1. **R-UI-3, PARTIAL — a paid reader is shown an upgrade prompt.** The
+                     `QuotaNotice` component 2-07 added decides the prompt on
+                     `reason === "exhausted"` alone, and `QuotaSignal` carries no plan. A
+                     paid reader who trips D4's 200/day wallet breaker gets
+                     `{kind:"breaker", reason:"exhausted"}` — which is exactly what
+                     R-QUOTA-2 specifies, so the PAYLOAD is correct — and the component
+                     renders "Peer Pro lifts the monthly limit. Add your own key to keep
+                     going now." to a Pro subscriber. Both halves measured this turn.
+                     `TierUpgradeBlock` itself is unaffected and still correct; this is a
+                     SECOND upsell that R-UI-3's rule never reached.
+                  2. **R-SEC-2, PARTIAL — Ruling 7 point 3's branded context has not
+                     landed.** A grep of `src/lib` for `__brand`, `declare const brand`,
+                     `Branded<` and `Opaque<` returns ZERO hits: no branded or opaque type
+                     exists anywhere in the tree. `resolveProvider(override?, ctx?)` has
+                     both parameters optional and every field of `ctx` optional, and
+                     `operatorSearchAvailability` takes a bare boolean — so an unguarded
+                     caller is still a grep miss, not a compile error. Reachability today
+                     is NIL (all nine spending routes carry the guard, all nine driven this
+                     turn, scans 4 and 5 both 0); this is the difference between "correct"
+                     and "cannot be made incorrect by accident".
+                  **BLOCKED is now 7 items, and that rise is ACCOUNTING, NOT DECAY**
+                  (Ruling 5 point 8 predicted it). Nothing became less observable: round 2
+                  listed four unnamed QUESTIONS, Ruling 5 point 1 then asked for the
+                  enumeration to be per item and by name, so the same two root causes now
+                  attach to seven named requirements. The two causes are unchanged — no key
+                  in `.env.local`, and three unapplied migrations. Both are owner actions.
+                  **THINGS THAT WILL LOOK LIKE FINDINGS AND ARE NOT, for whoever reads next:**
+                  - Scan 1's two `jobs/[id]/page.tsx` hits moved from `:1342`/`:1523` to
+                    `:1347`/`:1528`. 2-07 inserted five lines above them; same two comment
+                    blocks, read in context, still 0 rendered.
+                  - A counter store that answers 200 with no row for a key is a reader who
+                    has used NOTHING, not an outage — `GET /api/profile` correctly ships a
+                    real remainder there, and `null` + `reason:"unavailable"` only when the
+                    store is genuinely unreachable. A's first probe got this wrong for a
+                    minute; the fixture was the defect.
+                  - Papers spends 0 on any operator key on every persona in BOTH runtimes.
+                    Ruling 6 point 3 working, superseding report-parity Rulings 75 and 79c.
+                  - The structured-source tally is 3 SOURCES (Adzuna, JSearch, USAJobs); the
+                    raw line count is 4 because Adzuna reads two names. The threshold is
+                    about sources and none of the three bills per request.
+                  - `local-no-auth` is ABSENT from all three deployed shapes (503 x3), and a
+                    developer machine with Vertex, Brave and Tavily all configured spends
+                    NOTHING until `PEER_DEV_ENTITLEMENT=paid` is set — A confirmed the
+                    override flips it on, so the zero is the gate, not an inert runtime.
+LAST DIFFERENCE:  **6.5% code-side (2/31, exclusions: none)** — R-SEC-2, R-UI-3 · **blocked: 7
+                  — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2**
+GATE (0% unexplained, both measurements):  NOT MET — code-side is 6.5%, not 0%, and seven
+           items carry a blocked half. The blocked half CANNOT close without the owner even
+           if B and C close the code side next round.
 
 DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 28 ITEMS.
            Round 2 A: all three parts. Round 2 B: all six items plus one issued correction
            and a close-out; no code changed.
-           **Round 2 C: ALL SEVEN ITEMS, 2-01 … 2-07**, one commit each, each pushed.
+           Round 2 C: ALL SEVEN ITEMS, 2-01 … 2-07, one commit each, each pushed.
+           **Round 3 A: all three parts**, one commit each, each pushed; no code changed;
+           five throwaway measurement files created and deleted before the final commit.
 GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0 warnings**) ·
            vitest **123 files passed | 1 skipped (124)** · **2825 tests passed | 1 skipped
-           (2826)**, **0 failed**. Run cold after every item from 2-01 on. The cold run
-           BEFORE C's first edit was the expected red: 3 failed | 2713 passed | 1 skipped
-           (2717), all three in `deep-report-quota.test.ts` and exactly the three B named.
-           Net +112 tests across the turn, all additive; no count anywhere fell, and no test
-           was deleted. `benchmark.test.ts` is still the one skip and did not flake once.
-TODO:      ROUND-3 A MEASURES under Ruling 5 point 1 (two numbers: code-side % over 31, and the
-           BLOCKED list by name) and Ruling 7 (§1h). Score every R-* item against behaviour;
-           verify each of round-2's seven differences closed; run the persona suite
-           (`src/app/api/ai-route-personas.test.ts`) and the four route suites as the harness
-           (41/45 denominator, extended if C added pairs); re-run every standing tally by name
-           (Ruling 5 point 8, Ruling 6 point 4, Ruling 7 point 5); enumerate every blocked
-           half explicitly. Ruling 7 point 3 (branded entitlement context at the chokepoint)
-           is a round-3 fix item — A scores R-SEC-2 PARTIAL until it lands and says so.
-           If code-side is 0%: say so plainly, list the blocked halves, and hand to the
-           manager (who re-measures independently before telling the owner).
+           (2826)**, **0 failed**, 9.32 s. Run cold TWICE by round-3 A — once on the tree as
+           found, once after deleting every throwaway — identical figures both times.
+           `benchmark.test.ts` is still the one skip and did not flake.
+TODO:      ROUND-3 B INVESTIGATES A's two differences, in A's rank order.
+           1. **R-UI-3 / difference 1 — the paid upgrade prompt.** Wrong data shown to the
+              one group who has already paid, and D7 makes the price display-only so there
+              is nothing for them to buy. The prompt needs the plan, which `QuotaSignal`
+              does not carry — decide where it comes from (the client already holds a
+              `ClientEntitlement` with `plan` and `unlimited`) rather than widening the
+              server payload by reflex. Do NOT suppress the whole notice for paid: a paid
+              reader at the daily cap still needs to be told why the report is degraded.
+           2. **R-SEC-2 / difference 2 — the branded entitlement context** (Ruling 7 point 3,
+              B DESIGNS, and its escape clause applies: if it forces a signature cascade
+              beyond the AI routes and their direct helpers, STOP and record, and the
+              heuristic scan stays the guard with the cost written down).
+           Ruling 5 point 2's escape clause and Ruling 6 point 4's threshold both stay live.
+           B changes no code.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
-           works. (4) The Vercel do-not-yet on TAVILY_API_KEY is LIFTED (Ruling 5 point 7):
-           the four variables may be set. **The gate is now GREEN**, so the remaining bar to
-           deploying this branch is round-3 A's re-measurement and the merge — not a red gate.
-           (5) Local .env.local keys whenever ready — live-model halves stay BLOCKED until
-           then. (6) NEW (Ruling 6 point 4): confirm ADZUNA_APP_ID/APP_KEY, JSEARCH_API_KEY
-           and USAJOBS_API_KEY are set on Vercel if the free jobs surface is meant to have
-           them — nobody in the loop can see the Vercel env.
-OPEN FOR MANAGER:  none — C's three doubts ruled in §1h (Ruling 7 points 1–3).
+           works — the column-level revoke has never met a real profile sync. (4) The Vercel
+           do-not-yet on TAVILY_API_KEY is LIFTED (Ruling 5 point 7): the four variables may
+           be set. **The gate is green and round-3 A has now re-measured**, so the remaining
+           bar to deploying this branch is the two code-side items above and the merge.
+           (5) Local .env.local keys whenever ready — `GOOGLE_API_KEY` and `TAVILY_API_KEY`
+           are both absent. **The two causes split the seven items unevenly:** the keys alone
+           unblock R-KEY-1 and half of R-METER-1; the three migrations are what the other
+           six need (R-ENT-1, R-ENT-2, R-METER-1's persistence half, R-METER-2, R-METER-3,
+           R-QUOTA-2). **Applying the migrations is the larger of the two owner actions.**
+           (6) Confirm ADZUNA_APP_ID/APP_KEY, JSEARCH_API_KEY and USAJOBS_API_KEY are set on
+           Vercel if the free jobs surface is meant to have them — nobody in the loop can see
+           the Vercel env. **(7) THE BLOCKED LIST IS NOW THE LARGER HALF OF THE GATE:** seven
+           named items, two causes, both owner actions. No agent can close any of them.
+OPEN FOR MANAGER:  ONE, raised by round-3 A and marked POLICY rather than decided.
+           **Where does the paid upgrade prompt land?** R-UI-3 names `TierUpgradeBlock` by
+           hand and this component arrived a round later under R-QUOTA-1. A scored it against
+           R-UI-3 because that is where the PROPERTY ("never upsell a paid reader") lives, and
+           says so explicitly rather than dropping it. Moving it to R-QUOTA-1 changes which
+           row reads PARTIAL and changes NEITHER number.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -267,6 +240,7 @@ part-way; a released lock looks identical in both cases.
 |---|---|---|
 | 1 (A) | 93.5% (29/31, exclusions: none) | NOT MET — BYOK-only build; unauthenticated operator-key spend confirmed live on all three feed routes; no entitlement exists |
 | 2 (A) | 19.4% (6/31, exclusions: none) | NOT MET — all 20 round-1 differences closed, all five scans 0, operator-key searches 0 for `anonymous` and `free-no-key` on both surfaces (the Vercel do-not-yet is lifted), `local-no-auth` ABSENT from every deployed runtime. Seven differences remain: three wrong-data (quota outage reads as exhaustion · `deepReportsRemaining` is a budget · a paid reader gets `null`), a red gate (three daily-window quota tests aged out at UTC midnight — deterministic, a fixture not a regression), Vertex/grounding search ungated by entitlement (0 reachability in a deployment), `GOOGLE_VERTEX_*` banned as 4 names not a prefix, and Brave outranking the system Tavily key. Four questions still BLOCKED: no key, migrations unapplied |
+| 3 (A) | **code-side 6.5% (2/31, exclusions: none)** · **blocked 7** — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2 | NOT MET — all seven round-2 differences CLOSED by behaviour; gate green with the quota fixture date unchanged and now a day in the past; personas 45 of 45 (was 41 of 45); all five scans 0, grepped independently and agreeing with C's three new gate tests; the `GOOGLE_VERTEX_` prefix ban proved with an invented `GOOGLE_VERTEX_ZZZ`; all four operator search providers gated, breaker-charged and writing one named usage row; papers 0 on every persona in both runtimes; `local-no-auth` ABSENT (503 ×3). Two differences remain, both NEW: a **paid** reader at the 200/day breaker is shown an upgrade prompt by 2-07's `QuotaNotice` (R-UI-3, the payload is correct and the component is the defect), and Ruling 7 point 3's branded entitlement context has not landed — zero branded/opaque types exist in the tree, so an unguarded caller is still a grep miss rather than a compile error (R-SEC-2). **The blocked count rose 4 -> 7 as accounting, not decay** (Ruling 5 point 8): same two owner-action causes, now enumerated per item by name |
 
 ---
 
