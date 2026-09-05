@@ -1,0 +1,256 @@
+import fs from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+
+/**
+ * The three standing scans that were still being recomputed by hand.
+ *
+ * ABC-freemium 2-06 · R-SEC-2, R-SEC-3, R-KEY-3, D2, D8, D9 · Ruling 2 point 6
+ * (the standing tallies A owes every round) · Ruling 4 point 7 · Ruling 6
+ * point 4.
+ *
+ * Two of A's five scans already ship as gate tests —
+ * `lib/feed/ui-vocabulary.test.ts` (scan 1) and `lib/env/no-client-dev-flags.test.ts`
+ * (scan 2). **Scans 3, 4 and 5 were recounted by hand every round**, which is
+ * how a count drifts between agents: round-2 A and round-2 B disagreed about
+ * how many harness-driven route suites exist, and B found three
+ * `request key || env key` readers that no scan looked for. A number a person
+ * recomputes is a number that goes stale between the recomputing.
+ *
+ * `usage/quota-exemptions.test.ts` and `scripts/assert-byok-production-env.test.ts`
+ * are the precedents for asserting on file contents rather than on behaviour;
+ * this follows their shape.
+ *
+ * **These are placement rules, not behaviour**, so they read source text. A
+ * placement rule that is only written in prose is a rule that is followed until
+ * someone is in a hurry.
+ */
+
+const SRC = path.join(process.cwd(), "src");
+
+/** Every `.ts`/`.tsx` under `src`, excluding tests and the test scaffolding. */
+function productionFiles(): string[] {
+  const out: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        // Ruling 4 point 7 — `src/test-support/` is excluded alongside
+        // `*.test.ts`. Its one key reference DELETES the key rather than
+        // reading it.
+        if (entry.name === "test-support") continue;
+        walk(full);
+        continue;
+      }
+      if (!/\.tsx?$/.test(entry.name)) continue;
+      if (/\.test\.tsx?$/.test(entry.name)) continue;
+      out.push(full);
+    }
+  };
+  walk(SRC);
+  return out;
+}
+
+function relative(file: string): string {
+  return path.relative(process.cwd(), file).replace(/\\/g, "/");
+}
+
+/**
+ * Source with comments removed.
+ *
+ * **Not a nicety — the first draft of this file failed on its own prose.** These
+ * modules document what they used to do ("this used to call
+ * `isGeminiSearchAvailable()` directly from the environment"), and a scan that
+ * reads comments reports the explanation of a fixed defect as the defect. A
+ * source-text rule that cannot tell code from a comment about code gets switched
+ * off by whoever next writes a thorough comment, which is the opposite of what
+ * it is for.
+ */
+function code(file: string): string {
+  return fs
+    .readFileSync(file, "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
+function filesMatching(pattern: RegExp): string[] {
+  return productionFiles()
+    .filter((file) => pattern.test(code(file)))
+    .map(relative)
+    .sort();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCAN 3 — operator search credentials are read in exactly one module
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("scan 3 — every operator search credential is read in one place", () => {
+  /**
+   * **Widened by 2-04 from Tavily-only to every operator-funded search name.**
+   * The gate is no longer about one key: Ruling 5 point 2 puts Brave, Vertex AI
+   * Search and Gemini grounding behind the same predicate, so the scan that
+   * protects the gate has to cover the same set. A scan that still looked only
+   * for `TAVILY_API_KEY` would have reported "0" while three other names were
+   * read straight from the environment — which is exactly what happened for a
+   * whole round.
+   */
+  const OPERATOR_SEARCH_ENV = [
+    "TAVILY_API_KEY",
+    "BRAVE_SEARCH_API_KEY",
+  ] as const;
+
+  /** The one module allowed to turn an operator search credential into a key. */
+  const GATE = "src/lib/search/system-key.ts";
+
+  for (const name of OPERATOR_SEARCH_ENV) {
+    it(`reads process.env.${name} only inside the gate`, () => {
+      const readers = filesMatching(
+        new RegExp(`process\\.env\\.${name}\\b`),
+      );
+      expect(readers).toEqual([GATE]);
+    });
+  }
+
+  it("reads the GOOGLE_VERTEX_ search capability names only where they are gated", () => {
+    // These are capabilities rather than keys — "is a project configured" — so
+    // they legitimately live in the two search modules that own them. What must
+    // NOT happen is a third module calling the availability helpers directly,
+    // which is precisely the defect 2-04 fixed in `web-search.ts`, `jobweb.ts`
+    // and `eventweb.ts`.
+    const readers = filesMatching(/process\.env\.GOOGLE_VERTEX_SEARCH_/);
+    expect(readers).toEqual(["src/lib/sources/vertex-search.ts"]);
+  });
+
+  it("calls the availability helpers only from the gate and their own modules", () => {
+    // ABC-freemium 2-04 — the gate is `operatorSearchAvailability()` in
+    // `system-key.ts`. Every other caller must go through it, or the
+    // entitlement is bypassed by a direct environment read.
+    const callers = filesMatching(
+      /\bis(Gemini|Vertex)SearchAvailable\s*\(/,
+    );
+    expect(callers).toEqual([
+      "src/lib/search/system-key.ts",
+      "src/lib/sources/gemini-search.ts",
+      "src/lib/sources/vertex-search.ts",
+    ]);
+  });
+
+  it("counts the structured-source key reads that are ACCEPTED outside the gate", () => {
+    // Ruling 6 point 4 — Adzuna, JSearch and USAJobs read
+    // `request key || operator env key` in the same shape, and they deliberately
+    // do NOT join the gate: they are the free structured backbone of the jobs
+    // surface and their keys buy free-tier quota rather than per-call billing.
+    //
+    // **This is A's standing tally, as an assertion.** The number is 3. If it
+    // rises, a fourth ungated structured source appeared and the manager needs
+    // to rule on it; if one of these ever bills per request, it joins the gate
+    // the same round (the ruling's stated threshold).
+    const accepted = filesMatching(
+      /process\.env\.(ADZUNA_APP_(ID|KEY)|JSEARCH_API_KEY|USAJOBS_(API_KEY|USER_AGENT))\b/,
+    );
+    expect(accepted).toEqual([
+      "src/lib/jobs/sources/adzuna.ts",
+      "src/lib/jobs/sources/jsearch.ts",
+      "src/lib/jobs/sources/usajobs.ts",
+    ]);
+    expect(accepted).toHaveLength(3);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCAN 4 — no `resolveProvider()` without a usage context
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("scan 4 — every resolveProvider call carries a context", () => {
+  it("has no argument-less resolveProvider() call anywhere", () => {
+    // D8 / R-METER-1 — the second argument is what attributes a model call to a
+    // user. Round-2 A noted this is now true "by construction" because both
+    // figure matchers take a required context; a test is what makes it stay
+    // true when the next matcher is written.
+    //
+    // A bare `resolveProvider()` is the shape being banned. Calls that pass an
+    // override but no context are legal — `tier2-rerank.ts` and `query-gen.ts`
+    // are both R-QUOTA-3-exempt paths that still meter through the wrapper.
+    const offenders = productionFiles().filter((file) => {
+      const source = code(file);
+      // The declaration itself, and the unrelated local helper in
+      // `sources/web-search.ts`, both have a parameter list — so a zero-argument
+      // CALL is unambiguous.
+      return /(?<!function\s)\bresolveProvider\(\s*\)/.test(source);
+    });
+
+    expect(offenders.map(relative)).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCAN 5 — every AI route is behind the shared guard
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("scan 5 — every route that can spend is behind requireEntitledAiRequest", () => {
+  const GUARD = "requireEntitledAiRequest";
+
+  /**
+   * Routes that may reach a provider or an operator search key WITHOUT calling
+   * the guard, each with the reason it is exempt. **A short, justified list —
+   * never a convenience list.** Every entry here is a decision someone can
+   * argue with, which is the point of writing them down.
+   */
+  const JUSTIFIED_EXEMPTIONS: Record<string, string> = {
+    "src/app/api/jobs/dispatch-digests/route.ts":
+      "D9 — the nightly cron runs on CRON_SECRET, not a session; it passes " +
+      "systemSearchAllowed: false per enrolled user",
+    "src/app/api/digest/test/route.ts":
+      "a local-only diagnostic that answers 404 unless canUseLocalServerProvider()",
+  };
+
+  function apiRouteFiles(): string[] {
+    return productionFiles()
+      .map(relative)
+      .filter((file) => /^src\/app\/api\/.*\/route\.ts$/.test(file));
+  }
+
+  /** A route "can spend" if it can reach a provider or an operator search key. */
+  function canSpend(file: string): boolean {
+    const source = code(path.join(process.cwd(), file));
+    return (
+      /\bresolveProvider\s*\(/.test(source) ||
+      /\bGoogleGenAI\b/.test(source) ||
+      /systemSearchAllowed/.test(source)
+    );
+  }
+
+  it("leaves no spending route unguarded and unjustified", () => {
+    const unguarded = apiRouteFiles()
+      .filter(canSpend)
+      .filter((file) => {
+        return !code(path.join(process.cwd(), file)).includes(GUARD);
+      })
+      .filter((file) => !(file in JUSTIFIED_EXEMPTIONS));
+
+    expect(unguarded).toEqual([]);
+  });
+
+  it("keeps the exemption list honest — every entry still exists and still cannot spend safely", () => {
+    // The staleness check `ui-vocabulary.test.ts` already does for its own list.
+    // An exemption for a file that has been deleted or renamed is an exemption
+    // nobody notices has stopped applying.
+    for (const [file, reason] of Object.entries(JUSTIFIED_EXEMPTIONS)) {
+      expect(
+        fs.existsSync(path.join(process.cwd(), file)),
+        `${file} is exempted for "${reason}" but no longer exists`,
+      ).toBe(true);
+    }
+  });
+
+  it("reports the guarded count, so a DROP is visible rather than silent", () => {
+    // A's standing tally as an assertion. Nine routes carry the guard today. A
+    // route losing it would otherwise show up only as an absence, and an
+    // absence is what nobody notices.
+    const guarded = apiRouteFiles().filter((file) =>
+      code(path.join(process.cwd(), file)).includes(GUARD),
+    );
+
+    expect(guarded).toHaveLength(9);
+  });
+});

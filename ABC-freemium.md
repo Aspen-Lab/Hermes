@@ -122,7 +122,7 @@ HELD BY:          C-round2 @ 2026-09-05T00:40Z
 ROUND:            2
 WHOSE TURN:       C
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:35Z
-STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03, 2-04, 2-05.
+STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03, 2-04, 2-05, 2-06.
 
                   DEVIATIONS FROM B'S GUIDE, each traced before it was taken:
                   - 2-02: B put the `[quota] store unavailable` writer in a PRIVATE helper in
@@ -131,6 +131,12 @@ STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02,
                     the identical line — B's own placement would have produced two copies
                     across two modules, which is the drift B's single-writer rule exists to
                     prevent. Both modules already import `counters.ts`; no new import edge.
+                  - 2-06: B said to add persona cases to the four existing route.test.ts
+                    files. C added ONE new suite instead — each of those four already carries
+                    its own module-scope `vi.mock` block and none stubs the Supabase server
+                    client, so adding a session stub to any of them would change the runtime
+                    of every case already in the file. One file also gives A one command for
+                    the whole persona pass.
 
                   --- B's original classification, kept for reference ---
                   ROUND 2 — B HAS WRITTEN THE FIX GUIDE. Six items, 2-01 … 2-06, in the
@@ -6684,3 +6690,138 @@ honest value rather than a guess, and it is asserted as such. But it means a hyp
 non-logging provider would produce rows the owner cannot attribute to a model. The right fix is for
 every provider to keep logging (they all do), so I have left it; if the manager wants the wrapper to
 be able to name a model, that needs the usage-envelope change B costed, which is a different item.
+
+---
+
+#### 2-06 — LANDED. The three hand-counted scans became gate tests, and the persona pass stopped being thrown away
+
+**Gate after this item:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, **0
+warnings**) · `vitest` **122 files passed | 1 skipped (123)** · **2810 tests passed | 1 skipped
+(2811)**, **0 failed**. Up 28 from 2-05's 2782.
+
+**Three new files, no production code touched.** This item is entirely additive test coverage, which
+is what B specified.
+
+| File | What it covers | Cases |
+|---|---|---|
+| **NEW** `web/src/lib/security/spend-scans.test.ts` | B's part (d) — scans 3, 4 and 5 as assertions | 9 |
+| **NEW** `web/src/app/api/ai-route-personas.test.ts` | B's part (a) — persona coverage for the four AI routes that had none | 16 |
+| **NEW** `web/src/app/api/test-digest/route.test.ts` | B's part (b) — the guarded AI route with no suite at all | 3 |
+
+B's part (c), the missing `web-search.test.ts`, landed inside **2-04** as B allowed ("C creates it
+as part of 2-04 if the gate work touches the file"), and part (a)'s `GET /api/profile` half landed
+inside **2-03**.
+
+---
+
+##### (d) The three scans, now assertions rather than a hand count
+
+**This is the highest-value half and B said so.** Scans 1 and 2 already shipped as gate tests;
+3, 4 and 5 were recomputed by a person every round, and the round-2 record shows exactly what that
+costs: A and B disagreed about how many harness-driven route suites exist, and B found three
+`request key || env key` readers that no scan was looking for.
+
+- **Scan 3, widened by 2-04 from Tavily-only to every operator search credential.** A scan that
+  still looked only for `TAVILY_API_KEY` would have reported "0" for a whole round while three
+  other names were read straight from the environment — which is precisely what happened. Five
+  cases: `TAVILY_API_KEY` and `BRAVE_SEARCH_API_KEY` each read only in `system-key.ts`; the
+  `GOOGLE_VERTEX_SEARCH_` names read only in `vertex-search.ts`; the availability helpers called
+  only from the gate and their own two modules; and **A's accepted-cost tally as an assertion** —
+  the three structured job sources, asserted by name and by count (**3**, Ruling 6 point 4). If a
+  fourth appears the gate goes red and the manager gets to rule on it.
+- **Scan 4** — no argument-less `resolveProvider()` anywhere. A noted this is true "by
+  construction" today; a test is what keeps it true when the next figure matcher is written.
+- **Scan 5** — every `route.ts` under `src/app/api` that can reach a provider or an operator search
+  key either calls `requireEntitledAiRequest` or appears in a **short, justified** exemption list
+  with its reason written next to it (`dispatch-digests` → D9 and `CRON_SECRET`; `digest/test` →
+  404 off a developer machine). Plus the staleness check `ui-vocabulary.test.ts` already does for
+  its own list — an exemption naming a deleted file is an exemption nobody notices has stopped
+  applying — and a count assertion (**9 guarded routes**) so a route *losing* the guard shows up as
+  a failure rather than as an absence.
+
+**A trap I hit and fixed, worth recording because the next person will hit it too.** My first
+version of this file **failed on its own prose**: these modules document what they used to do
+("this used to call `isGeminiSearchAvailable()` directly from the environment"), and a scan that
+reads comments reports the explanation of a fixed defect as the defect. Two of the nine cases were
+red for that reason, and both looked like findings for a minute. The scans now strip comments
+before matching, with the reasoning written at the helper — a source-text rule that cannot tell code
+from a comment about code gets switched off by whoever next writes a thorough comment.
+
+**Proved the scans are live, not decoration (§2 Agent C, standard 1).** A source-text rule passes
+trivially if its pattern is wrong, so I injected a violation rather than reasoning about it: I
+appended a bare `process.env.TAVILY_API_KEY` read to `jobweb.ts`, re-ran, and
+`reads process.env.TAVILY_API_KEY only inside the gate` went red by name. Reverted; `git status`
+clean.
+
+---
+
+##### (a) The persona pass, permanent this time
+
+Round-1 A and round-2 A each built persona probes, measured with them, and deleted them — B counted
+65 cases of coverage reconstructed from prose and thrown away, twice. The new suite drives the
+**real handlers** for `POST /api/digest`, `/api/jobs/report`, `/api/events/report` and
+`/api/papers/report`, four cases each: the anonymous **401**; **zero** outgoing requests carrying
+`OPERATOR_SENTINEL` for `anonymous`; the same for a **signed-in free** caller; and
+`resolveProvider` never called for a signed-out visitor (R-SEC-2's ordering property).
+
+**The operator keys are SET in the fixture**, so "zero searches" is a statement about the gate
+rather than about an empty environment. A test that asserted zero with no key configured would pass
+whether or not the gate existed — that is the vacuity trap this loop keeps naming, and it is
+commented at the fixture.
+
+**DEVIATION FROM B'S GUIDE, traced first.** B said to add these cases **to the existing
+`route.test.ts` files**. I did exactly that for `GET /api/profile` in 2-03, where the file had no
+module-scope mocks to disturb. These four are different: each already carries its own `vi.mock`
+setup, **none of them stubs `@/lib/supabase/server`**, and `vi.mock` is module-scoped and hoisted —
+so adding a session stub to any of them would change the runtime of every case already in that file.
+That is the collateral breakage §3 warns about, for no gain in what is measured. One file also gives
+A **one command** for the whole persona pass instead of four, which is the property Ruling 2 point 7
+actually wanted. Recorded in §1's STATUS line.
+
+**Three fixtures were red on the first run and NONE of them was a finding** — recorded because each
+looked like one for a moment and a later reader should not re-open them:
+
+1. `POST /api/digest` answered **200** to a signed-out visitor with my body. Not a leak: my body
+   carried `topics` rather than `papers`, and an empty `papers` array returns `emptyResponse()`
+   above the guard — a "nothing to do" path that spends nothing and authenticates nothing. With a
+   real paper in the body it answers **401**, as Ruling 3 point 7 predicts.
+2. `POST /api/events/report` answered **400** — it requires `event.name` and I sent `event.title`.
+   Body validation before the guard, which is correct.
+3. `POST /api/papers/report` threw `paper.summaryExperimentKeywords is not iterable` — my paper
+   fixture was too thin for the shallow-report builder a free caller legitimately reaches.
+
+---
+
+##### (b) `api/test-digest` — a comment turned into a gate
+
+It is one of the nine routes carrying `requireEntitledAiRequest` and was the only one with **no
+suite at all**. Its own comment claims it "still spends nothing" because the pipeline passes no
+`aiTier` and papers hard-code `systemSearchAllowed: false` — a claim nothing checked. Three cases:
+the signed-out **401** with the pipeline and the mailer both proved unreached; **zero**
+`OPERATOR_SENTINEL` requests for a signed-in free caller; and the pipeline never asked for
+`systemSearchAllowed: true`, asserted at the seam as well as at the wire so a future refactor onto a
+different search path cannot slip past.
+
+---
+
+##### (e) What I did NOT turn into a test, per B's warning
+
+The four blocked questions (Ruling 5 point 1) are blocked because **no fixture can answer them**: a
+live `GOOGLE_API_KEY` call, the Supabase RPC's `on conflict do update` under two instances,
+`handle_new_user` writing a real trial, and the ISO-week key on a non-UTC server. I wrote nothing
+that appears to cover any of them. A stub that returns what the real thing would return proves the
+stub, and a green test named after a blocked question is **worse** than the blocked line, because
+the next A scores it `MET`. No `it.skip` placeholders either — `benchmark.test.ts` remains the only
+skip, and it did not flake.
+
+**Standing locks re-verified** (§2 Agent C, standard 2): every named lock is green in the cold full
+run above, and **no existing test file was modified by this item** — the three files are new, so
+the +28 is entirely additive and no count anywhere fell.
+
+**Doubt flagged, not judged.** Scan 5's `canSpend` predicate is a heuristic: a route "can spend" if
+its code mentions `resolveProvider`, `GoogleGenAI` or `systemSearchAllowed`. That is deliberately
+broad — it over-includes rather than under-includes, and the exemption list is where an
+over-inclusion gets argued in writing. But a future route that reaches a provider through a helper
+naming none of those three would not be caught. I judged a broad-and-argued predicate better than a
+narrow-and-silent one; if the manager wants it tightened to an import-graph walk, that is a
+different item.
