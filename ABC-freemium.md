@@ -118,75 +118,66 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          B-round2 @ 2026-09-05T00:10Z
+HELD BY:          free
 ROUND:            2
-WHOSE TURN:       B
-STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:03Z
-STATUS:           ROUND 2 — A HAS MEASURED, ALL THREE PARTS BANKED. The build went from 93.5%
-                  to 19.4% unexplained. Every one of round-1 A's twenty differences is CLOSED or
-                  has become a recorded decision, all five static scans are ZERO, and the
-                  operator's search key is no longer reachable without an entitlement.
+WHOSE TURN:       C
+STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:35Z
+STATUS:           ROUND 2 — B HAS WRITTEN THE FIX GUIDE. Six items, 2-01 … 2-06, in the
+                  manager's order from Ruling 5, one commit each, all pushed. Nothing reordered.
+                  B changed no code; the gate is unchanged and still red on 2-01's three tests.
 
-                  THE NUMBER THAT LIFTS THE VERCEL DO-NOT-YET IS IN: operator-key searches for
-                  `anonymous` and `free-no-key` are 0 on jobs and 0 on events, measured by A
-                  independently (counting outgoing request bodies), not read off C's assertions.
-                  Ruling 2 point 3 / Ruling 4 point 6 are SATISFIED. Papers: 0 on every persona.
+                  CLASSIFICATION: 2-01 WRONG SHAPE (the clock seam) · 2-02 WRONG DATA (quota
+                  outage reads as exhaustion) · 2-03 WRONG DATA x2 (budget-as-remainder, and
+                  paid arriving as `null`) · 2-04 MISSING + WRONG ORDER (three of the four
+                  operator-funded search providers ungated/uncounted/unmetered) · 2-05 WRONG
+                  SHAPE + WRONG DATA (the wrapper guarantees nothing on success; one call
+                  already writes several rows) · 2-06 MISSING (persona coverage discarded twice;
+                  three scans still counted by hand).
 
-                  RULING 4 POINT 4 ANSWERED, EXPLICITLY: the `local-no-auth` synthesised user is
-                  ABSENT from every deployed runtime. Driven with no Supabase config under
-                  VERCEL_ENV, VERCEL=1 and NODE_ENV=production — 503 in all three, on
-                  jobs/report, digest and figure alike. It is reachable only in the test process
-                  and a self-host with no sign-in mechanism, which is what makes the route
-                  suites runnable.
+                  THIRTEEN THINGS B ESTABLISHED BY EXECUTION THAT THE LIST OR THE RULINGS HAD
+                  WRONG — the five that change what C does:
+                  1. FIXING 2-04'S AUTO ORDER ALONE CLOSES NOTHING. For jobs and events the
+                     auto branch is usually not reached: the pipeline sets an explicit
+                     `provider` from `webSearchOptions` and `resolveWebSearchProvider` returns
+                     at `gemini-search.ts:207-212` before any ordering clause runs. The gate
+                     goes on the availability inputs, which BOTH branches consult.
+                  2. THE UI NEVER READS `quota` AT ALL. `quotaMessage` has zero production
+                     callers and all three client fetchers drop the field, so the manager's
+                     "read how the UI switches on `kind`" has no subject and R-QUOTA-1's UI
+                     half is MISSING on top of the `reason` field.
+                  3. A STORE OUTAGE CORRUPTS THE AUDIT TRAIL FOR PAID USERS — a false
+                     `kind:"breaker"` usage row plus an error line claiming the 200/day cap
+                     tripped, for a call that spent nothing. `consumeSystemSearches` is the
+                     same shape. A measured only the free path.
+                  4. "ONE ROW PER CALL, NEVER TWO" IS ALREADY VIOLATED IN THE `two` DIRECTION.
+                     Both Gemini providers — including the system-key one every free user gets
+                     — loop over a model fallback chain and log per attempt. The `zero`
+                     direction the ruling anticipated is the hypothetical one.
+                  5. THE OBVIOUS JSON ROUND-TRIP TEST PASSES ON TODAY'S BROKEN CODE. Compare
+                     the parsed object with the original object, never two stringify outputs.
 
-                  SEVEN DIFFERENCES REMAIN, and B's round-2 guide is exactly this list:
-                  1. WRONG DATA — a counter-store outage shows the exhaustion sentence. The
-                     outage payload is BYTE-IDENTICAL to the exhausted one and there are ZERO
-                     `[quota] store unavailable` log lines. Ruling 4 point 2's fix has not
-                     landed. `QuotaSignal` has no `reason` field.
-                  2. WRONG DATA — `deepReportsRemaining` is the plan's BUDGET and never
-                     decreases; `GET /api/profile` ships it to the browser. Ruling 4 point 3.
-                  3. WRONG DATA — a PAID reader's `deepReportsRemaining` reaches the browser as
-                     `null`, because `Number.POSITIVE_INFINITY` JSON-serialises to null. That is
-                     the exact sentinel the R-ENT-2 amendment reserves for "store unreachable".
-                     A SEPARATE bug from 2 that survives a naive budget-minus-used fix.
-                  4. WRONG DATA / THE GATE IS RED — three tests in
-                     `web/src/lib/usage/deep-report-quota.test.ts` now fail on EVERY run. Fixed
-                     `NOW = 2026-09-04T12:00:00Z`, and `InMemoryCounterStore.prune()` compares
-                     `windowEndsAt` against the REAL `Date.now()`, so every daily-window entry is
-                     deleted between the two increments a breaker test needs. UTC midnight passed
-                     between C's run and A's. NOT a product defect and NOT a transient flake —
-                     deterministic from 2026-09-05T00:00Z onward. B lands this FIRST; it is a
-                     one-line fixture fix or an injectable clock on `prune()`.
-                  5. UNGATED OPERATOR SPEND (not reachable in a deployment today) — Vertex AI
-                     Search and Gemini grounding read environment only, sit AHEAD of Tavily in the
-                     auto order, and are charged to neither the 500/day breaker nor an R-METER-2
-                     row. Zero reachability on Vercel because difference 6's names are banned;
-                     it bites a self-host or local runtime, where an ANONYMOUS caller reaches it.
-                  6. R-GUARD-1 bans 4 `GOOGLE_VERTEX_*` names; the tree reads 11. None of the
-                     seven unbanned names alone enables anything — sized deliberately so B does
-                     not over-react. The fix is a prefix test, not a longer list.
-                  7. ORDER — Brave outranks the OPERATOR's Tavily key in
-                     `sources/gemini-search.ts:233-235`. Low severity: Brave is env-only and
-                     banned on Vercel, so local-only. Flagged as POLICY P2 below.
+                  Plus: Brave is operator-funded and ungated at the env read
+                  (`system-key.ts:67`); papers is permanently zero only for TAVILY, and
+                  `web-search.ts` charges no breaker and writes no usage row at all; three more
+                  `request key || operator env key` reads exist outside every ruling
+                  (adzuna, jsearch, usajobs); `CounterStore.read()` has zero production
+                  callers; there are four harness-driven route suites, not three; and no
+                  provider test asserts on a `[llm]` log line. B also corrected one of its own
+                  citations in place (`api/profile/route.test.ts` does exist).
 
-                  FOR B, THINGS THAT WILL LOOK LIKE FINDINGS AND ARE NOT:
-                  - R-ENT-2/R-ENT-3 and R-QUOTA-1 were already PARTIAL by Ruling 4 before A
-                    measured. A reproduced both defects at the route, so they are real, but they
-                    are not new discoveries.
-                  - The persona denominator changed (2 of 13 -> 41 of 45) because trial and paid
-                    could not be constructed at all in round 1 and four routes were added. The
-                    like-for-like number is the operator search count: 2 and 7 -> 0 and 0.
-                  - The papers surface returns 0 searches for EVERY persona including paid. That
-                    is D3 / Ruling 3 point 5 working, not a gap.
-                  - `free-no-key` now gets a system LLM provider where `anonymous` gets none.
-                    That is D1, and it is what stopped the two personas being identical.
-                  - Local dev with no session still hands out a system provider. Ruling 3 point 2
-                    makes that deliberate; the money half (2 operator searches) is closed.
-                  - R-METER-1's success row is written by `logLlmUsage` inside each provider, not
-                    by the wrapper — the wrapper only writes when a call throws before logging.
-                    All five providers call it today; a sixth that forgot would be unmetered on
-                    success. Worth a note in B's guide, not a fix item.
+                  FOR C, THINGS THAT WILL LOOK LIKE FINDINGS AND ARE NOT:
+                  - The gate is RED until 2-01 lands. That is why 2-01 is first; §2's "confirm
+                    the gate is green before your first edit" is satisfied by landing it.
+                  - Every name 2-04 gates is already banned on Vercel, so the visible effect on
+                    the deployment today is NIL. It is defence in depth for a self-host and a
+                    developer machine, not a live leak — report it that way.
+                  - Renaming `deepReportsRemaining` breaks no rendered screen, because nothing
+                    renders it. The value is still wrong on the wire.
+                  - `breakerTripped`'s fail-closed direction and `resolveEntitlement` staying
+                    free of counter reads are both binding; 2-02 and 2-03 work around them
+                    rather than changing them.
+                  - B's guide lists tests at risk as a STARTING POINT (§2 Agent C). Run the
+                    named suites first and expect more.
 LAST DIFFERENCE:  19.4% code-side (6/31; exclusions: none) · BLOCKED on owner action: R-ENT-1
                   live half (Ruling 5 point 1; round-3 A enumerates every other blocked half)
 GATE (0% unexplained, both measurements):  NOT MET
@@ -194,21 +185,19 @@ GATE (0% unexplained, both measurements):  NOT MET
 DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 28 ITEMS.
            Round 2 A: all three parts (fixture · personas + round-1 verification · scans,
            tallies, difference list, number), one commit per part, each pushed.
+           Round 2 B: all six items (2-01 … 2-06) plus one issued correction and a close-out,
+           one commit each, each pushed. No code changed.
 GATE NOW:  tsc exit 0 · eslint 1 error (the standing quiz.tsx:46) · vitest **1 file failed |
            115 passed | 1 skipped (117)** · **3 tests failed | 2713 passed | 1 skipped (2717)**.
-           File and test TOTALS are unchanged from C's 117/2717; three tests moved from passed to
-           failed, all three in `deep-report-quota.test.ts`, all three the daily-window breaker
-           cases. See difference 4. `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      B WRITES THE ROUND-2 FIX GUIDE from A's seven differences, under Ruling 5 (§1f):
-           2-01 FIRST: the red gate — inject the test's clock into `prune()` and every other
-           time read in the counter store (Ruling 5 point 3; fix the seam, never the fixture
-           window). Then: quota `reason` + outage copy + `[quota] store unavailable` line
-           (Ruling 4 point 2); `deepReportsBudget` vs a real `deepReportsRemaining` AND the
-           JSON-safe `{ unlimited, deepReportsRemaining, reason? }` shape (Ruling 4 point 3 +
-           Ruling 5 point 4); ONE gate for every operator-funded search provider + breaker +
-           usage row + `GOOGLE_VERTEX_` prefix ban + auto order (Ruling 5 point 2, merges A's
-           5/6/7); the metering wrapper as single writer (Ruling 5 point 6). Number items
-           2-01, 2-02, …; tests inside each item.
+           Re-run cold by B this turn, byte-for-byte A's figures — B changed nothing. The three
+           failures are 2-01's subject and reproduce running the file alone (3 failed | 12
+           passed). `benchmark.test.ts` is still the one skip and did not flake.
+TODO:      C WORKS THE ROUND-2 GUIDE FROM 2-01 (§4 "Round 2 — Agent B"), top to bottom, one
+           commit per item, pushed. 2-01 first: it is what makes the gate green, so §2's
+           "confirm the gate is green cold before your first edit" is satisfied by landing it
+           rather than by finding it already green. Tests live INSIDE each item. Four POLICY
+           questions are open below — C lands the direction each entry names meanwhile and
+           records that it did so; none of them blocks starting.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -216,9 +205,28 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            the four variables may be set — but DO NOT DEPLOY THIS BRANCH until round-3 A
            reports the gate green (it is red today on a test-clock defect) and it is merged.
            (5) Local .env.local keys whenever ready — live-model halves stay BLOCKED until then.
-OPEN FOR MANAGER:  none — P1 and P2 ruled in §1f (Ruling 5 points 1–2); A's difference 4 ruled a
-           fixture defect, not a flake (point 3); differences 3 and the R-METER-1 note became
-           fix items (points 4, 6).
+OPEN FOR MANAGER:  FIVE from round-2 B, none of them a reversal of any decision; full reasoning
+           in the close-out at the end of §4. C is not blocked by any of them.
+           (1) 2-02 — the FALSE `breaker` usage row an outage writes for a paid user. Ruling 4
+               point 2 requires the log line and is silent on the row. Keeping it records a trip
+               that did not happen; removing it loses the only durable trace of the outage;
+               changing its `kind` collides with R-QUOTA-2's assertions. Same shape in
+               `consumeSystemSearches`. Meanwhile C fixes only the log line and the payload.
+           (2) 2-02 — SCOPE. R-QUOTA-1's UI half is entirely MISSING (`quotaMessage` has zero
+               production callers; every client drops `quota`). It is in the requirement's own
+               text, so not a widening — but it is the larger half. One item or two?
+           (3) 2-04 — THE PAPERS SURFACE IN LOCAL DEV. Gating Vertex and grounding uniformly
+               makes the papers `web` source return `[]` locally as well as in production, where
+               Rulings 75/79c deliberately kept it alive. B recommends accepting it; C lands
+               that direction meanwhile because it is the safer one and can be relaxed later.
+           (4) 2-04 — ADZUNA / JSEARCH / USAJOBS read `request key || operator env key` with no
+               gate, no breaker, no usage row, and are on NEITHER guard list. B recorded rather
+               than widened. Cheap partial answer: four more names on `FORBIDDEN_ON_VERCEL`.
+               **What is actually set on Vercel is the owner's to check — nobody here can see
+               it.**
+           (5) 2-05 — WHAT IS A "CALL"? A provider request (billing truth, B's recommendation)
+               or a wrapped method call? Today's model fallback chains already write several
+               rows per wrapped call, so "never two" is decided by this answer, not by a bug.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -5909,3 +5917,140 @@ this and Ruling 3 point 3(c) keeps it skipping cleanly.
 Every case above is additive. `tsc` 0 · `eslint` 1 (the standing `quiz.tsx:46`) · `vitest` 0 failed,
 with the file and test totals rising. A count that **falls** anywhere means a test was deleted, which
 §3 forbids.
+
+---
+
+## Round 2 — Agent B: close-out
+
+**Six items, 2-01 … 2-06, in the manager's order.** I did not reorder anything. Classification:
+
+| Item | Class | One line |
+|---|---|---|
+| 2-01 | `WRONG SHAPE` | `prune()` reads the process clock while its caller passes a fixture clock |
+| 2-02 | `WRONG DATA` | a store outage is reported as exhaustion — and, for paid, as a breaker trip that never happened |
+| 2-03 | `WRONG DATA` ×2 | `deepReportsRemaining` is a budget; a paid reader gets the outage sentinel |
+| 2-04 | `MISSING` + `WRONG ORDER` | three of the four operator-funded search providers are ungated, uncounted and unmetered |
+| 2-05 | `WRONG SHAPE` + `WRONG DATA` | the wrapper guarantees nothing on success; one call already writes several rows |
+| 2-06 | `MISSING` | persona coverage thrown away twice; three scans still counted by hand |
+
+##### What I found by execution that A's list or the manager's rulings had wrong
+
+Every one of these was established by running something, not by reading harder.
+
+1. **A's "tell" for the red gate is not the discriminator** (2-01). A said the two neighbouring paid
+   cases pass because they pre-spend with a `null` window. **All three pre-spend with `null`.** The
+   real rule is: a case fails iff it needs a counter to survive **two** increments that each write a
+   *daily* window. C needs the corrected rule to know which other tests are latent.
+2. **The manager's premise for 2-02's design does not hold.** "Choose by reading how the UI switches
+   on `kind`" — **the UI never reads `quota` at all.** `quotaMessage` has **zero** production
+   callers; the three client fetchers drop the field; on papers it is not even reachable in
+   TypeScript. So R-QUOTA-1's UI half is `MISSING` on top of the `reason` field, and R-QUOTA-1 stays
+   PARTIAL after the ruled fix unless it lands too.
+3. **A store outage corrupts the audit trail for paid users** (2-02). Driven against a stubbed
+   unreachable store: paid returns `{kind:"breaker"}` **plus one error line claiming the 200/day cap
+   tripped and one `usage_events` row saying `kind:"breaker"`** — for a call that spent nothing. A
+   measured only the free path and reported "0 error lines". Both are true; the paid shape is worse
+   and was unreported. `consumeSystemSearches` has the identical shape.
+4. **The obvious JSON round-trip test passes on today's broken code** (2-03).
+   `JSON.stringify(JSON.parse(JSON.stringify(x)))` equals `JSON.stringify(x)` for the paid
+   entitlement, because the first `stringify` has already destroyed `Infinity`. The protective test
+   must compare the **parsed object** with the **original object**.
+5. **Fixing the auto order alone would have closed nothing** (2-04). For jobs and events the auto
+   branch is usually **not reached**: the pipeline sets an explicit `provider` from
+   `webSearchOptions`, and `resolveWebSearchProvider` returns from the explicit branch at
+   `gemini-search.ts:207-212` before any ordering clause runs. The gate must go on the availability
+   inputs, which both branches consult.
+6. **Brave is operator-funded and ungated at the env read** (2-04). `system-key.ts:67` reads
+   `BRAVE_SEARCH_API_KEY` unconditionally and returns it on **every** branch, including
+   `provenance: "none"`. A flagged Brave's *order* only.
+7. **A's reason for papers being permanently at zero is wrong** (2-04). "`feed/pipeline.ts:129`
+   passes a hard `false`" is permanent **only for Tavily**. Brave, Vertex and grounding walk past it,
+   and `web-search.ts` charges **no breaker and writes no usage row anywhere in the file**. A's
+   measured zero is still correct — none of those names is set here and all are banned on Vercel.
+8. **"One row per call, never two" is already violated, in the `two` direction** (2-05). Both Gemini
+   providers — including `createGeminiApiProvider`, the one D1 gives every free user — loop over a
+   model fallback chain and log **per attempt**. A model that returns empty text logs `ok: true` and
+   the loop continues. A and Ruling 5 point 6 both anticipated the `zero` direction, which is
+   hypothetical; the `two` direction is the normal degradation path.
+9. **The brief's "there are provider tests that assert on log lines" is not so** (2-05).
+   `grep -rn "\[llm\]" src/` returns exactly one hit: the line's own definition in `usage-log.ts:31`.
+10. **Three more `request key ∥ operator env key` reads, outside every ruling** (2-04) —
+    `adzuna.ts:128-129`, `jsearch.ts:81`, `usajobs.ts:93-95`. The exact shape `system-key.ts:6-12`
+    calls the original defect. Ungated, uncharged, unmetered, and **not on the guard's ban list**.
+11. **`CounterStore.read()` has zero production callers** (2-01); 2-03 gives it its first.
+12. **There are four harness-driven route suites, not three** (2-06) — `api/feed` uses the harness
+    too.
+13. **My own error, corrected in place above:** I wrote that `api/profile` has no `route.test.ts`.
+    It does. See the correction after 2-03.
+
+##### POLICY — manager decides (four, none of them a reversal of anything)
+
+1. **2-02 — the false `breaker` row on an outage.** Ruling 4 point 2 requires the log line and is
+   silent on the `usage_events` row. Keeping it records a trip that did not happen; removing it
+   loses the only durable trace of the outage; changing its `kind` collides with R-QUOTA-2's
+   assertions. Applies identically to `consumeSystemSearches`. **Until ruled, C changes only the log
+   line and the payload** — strictly an improvement, cannot regress R-QUOTA-2.
+2. **2-02 — scope.** Is R-QUOTA-1's missing UI half part of 2-02 or its own item? It is in the
+   requirement's own text, so it is not a widening, but it is the larger half of the work.
+3. **2-04 — the papers surface in local development.** Gating Vertex and grounding uniformly makes
+   the papers `web` source return `[]` **locally as well as in production**, where Rulings 75/79c
+   deliberately kept it alive. Three options are set out under 2-04; **I recommend accepting it**
+   (option 1), and C lands that direction meanwhile because it is the safer one and can be relaxed.
+4. **2-04 — Adzuna / JSearch / USAJobs.** Do the three join the gate this round? Ruling 5 point 2
+   names four providers and these are structured job sources, so I recorded rather than widened
+   (Ruling 2 point 2's culture). The cheap partial answer is four extra names on
+   `FORBIDDEN_ON_VERCEL`. **What is set on Vercel is the owner's to check — nobody here can see it.**
+
+Plus, from 2-05, the question that decides the fix: **is a "call" a provider request or a wrapped
+method call?** I recommend the provider request — rows exist to say where money went, and every
+attempt is billed.
+
+##### Where I looked and found nothing
+
+- **A second clock defect in the Supabase counter store** — absent. No `Date.now()`, no `new Date()`,
+  no sweep in `SupabaseCounterStore` (`counters.ts:257-308`); the RPC calls `now()` twice and only
+  for `updated_at` (`20260904000000_usage_counters.sql:65`, `:69`); the migration ships no delete
+  job. Stated explicitly so it cannot fire on silence.
+- **A fifth operator-funded search provider that cannot be routed through the gate** (Ruling 5 point
+  2's escape clause) — none. All four take availability from a parameter that already exists.
+- **A request body that can force a search provider** — none. `webSearch.provider` is set only by
+  the server from its own environment; the body can turn grounding **off** and never on.
+- **An unwrapped `DigestProvider` method** — none. The interface has exactly four members
+  (`providers/types.ts:41-67`) and `meterProvider` wraps all four.
+- **A rendered reader of `deepReportsRemaining` or of `quota`** — none, in any component, page or
+  store. Both are on the wire and displayed nowhere.
+- **Any `.env.local` value** — never read. Presence was checked with `grep -c "^NAME=."` only, which
+  prints a count; `ADZUNA_APP_ID`, `ADZUNA_APP_KEY`, `JSEARCH_API_KEY`, `USAJOBS_API_KEY`,
+  `SEMANTIC_SCHOLAR_API_KEY`, `BRAVE_SEARCH_API_KEY`, `GOOGLE_VERTEX_PROJECT` and
+  `GOOGLE_VERTEX_SEARCH_ENGINE_ID` are all **0**. `.env.local` was never `cat`-ed.
+
+##### D1–D9 and standing rulings
+
+Nothing in this guide reverses a decision. Three came close enough to name and are flagged as POLICY
+rather than recommended away: D3 versus a uniform gate on the papers surface (POLICY 3);
+`breakerTripped`'s fail-closed direction, which 2-02 explains around rather than changes; and
+`resolveEntitlement` staying free of counter reads (2-03), which I treat as binding because it sits
+on every AI request.
+
+##### Housekeeping
+
+**B changed no code.** Everything above is reading, grepping and execution. All harnesses were
+written to the session scratchpad and never to the tree; `git status --porcelain
+--untracked-files=all` is clean of them. `git diff --cached | grep -E "AIza|tvly-"` was run before
+**every** push and returned nothing each time. No `next dev` was started (Ruling 2 point 5) and no
+process was killed. No third-party text was pasted anywhere. One commit per item, each pushed
+immediately.
+
+##### Gate, run cold from `web/` this turn, figures verbatim — unchanged by my turn, because I changed nothing
+
+- **tsc:** exit **0**
+- **eslint:** **1 error** — the standing `src/components/persona/quiz.tsx:46
+  react-hooks/set-state-in-effect`. `✖ 1 problem (1 error, 0 warnings)`
+- **vitest:** `Test Files  1 failed | 115 passed | 1 skipped (117)` ·
+  `Tests  3 failed | 2713 passed | 1 skipped (2717)`, 16.60 s
+
+Byte-for-byte A's figures. The three failures are 2-01's subject and I confirmed them by running the
+file alone as well (`Tests 3 failed | 12 passed (15)`). `benchmark.test.ts` is still the one skip and
+did not flake. **C confirms the gate is green cold only after 2-01 lands** — it cannot be green
+before, so §2's "confirm the gate is green before your first edit" is satisfied for this round by
+landing 2-01 first, which is why the manager put it first.
