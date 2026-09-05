@@ -56,6 +56,8 @@ import {
   TierUpgradeBlock,
   type TierUpgradeItem,
 } from "@/components/reports/tier-upgrade-block";
+import { QuotaNotice } from "@/components/reports/quota-notice";
+import type { QuotaSignal } from "@/lib/usage/deep-report-quota";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import { ReportTimelineTrack } from "@/components/reports/timeline-track";
 import {
@@ -1748,6 +1750,8 @@ export function EventReport({
   // needs the reader's plan as well as whether a model is reachable.
   aiMode = "none",
   effectivePlan = "free",
+  // ABC-freemium 2-07 · R-QUOTA-1 — absent whenever the reader was served.
+  quota,
   enrichmentLoading = false,
   onToggleStar,
   onToggleSave,
@@ -1779,6 +1783,7 @@ export function EventReport({
   providerConfigured?: boolean;
   aiMode?: AiMode;
   effectivePlan?: Plan;
+  quota?: QuotaSignal;
   enrichmentLoading?: boolean;
   onToggleStar: (key: string) => void;
   onToggleSave: () => void;
@@ -2311,6 +2316,10 @@ export function EventReport({
           facetReason={event.facetPreferenceReason}
         />
 
+        {/* ABC-freemium 2-07 · R-QUOTA-1 — beside the degraded report, never
+            instead of it. Renders null when there is no signal. */}
+        <QuotaNotice quota={quota} />
+
         {/* ABC-freemium 1-26 — `hasEnrichment` still suppresses the block, and
             it is not about plans: if the enriched rows are already on the page
             there is nothing locked to advertise. It reaches the block through
@@ -2379,6 +2388,10 @@ export default function EventDetailPage({
     result: OpportunityEnrichmentLoadResult<EventEnrichment> | null;
     done: boolean;
   }>({ key: "", result: null, done: false });
+  // ABC-freemium 2-07 · R-QUOTA-1 — held OUTSIDE the enrichment result, because
+  // that result is cached in browser storage and a cached quota signal is a
+  // stale one. See the matching note on the jobs report.
+  const [quota, setQuota] = useState<QuotaSignal | undefined>(undefined);
 
   const event =
     feedEvents.find((candidate) => candidate.id === id) ??
@@ -2426,7 +2439,10 @@ export default function EventDetailPage({
             | "read"
             | "failed"
             | "not-requested";
+          // ABC-freemium 2-07 — the field this fetcher always dropped.
+          quota?: QuotaSignal;
         };
+        setQuota(result.quota);
         return {
           enrichment: result.enrichment ?? null,
           sourceReadStatus:
@@ -2520,6 +2536,7 @@ export default function EventDetailPage({
       aiMode={aiAvailability(profile, entitlement)}
       effectivePlan={entitlement.effectivePlan}
       starredKeys={starredKeys}
+      quota={quota}
       isSaved={isSaved}
       isRegistered={isRegistered}
       isSubmitted={isSubmitted}

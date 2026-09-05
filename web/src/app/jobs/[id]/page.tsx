@@ -37,6 +37,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { PageContainer } from "@/components/ui/page-container";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import { QuotaNotice } from "@/components/reports/quota-notice";
+import type { QuotaSignal } from "@/lib/usage/deep-report-quota";
 import { WhyPeerSentThis } from "@/components/reports/why-peer-sent-this";
 import { ReportTimelineTrack } from "@/components/reports/timeline-track";
 import {
@@ -954,6 +956,8 @@ export function JobReport({
   // needs the reader's plan as well as whether a model is reachable.
   aiMode = "none",
   effectivePlan = "free",
+  // ABC-freemium 2-07 · R-QUOTA-1 — absent whenever the reader was served.
+  quota,
   enrichmentLoading = false,
   onToggleSave,
   onAppliedChange,
@@ -972,6 +976,7 @@ export function JobReport({
   providerConfigured?: boolean;
   aiMode?: AiMode;
   effectivePlan?: Plan;
+  quota?: QuotaSignal;
   enrichmentLoading?: boolean;
   onToggleSave: () => void;
   onAppliedChange: (next: boolean) => void;
@@ -1529,6 +1534,12 @@ export function JobReport({
         matchedTerms={job.matchedTerms}
       />
 
+      {/* ABC-freemium 2-07 · R-QUOTA-1 — the message the server has always
+          computed and nothing ever rendered. It sits beside the existing
+          degraded report rather than replacing it: the reader still has their
+          complete deterministic report. Renders null when there is no signal. */}
+      <QuotaNotice quota={quota} />
+
       {/* ABC-freemium 1-26 — see the matching note in the events report:
           nothing locked means nothing to advertise. */}
       <TierUpgradeBlock
@@ -1574,6 +1585,13 @@ export default function JobDetailPage({
     result: OpportunityEnrichmentLoadResult<JobEnrichment> | null;
     done: boolean;
   }>({ key: "", result: null, done: false });
+  // ABC-freemium 2-07 · R-QUOTA-1 — held OUTSIDE the enrichment result on
+  // purpose. `loadConfiguredOpportunityEnrichment` caches its return value in
+  // browser storage, and a cached quota signal is a stale one: it would keep
+  // telling a reader they had spent their allowance after they upgraded, which
+  // is the cache-poisoning shape R-UI-4 exists to prevent. This is set only
+  // when the fetch actually runs, so a cache hit correctly shows nothing.
+  const [quota, setQuota] = useState<QuotaSignal | undefined>(undefined);
 
   const job =
     feedJobs.find((candidate) => candidate.id === id) ??
@@ -1621,7 +1639,11 @@ export default function JobDetailPage({
             | "read"
             | "failed"
             | "not-requested";
+          // ABC-freemium 2-07 — the field the server has always sent and this
+          // fetcher always dropped.
+          quota?: QuotaSignal;
         };
+        setQuota(result.quota);
         return {
           enrichment: result.enrichment ?? null,
           sourceReadStatus:
@@ -1688,6 +1710,7 @@ export default function JobDetailPage({
       providerConfigured={canAttemptOpportunityEnrichment(profile, entitlement)}
       aiMode={aiAvailability(profile, entitlement)}
       effectivePlan={entitlement.effectivePlan}
+      quota={quota}
       onToggleSave={() => (isSaved ? unsaveJob(job.id) : saveJob(job))}
       onAppliedChange={(next) => setJobApplied(job, next)}
       onInterested={() => moreLikeJob(job)}

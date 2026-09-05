@@ -48,6 +48,8 @@ import {
   type StageId,
 } from "@/lib/papers/report-stream";
 import { TierUpgradeBlock } from "@/components/reports/tier-upgrade-block";
+import { QuotaNotice } from "@/components/reports/quota-notice";
+import type { QuotaSignal } from "@/lib/usage/deep-report-quota";
 import {
   PAPER_REPORT_CACHE_STORAGE_KEY,
   paperReportCacheKey,
@@ -589,6 +591,9 @@ export default function PaperDetailPage({
     report: PaperReport | null;
     done: boolean;
   }>(() => ({ key: "", report: null, done: false }));
+  // ABC-freemium 2-07 · R-QUOTA-1 — deliberately NOT part of `reportResult`,
+  // whose `report` is written to localStorage. See the note at the fetch.
+  const [quota, setQuota] = useState<QuotaSignal | undefined>(undefined);
   const [buildup, setBuildup] = useState<{
     key: string;
     stage: StageId;
@@ -805,11 +810,24 @@ export default function PaperDetailPage({
 
     const fetchJsonFallback = async () => {
       try {
-        const nextReport = await apiFetch<PaperReport>("/api/papers/report", {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          signal: controller.signal,
-        });
+        // ABC-freemium 2-07 · R-QUOTA-1 — `quota` was unreachable in TypeScript
+        // here: `PaperReport` has `noLlm?` but no `quota`, so the field the
+        // server sends could not even be named. It is read at the boundary
+        // rather than added to `PaperReport`, because that type IS cached in
+        // localStorage and a cached quota signal is a stale one — it would keep
+        // telling a reader they had spent their allowance after they upgraded.
+        //
+        // A quota refusal returns JSON rather than NDJSON, so the streaming
+        // attempt above falls through to exactly this path.
+        const nextReport = await apiFetch<PaperReport & { quota?: QuotaSignal }>(
+          "/api/papers/report",
+          {
+            method: "POST",
+            body: JSON.stringify(requestBody),
+            signal: controller.signal,
+          },
+        );
+        setQuota(nextReport.quota);
         finishWithReport(nextReport, nextReport.noLlm !== true);
       } catch {
         if (isActive()) {
@@ -1558,6 +1576,11 @@ export default function PaperDetailPage({
             </div>
           </section>
         )}
+
+        {/* ABC-freemium 2-07 · R-QUOTA-1 — beside the deterministic report the
+            reader already has, never instead of it. Renders null when the
+            server sent no signal, which is the common case. */}
+        <QuotaNotice quota={quota} />
 
         <TierUpgradeBlock
           items={PAPER_TIER_UPGRADE_ITEMS}

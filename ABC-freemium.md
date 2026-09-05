@@ -118,13 +118,50 @@ lock by rebasing onto the holder's head.
 ## §1. CURRENT STATE — THE SOURCE OF TRUTH
 
 ```
-HELD BY:          C-round2 @ 2026-09-05T00:40Z
+HELD BY:          free
 ROUND:            2
-WHOSE TURN:       C
-STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:35Z
-STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03, 2-04, 2-05, 2-06.
+WHOSE TURN:       A
+STOPPED BECAUSE:  finished the turn @ 2026-09-05T01:34Z
+STATUS:           ROUND 2 — C HAS LANDED ALL SEVEN ITEMS, 2-01 … 2-07, in the manager's
+                  order, one commit each, each pushed immediately. Nothing reordered. The
+                  gate is GREEN and has been green cold after every item since 2-01.
 
-                  DEVIATIONS FROM B'S GUIDE, each traced before it was taken:
+                  WHAT EACH ITEM DID, one line each:
+                  2-01  the in-memory counter store's housekeeping sweep now uses the
+                        caller's clock, not the process clock. The three red R-QUOTA-2 cases
+                        went green WITH THE FIXTURE UNCHANGED, which is Ruling 5 point 3's
+                        whole point. Also fixes two users on one UTC day sweeping each
+                        other's live entries — a bug no test covered.
+                  2-02  a counter-store outage stops reading as exhaustion. `QuotaSignal`
+                        gains a REQUIRED `reason: "exhausted" | "unavailable"`, kept
+                        orthogonal to `kind` because an outage happens on the breaker path
+                        too. Per Ruling 6 point 1 an outage writes the `[quota] store
+                        unavailable` line and NO usage row, in both the deep-report check
+                        and `consumeSystemSearches`. Real trips keep their line and row.
+                  2-03  `deepReportsRemaining` (a budget that never moved) becomes
+                        `deepReportsBudget` on the resolver; `GET /api/profile` ships a
+                        JSON-safe `{unlimited, deepReportsRemaining, reason?}` computed from
+                        one NON-INCREMENTING counter read. `Infinity` cannot reach a payload
+                        by construction — the field that could carry it is dropped by type.
+                  2-04  Brave, Vertex AI Search and Gemini grounding join the system Tavily
+                        key behind ONE gate, one 500/day breaker and one usage row carrying
+                        the provider's own NAME. The gate is on the availability inputs, not
+                        the ordering (B's point 1). Papers spends nothing on any operator key
+                        in any runtime (Ruling 6 point 3) and gains the breaker and row it
+                        never had. The build guard bans `GOOGLE_VERTEX_` by PREFIX.
+                  2-05  the metering wrapper's "did the provider already log this" check
+                        moves from a `catch` to a `finally`, closing "never zero" on the
+                        success path; the four Gemini `ok: true`-on-empty rows are fixed to
+                        `ok: text.trim().length > 0`. A fallback chain writing one row per
+                        attempt is now a documented, tested contract (Ruling 6 point 5).
+                  2-06  scans 3, 4 and 5 become gate tests instead of a hand count; the
+                        persona pass becomes a permanent suite instead of being rebuilt and
+                        deleted a third time; `api/test-digest` gets its first suite.
+                  2-07  the three report pages finally RENDER the quota message —
+                        exhausted → sentence + upgrade prompt; unavailable → the outage copy
+                        and NO prompt; no signal → nothing at all.
+
+                  DEVIATIONS FROM B'S GUIDE — three, each traced before it was taken:
                   - 2-02: B put the `[quota] store unavailable` writer in a PRIVATE helper in
                     `deep-report-quota.ts`. C exported it from `counters.ts` instead, because
                     the sibling `consumeSystemSearches` lives in `search-breaker.ts` and needs
@@ -137,94 +174,116 @@ STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02,
                     client, so adding a session stub to any of them would change the runtime
                     of every case already in the file. One file also gives A one command for
                     the whole persona pass.
+                  - 2-07: the obvious wiring is to put `quota` inside the object each page
+                    already holds. C held it in SEPARATE state on all three pages, because
+                    all three of those objects are cached in browser storage and a cached
+                    quota signal is a stale one — it would keep telling a reader they had
+                    spent their allowance after they upgraded, which is the cache-poisoning
+                    shape R-UI-4 exists to prevent.
 
-                  --- B's original classification, kept for reference ---
-                  ROUND 2 — B HAS WRITTEN THE FIX GUIDE. Six items, 2-01 … 2-06, in the
-                  manager's order from Ruling 5, one commit each, all pushed. Nothing reordered.
-                  B changed no code; the gate is unchanged and still red on 2-01's three tests.
+                  WHAT B AND THE RULINGS GOT WRONG, found by execution this turn — SHORT LIST,
+                  and none of it changed an item's direction:
+                  1. B's `web-search.ts` fix could not be completed as specified: the papers
+                     `SourceQuery.webSearch` type has NO `userId` and `feed/pipeline.ts` has
+                     no user in scope at all. C added the optional field for shape parity,
+                     left it unpopulated, and RECORDED the gap rather than widening the feed
+                     request type inline. It does not matter today (the gate makes the
+                     metering unreachable) and it is THE FIRST THING anyone un-gating that
+                     surface must fix — otherwise the breaker sees a null user and declines
+                     to charge, which is a meter that looks present and counts nothing.
+                  2. Three source-text scans C wrote in 2-06 initially failed on their OWN
+                     PROSE: these modules document what they used to do, and a scan that
+                     reads comments reports the explanation of a fixed defect as the defect.
+                     The scans now strip comments. Worth knowing before writing a fourth.
+                  3. Three of the four persona fixtures were red on their first run and NONE
+                     was a finding — a digest body with no papers returns 200 above the guard
+                     (a "nothing to do" path), events/report requires `event.name`, and the
+                     papers shallow-report builder needs `summaryExperimentKeywords`. Named
+                     so round-3 A does not re-open them.
 
-                  CLASSIFICATION: 2-01 WRONG SHAPE (the clock seam) · 2-02 WRONG DATA (quota
-                  outage reads as exhaustion) · 2-03 WRONG DATA x2 (budget-as-remainder, and
-                  paid arriving as `null`) · 2-04 MISSING + WRONG ORDER (three of the four
-                  operator-funded search providers ungated/uncounted/unmetered) · 2-05 WRONG
-                  SHAPE + WRONG DATA (the wrapper guarantees nothing on success; one call
-                  already writes several rows) · 2-06 MISSING (persona coverage discarded twice;
-                  three scans still counted by hand).
-
-                  THIRTEEN THINGS B ESTABLISHED BY EXECUTION THAT THE LIST OR THE RULINGS HAD
-                  WRONG — the five that change what C does:
-                  1. FIXING 2-04'S AUTO ORDER ALONE CLOSES NOTHING. For jobs and events the
-                     auto branch is usually not reached: the pipeline sets an explicit
-                     `provider` from `webSearchOptions` and `resolveWebSearchProvider` returns
-                     at `gemini-search.ts:207-212` before any ordering clause runs. The gate
-                     goes on the availability inputs, which BOTH branches consult.
-                  2. THE UI NEVER READS `quota` AT ALL. `quotaMessage` has zero production
-                     callers and all three client fetchers drop the field, so the manager's
-                     "read how the UI switches on `kind`" has no subject and R-QUOTA-1's UI
-                     half is MISSING on top of the `reason` field.
-                  3. A STORE OUTAGE CORRUPTS THE AUDIT TRAIL FOR PAID USERS — a false
-                     `kind:"breaker"` usage row plus an error line claiming the 200/day cap
-                     tripped, for a call that spent nothing. `consumeSystemSearches` is the
-                     same shape. A measured only the free path.
-                  4. "ONE ROW PER CALL, NEVER TWO" IS ALREADY VIOLATED IN THE `two` DIRECTION.
-                     Both Gemini providers — including the system-key one every free user gets
-                     — loop over a model fallback chain and log per attempt. The `zero`
-                     direction the ruling anticipated is the hypothetical one.
-                  5. THE OBVIOUS JSON ROUND-TRIP TEST PASSES ON TODAY'S BROKEN CODE. Compare
-                     the parsed object with the original object, never two stringify outputs.
-
-                  Plus: Brave is operator-funded and ungated at the env read
-                  (`system-key.ts:67`); papers is permanently zero only for TAVILY, and
-                  `web-search.ts` charges no breaker and writes no usage row at all; three more
-                  `request key || operator env key` reads exist outside every ruling
-                  (adzuna, jsearch, usajobs); `CounterStore.read()` has zero production
-                  callers; there are four harness-driven route suites, not three; and no
-                  provider test asserts on a `[llm]` log line. B also corrected one of its own
-                  citations in place (`api/profile/route.test.ts` does exist).
-
-                  FOR C, THINGS THAT WILL LOOK LIKE FINDINGS AND ARE NOT:
-                  - The gate is RED until 2-01 lands. That is why 2-01 is first; §2's "confirm
-                    the gate is green before your first edit" is satisfied by landing it.
-                  - Every name 2-04 gates is already banned on Vercel, so the visible effect on
-                    the deployment today is NIL. It is defence in depth for a self-host and a
-                    developer machine, not a live leak — report it that way.
-                  - Renaming `deepReportsRemaining` breaks no rendered screen, because nothing
-                    renders it. The value is still wrong on the wire.
-                  - `breakerTripped`'s fail-closed direction and `resolveEntitlement` staying
-                    free of counter reads are both binding; 2-02 and 2-03 work around them
-                    rather than changing them.
-                  - B's guide lists tests at risk as a STARTING POINT (§2 Agent C). Run the
-                    named suites first and expect more.
-LAST DIFFERENCE:  19.4% code-side (6/31; exclusions: none) · BLOCKED on owner action: R-ENT-1
-                  live half (Ruling 5 point 1; round-3 A enumerates every other blocked half)
-GATE (0% unexplained, both measurements):  NOT MET
+                  FOR ROUND-3 A, THINGS THAT WILL LOOK LIKE FINDINGS AND ARE NOT:
+                  - The papers `web` source now returns `[]` in LOCAL DEVELOPMENT too, not
+                    only in production. That is Ruling 6 point 3 accepted and implemented,
+                    superseding report-parity Rulings 75 and 79c for this surface.
+                  - The visible effect of 2-04 on the current Vercel deployment is NIL —
+                    every name it gates is already banned there. Defence in depth for a
+                    self-host and a developer machine, not a live leak closed.
+                  - A Gemini fallback chain writes SEVERAL usage rows for one logical call.
+                    That is Ruling 6 point 5's billing truth, now asserted, not a duplicate.
+                  - An outage no longer writes any `usage_events` row, so the `[quota] store
+                    unavailable` LOG LINE is the only durable trace. Count occurrences from a
+                    captured log, never from `usage_events`. Expect 0 in a healthy local run.
+                  - `deepReportsBudget` renames a field nothing rendered; the wire value is
+                    what changed.
+LAST DIFFERENCE:  19.4% code-side at round-2 A (6/31) — ROUND-3 A RE-MEASURES. All seven of
+                  round-2 A's differences have code landed against them; A scores, not C.
+GATE (0% unexplained, both measurements):  NOT MET — round-3 A re-measures
 
 DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 28 ITEMS.
-           Round 2 A: all three parts (fixture · personas + round-1 verification · scans,
-           tallies, difference list, number), one commit per part, each pushed.
-           Round 2 B: all six items (2-01 … 2-06) plus one issued correction and a close-out,
-           one commit each, each pushed. No code changed.
-GATE NOW:  tsc exit 0 · eslint 1 error (the standing quiz.tsx:46) · vitest **1 file failed |
-           115 passed | 1 skipped (117)** · **3 tests failed | 2713 passed | 1 skipped (2717)**.
-           Re-run cold by B this turn, byte-for-byte A's figures — B changed nothing. The three
-           failures are 2-01's subject and reproduce running the file alone (3 failed | 12
-           passed). `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      C WORKS THE ROUND-2 GUIDE 2-01 … 2-07 under Ruling 6 (§1g): 2-01 first (it is what
-           turns the gate green — confirm green BY landing it, then cold after every later
-           item); 2-02 with NO breaker row on an outage (point 1), in both the deep-report and
-           system-search checks; 2-03 JSON-safe shape; 2-04 one gate for every operator-funded
-           search provider, papers stays zero everywhere (point 3), Adzuna/JSearch/USAJobs do
-           NOT join and are NOT banned (point 4); 2-05 on the provider-request reading (point
-           5) incl. the ok-on-empty fix; 2-06 tests; 2-07 the UI half of R-QUOTA-1 (point 2).
+           Round 2 A: all three parts. Round 2 B: all six items plus one issued correction
+           and a close-out; no code changed.
+           **Round 2 C: ALL SEVEN ITEMS, 2-01 … 2-07**, one commit each, each pushed.
+GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0 warnings**) ·
+           vitest **123 files passed | 1 skipped (124)** · **2825 tests passed | 1 skipped
+           (2826)**, **0 failed**. Run cold after every item from 2-01 on. The cold run
+           BEFORE C's first edit was the expected red: 3 failed | 2713 passed | 1 skipped
+           (2717), all three in `deep-report-quota.test.ts` and exactly the three B named.
+           Net +112 tests across the turn, all additive; no count anywhere fell, and no test
+           was deleted. `benchmark.test.ts` is still the one skip and did not flake once.
+TODO:      ROUND-3 A RE-MEASURES. Questions a fixture cannot settle, and the standing tallies
+           to carry by name:
+           (1) Does a reader actually SEE the quota message? 2-07 asserts the component and
+               the placement; nobody in this loop can look at a rendered page. Related: on
+               jobs and events the signal is set only when the enrichment fetch runs, and
+               that fetch is skipped when `canAttemptOpportunityEnrichment` is false — so
+               which persona, if any, is refused a deep report but never shown the notice?
+           (2) Is the papers `web` source's silence in local development acceptable to the
+               owner in practice? Ruling 6 point 3 accepted it as a design decision; only
+               using the app says whether it reads as a bug.
+           (3) Does the `[quota] store unavailable` line actually survive where it matters?
+               With the row gone it is the only durable trace of an outage, and a log line
+               does not survive a cold shutdown the way an awaited row did.
+           (4) THE PAPERS `userId` GAP (finding 1 above) — confirm it is still unpopulated and
+               still harmless, and that nobody has un-gated the surface without fixing it.
+           (5) Do the three structured job sources (Adzuna/JSearch/USAJobs) still bill by
+               free-tier quota rather than per request? Ruling 6 point 4's threshold turns on
+               exactly that, and only the owner's accounts can answer it.
+           STANDING TALLIES, every one to be reported even when zero — several are now
+           ASSERTIONS in `src/lib/security/spend-scans.test.ts`, so A can run them rather than
+           recount them:
+           · the five scans (1 and 2 already tests; 3, 4 and 5 became tests this turn)
+           · routes resolving a provider before the guard (was 7 in round 1, 0 expected)
+           · persona/route pairs behaving per spec — denominator **41/45** (Ruling 5 point 8)
+           · operator-key searches on `anonymous` + `free-no-key`, per surface (must be 0;
+             now also asserted in `src/app/api/ai-route-personas.test.ts`)
+           · papers operator-key searches (must be 0; now 0 in EVERY runtime)
+           · anonymous-BYOK feed requests → tier 0, never a provider (Ruling 4 point 1)
+           · `[quota] store unavailable` occurrences (expect 0 in a healthy run)
+           · `local-no-auth` reachability in a deployed runtime (expect ABSENT again)
+           · structured-source key reads outside the gate — **expect 3** (Ruling 6 point 4),
+             now asserted by name and by count
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
            works. (4) The Vercel do-not-yet on TAVILY_API_KEY is LIFTED (Ruling 5 point 7):
-           the four variables may be set — but DO NOT DEPLOY THIS BRANCH until round-3 A
-           reports the gate green (it is red today on a test-clock defect) and it is merged.
-           (5) Local .env.local keys whenever ready — live-model halves stay BLOCKED until then.
-OPEN FOR MANAGER:  none — B's five questions ruled in §1g (Ruling 6 points 1–5); the guide is
-           seven items (point 6).
+           the four variables may be set. **The gate is now GREEN**, so the remaining bar to
+           deploying this branch is round-3 A's re-measurement and the merge — not a red gate.
+           (5) Local .env.local keys whenever ready — live-model halves stay BLOCKED until
+           then. (6) NEW (Ruling 6 point 4): confirm ADZUNA_APP_ID/APP_KEY, JSEARCH_API_KEY
+           and USAJOBS_API_KEY are set on Vercel if the free jobs surface is meant to have
+           them — nobody in the loop can see the Vercel env.
+OPEN FOR MANAGER:  Three doubts C flagged rather than judged, none blocking:
+           (a) `GET /api/profile` now performs one extra counter read for free and trial
+               readers. C judged it in scope because Ruling 4 point 3 asks for budget minus
+               used from the counter store in as many words, and there is nowhere else to get
+               `used`. A separate allowance fetch would be a shape change, not a correction.
+           (b) `web-search.ts` now imports the usage modules for machinery the gate makes
+               unreachable. C judged a gate with a meter behind it better than a gate with
+               nothing, but it is a real cost.
+           (c) scan 5's "can this route spend" predicate is a deliberately BROAD heuristic
+               (mentions `resolveProvider`, `GoogleGenAI` or `systemSearchAllowed`) with a
+               written exemption list. It over-includes rather than under-includes; a route
+               reaching a provider through a helper naming none of those three would slip.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -6825,3 +6884,98 @@ over-inclusion gets argued in writing. But a future route that reaches a provide
 naming none of those three would not be caught. I judged a broad-and-argued predicate better than a
 narrow-and-silent one; if the manager wants it tightened to an import-graph walk, that is a
 different item.
+
+---
+
+#### 2-07 — LANDED. The quota message reaches a reader for the first time
+
+**Gate after this item:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, **0
+warnings**) · `vitest` **123 files passed | 1 skipped (124)** · **2825 tests passed | 1 skipped
+(2826)**, **0 failed**. Up 15 from 2-06's 2810.
+
+**What changed, five files (two new):**
+
+| File | Change |
+|---|---|
+| **NEW** `web/src/components/reports/quota-notice.tsx` | `QuotaNotice` — renders `quotaMessage(quota)`, plus an upgrade prompt **only** when `reason === "exhausted"`; returns `null` with no signal |
+| **NEW** `web/src/components/reports/quota-notice.test.tsx` | 6 rendering cases + 9 placement cases |
+| `web/src/app/jobs/[id]/page.tsx` · `web/src/app/events/[id]/page.tsx` · `web/src/app/papers/[id]/page.tsx` | each reads `quota` off the response, holds it, and renders the notice beside the existing degraded report |
+
+**This closes the half B found MISSING and Ruling 6 point 2 made its own item.** `quotaMessage` had
+**zero** production callers: the server computed a correct message, tested it three ways, and showed
+it to nobody. On papers the field was not even reachable in TypeScript, because `PaperReport` has
+`noLlm?` and no `quota`.
+
+**The three states, exactly as the manager specified:**
+
+| State | What renders |
+|---|---|
+| `reason: "exhausted"` | the exhaustion sentence **+ the upgrade prompt** |
+| `reason: "unavailable"` | the outage copy, **and no upgrade prompt** — nothing the reader buys fixes a store outage, and an upsell there would be a second lie on top of the one 2-02 removed |
+| no `quota` at all | **`null`** — not an empty panel, not a heading over nothing |
+
+The reader keeps their complete deterministic report in every case: the notice sits **beside** the
+existing degraded rendering rather than replacing anything, which is what "reuse the existing
+degraded-report rendering; add only the message and the prompt" asks for.
+
+**A DESIGN DECISION I MADE AND WANT ON THE RECORD, because it is the one place I departed from the
+obvious implementation.** The obvious wiring is to put `quota` inside the object each page already
+holds — `OpportunityEnrichmentLoadResult` on jobs and events, `PaperReport` on papers. **I did not,
+and all three pages hold it in separate state instead**, because all three of those objects are
+**cached in browser storage**: `loadConfiguredOpportunityEnrichment` caches its return value, and the
+papers page writes its report to `PAPER_REPORT_CACHE_STORAGE_KEY`. A cached quota signal is a stale
+one — it would keep telling a reader they had spent their allowance after they upgraded, which is
+exactly the cache-poisoning shape R-UI-4 exists to prevent. Holding it outside also gives the right
+behaviour on a cache hit: the signal is set only when a fetch actually runs, so a reader served from
+cache correctly sees nothing. There is a test per page pinning this.
+
+**On papers, the JSON path is the right seam and I verified it rather than assuming.** The quota
+refusal returns `NextResponse.json({ ...shallow, quota })` — not NDJSON — so `streamPaperReport`
+rejects on the content type and the page falls through to `fetchJsonFallback`, which is where the
+read is. The type is widened at the call site (`apiFetch<PaperReport & { quota?: QuotaSignal }>`)
+rather than on `PaperReport`, for the caching reason above.
+
+**No upgrade link that does not work.** The prompt points at the existing key panel, which is a real
+thing a reader can do today. That follows `TierUpgradeBlock`'s existing decision and its reason: spec
+§3 puts payment out of scope, and a dead checkout link is worse than no link. **D7's price stays
+display-only.**
+
+**Fifteen new cases.** Six on the component: nothing renders with no signal; the exhaustion sentence
+**and** the prompt; the outage copy **and no prompt** (asserted by absence of both "Peer Pro" and
+the settings link); the outage never borrows the exhaustion wording (the two payloads used to be
+byte-identical — this is what stops them becoming byte-identical again on screen); the paid
+daily-breaker sentence; and the CJK guard, which now follows the string onto the screen rather than
+stopping at the pure function. Nine on placement, three per page: it reads `quota`, it renders
+`QuotaNotice`, and it keeps the signal out of the cached object.
+
+**Placement asserted as source text, deliberately.** Rendering three ~2500-line page components in a
+unit test would assert far less for far more setup, and the property that matters is a placement
+rule — the same reasoning `spend-scans.test.ts` and `quota-exemptions.test.ts` already use. The
+component's own behaviour is asserted by real rendering.
+
+**Proved the new tests test the fix (§2 Agent C, standard 1).** I reverted the three pages and
+replaced the component with a stub returning `null`, then re-ran: **12 of 15 failed** — every
+rendering case except the two negative ones, and all nine placement cases. Restored, re-ran, green.
+
+**Standing locks re-verified** (§2 Agent C, standard 2): `tier-upgrade-block.test.tsx` green and
+unmodified — I added the notice **beside** that block on all three pages and changed nothing about
+it. `ui-vocabulary.test.ts` green, which matters here because this item adds user-visible strings.
+`no-client-dev-flags.test.ts` green — the new component reads no environment at all. Every other
+named lock green in the cold full run above.
+
+**R-QUOTA-1 should now be scoreable end to end** — the server half landed in 2-02 and this is the UI
+half Ruling 6 point 2 says it was waiting on. **Round-3 A should score it, not me**: I cannot see a
+rendered page, and "a reader sees the message" is exactly the kind of claim a fixture argues for
+rather than settles.
+
+**Doubt flagged, not judged.** Two, both for round-3 A rather than for me.
+
+1. **The events and jobs pages set `quota` from the report fetch, which only runs when enrichment is
+   attempted at all.** `loadConfiguredOpportunityEnrichment` returns `null` early when
+   `canAttemptOpportunityEnrichment` is false, so the fetch — and therefore the signal — never
+   happens for a reader who could not have spent a deep report anyway. I believe that is correct
+   (no attempt, no refusal, nothing to say), but it means the notice is unreachable for one persona
+   and A should confirm which.
+2. **The papers stream path carries no `quota`.** It does not need to today, because a refusal comes
+   back as JSON — but if a later round streams a refusal, the signal would be dropped silently. The
+   stream's event union (`ReportStreamEvent`) is where that would have to be added.
