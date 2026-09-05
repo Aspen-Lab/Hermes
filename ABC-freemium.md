@@ -119,10 +119,13 @@ lock by rebasing onto the holder's head.
 
 ```
 HELD BY:          free
-ROUND:            3
+ROUND:            4
 WHOSE TURN:       A
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T02:53Z
-STATUS:           ROUND 3 — **C HAS WORKED THE WHOLE GUIDE. All three items landed, 3-01 /
+STATUS:           ROUND 4 — A MEASURES. The manager accepted round-3 C after an independent
+                  cold gate run (identical figures) and a read of the streamed reachability
+                  suite (Ruling 10, §1k). Round-3 C's own summary follows.
+                  ROUND 3 — **C HAS WORKED THE WHOLE GUIDE. All three items landed, 3-01 /
                   3-02 / 3-03, one commit each, each pushed as it finished; no deviation
                   from the ordering; tree clean throughout and every throwaway written
                   outside the repo.**
@@ -225,42 +228,13 @@ DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 2
 GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0 warnings**) ·
            vitest **124 files passed | 1 skipped (125)** · **2859 tests passed | 1 skipped
            (2860)**, **0 failed**, 9.43 s.
-TODO:      **ROUND-4 A RE-MEASURES.** Questions a fixture cannot settle, and the standing
-           tallies, carried by name:
-           1. **Drive every route the way the CLIENT drives it** (Ruling 9 point 3, now a §3
-              rule). 3-03 existed because A drove papers without the NDJSON header. **The
-              same question is open for `jobs/report` and `events/report`** — C did not touch
-              them: both consume the counter before resolving a provider and neither has a
-              streaming transport today, but that is a reading of the code, not a
-              measurement. Ditto `digest` and `figure`.
-           2. **Does the paid reader see a clean breaker notice end-to-end?** C's proof is a
-              render test plus a unit test. Nobody has driven a real paid reader to the
-              200/day cap and read the screen. **Blocked on the migrations** (no real paid
-              plan exists), so it may have to stay blocked — say so rather than scoring it.
-           3. **Does the `quota` stream event reach the notice on a real page?** The route
-              emits it and the page handler sets state; the two have never met outside
-              vitest. Same blocker.
-           4. **Is `resetsIn` right at a DST boundary and across a month end?** Both units are
-              pure UTC arithmetic, so C believes yes, and the unit tests cover 23 h 59 m /
-              24 h 1 m / a past instant. A should confirm from the rendered string.
-           **STANDING TALLIES — every one, by name (Ruling 7 point 5, Ruling 8 point 5,
-           Ruling 9 point 6):** the five scans; routes resolving a provider before the guard;
-           persona/route pairs (denominator 45); operator-key searches on anonymous and on
-           free-no-key, per surface; papers operator-key searches; anonymous-BYOK feed
-           requests; `[quota] store unavailable` occurrences; `local-no-auth` reachability;
-           structured-source key reads outside the gate (3); usage rows per provider request;
-           **paid readers shown any upsell** (C: now **0**, pinned by render test);
-           **compile-time enforcement of the entitlement context** (C: **PRESENT** for
-           `resolveProvider`, **ABSENT** for the operator-search availability gate — report as
-           **two figures, not one**); **quota/breaker checks reachable on the app's real
-           request shape, per route** (C: papers **now reachable on both transports**, proved
-           by driving it; the other four routes unmeasured); **`resolveProvider` call sites
-           without a context** (C: **0**, now enforced by the compiler — note scan 4 read 0
-           before this item too, because it only ever banned the zero-argument form, so the
-           two numbers measure different things and both should be reported).
-           **A SIXTH SCAN EXISTS NOW** — scan 6, banning the three shapes that would re-open
-           3-02 (an optional entitled/provider context, the test-only mint in production, a
-           cast to the brand outside its module). The five-scan tally becomes six.
+TODO:      ROUND-4 A MEASURES under Rulings 5/7/8/9/10: score every R-* item against behaviour
+           (both numbers; blocked halves by name — expect the same seven); verify round-3's
+           three items closed by behaviour (paid breaker renders no upsell; a plain-object
+           context is a compile error; a streamed deep papers report increments the counter
+           and charges the breaker, the shallow one does not); every standing tally by name
+           (Ruling 9 point 6 + Ruling 10 point 4). If code-side is 0%: say so plainly, set
+           `WHOSE TURN: manager — independent re-measure`, and stop.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -277,12 +251,7 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            HALF OF THE GATE:** seven named items, two causes, both owner actions. No agent can
            close any of them. **After round-4 A confirms 0% code-side, the owner's two actions
            are the ONLY thing between this branch and the gate.**
-OPEN FOR MANAGER:  none. Ruling 9's three authorisations are all built as ruled. **One thing
-           C flagged rather than judged:** 3-02 half B stays unbuilt under Ruling 7 point 3's
-           escape clause, so scan 3 and scan 5 are now load-bearing **specifically for the
-           operator-search gate**, and scan 5's `canSpend` is a three-marker closed list over
-           an open class. That is a written-down, accepted cost — not a new question — but it
-           is the one place where "cannot be made incorrect by accident" still does not hold.
+OPEN FOR MANAGER:  none — round 3 closed by Ruling 10; nothing pending from C.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -679,6 +648,36 @@ Round-3 A re-measures every closure; this ruling accepts the round, it does not 
 
 ---
 
+## §1k. RULING 10 — after round-3 C; ROUND 4 OPENS (2026-09-05, BINDING)
+
+**Manager's independent check before accepting the round:** the gate re-run cold — tsc 0 ·
+eslint 1 (standing) · vitest 124/1 files, 2859/1 tests, 0 failed — identical to C's figures;
+the 3-03 reachability suite read: seven cases drive the NDJSON request shape the app sends and
+assert the counter and the breaker directly, with the shallow exemption still un-counted.
+
+1. **Round 3 accepted.** 3-01 closed (upsell keyed on `effectivePlan !== "paid"`, trial keeps
+   the prompt, hours under a day); 3-02 half A closed (branded `EntitledContext`, required by
+   `resolveProvider`; the two contextless pool closures carry a compile-checked
+   `SpendJustification`; `FigureMatchContext` now carries the entitlement, which **closes a
+   hole 1-07 left** — a null-user context satisfied the old required shape); 3-03 closed
+   (one `consumeDeepReport` above the transport branch; refusal as a `ReportStreamEvent`
+   before the `mode` event).
+2. **Two new ground rules (§3), from C's own false greens.** (a) **A revert proof asserts the
+   revert applied** — show the non-empty diff (or the substitution count) before reading the
+   run; a green run against an unmodified file is not evidence. (b) **Every new scan or guard
+   test is proved by planting an offender** and watching it fail; a guard that passes is not
+   a guard that works. (c) Source-text assertions across line breaks use whitespace-tolerant
+   regexes — this tree is CRLF on disk.
+3. **Round 4 opens; A measures under the two-number convention.** Expected: **0% code-side**
+   with the seven blocked halves unchanged. If A reports that, the manager re-runs A's
+   measurement independently (Ruling 8 point 4; SKILL: never close alone), records both
+   numbers, and the loop **waits on the owner** — `PENDING USER ACTION` unchanged: the three
+   migrations, the existing-users trial decision, one profile save, the Vercel variables
+   (deploy only after green + merge), local keys.
+4. **Round-4 tallies** — Ruling 9 point 6 in full, plus: "guard tests proved by planting"
+   (count of scans with a plant case; expect all), and "figure matchers reachable with a
+   null-user context" (must be 0 by the compiler).
+
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
 ### Agent A — Reviewer
@@ -800,6 +799,10 @@ C does **not** judge whether something should be fixed.
 - **Every route with an entitlement, quota or breaker check has a reachability test** that
   drives the request shape the app actually sends — streaming included — and asserts the check
   ran (Ruling 9 point 3). "Where the counter sits in the file" is not evidence.
+- **A revert proof asserts the revert applied** (non-empty diff or substitution count) before
+  the run is read; **every new scan or guard test is proved by planting an offender**; source
+  assertions across line breaks use whitespace-tolerant regexes — the tree is CRLF on disk
+  (Ruling 10 point 2).
 - Commit messages: plain sentences in the repo's existing style
   (`feat(scope): …`, `fix(scope): …`, `refactor(scope): …`), ending with
   `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`.
