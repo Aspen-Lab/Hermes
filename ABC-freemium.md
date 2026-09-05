@@ -7258,3 +7258,240 @@ silence.
 /api/jobs/feed` signed out, `aiTier: 2` in the body, own Tavily key in `searchConnectors`, all four
 operator credentials armed -> **200 · 0 operator requests · 0 usage rows · 2 fetches on the key the
 caller supplied themselves**. Tier 0, no provider, no operator money. Unchanged from round 2.
+
+#### Part 3 — the static scans, the standing tallies, the difference list, the two numbers
+
+##### The five scans, each reported even at zero — and each done twice
+
+C turned scans 3, 4 and 5 into gate tests in 2-06. The brief says to run those **and** grep
+independently, and to say whether the two agree. **They agree on all three.** I ran
+`spend-scans.test.ts` (9 cases, green) and separately grepped the tree myself; the counts match
+name for name.
+
+**Scan 1 — rendered strings matching `Tier 0|Tier 1|Tier 2|BYOK` under `web/src`: 0.**
+146 raw -> 64 after dropping `*.test.ts(x)` -> **4** after dropping lines whose first non-space
+characters are `//`, `*` or `/*`. Same method as rounds 1 and 2. I read all four in context:
+
+| File:line | What it is | Rendered? |
+|---|---|---|
+| `app/jobs/[id]/page.tsx:1347` | inside a `/* ... */` comment in an element's attribute list | no |
+| `app/jobs/[id]/page.tsx:1528` | inside a `{/* ... */}` JSX comment | no |
+| `app/page.tsx:851` | inside a `{/* ... */}` JSX comment | no |
+| `lib/feed/tier2-rerank.ts:135` | `console.warn("[feed/tier2] rerank failed, keeping Tier 1 order:", err)` — a server log | no |
+
+The first two moved from `:1342`/`:1523` to `:1347`/`:1528` because 2-07 inserted five lines above
+them. **Same two comment blocks, not new occurrences** — I checked the surrounding text, not just
+the line numbers. `ui-vocabulary.test.ts` ships this scan as a gate and is green.
+
+**Scan 2 — `NODE_ENV === "development"` in code that ships to the browser: 0.**
+8 grep hits. Four are prose inside comments (`app/papers/[id]/page.tsx:698`, `lib/env/local-dev.ts:12`,
+`lib/feed/ai-tier.ts:28`, `lib/usage/counters.ts:253`). Four are real tests and all four are
+server-only: `app/auth/callback/route.ts:17` (a route handler), `lib/env/local-dev.ts:23` (imported
+by exactly three server modules — `entitlement/resolve.ts`, `llm/providers/registry.ts`,
+`security/ai-request.ts` — and by nothing client-side, re-grepped this turn),
+`lib/opportunities/pool-cache-disk.ts:42` (opens `import path from "node:path"`), and
+`lib/opportunities/pool-cache-runtime.ts:14`. `no-client-dev-flags.test.ts` ships this as a gate and
+is green.
+
+**Scan 3 — operator search credentials read outside the single gated resolver: 0.**
+Widened by 2-04 from Tavily alone to every operator search credential, which is the right shape:
+a Tavily-only scan reported "0" for a whole round while three other names were read straight from
+the environment. Excluding `*.test.ts` and `src/test-support/`:
+
+- `process.env.TAVILY_API_KEY` -> 2 hits, both `src/lib/search/system-key.ts:120-121`, both behind
+  `input.systemSearchAllowed &&`.
+- `process.env.BRAVE_SEARCH_API_KEY` -> 1 hit, `system-key.ts:114`, behind the same flag.
+- `process.env.GOOGLE_VERTEX_SEARCH_*` -> 8 hits, all inside `src/lib/sources/vertex-search.ts`,
+  whose availability helper is reached from the gate.
+- `isGeminiSearchAvailable` / `isVertexSearchAvailable` -> called from `system-key.ts` (the gate) and
+  from their own two modules. **Nothing outside.**
+
+**Scan 4 — `resolveProvider()` with no override argument: 0.**
+Three grep hits, **all three comment lines** (`app/api/figure/route.ts:30`,
+`lib/figures/match-context.ts:7`, `lib/figures/semantic-match.ts:54`); I read each. Every real call
+site passes an argument. **But note the honest limit, which is difference 2:** this is 0 by
+*vigilance plus a source-text test*, not by construction — `resolveProvider(override?, ctx?)` has
+both parameters optional, so a no-argument call still **compiles**. Only the two figure matchers
+require a context today.
+
+**Scan 5 — routes that can spend an operator key without the guard: 0.**
+**Nine** AI routes call `requireEntitledAiRequest`: `feed`, `jobs/feed`, `events/feed`, `digest`,
+`papers/report`, `jobs/report`, `events/report`, `figure`, `test-digest`. The gate test asserts the
+count of 9, so a route *losing* the guard shows up as a failure rather than as an absence. Two
+justified exemptions, both re-checked: `jobs/dispatch-digests` (`CRON_SECRET`, hard `aiTier: 0`, no
+`systemSearchAllowed` and it defaults `false`) and `digest/test` (404 off a developer's machine).
+The predicate behind this scan is a **heuristic** — a route reaching a provider through a helper
+that names none of its three markers would slip. That is Ruling 7 point 3's whole subject and it is
+difference 2.
+
+##### The standing tallies (Ruling 2 point 6 · Ruling 4 point 7 · Ruling 5 point 8 · Ruling 6 point 4 · Ruling 7 point 5), each reported even at zero
+
+| Tally | Round 1 | Round 2 | **Round 3** |
+|---|---|---|---|
+| Scan 1 — rendered tier vocabulary | 22 | 0 | **0** |
+| Scan 2 — browser-shipped `NODE_ENV` dev tests | 6 | 0 | **0** |
+| Scan 3 — ungated operator search credential reads | 3 | 0 | **0** (now covering all four credentials, not just Tavily) |
+| Scan 4 — no-argument `resolveProvider()` | 2 | 0 | **0** |
+| Scan 5 — routes that can spend without a guard | 4 | 0 | **0** |
+| Routes calling `resolveProvider` **before** the guard | 7 | 0 | **0** |
+| Persona/route pairs behaving per spec | 2 of 13 | 41 of 45 | **45 of 45** |
+| Operator-key searches, `anonymous`, per surface | jobs 2 · events 7 | jobs 0 · events 0 | **jobs 0 · events 0** |
+| Operator-key searches, `free-no-key`, per surface | jobs 2 · events 7 | jobs 0 · events 0 | **jobs 0 · events 0** |
+| Papers operator-key searches | 1 | 0 | **0** on every persona, in **both** runtimes |
+| Anonymous-BYOK feed request | not measured | tier 0 · 0 providers · 0 operator | **tier 0 · 0 providers · 0 operator · 2 on the caller's own key** |
+| `[quota] store unavailable` occurrences | n/a | 0 (fix not landed) | **1 per outage decision** in the outage tests · **0** in every production path exercised |
+| `local-no-auth` reachable in a deployed runtime | n/a | ABSENT | **ABSENT** — 503 under `VERCEL_ENV`, `VERCEL=1` and `NODE_ENV=production` |
+| Structured-source key reads outside the gate (accepted cost, Ruling 6 point 4) | n/a | n/a | **3** — `jobs/sources/adzuna.ts`, `jsearch.ts`, `usajobs.ts`. Exactly the expected 3. (Adzuna reads two names on two lines, so the raw line count is 4; the tally counts **sources**, which is what the threshold is about, and C's gate test asserts the same three by name.) |
+| Usage rows per provider request (Ruling 7 point 5) | n/a | n/a | **1** — never 2, never 0, on both the success and the throw exit |
+
+**Ruling 6 point 4's threshold is not met:** none of the three structured sources bills per request
+today, so none joins the gate. **Owner action stands** — nobody in this loop can see the Vercel
+environment, so whether `ADZUNA_APP_ID`/`APP_KEY`, `JSEARCH_API_KEY` and `USAJOBS_API_KEY` are
+actually set there is unknown from here.
+
+**The three C-recorded fixture pitfalls are not findings** (Ruling 7 point 5, cited because I met
+all three): a digest body with no papers returns 200 above the guard; `events/report` requires
+`event.name`; the papers shallow builder needs `summaryExperimentKeywords`. I built my fixtures
+around them and did not re-open any.
+
+**One more thing that looked like a finding for a minute and is not, recorded so the next reader
+does not chase it.** My first attempt at the profile-outage probe stubbed the counter store's
+transport to return `200 {}`, and `GET /api/profile` shipped `deepReportsRemaining: 5` rather than
+`null`. That is **correct behaviour, not a defect**: a store that answers with no row for a key is a
+reader who has used nothing, which is genuinely zero used — it is not an outage. With the store
+made really unreachable (a 500), the same route ships
+`{ unlimited: false, deepReportsRemaining: null, reason: "unavailable" }`. The lesson is the one
+C recorded in 2-06 in a different form: a fixture that only *looks* broken measures the fixture.
+
+---
+
+#### The numbered difference list — ranked by what a user, or the owner, notices first
+
+**Two differences. Both are the same shape: a guard that covers the case it was written for and not
+the case next door.**
+
+**Tier A — wrong data: something false is shown**
+
+**1. A reader who already pays is shown an upgrade prompt, and told to add their own key.**
+Spec: R-UI-3 — the upsell "never renders for paid users". R-QUOTA-1 asks the UI for a message and an
+upgrade prompt, and does not say who may see the prompt.
+Build: `components/reports/quota-notice.tsx` decides the prompt with `quota.reason === "exhausted"`
+alone. `QuotaSignal` carries `kind` and `reason`; it does **not** carry the plan, so the component
+cannot tell a free reader out of five monthly reports from a paid reader who has hit D4's 200/day
+wallet breaker. `TierUpgradeBlock`, which does take a `Plan`, is unaffected and still correct — the
+new component is a second upsell that R-UI-3's rule never reached.
+Measured, both halves of the chain, this turn:
+(a) a `paid` reader past 200/day on the real `POST /api/jobs/report` gets
+`{"kind":"breaker","reason":"exhausted","remaining":0,"resetsAt":"<end of UTC day>"}` — which is
+exactly what R-QUOTA-2 specifies, so the payload is **not** the defect;
+(b) rendering `QuotaNotice` with that exact signal produces *"Peer is at today's limit for deep
+reports. Resets in N days. **Peer Pro lifts the monthly limit. Add your own key to keep going
+now.**"* — with a live link to `/settings`.
+Three report pages pass the signal straight through, so a Pro subscriber is invited to buy Pro and
+to supply a key they should not need. **Severity: it is user-visible wrong data aimed at the one
+group who has already paid**, and D7 makes the price display-only, so there is nothing for them to
+buy either.
+`POLICY — manager decides` where this lands: R-UI-3 names `TierUpgradeBlock` by hand, and this
+component arrived a round later under R-QUOTA-1. I scored it against R-UI-3 because that is where
+the *property* lives. Moving it to R-QUOTA-1 changes which row is PARTIAL and changes neither
+number.
+
+**Tier B — a guard that is a grep rather than a compile error**
+
+**2. The entitlement chokepoint still takes a plain object, so an unguarded caller compiles.**
+Spec: Ruling 7 point 3 (binding), which makes this a **round-3 fix item** and directs A to score
+R-SEC-2 PARTIAL until it lands. I am applying that, and reporting what I found so B can size it.
+Build: `resolveProvider(override?: ProviderOverrideConfig | null, ctx?: { userId?: string | null;
+byok?: boolean; path?: string })` — **both** parameters optional and every field of `ctx` optional.
+`operatorSearchAvailability({ systemSearchAllowed: boolean })` takes a bare boolean.
+`requireEntitledAiRequest` returns an ordinary `EntitledAiRequest` object.
+Measured: I grepped `src/lib` for `__brand`, `declare const brand`, `Branded<` and `Opaque<` —
+**zero hits. No branded or opaque type exists anywhere in the tree.** So a new route that reaches a
+provider through a helper naming none of scan 5's three marker words is caught by nothing: it
+type-checks, and the scan is a closed list sampling an open class.
+**Reachability today: none.** All nine spending routes carry the guard, all nine were driven this
+turn, and scans 4 and 5 are both 0. This is the difference between "correct" and "cannot be made
+incorrect by accident", which is what Ruling 7 point 3 asked for. Ruling 7 point 3's own escape
+clause applies if it forces a signature cascade beyond the AI routes and their direct helpers.
+
+**Nothing else.** No round-1 finding and no round-2 finding survives; all twenty of round 1 and all
+seven of round 2 are closed or reduced to a recorded decision, each re-verified by behaviour this
+turn rather than carried forward on trust.
+
+---
+
+#### The two numbers
+
+**Code-side: 6.5%.** Method in one sentence: (NOT MET + PARTIAL) ÷ (31 − exclusions) =
+(0 + 2) ÷ (31 − 0) = 2/31 = **6.45%**, reported to one decimal as 6.5%. **Exclusions: none.**
+
+- **NOT MET (0):** none.
+- **PARTIAL (2):** R-SEC-2 (difference 2, and Ruling 7 point 3 directs this score), R-UI-3
+  (difference 1).
+- **MET (28):** everything else.
+- R-ENT-1 carries no code-side score at all — it is `BLOCKED: owner action` under Ruling 5 point 1
+  and appears only in the blocked count.
+
+**Blocked: 7 items**, by name — **R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1,
+R-QUOTA-2.** Method in one sentence: an item is counted here when a half of it can only be proved by
+an applied migration or a live key, which nobody in this loop can supply; the exact unobservable
+thing for each is in Part 1's blocked-halves table. Two root causes, both owner actions: **no key**
+(`GOOGLE_API_KEY` and `TAVILY_API_KEY` both absent from `web/.env.local`, checked by `grep -c` only)
+and **three unapplied migrations**.
+
+**`GATE: NOT MET.`** Nothing is rounded down, nothing is reclassified as cosmetic, and no earlier
+finding has been dropped. Two things hold the gate open, and they are different in kind:
+
+1. **Code-side is 6.5%, not 0%** — two PARTIALs, both listed above with what to change.
+2. **Seven items have a blocked half**, and a blocked item is neither met nor failed. The gate needs
+   both numbers at zero, so **the second one cannot close without the owner** even if B and C close
+   the first next round.
+
+#### Reading note — how round 2 compares to round 3 without being misread
+
+Ruling 5 point 8 warned that enumerating the blocked halves could make the totals look worse. It
+does, and here is exactly how, so nobody reads it as a regression.
+
+1. **19.4% -> 6.5% code-side is real and like-for-like.** Same 31 items, same denominator, same
+   exclusions (none), same method. Round 2's six code-side items were one NOT MET and five PARTIAL;
+   five of those six are now MET, verified by behaviour. The two remaining PARTIALs are **both new**:
+   one is the structural item Ruling 7 point 3 created *after* round 2 measured, and the other is a
+   consequence of 2-07, a fix that landed this round.
+2. **"4 blocked" -> "7 blocked" is accounting, not decay.** Nothing became less observable. Round 2
+   listed **four questions**; Ruling 5 point 1 then asked for the enumeration to be **per item and by
+   name**, so the same two root causes — no key, three unapplied migrations — now attach to seven
+   named requirements instead of four unnamed questions. The underlying facts are identical.
+3. **The persona denominators are the same this time.** 41 of 45 -> **45 of 45**, five personas
+   across the same nine routes. Unlike round 1 -> round 2, this comparison needs no caveat.
+4. **The gate went NOT MET -> MET on R-TEST-2, and that is a real fix, not a clock.** Round 2's red
+   was three tests aging out at UTC midnight; the fixture date is **unchanged** and now more than a
+   day in the past, and all three pass. The fix went into the production seam, which is the stronger
+   outcome Ruling 5 point 3 required.
+
+#### Gate, run cold from `web/` this turn, figures verbatim
+
+```
+npx tsc --noEmit -p tsconfig.json && npm run lint --silent && npx vitest run --reporter=dot
+```
+
+- **tsc:** exit **0**
+- **eslint:** **1 error** — `src/components/persona/quiz.tsx:46:7 react-hooks/set-state-in-effect`,
+  the standing one. `✖ 1 problem (1 error, 0 warnings)`. Nothing else.
+- **vitest:** `Test Files  123 passed | 1 skipped (124)` · `Tests  2825 passed | 1 skipped
+  (2826)`, 0 failed, 9.32 s.
+
+Exactly the expected figures. `benchmark.test.ts` is still the one skip and did not flake. I ran
+the gate **twice**: once at the start of the turn on the tree as I found it, and once at the end
+after deleting every throwaway file — identical figures both times, so nothing I did during the
+turn moved a count.
+
+**Housekeeping.** Five throwaway measurement files were created (four under `web/src/app/api/`, one
+under `web/src/components/reports/`) and **deleted before this part's commit**;
+`git status --porcelain --untracked-files=all` is clean. **C's suites were run and read, never
+edited** — every extension was a separate throwaway copy. Every key used anywhere in this turn was
+a sentinel. `.env.local` was never `cat`-ed and no environment value was printed. The staged-diff
+grep for the two vendor key prefixes was run before **every** push and returned nothing each time
+(it matched once, on my own prose naming the prefixes, and I reworded the sentence rather than
+push past it). No `next dev` was started (Ruling 2 point 5) — a hook reported another session's
+dev server running in this folder and it was left alone — and no process was killed. No worktree
+under `.claude/worktrees/` was touched. No PR was opened.
