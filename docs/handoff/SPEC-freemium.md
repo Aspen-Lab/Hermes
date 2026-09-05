@@ -176,6 +176,11 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   `kind`); for `unavailable` the UI shows *"Deep reports are temporarily unavailable — your
   allowance is unchanged. Try again shortly."*, never the exhaustion sentence; and the server
   writes one error-level log line prefixed `[quota] store unavailable`.
+  **Amendment 2026-09-05 (Ruling 8, binding):** the upgrade prompt is shown to **free and
+  trial** readers only. A paid reader at the daily breaker sees only *"Peer is at today's limit
+  for deep reports. Resets in N hours."* — no upgrade line, no "add your own key" line. Reset
+  copy uses hours when the reset is under a day, days otherwise; "Resets in 0 days" never
+  renders.
 - **R-QUOTA-2.** Trial cap 20 total; paid breaker 200/day; system-search breaker 500/day. A trip
   writes an error-level log line and a `usage_events` row (`kind = breaker`).
   **Amendment 2026-09-05 (Ruling 6, binding):** a counter-store **outage** is not a trip. It
@@ -192,6 +197,11 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
 - **R-UI-2.** Profile AI setup: the "Tier 0 — no AI API" option is gone; the default option reads
   "Peer's AI (included)"; "Use my own key" remains.
 - **R-UI-3.** `TierUpgradeBlock` becomes a plan-aware upsell and never renders for paid users.
+  **Amendment 2026-09-05 (Ruling 8, binding):** the property is **"no upsell of any kind is
+  shown to a paid reader"**, and it applies to every upsell surface — `TierUpgradeBlock`, the
+  quota notice of R-QUOTA-1, and any component added later. An upsell surface takes the plan
+  from the server's entitlement (the client summary's `unlimited`, or a plan field on the
+  signal), never inferred from the shape of a refusal.
 - **R-UI-4.** Report and digest cache keys discriminate system-AI output from no-AI output
   (`papers/[id]/page.tsx` key, `daily-digest.tsx` key). Ships in the **same commit** as R-KEY-1.
 

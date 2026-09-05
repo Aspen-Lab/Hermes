@@ -192,20 +192,15 @@ GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0
            (2826)**, **0 failed**, 9.32 s. Run cold TWICE by round-3 A — once on the tree as
            found, once after deleting every throwaway — identical figures both times.
            `benchmark.test.ts` is still the one skip and did not flake.
-TODO:      ROUND-3 B INVESTIGATES A's two differences, in A's rank order.
-           1. **R-UI-3 / difference 1 — the paid upgrade prompt.** Wrong data shown to the
-              one group who has already paid, and D7 makes the price display-only so there
-              is nothing for them to buy. The prompt needs the plan, which `QuotaSignal`
-              does not carry — decide where it comes from (the client already holds a
-              `ClientEntitlement` with `plan` and `unlimited`) rather than widening the
-              server payload by reflex. Do NOT suppress the whole notice for paid: a paid
-              reader at the daily cap still needs to be told why the report is degraded.
-           2. **R-SEC-2 / difference 2 — the branded entitlement context** (Ruling 7 point 3,
-              B DESIGNS, and its escape clause applies: if it forces a signature cascade
-              beyond the AI routes and their direct helpers, STOP and record, and the
-              heuristic scan stays the guard with the cost written down).
-           Ruling 5 point 2's escape clause and Ruling 6 point 4's threshold both stay live.
-           B changes no code.
+TODO:      B WRITES THE ROUND-3 FIX GUIDE under Ruling 8 (§1i): 3-01 the paid upsell — the
+           quota notice must take the plan from the server's entitlement (client summary's
+           `unlimited`, or a field on `QuotaSignal`), never infer it from `reason`; paid at the
+           daily breaker → breaker sentence only, hours when under a day; protective render
+           test. 3-02 the branded entitlement context at the chokepoint (Ruling 7 point 3):
+           `resolveProvider` and the operator-search availability gate take a context type only
+           `requireEntitledAiRequest` can produce; escape clause on a signature cascade. 3-03
+           tests inside each. Nothing else is open on the code side; the blocked list (7) is
+           the owner's.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -222,12 +217,8 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            Vercel if the free jobs surface is meant to have them — nobody in the loop can see
            the Vercel env. **(7) THE BLOCKED LIST IS NOW THE LARGER HALF OF THE GATE:** seven
            named items, two causes, both owner actions. No agent can close any of them.
-OPEN FOR MANAGER:  ONE, raised by round-3 A and marked POLICY rather than decided.
-           **Where does the paid upgrade prompt land?** R-UI-3 names `TierUpgradeBlock` by
-           hand and this component arrived a round later under R-QUOTA-1. A scored it against
-           R-UI-3 because that is where the PROPERTY ("never upsell a paid reader") lives, and
-           says so explicitly rather than dropping it. Moving it to R-QUOTA-1 changes which
-           row reads PARTIAL and changes NEITHER number.
+OPEN FOR MANAGER:  none — A's question ruled in §1i (Ruling 8 point 1): the property lives in
+           R-UI-3 and covers every upsell surface; R-QUOTA-1's prompt is free/trial only.
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -547,6 +538,40 @@ Round-3 A re-measures every closure; this ruling accepts the round, it does not 
    fixture pitfalls (a digest body with no papers returns 200 above the guard; events/report
    needs `event.name`; the papers shallow builder needs `summaryExperimentKeywords`) are **not
    findings** — A cites this point if it meets them.
+
+---
+
+## §1i. RULING 8 — after round-3 A (2026-09-05, BINDING)
+
+1. **The property "never upsell a paid reader" belongs to every upsell surface, present and
+   future — not to one component by name.** A scored the new `QuotaNotice` under R-UI-3 and
+   that is right: R-UI-3 is where the property lives; spec amended (dated) to say so.
+   R-QUOTA-1's "upgrade prompt" is for **free and trial readers only**; spec amended (dated).
+   A paid reader at the 200/day breaker sees the breaker sentence and nothing else — no "Pro"
+   line, no "add your own key" line (D7 makes the price display-only, so there is nothing to
+   buy; and a paying customer told to pay is wrong data aimed at the one group who already
+   did). **The component must not infer the plan from `reason`.** B decides by reading whether
+   the plan reaches it via the entitlement summary the client already holds (2-03 shipped
+   `unlimited`) or via a field on `QuotaSignal`; either way the source of truth is the server's
+   entitlement, never a guess from the shape of the refusal. Same item: the breaker's reset
+   copy uses **hours** when the reset is under a day — "Resets in 0 days" is a wrong value.
+   Protective test: rendering `QuotaNotice` with a paid breaker signal yields no link, no
+   "Pro", no "own key".
+2. **B's round-3 order:** **3-01** the paid upsell (WRONG DATA shown to a paying user — first,
+   by the standing rank rule); **3-02** the branded entitlement context at the chokepoint
+   (Ruling 7 point 3 — structural hardening; nothing reachable today; escape clause stands);
+   **3-03** tests inside each. Nothing else is open on the code side.
+3. **The blocked list stands as A enumerated it** — seven items, two causes, both the owner's:
+   migrations unapplied (unblocks six) and no local keys (unblocks the seventh and the live
+   halves of the persona pass). Reading note carried: 4 → 7 is bookkeeping (per-item naming
+   under Ruling 5 point 1), not decay.
+4. **Round-4 A is expected to report 0% code-side.** When it does, the manager re-runs A's
+   measurement independently (SKILL: never close alone), records it, and the loop **waits on
+   the owner**: the resume clock stands down on `blocked: needs the owner` ticks and re-engages
+   when §1's `PENDING USER ACTION` is cleared by the owner's word in chat.
+5. **Standing tallies for round 4** — everything in Ruling 7 point 5, plus: paid readers shown
+   any upsell (must be 0, by render test); compile-time enforcement of the entitlement context
+   (present OR absent, stated).
 
 ---
 
