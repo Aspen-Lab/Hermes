@@ -4451,3 +4451,312 @@ round-1 citations. **When the target is confirmed gone, what stands in its place
 **Twenty of twenty round-1 differences are closed or reduced to a recorded decision. None of the
 five remaining PARTIALs is a round-1 finding — they are new, or they are the two the manager
 predicted in Ruling 4.**
+
+#### Part 3 — the static scans, the standing tallies, the difference list, the number
+
+##### A correction to Part 1, issued rather than edited in
+
+Part 1 scored **R-TEST-2 MET** on the promise of a green gate. **The gate is red.** Three tests in
+`src/lib/usage/deep-report-quota.test.ts` fail, and they are **not** the standing `benchmark.test.ts`
+flake. **R-TEST-2 is NOT MET.** Part 1's table stands as committed so the audit trail is intact;
+this is the correction, and the tally and the number below use it. Revised tally: **25 MET · 5
+PARTIAL · 1 NOT MET**.
+
+##### Scan 1 — rendered strings matching `Tier 0|Tier 1|Tier 2|BYOK` under `web/src`: **0**
+
+```
+grep -rn -E "Tier 0|Tier 1|Tier 2|BYOK" src/ --include="*.ts" --include="*.tsx" \
+  | grep -v "\.test\." \
+  | grep -vE ":[0-9]+:[[:space:]]*(//|\*|/\*)"
+```
+146 raw -> 64 after dropping `*.test.ts(x)` -> **4** after dropping lines whose first non-space
+characters are `//`, `*` or `/*`. Same method as round 1. **I read all four in context rather than
+taking C's word:**
+
+| File:line | What it is | Rendered? |
+|---|---|---|
+| `app/jobs/[id]/page.tsx:1342` | inside a `/* … */` block in an element's attribute list | no |
+| `app/jobs/[id]/page.tsx:1523` | inside a `{/* … */}` JSX comment | no |
+| `app/page.tsx:851` | inside a `{/* … */}` JSX comment | no |
+| `lib/feed/tier2-rerank.ts:135` | `console.warn("[feed/tier2] rerank failed, keeping Tier 1 order:", err)` — a server log | no |
+
+Round 1 counted **22 rendered**. `BYOK` itself: 0 rendered, unchanged. The one near-miss round 1
+named — a lowercase `byok=` inside a localStorage cache key — is still not rendered and still not
+counted. `src/lib/feed/ui-vocabulary.test.ts` now ships this scan **as a gate**, with an exclusion
+list it also checks for staleness; run this turn, 3 tests green.
+
+##### Scan 2 — `NODE_ENV === "development"` in code that ships to the browser: **0**
+
+`grep -rn 'NODE_ENV === "development"' src/ --include="*.ts" --include="*.tsx" | grep -v "\.test\."`
+-> 8 hits. Four are prose inside comments (`app/papers/[id]/page.tsx:693`, `lib/env/local-dev.ts:12`,
+`lib/feed/ai-tier.ts:28`, `lib/usage/counters.ts:229`). Four are real tests, and I classified each
+by reading the file's first line and, for library modules, by grepping importers:
+
+| File:line | Reaches the browser? |
+|---|---|
+| `app/auth/callback/route.ts:17` | no — a route handler |
+| `lib/env/local-dev.ts:23` | no — imported by exactly three server modules (`entitlement/resolve.ts`, `llm/providers/registry.ts`, `security/ai-request.ts`) and by nothing client-side |
+| `lib/opportunities/pool-cache-disk.ts:42` | no — opens `import path from "node:path"` |
+| `lib/opportunities/pool-cache-runtime.ts:14` | no — server pool cache |
+
+Round 1 counted **6** browser-shipped, on four files that are all now gone from the client:
+`app/page.tsx:961`, `app/page.tsx:988`, `app/papers/[id]/page.tsx:685`, `store/feed.ts:266`, plus
+`lib/feed/ai-tier.ts:45` and `lib/opportunities/enrichment.ts:1001`.
+`src/lib/env/no-client-dev-flags.test.ts` ships this scan as a gate with an allow-list naming each
+server-only survivor; run this turn, 2 tests green.
+
+##### Scan 3 — `process.env.TAVILY_API_KEY` outside the single gated resolver: **0**
+
+Excluding `*.test.ts` **and** `src/test-support/` (Ruling 4 point 7). Three hits remain and all
+three are inside `src/lib/search/system-key.ts` — the one gated resolver: `:2` is its header
+comment, `:72-73` are the read, and the read sits behind `input.systemSearchAllowed &&`. Round 1
+counted **3**, in three different files, none of them gated. The `src/test-support/` hit the ruling
+mentions *deletes* the key rather than reading it.
+
+##### Scan 4 — `resolveProvider()` with no override argument: **0**
+
+Three grep hits, and **all three are comment lines** (`app/api/figure/route.ts:30`,
+`lib/figures/match-context.ts:7`, `lib/figures/semantic-match.ts:54`) — I read each. Every real call
+site passes an argument; the eleven are listed under R-SEC-2. The two figure matchers now take a
+**required** context, so a new caller cannot compile without saying whose request it is — this scan
+stays at zero by construction, not by vigilance. Round 1 counted **2**.
+
+##### Scan 5 — routes that can spend an operator key without the guard: **0**
+
+I enumerated all 21 `route.ts` files under `src/app/api` and checked each for a guard, its own auth,
+and whether it can reach a provider or a search key. **Nine** AI routes call
+`requireEntitledAiRequest`: `feed`, `jobs/feed`, `events/feed`, `digest`, `papers/report`,
+`jobs/report`, `events/report`, `figure`, `test-digest`. Round 1 counted **4** unguarded, three of
+them confirmed spending live.
+
+Not counted, and why:
+- `jobs/dispatch-digests` — `CRON_SECRET`, hard `aiTier: 0`, and it passes no `systemSearchAllowed`,
+  which defaults `false` (D9, R-SEC-4).
+- `digest/test` — returns **404** unless `canUseLocalServerProvider()`, i.e. a developer's own
+  machine. It does construct a Vertex client directly and prints
+  `credentials: process.env.GOOGLE_APPLICATION_CREDENTIALS` — a **file path**, not a key value — so
+  it is a local diagnostic, not a deployed spend path. Named here so a later round does not
+  rediscover it as a hole.
+- `briefings`, `feedback`, `profile`, `read`, `saved` — own `auth.getUser()`, no provider, no search
+  key. `affiliation/*`, `papers/[id]`, `papers/search`, `topics/suggest` — neither.
+
+##### The standing tallies (Ruling 2 point 6 + Ruling 4 point 7), each reported even at zero
+
+| Tally | Round 1 | Round 2 |
+|---|---|---|
+| Scan 1 — rendered tier vocabulary | 22 | **0** |
+| Scan 2 — browser-shipped `NODE_ENV` dev tests | 6 | **0** |
+| Scan 3 — ungated `TAVILY_API_KEY` reads | 3 | **0** |
+| Scan 4 — no-argument `resolveProvider()` | 2 | **0** |
+| Scan 5 — routes that can spend without a guard | 4 | **0** |
+| Routes calling `resolveProvider` **before** the guard | 7 | **0** |
+| Persona/route pairs behaving per spec | 2 of 13 | **41 of 45** (new denominator, listed in Part 2) |
+| Operator-key searches, `anonymous`, per surface | jobs 2 · events 7 | **jobs 0 · events 0** |
+| Operator-key searches, `free-no-key`, per surface | jobs 2 · events 7 | **jobs 0 · events 0** |
+| Papers operator-key searches | 1 (anonymous, `sources:["web"]`) | **0** on every persona |
+| Anonymous-BYOK feed request | not measured | **tier 0 · 0 providers · 0 operator searches** |
+| `[quota] store unavailable` occurrences | n/a | **0** — the fix has not landed |
+| `local-no-auth` reachable in a deployed runtime | n/a | **ABSENT** — 503 under `VERCEL_ENV`, `VERCEL=1` and `NODE_ENV=production`, on all three routes tried |
+
+**Ruling 2 point 3 / Ruling 4 point 6 — the `TAVILY_API_KEY` do-not-yet is SATISFIED.** The number
+it was waiting for is `anonymous` and `free-no-key` at **zero operator searches on both surfaces**,
+and I measured it myself by counting outgoing request bodies, not by reading C's assertions. R-SEC-2,
+R-SEC-3 and R-KEY-3's gate have all landed. The four Vercel variables may go in together whenever the
+owner is ready to deploy this branch — **after** the three migrations, because the R-QUOTA-2 breakers
+fail closed and a deployment with Supabase but no `usage_counters` would degrade every paid user.
+
+---
+
+#### The numbered difference list — ranked by what a user, or the owner, notices first
+
+**Tier A — wrong data: something false is shown or stored**
+
+**1. During a counter-store outage every reader is told they have used up an allowance they have
+not touched.**
+Spec: R-QUOTA-1, amendment of 2026-09-04 (Ruling 4 point 2) — the payload carries
+`reason: "exhausted" | "unavailable"`; the `unavailable` copy is *"Deep reports are temporarily
+unavailable — your allowance is unchanged. Try again shortly."*; and the server writes one
+error-level line prefixed `[quota] store unavailable`.
+Build: `QuotaSignal` at `web/src/lib/usage/deep-report-quota.ts:58-63` is `{kind, remaining,
+resetsAt}` — there is no `reason` field. In `consumeDeepReport`, the free branch (`:174-185`) and the
+trial branch (`:152-166`) both test `reading.ok && reading.value <= budget` and fall into the **same**
+return object whether `ok` was false (outage) or the value was over budget (exhaustion).
+Measured: forcing the `deep:` RPC to return an error on `POST /api/jobs/report` produced
+`{"kind":"deep_report","remaining":0,"resetsAt":"2026-10-01T00:00:00.000Z"}` — **byte-identical** to
+the exhausted case — with **0** `[quota] store unavailable` lines and 0 error-level lines of any
+kind. The nearest existing line is `[usage] counter store unreachable`, which is `console.warn`,
+fires once per process, and does not carry the required prefix (`web/src/lib/usage/counters.ts:246`).
+
+**2. `deepReportsRemaining` is the plan's budget, and the browser is handed it as a remainder.**
+Spec: R-ENT-2, amendment of 2026-09-04 (Ruling 4 point 3) — the resolver's plan-level figure is
+`deepReportsBudget`; `deepReportsRemaining` means budget minus used, read from the counter store, and
+is what the R-ENT-3 summary carries.
+Build: `web/src/lib/entitlement/resolve.ts:124` — `deepReportsRemaining: deepReportBudget(effectivePlan)`.
+`web/src/app/api/profile/route.ts:168` ships the whole `Entitlement` to the client.
+Measured on `GET /api/profile`: `free` reads `5` and `trial` reads `20` **after** a deep report has
+been consumed. The field never moves. `web/src/lib/entitlement/types.ts:38-42` says so in a comment.
+
+**3. A paid reader's `deepReportsRemaining` arrives at the browser as `null` — the exact value the
+spec reserves for "we cannot tell".**
+Spec: same amendment — `null` with `reason: "unavailable"` means the store is unreachable, "never a
+guessed or constant number".
+Build: `deepReportBudget("paid")` returns `Number.POSITIVE_INFINITY`
+(`web/src/lib/entitlement/resolve.ts:86`), and `NextResponse.json` serialises `Infinity` to `null`.
+Measured: `ROUND2|profile|paid` -> `"deepReportsRemaining":null`.
+**This is a separate bug from difference 2 and survives a fix that only subtracts used from budget** —
+`Infinity - used` is still `Infinity`. Paid needs an explicit unlimited sentinel the client can read.
+
+**4. The gate is red. Three quota tests fail on every run from 2026-09-05T00:00:00Z onward.**
+Spec: R-TEST-2 — the gate stays green at or above baseline.
+Build: `web/src/lib/usage/deep-report-quota.test.ts:23` fixes `NOW = new Date("2026-09-04T12:00:00.000Z")`.
+`InMemoryCounterStore.prune()` (`web/src/lib/usage/counters.ts:198-205`) compares each entry's
+`windowEndsAt` against the **real** `Date.now()`, not against the test's clock. `endOfUtcDay(NOW)` is
+`2026-09-05T00:00:00Z`, which is now in the past, so any entry written with a **daily** window is
+deleted before the next `increment` reads it. The three failures are exactly the three cases where
+the production code has to accumulate across two daily-window increments:
+`paid breaker > is unlimited to the reader until the daily cap`,
+`the system-search breaker > allows the day's searches and refuses the one past the cap`,
+`the system-search breaker > charges the whole fan-out, not one per call`.
+The two neighbouring cases that pre-spend with a `null` window still pass, which is the tell.
+**Deterministic, not a flake** — reproduced running the file alone, and it will fail every run until
+the fixture is changed. **Not a product defect:** in production `now` is the real clock, so
+`endOfUtcDay(now)` is always in the future and nothing prunes early. The fix belongs in the test or
+in an injectable clock on `prune()`, and it is the reason R-TEST-2 is NOT MET.
+
+**Tier B — operator spend that no entitlement gates**
+
+**5. Vertex AI Search and Gemini grounding are operator-funded search, and the entitlement gate does
+not cover them.**
+Spec: D2 — "Vertex AI Search and Gemini grounding: code stays, never enabled in a deployment (the
+guard bans their env names)"; R-KEY-3; R-METER-2; R-QUOTA-2's 500/day search breaker.
+Build: `isVertexSearchAvailable()` (`web/src/lib/sources/vertex-search.ts:198`) and
+`isGeminiSearchAvailable()` (`web/src/lib/sources/gemini-search.ts:179`) read **environment only** —
+neither consults `entitlement.systemSearchAllowed`. In `resolveWebSearchProvider`'s auto branch
+(`web/src/lib/sources/gemini-search.ts:227-231`) both sit **ahead of** Tavily. The daily search
+breaker and the R-METER-2 usage row are charged only when
+`keys.provenance === "system" && provider === "tavily"`
+(`web/src/lib/jobs/sources/jobweb.ts:2172`, and the matching line in `eventweb.ts`), so a Vertex or
+grounding fan-out is neither counted nor recorded.
+**Reachability today: zero in a deployment** — see difference 6 for why, and I am saying so plainly
+so this is not read as a live leak. Where it bites now is a self-hosted or local runtime with Vertex
+credentials: an **anonymous** caller reaches operator-funded search there, ungated, uncounted and
+unlogged.
+
+**6. The guard bans four `GOOGLE_VERTEX_*` names; the tree reads eleven.**
+Spec: R-GUARD-1 — the guard bans `GOOGLE_VERTEX_*`.
+Build: `web/scripts/assert-byok-production-env.mjs:39-56` lists `GOOGLE_VERTEX_PROJECT`,
+`GOOGLE_VERTEX_SEARCH_PROJECT`, `GOOGLE_VERTEX_SEARCH_ENGINE_ID`,
+`GOOGLE_VERTEX_SEARCH_DATA_STORE_ID`. Unbanned and read by the code: `GOOGLE_VERTEX_LOCATION`,
+`GOOGLE_VERTEX_ALLOW_GLOBAL_FALLBACK`, `GOOGLE_VERTEX_SEARCH_COLLECTION`,
+`GOOGLE_VERTEX_SEARCH_FALLBACK`, `GOOGLE_VERTEX_SEARCH_LOCATION`,
+`GOOGLE_VERTEX_SEARCH_MIN_RESULTS`, `GOOGLE_VERTEX_SEARCH_SERVING_CONFIG`.
+**Sized honestly:** none of the seven, alone, enables anything. `isVertexSearchAvailable()` needs a
+project **and** an app id, and all four of those names are banned; `isGeminiSearchAvailable()` is
+`Boolean(GOOGLE_VERTEX_PROJECT)`, banned. So D2 holds on a deployment today and difference 5 cannot
+fire there. This is defence in depth against the next `GOOGLE_VERTEX_` name someone adds, and the fix
+is a prefix test rather than a longer list.
+
+**Tier C — order and shape**
+
+**7. Brave outranks the operator's Tavily key.**
+Spec: R-KEY-3 — `request BYOK Tavily -> (systemSearchAllowed ? TAVILY_API_KEY : none) -> Brave env
+-> none`.
+Build: the preference is realised in `web/src/lib/sources/gemini-search.ts:233-235` as
+`if (requestTavilyKeyPresent) return "tavily"; if (braveKeyPresent) return "brave"; if
+(tavilyKeyPresent) return "tavily";` — a BYOK Tavily key wins, but the **system** Tavily key loses to
+Brave.
+Low severity and I say so: Brave is env-only and `BRAVE_SEARCH_API_KEY` is on the guard's ban list, so
+this can only happen on a developer's machine. Reported because it is a real difference from the
+requirement's stated order and A does not reclassify differences away. **If the manager rules the
+arrow chain describes the key resolver (`resolveSystemSearchKeys`, which is correct) rather than the
+provider preference, R-KEY-3 becomes MET.**
+
+**Nothing else.** No round-1 finding survives; every one of the twenty is closed or has become a
+recorded decision (Part 2's table).
+
+---
+
+#### The number
+
+**19.4% unexplained difference.**
+
+Method, in one sentence: (NOT MET + PARTIAL) ÷ (total R-* items − exclusions) = (1 + 5) ÷ (31 − 0)
+= 6/31 = **19.35%**, reported to one decimal as 19.4%. **Exclusions: none.**
+
+- **NOT MET (1):** R-TEST-2 — the gate is red (difference 4).
+- **PARTIAL (5):** R-ENT-2 and R-ENT-3 (differences 2 and 3, standing PARTIAL by Ruling 4 point 3 and
+  independently observed), R-QUOTA-1 (difference 1, standing PARTIAL by Ruling 4 point 2 and
+  independently observed), R-GUARD-1 (difference 6), R-KEY-3 (difference 7).
+- **MET (25):** everything else.
+
+**`GATE: NOT MET.`** Nothing is rounded down and nothing is reclassified as cosmetic. Two things keep
+it open beyond the six items above: R-TEST-2 is red, and four questions remain **BLOCKED** — a
+blocked item is neither met nor failed, and the gate cannot close while one stands:
+
+1. Does the system provider resolve and bill correctly on a real `GOOGLE_API_KEY`? `BLOCKED: no key`
+   (`grep -c "^GOOGLE_API_KEY=." web/.env.local` -> 0). Nothing in this repo has ever made a live
+   model call.
+2. Do the counters behave against real Supabase — does the RPC's `on conflict do update` actually
+   add rather than overwrite, under two concurrent instances? `BLOCKED: migrations unapplied`.
+3. Does `handle_new_user` create a real 14-day trial? `BLOCKED: migrations unapplied` — no row has
+   ever been written by the trigger.
+4. Does the ISO-week key hold on a server whose timezone is not UTC? Asserted across four stubbed
+   zones; a real deploy is the only place Vercel's UTC and this machine's zone meet.
+
+**Where I looked before calling anything unmeasurable:** `web/.env.local` (by `grep -c` only — never
+`cat`, never a printed value), `web/supabase/migrations/` (five files, three unapplied), and the
+vitest setup that deletes both spendable keys before every suite.
+
+**Two POLICY items for the manager — neither assumed, both stated with their effect on the number:**
+
+- **P1. Does an unapplied migration file score MET?** I scored **R-ENT-1 MET** on the file's content,
+  because writing it is the whole of what this loop can do (§0b point 5) and the consuming half is
+  observed under R-ENT-2. Round 1 scored it NOT MET, when no file existed. If the manager rules that
+  an unapplied migration cannot score MET, the number becomes **22.6%** (7/31).
+- **P2. Is difference 7 a difference?** R-KEY-3's arrow chain could describe the key resolver rather
+  than the provider preference. If the manager reads it that way, R-KEY-3 becomes MET and the number
+  becomes **16.1%** (5/31).
+
+#### Reading note — how round 1 compares to round 2 without being misread
+
+**93.5% -> 19.4% is real, but three things about it need saying, or the trend will be read wrong.**
+
+1. **Two of the five PARTIALs are PARTIAL by ruling, not by discovery.** R-ENT-2/R-ENT-3 and
+   R-QUOTA-1 were already ruled PARTIAL in Ruling 4 before I measured anything. I did not inherit
+   them — I reproduced both defects at the route and they are real — but B should expect them, and
+   the manager should not read them as new findings.
+2. **The denominators for the *persona* measurement are not the same.** 2 of 13 became 41 of 45
+   because two of the five personas could not be constructed at all in round 1 and four routes were
+   not in the inventory. The like-for-like comparison is the operator-key search count: **2 and 7 on
+   two personas became 0 and 0.**
+3. **R-TEST-2 went MET -> NOT MET, and that is a clock, not a regression in this round's work.**
+   The three failing tests passed for C a few hours ago and fail for me because UTC midnight passed
+   between the two runs. Nobody's change broke it; a fixed date in a fixture aged out. If the manager
+   rules it a standing flake in the `benchmark.test.ts` class, R-TEST-2 returns to MET and the number
+   becomes **16.1%**. I have **not** assumed that — a red gate is a red gate — but it is a one-line
+   fixture fix and B can land it first.
+
+#### Gate, run cold from `web/` this turn, figures verbatim
+
+```
+npx tsc --noEmit -p tsconfig.json && npm run lint --silent && npx vitest run --reporter=dot
+```
+
+- **tsc:** exit **0**
+- **eslint:** **1 error** — `src/components/persona/quiz.tsx:46:7 react-hooks/set-state-in-effect`,
+  the standing one. Nothing else. `✖ 1 problem (1 error, 0 warnings)`
+- **vitest:** `Test Files  1 failed | 115 passed | 1 skipped (117)` ·
+  `Tests  3 failed | 2713 passed | 1 skipped (2717)`, 8.67 s.
+
+Expected was 116 passed / 1 skipped files and 2716 passed / 1 skipped tests with 0 failed. The file
+and test **totals** are unchanged (117 and 2717); three tests moved from passed to failed, all three
+in `src/lib/usage/deep-report-quota.test.ts`, all three the daily-window breaker cases — difference 4.
+`benchmark.test.ts` is still the one skip and did not flake.
+
+**Housekeeping.** Three throwaway probe files were created under `web/src/app/api/` and **deleted
+before this turn's final commit**; `git status --porcelain --untracked-files=all` is clean of them.
+C's three route suites were run and read, never edited. Every key used anywhere in this turn was a
+sentinel; `.env.local` was never `cat`-ed and no environment value was printed. The staged-diff grep
+for the two key prefixes was run before **every** push and returned nothing each time. No `next dev`
+was started (Ruling 2 point 5) — a hook reported another session's dev server running in this folder
+and it was left alone — and no process was killed.
