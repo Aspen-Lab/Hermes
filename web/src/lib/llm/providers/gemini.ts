@@ -97,6 +97,23 @@ type GeminiResult = {
   };
 };
 
+/**
+ * One `usage_events` row per **provider request** (ABC-freemium 2-05 ·
+ * Ruling 6 point 5 · R-METER-1 as amended 2026-09-05).
+ *
+ * A "call" for billing purposes is one HTTP request to a model, so each attempt
+ * in a fallback chain gets its own row with its own `ok` and `model`. Both
+ * Gemini providers loop over a model chain, so one `generateJsonText` that
+ * falls back from model A to model B legitimately writes **two** rows — that is
+ * the ledger telling the owner about a retry they paid for, not a defect.
+ *
+ * **`ok` means "this request produced usable output", not "the HTTP call
+ * returned".** Every caller of the four call sites below used to pass a literal
+ * `true` on the success path, so a model that answered with empty text wrote an
+ * `ok: true` row and the chain then fell through to the next model. The ledger
+ * recorded a success the caller never received. The four sites now pass
+ * `(result.text ?? "").trim().length > 0`.
+ */
 function logGemini(
   modelId: string,
   path: string | undefined,
@@ -171,7 +188,7 @@ async function callModel(
       contents: prompt,
       config: genConfig(modelId, systemInstruction, opts.maxTokens),
     })) as GeminiResult;
-    logGemini(modelId, opts.path, result, started, true);
+    logGemini(modelId, opts.path, result, started, (result.text ?? "").trim().length > 0);
     return result.text ?? "";
   } catch (err) {
     logGemini(modelId, opts.path, undefined, started, false);
@@ -202,7 +219,7 @@ async function callVisionModel(
       ]),
       config: genConfig(modelId, systemInstruction, opts.maxTokens),
     })) as GeminiResult;
-    logGemini(modelId, opts.path, result, started, true);
+    logGemini(modelId, opts.path, result, started, (result.text ?? "").trim().length > 0);
     return result.text ?? "";
   } catch (err) {
     logGemini(modelId, opts.path, undefined, started, false);
@@ -325,7 +342,7 @@ export function createGeminiApiProvider(
         contents: prompt,
         config: genConfig(modelId, systemInstruction, opts.maxTokens),
       })) as GeminiResult;
-      logGemini(modelId, opts.path, result, started, true);
+      logGemini(modelId, opts.path, result, started, (result.text ?? "").trim().length > 0);
       return result.text ?? "";
     } catch (err) {
       logGemini(modelId, opts.path, undefined, started, false);
@@ -353,7 +370,7 @@ export function createGeminiApiProvider(
         ]),
         config: genConfig(modelId, systemInstruction, opts.maxTokens),
       })) as GeminiResult;
-      logGemini(modelId, opts.path, result, started, true);
+      logGemini(modelId, opts.path, result, started, (result.text ?? "").trim().length > 0);
       return result.text ?? "";
     } catch (err) {
       logGemini(modelId, opts.path, undefined, started, false);

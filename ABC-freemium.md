@@ -122,7 +122,7 @@ HELD BY:          C-round2 @ 2026-09-05T00:40Z
 ROUND:            2
 WHOSE TURN:       C
 STOPPED BECAUSE:  finished the turn @ 2026-09-05T00:35Z
-STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03, 2-04.
+STATUS:           ROUND 2 — C IS WORKING THE GUIDE. Landed so far: 2-01, 2-02, 2-03, 2-04, 2-05.
 
                   DEVIATIONS FROM B'S GUIDE, each traced before it was taken:
                   - 2-02: B put the `[quota] store unavailable` writer in a PRIVATE helper in
@@ -6580,3 +6580,107 @@ developer machine, not a live leak being closed.
    pulls the usage modules into its import graph for machinery that cannot fire under the current
    gate. I judged that the right trade — the alternative is a gate with nothing behind it — but it
    is a real cost and the manager may prefer it stated in the spec rather than only in a comment.
+
+---
+
+#### 2-05 — LANDED. The wrapper is a backstop on both exits, and `ok` stops lying about empty responses
+
+**Gate after this item:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, **0
+warnings**) · `vitest` **119 files passed | 1 skipped (120)** · **2782 tests passed | 1 skipped
+(2783)**, **0 failed**. Up 9 from 2-04's 2773.
+
+**What changed, four files (one new):**
+
+| File | Change |
+|---|---|
+| `web/src/lib/llm/providers/metered.ts` | the `catch` becomes a `finally`, so `!scope.recorded` is consulted on **both** exits; the row carries the real `ok` rather than a hard-coded `false`. Header rewritten to state the provider-request reading. |
+| `web/src/lib/llm/providers/gemini.ts` | all four `logGemini(…, true)` success sites become `(result.text ?? "").trim().length > 0`; `logGemini` gains a doc comment explaining what `ok` means and why a chain writes several rows |
+| `web/src/lib/llm/providers/metered.test.ts` | 5 new cases |
+| **NEW** `web/src/lib/llm/providers/gemini.test.ts` | 4 new cases — this file had no suite |
+
+**Ruling 6 point 5 implemented as written: a metered call is a PROVIDER REQUEST.** So the
+provider-level `logLlmUsage` stays the writer, the wrapper writes only when a request logged
+nothing, and one logical call that falls back down a model chain legitimately writes one row per
+attempt. B's reasoning for why the wrapper cannot be the single writer holds and I re-derived it in
+source rather than inheriting it: the row needs `input_tokens`, `output_tokens` and
+`thinking_tokens`, those come out of each SDK's own response object at the point of the call
+(`gemini.ts`'s `usageMetadata`, `anthropic.ts`'s `usage.input_tokens`), and the wrapper sees only
+the method's return value — a bare `string` for `generateJsonText`. Making the wrapper the writer
+would need either a usage envelope on every method's return type or a stash-on-the-scope rewrite,
+and both move the write further from the facts.
+
+**The "never zero" hole, closed by construction.** The `!scope.recorded` check lived in a `catch`,
+so it only ever ran on a throw: a provider that returned successfully **without** logging was
+silently unmetered and nothing in the type system or the suite would have said so. It is now in a
+`finally`, with an `ok` flag set on the success path. All five registered providers log today, so
+the hole was latent rather than live — but "every provider remembers" is not a property a wrapper
+should depend on, and a sixth provider is exactly when it would be forgotten.
+
+**The `catch` → `finally` conversion is the one risky edit in this item, and I verified the
+re-throw explicitly** as B asked. `finally` does not swallow; `metered.test.ts`'s existing
+`re-throws, and records ok:false when nothing else logged` case is green unmodified, and I added a
+second case that asserts `rejects.toThrow("boom")` **and** exactly one row **and** `ok: false`, so
+the re-throw is now pinned twice. The duplicate-suppression case is also green unmodified, and I
+added its success-path twin — because the wrapper now runs on that exit too, which is where a
+duplicate could newly appear.
+
+**The `ok`-on-empty fix, at all four sites.** `callModel`, `callVisionModel`, `callApiModel` and
+`callApiVisionModel` all did `logGemini(…, started, true); return result.text ?? "";`. A model that
+answered with **empty text** wrote an `ok: true` row and the chain then fell through to the next
+model — so the ledger recorded a success the caller never received, and the owner reading it could
+not tell a productive request from a wasted one. All four now pass
+`(result.text ?? "").trim().length > 0`. **This includes `createGeminiApiProvider`, the system-key
+provider D1 hands every signed-in free user** — the busiest path in the product.
+
+**B's "two rows" finding confirmed and turned into a documented contract rather than left
+implicit.** I read the chain loops: `geminiProvider.generateDigest` and `createGeminiApiProvider`'s
+three methods each loop over a model chain, and `callModel`/`callApiModel` log on both their success
+and their failure. One `generateJsonText` that falls back from model A to model B therefore writes
+two rows. Under Ruling 6 point 5 that is **correct** — two requests were billed — and there is now
+a test asserting exactly two rows with `[false, true]` and two distinct models, plus the same
+property asserted through the **real** chain loop in `gemini.test.ts`. Whichever way a later round
+reads "one row per call", the number has stopped being an accident.
+
+**Nine new cases.** In `metered.test.ts` (5): a success that logged nothing produces **exactly one**
+row with `model: null` and `ok: true` (the case that fails on the old wrapper); a throw that logged
+nothing produces exactly one row and still throws; a provider that logged produces **no** wrapper
+duplicate and the surviving row is the provider's, with its tokens; **all four members of
+`DigestProvider`** driven in one table so a fifth method cannot be added unwrapped (asserted by
+path: `digest`, `json`, `test-connection`, `vision`); and a fallback chain recorded as two rows. In
+`gemini.test.ts` (4): a request returning empty text writes `ok: false`; a request returning real
+text writes `ok: true` (so the first is not passing by making everything false); a real chain
+fallback writes one row per request with `[false, true]`; and a throwing request writes `ok: false`.
+
+**Proved the new tests test the fix (§2 Agent C, standard 1).** I `git stash`-ed the two source
+files and re-ran `src/lib/llm/providers`: **4 failed** — `writes ok:false for a request that
+returned EMPTY text`, `writes ONE ROW PER REQUEST across a fallback chain`, `writes exactly one row
+for a SUCCESS that logged nothing`, and `covers EVERY wrapped method`. Restored, re-ran, green.
+
+**B's correction to the brief confirmed: there are no provider tests asserting on log lines.** I
+re-grepped `\[llm\]` across `src/` and the only hit is `usage-log.ts`'s own definition. No test
+spies on `console.log` for it, so the console line is unconstrained by the suite and I left it
+exactly as it is — `usage-log.ts` asks for that, and it predates this loop.
+
+**The eight existing `metered.test.ts` cases are all green and unmodified.** Not one assertion was
+rewritten or deleted; this item is purely additive to that file. The only edits to existing test
+code were three `logLlmUsage` fixtures in my own new cases that needed `latencyMs` (it is required
+on `LlmUsage`, which `tsc` caught).
+
+**Standing locks re-verified** (§2 Agent C, standard 2): `registry.test.ts` green — `resolveProvider`
+and `registry.ts` are untouched by this item, and the wrap point is unchanged. `ai-tier.test.ts`,
+the four harness-driven route suites, `deep-report-quota.test.ts`, `counters.test.ts`,
+`ui-vocabulary.test.ts`, `no-client-dev-flags.test.ts` and the guard script test are green in the
+cold full run above.
+
+**Two model clients the wrapper can never reach, re-recorded so they are not mistaken for
+coverage.** `gemini-search.ts:274` constructs a `GoogleGenAI` for **grounding search** — it is not a
+`DigestProvider`, so it writes no `llm` row, and **2-04's search row is what covers that spend**,
+not this item's. `api/digest/test/route.ts:13` does the same in a local-only diagnostic that answers
+404 unless `canUseLocalServerProvider()`. Neither is an unmetered production path.
+
+**Doubt flagged, not judged.** One. The wrapper's backstop row carries `model: null`, because the
+wrapper genuinely does not know which model answered — it sees only the return value. That is the
+honest value rather than a guess, and it is asserted as such. But it means a hypothetical
+non-logging provider would produce rows the owner cannot attribute to a model. The right fix is for
+every provider to keep logging (they all do), so I have left it; if the manager wants the wrapper to
+be able to name a model, that needs the usage-envelope change B costed, which is a different item.
