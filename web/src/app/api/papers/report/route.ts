@@ -20,7 +20,10 @@ import type { ReportStreamEvent } from "@/lib/papers/report-stream";
 import { requireEntitledAiRequest } from "@/lib/security/ai-request";
 import { entitledContext } from "@/lib/security/entitled-context";
 import type { Entitlement } from "@/lib/entitlement/types";
-import { consumeDeepReport } from "@/lib/usage/deep-report-quota";
+import {
+  consumeDeepReport,
+  type DeepReportDecision,
+} from "@/lib/usage/deep-report-quota";
 
 export const dynamic = "force-dynamic";
 // Deep reports (full-text fetch + two model passes + figure binding) have been
@@ -213,7 +216,22 @@ function bestPaperUrl(paper: PaperReportRequest["paper"]): string | null {
   return paper.linkPaper ?? paper.linkArxiv ?? null;
 }
 
-function streamReport(body: ExtendedRequest, ctx: ReportUsageCtx): Response {
+/**
+ * ABC-freemium 3-03 · R-QUOTA-1 · R-QUOTA-3 · Ruling 9 points 1-2.
+ *
+ * **`quotaDecision` is a required parameter, and that is the fix.** It used to
+ * take no quota argument at all because the branch that calls it returned
+ * *above* the route's only counter, so a streamed deep report — which is what
+ * the app always sends — was never counted and never charged the paid daily
+ * breaker. The decision is now made once, above the transport branch, and
+ * handed in. **There is deliberately no `consumeDeepReport` call inside this
+ * function**: two call sites is how a route double-counts.
+ */
+function streamReport(
+  body: ExtendedRequest,
+  ctx: ReportUsageCtx,
+  quotaDecision: DeepReportDecision,
+): Response {
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
@@ -238,6 +256,14 @@ function streamReport(body: ExtendedRequest, ctx: ReportUsageCtx): Response {
       };
 
       try {
+        // ABC-freemium 3-03 — the refusal goes out FIRST, before `mode`, so it
+        // survives even the tier-0 stream below (which the reader stops reading
+        // at the mode event). What follows is the ordinary degraded stream, the
+        // same shape a reader with allowance left would get on a shallow read.
+        if (quotaDecision.quota) {
+          send({ type: "quota", quota: quotaDecision.quota });
+        }
+
         const provider = resolveProvider(
           body.llmOverride ?? null,
           providerCtx(ctx, body.llmOverride),
@@ -254,7 +280,15 @@ function streamReport(body: ExtendedRequest, ctx: ReportUsageCtx): Response {
           return;
         }
 
-        const aiMode = body.deepReport ? "tier2" : "tier1";
+        // ABC-freemium 3-03 — a refused deep read degrades to the shallow
+        // path, which is exactly what the non-streamed branch below does: it
+        // nulls the provider on refusal and falls through to
+        // `generateShallowReport`. Same behaviour, same depth, now on both
+        // transports. **Shallow is R-QUOTA-3's real exemption and stays
+        // uncounted** — the decision above is only taken when `deepReport` is
+        // set, so this line cannot charge a shallow reader.
+        const aiMode =
+          body.deepReport && quotaDecision.allowed ? "tier2" : "tier1";
         send({ type: "mode", aiMode });
 
         if (aiMode === "tier1") {
@@ -433,11 +467,39 @@ export async function POST(req: NextRequest) {
     path: "paper-report",
   };
 
+  // ABC-freemium 1-20 · 3-03 · R-QUOTA-1, D4, Ruling 9 points 1-2 —
+  // **the counter runs above the transport branch, so both transports pass it.**
+  //
+  // This used to sit inside the deep branch BELOW the streaming early return,
+  // and the comment there claimed the streaming path was one of R-QUOTA-3's
+  // exempt cases. **That was wrong, and it was the expensive kind of wrong:**
+  // the client always streams (`lib/papers/report-stream.ts` sends
+  // `Accept: application/x-ndjson` on every request) and the stream honours
+  // `deepReport` by running tier 2 and fetching full text. So every real deep
+  // papers report skipped the monthly allowance and never charged D4's 200/day
+  // paid breaker. Ruling 9 point 1: **streaming is a transport; R-QUOTA-3's
+  // exemption is a DEPTH.** A streamed `deepReport: true` request is a deep
+  // report and counts exactly as the non-streamed one does.
+  //
+  // The exemption that survives is the real one: a shallow (abstract-only)
+  // request never reaches `consumeDeepReport`, on either transport, because the
+  // decision below is gated on `body.deepReport`. Note "shallow" is not "no
+  // LLM" — `generateShallowReport` calls the model when one is available, so it
+  // is **metered by 1-03 and uncounted by 1-20**, which are different things and
+  // easy to conflate.
+  //
+  // **Exactly one `consumeDeepReport` call site**, here. `streamReport` takes
+  // the decision as an argument and never makes its own: two call sites is how
+  // a route double-counts.
+  const quotaDecision: DeepReportDecision = body.deepReport
+    ? await consumeDeepReport(gate.entitlement)
+    : { allowed: true };
+
   const wantsStream =
     req.headers.get("accept")?.includes("application/x-ndjson") === true ||
     body.stream === true;
   if (wantsStream) {
-    return streamReport(body, ctx);
+    return streamReport(body, ctx, quotaDecision);
   }
 
   // ── Deep path ────────────────────────────────────────────────────
@@ -445,14 +507,6 @@ export async function POST(req: NextRequest) {
   // user BYOK in deployments, or the explicit developer provider in local dev.
   // Without a provider, fall through to the deterministic shallow path.
   if (body.deepReport) {
-    // ABC-freemium 1-20 · R-QUOTA-1, D4 — **only this branch counts.** The
-    // shallow path below and the streaming path above are R-QUOTA-3's exempt
-    // cases and must never reach the counter.
-    //
-    // Note "shallow" is not "no LLM": `generateShallowReport` calls the model
-    // when one is available, so it is **metered by 1-03 and uncounted by
-    // 1-20** — different things, and easy to conflate.
-    const quotaDecision = await consumeDeepReport(gate.entitlement);
     const provider = quotaDecision.allowed
       ? resolveProvider(
           body.llmOverride ?? null,

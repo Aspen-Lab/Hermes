@@ -94,24 +94,73 @@ describe("R-QUOTA-3 — what must never be counted", () => {
   it("counts the papers DEEP branch only, never the shallow one", () => {
     // The fourth exempt path lives inside a counted file, so it cannot be
     // checked by absence. `generateShallowReport` is the shallow path and is
-    // reached from four places; none of them may consume the counter, and the
-    // one `consumeDeepReport` call must sit inside `if (body.deepReport)`.
+    // reached from four places; none of them may consume the counter.
     //
     // "Shallow" is not "no LLM" — `generateShallowReport` calls the model when
     // one is available, so it is METERED by 1-03 and UNCOUNTED by 1-20.
+    //
+    // ── ABC-freemium 3-03 · Ruling 9 points 1-3 — REWRITTEN, NOT DELETED ─────
+    //
+    // **This assertion is the reason the defect shipped.** It required the one
+    // `consumeDeepReport` call to sit BELOW `if (body.deepReport) {` in the
+    // file, and it did — while an early `return streamReport(...)` sat above it
+    // and took every real request. The assertion was about **position in the
+    // file**, and position in the file is not position in the control flow.
+    //
+    // What it asserts now is the ordering that actually decides the outcome:
+    // the counter runs **above** the transport branch, so neither transport can
+    // skip it. Reachability itself is proved by driving the route in
+    // `papers/report/route.test.ts` — a source scan cannot do that, and Ruling
+    // 9 point 3 makes the behaviour test the requirement, with this as its
+    // cheap structural companion.
     const source = read("src/app/api/papers/report/route.ts");
 
     expect(source.match(/consumeDeepReport\(/g) ?? []).toHaveLength(1);
 
-    const deepBranch = source.indexOf("if (body.deepReport) {");
     const consumeAt = source.indexOf("consumeDeepReport(gate.entitlement)");
+    const streamBranch = source.indexOf("return streamReport(");
+    const deepBranch = source.indexOf("if (body.deepReport) {");
+    expect(consumeAt).toBeGreaterThan(-1);
+    expect(streamBranch).toBeGreaterThan(-1);
     expect(deepBranch).toBeGreaterThan(-1);
-    expect(consumeAt).toBeGreaterThan(deepBranch);
 
-    // And the shallow generator itself never reaches it.
+    // The counter is reached before the transport is chosen…
+    expect(consumeAt).toBeLessThan(streamBranch);
+    // …and before the non-streamed deep branch, which now consumes the
+    // decision rather than making a second one.
+    expect(consumeAt).toBeLessThan(deepBranch);
+
+    // Still gated on the request being deep: R-QUOTA-3's REAL exemption is a
+    // depth, not a transport, and a shallow read must not reach the counter on
+    // either path.
+    expect(source).toMatch(/body\.deepReport\s*\?\s*await consumeDeepReport\(/);
+
+    // And the shallow generator itself never reaches it. The check is for a
+    // CALL, not the bare identifier: `streamReport`'s doc comment sits in this
+    // window and names the function in prose, which is documentation of the
+    // rule rather than a breach of it.
     const shallowStart = source.indexOf("async function generateShallowReport(");
     const shallowEnd = source.indexOf("function streamReport(");
-    expect(source.slice(shallowStart, shallowEnd)).not.toContain(CONSUMER);
+    expect(source.slice(shallowStart, shallowEnd)).not.toMatch(
+      /consumeDeepReport\s*\(/,
+    );
+  });
+
+  it("never lets the streaming branch make a SECOND counter call", () => {
+    // ABC-freemium 3-03 · Ruling 9 point 2 — the failure mode on the other side
+    // of this fix. Moving the check up is one way to make both transports
+    // count; adding a second call inside `streamReport` is the other, and it
+    // charges a reader twice for one report. The route-wide count of 1 above
+    // already forbids it; this states the reason so it is not "simplified"
+    // away later.
+    const source = read("src/app/api/papers/report/route.ts");
+    const streamStart = source.indexOf("function streamReport(");
+    // Bounded by the route handler, which follows it in the file and is where
+    // the one legitimate call lives.
+    const streamEnd = source.indexOf("export async function POST(");
+    expect(streamStart).toBeGreaterThan(-1);
+    expect(streamEnd).toBeGreaterThan(streamStart);
+    expect(source.slice(streamStart, streamEnd)).not.toContain(CONSUMER);
   });
 
   it("keeps every exempt path METERED — uncounted is not unmetered", () => {

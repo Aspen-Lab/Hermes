@@ -817,8 +817,13 @@ export default function PaperDetailPage({
         // localStorage and a cached quota signal is a stale one — it would keep
         // telling a reader they had spent their allowance after they upgraded.
         //
-        // A quota refusal returns JSON rather than NDJSON, so the streaming
-        // attempt above falls through to exactly this path.
+        // ABC-freemium 3-03 — **this note used to claim a quota refusal came
+        // back as JSON, so the stream fell through to here. It did not.** The
+        // streaming branch returned above the route's only counter, so a
+        // streamed deep report was never refused at all: it was never counted.
+        // The counter now runs above the transport branch and a refusal arrives
+        // as a `quota` stream event, handled above. This path is the genuine
+        // fallback — a stream that threw — and it still reads the field.
         const nextReport = await apiFetch<PaperReport & { quota?: QuotaSignal }>(
           "/api/papers/report",
           {
@@ -849,6 +854,16 @@ export default function PaperDetailPage({
           controller.signal,
         )) {
           if (!isActive()) return;
+
+          // ABC-freemium 3-03 · R-QUOTA-1 — read BEFORE the mode check, on
+          // purpose. A refusal arrives ahead of the degraded stream, and the
+          // tier-0 arm of the mode handler below returns immediately, so a
+          // quota event placed after it would be dropped for exactly the reader
+          // who needs it. It does not count as the stream's opening event.
+          if (event.type === "quota") {
+            setQuota(event.quota);
+            continue;
+          }
 
           if (event.type === "mode") {
             if (modeSeen) {

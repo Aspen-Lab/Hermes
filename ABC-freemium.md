@@ -8404,3 +8404,106 @@ warnings) · `vitest` **124 files passed | 1 skipped (125)** · **2851 tests pas
 **Standing tallies:** `resolveProvider` call sites without a context — **0, now enforced by the
 compiler**. Compile-time enforcement of the entitlement context — **PRESENT for `resolveProvider`,
 ABSENT for the operator-search availability gate**, and that split is deliberate.
+
+---
+
+#### 3-03 — the papers streaming quota bypass. **FIX AND TESTS LANDED, in one commit.**
+
+Built in the shape Ruling 9 point 2 authorises and no other.
+
+**The fix — an ordering change, not a new check.** In `papers/report/route.ts` the decision now runs
+**above** the transport branch:
+
+```ts
+const quotaDecision: DeepReportDecision = body.deepReport
+  ? await consumeDeepReport(gate.entitlement)
+  : { allowed: true };
+
+const wantsStream = /* accept: application/x-ndjson || body.stream */;
+if (wantsStream) return streamReport(body, ctx, quotaDecision);
+```
+
+`streamReport` takes the decision as a **required parameter** and contains **no `consumeDeepReport`
+call of its own** — the route-wide count is still exactly 1, and there is now a test whose only job
+is to keep it that way, because "make both transports count" has a second, wrong solution that
+charges a reader twice.
+
+**The refusal survives the transport.** `ReportStreamEvent` gains `{ type: "quota"; quota:
+QuotaSignal }`, emitted **before** the `mode` event, followed by the existing degraded stream
+(`aiMode` forced to `tier1`). That mirrors the non-streamed branch exactly: it nulls the provider on
+refusal and falls through to `generateShallowReport`. Same depth, same degraded payload, on both
+transports.
+
+**Why the event goes first, which is not what I expected to write.** The obvious placement is after
+`mode`. The client rejects a stream that does not open with a `mode` event *and* returns immediately
+on `tier0` — so a quota event placed after it is dropped for precisely the reader it exists for.
+Ruling 9's own wording ("the signal, and then the existing degraded stream") turns out to describe
+the only ordering that works. The client's mode-first invariant is kept for every other event type.
+
+**The compiler found the client for me.** Adding the union member turned
+`papers/[id]/page.tsx:902` into `TS2339: Property 'message' does not exist` — the stream's
+fall-through `throw new Error(event.message)` would have swallowed the new event as a malformed one
+and dropped to the JSON fallback. A discriminated union earning its keep.
+
+**Three wrong comments corrected in the same commit**, since a file that argues with itself is how
+this defect survived four measurements:
+- the route's `:429-432` claim that *"the streaming path above [is] R-QUOTA-3's exempt [case]"* —
+  replaced with Ruling 9 point 1's distinction: **streaming is a transport, the exemption is a
+  depth**;
+- `quota-exemptions.test.ts`'s comment describing the counter's file position as the guarantee;
+- `papers/[id]/page.tsx:803`'s note that *"a quota refusal returns JSON rather than NDJSON, so the
+  streaming attempt falls through to this path"* — it did not; a streamed deep report was never
+  refused, it was never counted. 2-07 wired the page to a field the stream could not emit.
+
+##### The tests — a reachability suite, per Ruling 9 point 3
+
+Seven new cases in `papers/report/route.test.ts`, all driving `POST` with
+**`Accept: application/x-ndjson`** and `deepReport: true` — the shape `report-stream.ts` sends on
+every request. The counter is observed **directly**, by spying on the store's `increment` and
+filtering to the `deep:` keys, rather than inferred from the response: a response looks identical
+whether or not anything was counted, which is exactly how this shipped.
+
+1. a streamed deep report **increments the counter once** and still returns a tier-2 report;
+2. past the free monthly allowance the **stream carries the `quota` event**;
+3. the event is at **index 0**, the reader still gets a report, and the mode degrades to `tier1`;
+4. a **paid** reader's streamed deep report charges the **day** key (D4's 200/day breaker);
+5. a paid reader **past** the breaker is refused **in the stream**, `kind: "breaker"`;
+6. a **shallow** streamed request is **not counted** and carries no quota event — R-QUOTA-3's real
+   exemption, and the mirror case that stops the fix over-correcting;
+7. the two transports together increment **twice, not four times** — one call site.
+
+**Proved by reverting to the pre-fix ordering** (stream branch returns above the counter):
+**7 failed** — six of the seven new cases plus the rewritten source assertion. Case 6 correctly
+still passed, because a shallow read was uncounted before and after; a case that fails in both
+directions would be testing the wrong thing.
+
+**`quota-exemptions.test.ts` rewritten, not deleted.** Its assertion required the counter to sit
+below `if (body.deepReport) {` **in the file**, which it did, while an early `return
+streamReport(...)` sat above it and took every real request. It now asserts the counter is reached
+**before the transport branch** and before the deep branch, still gated on `body.deepReport`, with
+the comment naming why the old form was green while the defect shipped. A second case forbids a
+counter call inside `streamReport`.
+
+##### Two defects in my own first cut, both recorded
+
+1. `expect(source).toContain("body.deepReport\\n    ? await …")` — the route file is **CRLF**, so the
+   assertion could never match. Replaced with a whitespace-tolerant regex. Same family as the CRLF
+   no-op that made a revert proof lie in 3-02: **on this repo, never assert across a newline.**
+2. `PEER_DEV_ENTITLEMENT=paid` alone does **nothing** in a route test. `isLocalDevRuntime()` is
+   deliberately false under `NODE_ENV=test`, so the default runtime is the no-sign-in branch — user
+   `local-no-auth`, plan **free**, budget 5 — and the dev override is only read on the
+   local-development branch. The paid cases stub `NODE_ENV=development` with `VERCEL`/`VERCEL_ENV`
+   cleared, which also changes the user id to `dev-local`. **Worth carrying forward: a route test
+   that believes it is exercising a paid reader and is not will pass for the wrong reason**, and the
+   only thing that caught it here was asserting the exact counter key rather than a count.
+
+##### What I did not do
+
+`consumeDeepReport` was **not** renamed (`quota-exemptions.test.ts` depends on the literal), no
+second call site was added, and no other route was touched: `jobs/report` and `events/report`
+consume the counter before resolving a provider and have no streaming transport, so Ruling 9 point
+3's reachability question has a different answer there — flagged for round-4 A rather than assumed.
+
+**Gate after 3-03:** `tsc` exit **0** · `eslint` **1 error** (the standing `quiz.tsx:46`, 0
+warnings) · `vitest` **124 files passed | 1 skipped (125)** · **2859 tests passed | 1 skipped
+(2860)**, **0 failed**. +8 tests, 0 regressions.
