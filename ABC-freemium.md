@@ -120,9 +120,13 @@ lock by rebasing onto the holder's head.
 ```
 HELD BY:          free
 ROUND:            4
-WHOSE TURN:       manager — independent re-measure
-STOPPED BECAUSE:  finished the turn @ 2026-09-05T03:32Z
-STATUS:           ROUND 4 — **A HAS MEASURED. CODE-SIDE IS 0%.** Three parts, one commit each,
+WHOSE TURN:       owner (see Ruling 11 — the loop waits; round 5 opens on the owner's word)
+STOPPED BECAUSE:  blocked: waiting on the owner — three migrations unapplied, no local keys
+STATUS:           CODE SIDE CLOSED at 0.0%, CONFIRMED BY THE MANAGER'S INDEPENDENT RE-MEASURE
+                  (Ruling 11, §1l): cold gate, five scans by hand, a compile probe, and a
+                  hand-written wallet probe with all four operator providers armed. The gate
+                  stays NOT MET on the seven owner-blocked halves. Round-4 A's summary follows.
+                  ROUND 4 — **A HAS MEASURED. CODE-SIDE IS 0%.** Three parts, one commit each,
                   each pushed as it finished; no production code changed and
                   `git diff HEAD -- web/` is empty.
                   **Ruling 10 point 3 fires: A does NOT hand to B. The manager re-measures
@@ -180,9 +184,8 @@ A'S OWN FIXTURE FAULTS, recorded because each produced a plausible FALSE reading
                   regressions.** Also live: the **CRLF** trap (Ruling 10 point 2c) — a
                   multi-line plant literal with `\n` separators matched **0** times; the count
                   assertion caught it and a whitespace-tolerant regex matched 1.
-LAST DIFFERENCE:  **0.0% code-side (0/31, exclusions: none)** — no differences; the list is
-                  empty · **blocked: 7 — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3,
-                  R-KEY-1, R-QUOTA-2.**
+LAST DIFFERENCE:  0.0% code-side (0/31; exclusions: none; manager-confirmed) · BLOCKED on the
+                  owner: 7 — R-ENT-1, R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2
 GATE (0% unexplained, both measurements):  **NOT MET — and the code side is no longer why.**
            Code-side is 0% and the difference list is empty; seven items carry a blocked half
            that only the owner can close. `GATE: MET` needs both at zero.
@@ -197,18 +200,11 @@ DONE:      Round 1 A (three parts). Round 1 B, all seven units. Round 1 C: ALL 2
 GATE NOW:  tsc exit **0** · eslint **1 error** (the standing `quiz.tsx:46`, **0 warnings**) ·
            vitest **124 files passed | 1 skipped (125)** · **2859 tests passed | 1 skipped
            (2860)**, **0 failed**, 11.49 s.
-TODO:      **MANAGER — RE-MEASURE A's NUMBER INDEPENDENTLY** (Ruling 7 point 4, Ruling 8
-           point 4, Ruling 10 point 3; SKILL: never close alone). Re-run the gate cold; re-score
-           the three round-3 closures yourself rather than reading A's tables — the cheapest
-           independent checks are (a) write a throwaway `.ts` that passes a plain object to
-           `resolveProvider` and confirm `tsc` refuses it, (b) render `QuotaNotice` with a paid
-           breaker signal and confirm no link and no "Pro", (c) drive `POST /api/papers/report`
-           with `Accept: application/x-ndjson` and `deepReport: true` and watch the counter
-           move. Then record both numbers and **tell the owner the code side is closed**, with
-           the blocked list by name and the two actions that clear it. There is nothing for B
-           or C to do: the difference list is empty. **The loop now waits on the owner** — the
-           resume clock stands down on `blocked: needs the owner` ticks and re-engages when
-           `PENDING USER ACTION` is cleared by the owner's word in chat.
+TODO:      NOTHING FOR AN AGENT UNTIL THE OWNER ACTS. When the owner says the migrations are
+           applied and/or the keys exist, the manager opens round 5: A measures the live
+           halves (Ruling 11 point 4) — locally via a standalone script if `.env.local`
+           carries the Supabase pair + the keys, else by writing the production checklist.
+           Resume clock: stand down on every tick while STOPPED BECAUSE says `blocked:`.
 PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additive). (2) DECIDE
            whether existing users get a backfilled 14-day trial (the migration gives them
            `free`). (3) After applying, save a profile once in the app to confirm sync still
@@ -224,19 +220,7 @@ PENDING USER ACTION: (1) The three migrations — apply when ready (safe, additi
            surface is meant to have them — nobody in the loop can see the Vercel env.
            **(7) THE BLOCKED LIST IS NOW THE WHOLE GATE.** Code-side is 0%. Seven named items,
            two causes, both owner actions. No agent can close any of them.
-OPEN FOR MANAGER:  **One item, and it moves neither number.** `POLICY — manager decides`:
-           **on the papers surface a refused deep report degrades to the SHALLOW report, which
-           still calls the model** (measured: the refused stream emits `mode: tier1`, not
-           `tier0`), whereas D4 calls the 200/day breaker a "hard circuit breaker" that
-           "degrades to the existing no-LLM path" and R-QUOTA-1 says "the existing degraded
-           (no-LLM) payload". Jobs and events differ — their refusal returns
-           `{ enrichment: null, noLlm: true }` with **zero** model calls. This is **round-1 B's
-           written design, ratified and unchanged** ("the shallow report on papers, the no-LLM
-           object on the other two"), it is consistent across both transports, and it matches
-           D4's other sentence putting shallow reads in the "unlimited for everyone (metered,
-           never capped)" group. A is raising the **wording**, not recommending a reversal
-           (§2). Decide whether it is a spec amendment, an accepted cost to write down, or
-           nothing.
+OPEN FOR MANAGER:  none — A's policy item ruled in §1l (Ruling 11 point 2).
 ```
 
 **This block is edited in place — never append a superseding copy below it.** `STOPPED
@@ -663,6 +647,61 @@ assert the counter and the breaker directly, with the shallow exemption still un
 4. **Round-4 tallies** — Ruling 9 point 6 in full, plus: "guard tests proved by planting"
    (count of scans with a plant case; expect all), and "figure matchers reachable with a
    null-user context" (must be 0 by the compiler).
+
+---
+
+## §1l. RULING 11 — the manager's independent re-measure; CODE SIDE CLOSED; WAITING ON THE OWNER (2026-09-05, BINDING)
+
+**Round-4 A reported 0.0% code-side. Per Ruling 8 point 4 / Ruling 10 point 3 and the skill
+("never close alone"), the manager re-measured independently before accepting it:**
+
+- **Gate, cold:** tsc 0 · eslint 1 (the standing `quiz.tsx:46`; a first run exited 2 on a
+  file-read crash caused by the manager's own probe file being deleted mid-lint — re-run clean)
+  · vitest 124/1 files, 2859/1 tests, 0 failed. Identical to A's.
+- **The five scans, by the manager's own grep, not the gate tests:** rendered tier vocabulary
+  0 (three grep hits, all inside `/* */` or `{/* */}` comment blocks, read individually);
+  browser-shipped dev flags 0 (one grep hit is a `//` comment); `TAVILY_API_KEY` reads 1, inside
+  the gate (`lib/search/system-key.ts:120`); bare `resolveProvider()` 0 (three hits are
+  comments); routes reaching a provider without the guard: two heuristic hits, both on the
+  scan's justified-exemption list, **each justification read in source** — the cron runs on
+  `CRON_SECRET` at `aiTier: 0`, and `api/digest/test` answers 404 unless
+  `canUseLocalServerProvider()`. All five agree with A.
+- **Branded context:** a hand-built `{ userId, byok, path }` passed to `resolveProvider` is
+  TS2345; with `@ts-expect-error` the file compiles. Probe deleted; tree clean.
+- **The wallet, by the manager's own throwaway suite** (real events pipeline, recording
+  `fetch`, sentinel keys, deployed runtime, **all four** operator-funded providers armed):
+  `anonymous` and `free-no-key` → **0** requests carrying the operator key and **0** requests
+  to any search host; `paid` with Tavily alone → spend visible (positive control). Probe
+  deleted; tree clean.
+
+1. **Code side: CLOSED at 0.0% (0 of 31), manager-confirmed.** Exclusions: none. Every
+   requirement observable from this machine behaves as the spec says.
+2. **A's policy item — accepted cost, with machinery.** On papers a refused deep report
+   degrades to the **shallow** report (one small-model call, R-QUOTA-3-exempt, bounded by the
+   20/h report rate bucket — worst case ≈ $0.24/user/day at current prices), where D4's
+   wording said "the existing no-LLM path". The shallow report is the papers surface's
+   existing non-deep path (ratified round 1) and gives the reader something true; jobs and
+   events keep their genuine no-LLM payload. Spec R-QUOTA-1 amended (dated). **Tally** (A,
+   every round from 5): shallow calls made on refused deep requests. **Threshold:** if the
+   rate bucket ever stops bounding it (the bucket is raised, or the shallow model's price
+   rises past 5× today's), the refusal switches to tier 0 the same round. **The owner can
+   reverse this in one line** (refuse to tier 0 on papers) — it is a judgment call, recorded
+   as one.
+3. **The gate stays `NOT MET` — the blocked list is the entire remaining gate:** R-ENT-1,
+   R-ENT-2, R-METER-1, R-METER-2, R-METER-3, R-KEY-1, R-QUOTA-2, two causes, both the
+   owner's: the three migrations are unapplied, and no `GOOGLE_API_KEY` / `TAVILY_API_KEY`
+   exists locally.
+4. **The loop now WAITS ON THE OWNER.** §1 reads `WHOSE TURN: owner` and `STOPPED BECAUSE:
+   blocked: waiting on the owner`. The hourly resume clock stands down on every tick until
+   the owner's word in chat clears `PENDING USER ACTION` — then the manager opens **round 5**:
+   A measures the live halves — **locally** if `.env.local` carries the Supabase URL +
+   service-role key and the two keys (a standalone script, **never inside vitest**, which
+   deletes the keys by design), otherwise by writing a short **production verification
+   checklist** the owner runs after deploy and reports back on. Production is reality;
+   either path is honest, a fixture is not.
+5. **Deploy order for the owner, restated:** apply the three migrations → decide the
+   existing-users trial backfill → save a profile once → set the four Vercel variables →
+   merge `freemium-system-key` → deploy → run A's checklist. Nothing in this loop deploys.
 
 ## §2. ROLES — DO ONLY YOUR OWN JOB
 
@@ -2279,6 +2318,7 @@ an unrelated dev convenience. All six are in scope.**
 | 2 | `lib/opportunities/enrichment.ts:1001` | `canAttemptOpportunityEnrichment` — whether a job/event report even attempts enrichment (`:978` `return Promise.resolve(null)`) | **AI availability.** Replace. |
 | 3 | `store/feed.ts:266` | an **inline second copy** of #1 inside `paperFeedRequestBody`, ANDed with `aiPaperSearchEnabled`, feeding `aiTier` at `:293` | **AI availability.** Replace — and see the shadowing note below. |
 | 4 | `app/papers/[id]/page.tsx:685` | `localDeveloperProvider`, feeding `deepReportRequested` (`:691-693`) **and** the report cache key (`:695`) | **AI availability + an AI-dependent cache key.** Replace. |
+| 4 (manager re-measure) | 0.0% code-side · blocked 7 | confirmed independently; loop waits on the owner |
 | 5 | `app/page.tsx:961` | which of two sentences the AI-key panel shows ("Local development may use the Vertex account…" vs "…stays on Tier 0 and makes no AI model call") | **AI-dependent UI state.** Replace. |
 | 6 | `app/page.tsx:988` | the same fork in the deep-report panel | **AI-dependent UI state.** Replace. |
 

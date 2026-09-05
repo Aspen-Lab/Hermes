@@ -181,6 +181,10 @@ route behaviour, or grep result). Requirements are grouped; numbering is stable 
   for deep reports. Resets in N hours."* — no upgrade line, no "add your own key" line. Reset
   copy uses hours when the reset is under a day, days otherwise; "Resets in 0 days" never
   renders.
+  **Amendment 2026-09-05 (Ruling 11, binding):** a refused deep report degrades to the
+  surface's **existing non-deep path**: on jobs and events that is the true no-LLM payload; on
+  papers it is the shallow (abstract-only) report, which makes one small-model call that is
+  R-QUOTA-3-exempt and bounded by the 20/h report rate bucket. Accepted cost; A tallies it.
 - **R-QUOTA-2.** Trial cap 20 total; paid breaker 200/day; system-search breaker 500/day. A trip
   writes an error-level log line and a `usage_events` row (`kind = breaker`).
   **Amendment 2026-09-05 (Ruling 6, binding):** a counter-store **outage** is not a trip. It
